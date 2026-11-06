@@ -1,6 +1,6 @@
 # Libro de nudos del Grupo 431
 
-Son fichas de nudos para la Wak y la Tropa del Grupo Guía y Scout 431, con modelos 3D propios de cada paso. Cada nudo se describe en una especificación en `specs/`, y de ella salen sus modelos, sus imágenes y su ficha.
+Son fichas de nudos para la Wak y la Tropa del Grupo Guía y Scout 431, con modelos 3D propios de cada paso. Cada nudo se describe en una especificación en `specs/`, y de ella salen sus modelos, sus imágenes, su ficha y su visor 3D en `https://gaboelc.github.io/nudos-431/<slug>/`.
 
 ## Instalar
 
@@ -15,8 +15,11 @@ python -m pip install -e .[dev]
 ```
 python -m nudos construir as-de-guia
 python -m nudos hoja as-de-guia
+python -m nudos sitio
 python -m pytest
 ```
+
+Para publicar el sitio, desde `main` ya subido: `scripts/publicar.sh`. Sube el sitio a la rama `gh-pages`, que es la que sirve GitHub Pages.
 
 ## Carpetas
 
@@ -24,6 +27,10 @@ python -m pytest
 |---|---|
 | `specs/` | Una especificación por nudo (formato en `docs/formato-spec.md`) |
 | `nudos/` | Código |
+| `render/` | Escena 3D compartida por el visor y las imágenes de impresión |
+| `sitio/` | Plantillas y página del visor; en `sitio/vendor/`, three.js y las fuentes |
+| `scripts/` | `publicar.sh` |
+| `publicados.txt` | Nudos con QR impreso: su dirección no cambia nunca |
 | `tests/` | Pruebas |
 | `docs/` | Documentación del formato |
 | `tasks/` | Plan y lista de tareas |

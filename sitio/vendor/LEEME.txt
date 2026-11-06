@@ -1,0 +1,13 @@
+Archivos de terceros que el sitio sirve desde sí mismo, para que el visor no dependa de
+servicios externos mientras existan los QR impresos. Cada paquete se descargó de
+registry.npmjs.org y se comprobó contra el hash de integridad que publica npm.
+
+three@0.160.0 (licencia MIT, three/LICENSE.txt)
+  three/three.module.min.js   build/three.module.min.js, sin cambios
+  three/OrbitControls.js      examples/jsm/controls/OrbitControls.js, con un solo cambio:
+                              importa './three.module.min.js' en vez de 'three', para que
+                              el sitio no necesite un import map.
+
+@fontsource/big-shoulders-display@5.3.0, @fontsource/ibm-plex-mono@5.3.0 y
+@fontsource/literata@5.3.0 (SIL Open Font License 1.1, fuentes/LICENCIA-*.txt)
+  fuentes/*-latin-<peso>-normal.woff2, sin cambios

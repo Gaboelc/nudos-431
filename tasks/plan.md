@@ -44,6 +44,9 @@ Un solo libro de nudos para la Wak y la Tropa del Grupo 431, impreso por edicion
 5. **Una sola escena 3D sirve para el visor y para la impresión.** La escena three.js del prototipo genera también las imágenes de impresión con Chrome sin interfaz. Si la página impresa no se lee bien, la alternativa es Blender con la misma geometría. Se decide en el Punto de control A.
 6. **El libro se arma en HTML/CSS y se exporta a PDF con Chrome.** Reemplaza el armado con `docx` del v1.2. Usa las mismas herramientas que el visor y da control fino del diseño impreso. A cambio, ya no se edita en Word: los cambios se hacen en las especificaciones y las plantillas.
 7. **Los visores viven en direcciones permanentes.** El sitio se publica en GitHub Pages bajo `/<slug>/`. Un slug que ya tiene un QR impreso no cambia nunca, y una prueba lo vigila contra `publicados.txt`.
+   - El sitio se construye en la sesión y `scripts/publicar.sh` lo sube a la rama `gh-pages`, siempre desde un `main` ya subido. Así lo publicado es exactamente lo que se revisó, y no hace falta GitHub Actions.
+   - three.js y las fuentes van dentro del sitio, con versión fija. El visor no depende de ningún servicio externo mientras existan los QR impresos.
+   - El sitio no acepta imágenes ni archivos fuera de una lista corta de tipos, y no se publica si algún nudo tiene fallas.
 8. **El flujo se opera desde la app de Claude,** en conversaciones del proyecto Scouts y con la computadora de Gabriel vinculada.
    - GitHub es la fuente de verdad. Cada sesión empieza clonando el repositorio y termina subiendo los cambios y actualizando la copia en `A:\`.
    - Una skill de Claude, `nudo-nuevo`, contiene el procedimiento, y su fuente vive en el repositorio.
@@ -61,7 +64,8 @@ nudos-431/
   nudos/            paquete Python: especificación, cruces, generador libre,
                     anfitriones, plantillas, exportación, ficha, libro
   render/           escena three.js compartida (visor e impresión)
-  sitio/            plantilla del visor; lo que se publica
+  sitio/            plantillas y página del visor; three.js y fuentes en sitio/vendor/
+  scripts/          publicar.sh: sube el sitio a la rama gh-pages
   libro/            plantillas HTML/CSS de ficha, inicio, glosario y anexos
   config/           vocabulario controlado y términos propios de cada sección
   tests/            pruebas por nudo y del sistema
@@ -191,7 +195,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 **Dependencias:** T1, D4
 
-**Archivos:** `render/escena.js`, `sitio/plantilla.html`, `nudos/exportar.py`, `.github/workflows/sitio.yml`, `tests/test_sitio.py`
+**Archivos:** `render/escena.js`, `sitio/plantilla.html`, `sitio/visor.js`, `sitio/visor.css`, `sitio/vendor/`, `nudos/exportar.py`, `scripts/publicar.sh`, `publicados.txt`, `tests/test_sitio.py`
 
 **Tamaño:** M
 

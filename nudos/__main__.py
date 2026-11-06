@@ -1,12 +1,14 @@
-"""Uso: python -m nudos <orden> <slug>. «python -m nudos -h» muestra las órdenes."""
+"""Uso: python -m nudos <orden> [argumentos]. «python -m nudos -h» muestra las órdenes."""
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from . import BUILD, RAIZ
 from .construir import construir, guardar
+from .exportar import SitioError, construir_sitio
 from .hoja import hoja
 from .libre import LIMITES
 from .spec import SpecError, cargar
@@ -21,14 +23,29 @@ def main(argv=None) -> int:
     h.add_argument("slug")
     h.add_argument("--vista", default="arriba",
                    help="«arriba» o la inclinación de la cámara en grados, por ejemplo 55")
+    s = ordenes.add_parser("sitio", help="construye el sitio con el visor de cada nudo")
+    s.add_argument("--salida", type=Path, default=BUILD / "sitio",
+                   help="carpeta donde queda el sitio (por omisión build/sitio)")
     args = p.parse_args(argv)
     try:
         if args.orden == "construir":
             return _construir(args.slug)
+        if args.orden == "sitio":
+            return _sitio(args.salida)
         return _hoja(args.slug, args.vista)
     except SpecError as e:
         print(f"Error en la especificación: {e}", file=sys.stderr)
         return 2
+
+
+def _sitio(salida: Path) -> int:
+    try:
+        slugs = construir_sitio(salida.resolve())
+    except SitioError as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Sitio con {len(slugs)} nudo(s) en {salida}: {', '.join(slugs)}")
+    return 0
 
 
 def _construir(slug: str) -> int:

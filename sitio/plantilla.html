@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{titulo}} · Libro de nudos del Grupo 431</title>
+<meta name="description" content="{{descripcion}}">
+<link rel="canonical" href="{{url}}">
+<link rel="stylesheet" href="../recursos/visor.css">
+<link rel="modulepreload" href="../recursos/vendor/three/three.module.min.js">
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <p class="eyebrow"><a href="../">Libro de nudos · Grupo Guía y Scout 431</a></p>
+    <h1>{{titulo}}</h1>
+    <dl class="facts">
+{{hechos}}
+    </dl>
+  </header>
+
+  <main class="work">
+    <section class="stage-wrap" aria-label="Modelo 3D del paso">
+      <div class="stage" id="stage">
+        <p class="stage-msg" id="stageMsg">Cargando el modelo 3D…</p>
+        <div class="tags" id="tags" aria-hidden="true">
+          <span class="tag" id="tagFirme" hidden>Firme</span>
+          <span class="tag" id="tagChicote" hidden>Chicote</span>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="nav">
+          <button class="btn" id="prev" type="button" aria-label="Paso anterior">← Anterior</button>
+          <span class="count" id="count" aria-live="polite">Paso 1 de {{n_pasos}}</span>
+          <button class="btn" id="next" type="button" aria-label="Paso siguiente">Siguiente →</button>
+        </div>
+        <div class="opts">
+          <div class="seg" role="group" aria-label="Vista">
+            <button type="button" id="viewTop" aria-pressed="false">Desde arriba</button>
+            <button type="button" id="view3d" aria-pressed="true">3D</button>
+          </div>
+          <label class="chk" for="optHl"><input type="checkbox" id="optHl" checked><span class="box"></span><span class="swatch" aria-hidden="true"></span>Lo que se mueve</label>
+          <label class="chk" for="optTags"><input type="checkbox" id="optTags" checked><span class="box"></span>Nombres</label>
+        </div>
+      </div>
+      <p class="hint">Arrastra para girar · pellizca o usa la rueda para acercar · teclas ← → para cambiar de paso</p>
+    </section>
+
+    <section class="steps" aria-label="Pasos">
+      <h2>Pasos</h2>
+      <ol id="stepList">
+{{pasos}}
+      </ol>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Modelo 3D propio del Grupo 431</span>
+    <a href="../">Todos los nudos</a>
+  </footer>
+</div>
+
+<script type="application/json" id="modelo">{{datos}}</script>
+<script>
+  // Si el visor no arranca (navegador viejo o sin WebGL), los pasos escritos siguen sirviendo.
+  setTimeout(function () {
+    if (window.visorListo) return;
+    var m = document.getElementById("stageMsg");
+    if (m && !m.hidden) m.textContent = "El modelo 3D está tardando o no funciona en este navegador. Los pasos escritos están abajo.";
+  }, 15000);
+</script>
+<script type="module" src="../recursos/visor.js"></script>
+</body>
+</html>

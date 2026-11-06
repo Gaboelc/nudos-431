@@ -1,3 +1,5 @@
 * text=auto
 *.png binary
 *.zip binary
+*.woff2 binary
+sitio/vendor/** linguist-vendored
