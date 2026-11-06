@@ -99,7 +99,7 @@ function cajaDeEncuadre(modelo) {
   return { x0: x0 - MARGEN, x1: x1 + MARGEN, y0: y0 - MARGEN, y1: y1 + MARGEN };
 }
 
-export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null } = {}) {
+export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null } = {}) {
   // Si el navegador no tiene WebGL, esto lanza una excepción y quien llama muestra el aviso.
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: !interactiva });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -215,47 +215,27 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     };
     grupo.add(tapa(0, matAzul), tapa(1, matPunta));
     // Nombres: «Firme» junto a donde la cuerda entra al encuadre y «Chicote» junto al extremo.
-    // Cada nombre va en espacio libre y una línea fina lo une con su punto. Se prueban
-    // lugares de cerca hacia afuera y gana el primero que esté despejado y más cerca de su
-    // propio tramo que de otro; si no hay, el primero despejado; si tampoco, el más despejado.
-    const DESPEJE = 1.6;   // medio nombre más el radio de la cuerda, en diámetros
-    const arco = [0];
-    for (let i = 1; i < pts.length; i++) arco.push(arco[i - 1] + pts[i].distanceTo(pts[i - 1]));
-    const cercano = (c) => {
-      let m = Infinity, j = 0;
-      pts.forEach((p, i) => { const d = (p.x - c.x) ** 2 + (p.y - c.y) ** 2; if (d < m) { m = d; j = i; } });
-      return { d: Math.sqrt(m), s: arco[j] };
-    };
-    const elegir = (cands, s0) => {
-      let despejado = null, mejor = null, mejorD = -1;
-      for (const c of cands) {
-        const q = cercano(c);
-        if (q.d >= DESPEJE && Math.abs(q.s - s0) <= 3.5) return c;
-        if (q.d >= DESPEJE && !despejado) despejado = c;
-        if (q.d > mejorD) { mejor = c; mejorD = q.d; }
-      }
-      return despejado || mejor;
-    };
+    // Aquí solo se preparan los lugares posibles, de cerca hacia afuera. Cuál se usa se decide
+    // en pantalla (colocarNombres), porque depende del tamaño del nombre y de la cámara.
     const plano = (v) => { v.setZ(0); return v.lengthSq() > 1e-12 ? v.normalize() : v.set(1, 0, 0); };
     const giro = (v, g) => {
       const a = (g * Math.PI) / 180;
       return new THREE.Vector3(v.x * Math.cos(a) - v.y * Math.sin(a), v.x * Math.sin(a) + v.y * Math.cos(a), 0);
     };
-    const alrededor = (p, dir, radios, angulos) =>
-      radios.flatMap((r) => angulos.map((g) => p.clone().addScaledVector(giro(dir, g), r)));
-    const nombre = (punto, cands, s0) => {
-      const etiqueta = elegir(cands, s0);
-      etiqueta.z = punto.z + 0.6;
-      return { punto: punto.clone(), etiqueta };
-    };
+    const alrededor = (p, dir, radios, angulos) => radios.flatMap((r) => angulos.map((g) => {
+      const c = p.clone().addScaledVector(giro(dir, g), r);
+      c.z = p.z + 0.6;
+      return c;
+    }));
     let k = 0;
     while (k < pts.length - 2 && !dentro(pts[k])) k++;
     const t = plano(pts[k + 1].clone().sub(pts[k]));
-    const firme = nombre(pts[k], alrededor(pts[k], t, [1.9, 2.8, 3.8], [90, -90]), arco[k]);
+    const firme = { punto: pts[k].clone(), candidatos: alrededor(pts[k], t, [1.9, 2.8, 3.8, 5.0], [90, -90, 135, -135, 45, -45]) };
     const fin = curva.getPointAt(1), tanFin = plano(curva.getTangentAt(1));
-    const chicote = nombre(fin, alrededor(fin, tanFin, [2.2, 3.2, 4.4], [0, 45, -45, 90, -90, 135, -135, 180]),
-      arco[arco.length - 1]);
-    return { grupo, L, nombres: { firme, chicote } };
+    const chicote = { punto: fin.clone(), candidatos: alrededor(fin, tanFin, [2.2, 3.2, 4.4, 5.6, 7.0], [0, 45, -45, 90, -90, 135, -135, 180]) };
+    firme.etiqueta = firme.candidatos[0];
+    chicote.etiqueta = chicote.candidatos[0];
+    return { grupo, L, pts, nombres: { firme, chicote } };
   }
 
   function mostrarPaso(n) {
@@ -268,6 +248,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     const rep = c.L / Math.PI;
     for (const m of [matAzul, matAmbar]) { m.map.repeat.set(rep, 1); m.bumpMap.repeat.set(rep, 1); }
     matRemate.map.repeat.set(c.L / 0.5, 1);
+    colocarNombres();
     pedirCuadro();
   }
 
@@ -321,6 +302,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       camera.lookAt(p.target);
       if (controls) { controls.target.copy(p.target); controls.update(); }
       anim = null;
+      colocarNombres();
       pedirCuadro();
       return;
     }
@@ -339,6 +321,52 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     return activo ? activo.nombres : null;
   }
 
+  /* Elige en pantalla dónde va cada nombre: el primer lugar, de cerca hacia afuera, donde la
+     etiqueta entra completa en el escenario sin tapar ningún tramo. Si no hay ninguno, el
+     menos tapado. Se recalcula cuando la cámara se queda quieta, no mientras se mueve, para
+     que los nombres no salten. «medidasNombres» devuelve el tamaño de cada etiqueta en px. */
+  function colocarNombres() {
+    if (!activo || !medidasNombres) return;
+    const medidas = medidasNombres();
+    const w = contenedor.clientWidth, h = contenedor.clientHeight;
+    if (!w || !h) return;
+    camera.updateMatrixWorld();
+    const pantalla = (v) => {
+      tmp.copy(v).project(camera);
+      return { x: ((tmp.x + 1) / 2) * w, y: ((1 - tmp.y) / 2) * h, z: tmp.z };
+    };
+    const P = activo.pts.map(pantalla).filter((p) => p.z <= 1);
+    const derecha = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+    const a = pantalla(centroFit), b = pantalla(centroFit.clone().addScaledVector(derecha, RADIO));
+    const r = Math.hypot(b.x - a.x, b.y - a.y);   // radio de la cuerda en px
+    const puestos = [];   // etiquetas ya colocadas: tampoco se pueden tapar entre sí
+    for (const [clave, nom] of Object.entries(activo.nombres)) {
+      const m = medidas[clave];
+      if (!m || !m.w) continue;
+      const hw = m.w / 2 + 3, hh = m.h / 2 + 3;
+      let mejor = null, mejorD = -Infinity, mejorQ = null;
+      for (const c of nom.candidatos) {
+        const q = pantalla(c);
+        if (q.z > 1 || q.x - hw < 0 || q.x + hw > w || q.y - hh < 0 || q.y + hh > h) continue;
+        let d = Infinity;
+        for (const o of puestos) {
+          const dx = Math.max(Math.abs(o.x - q.x) - hw - o.hw, 0), dy = Math.max(Math.abs(o.y - q.y) - hh - o.hh, 0);
+          d = Math.min(d, Math.hypot(dx, dy) - 2);
+        }
+        for (const p of P) {
+          if (d < mejorD) break;   // ya no puede ganar
+          const dx = Math.max(Math.abs(p.x - q.x) - hw, 0), dy = Math.max(Math.abs(p.y - q.y) - hh, 0);
+          d = Math.min(d, Math.hypot(dx, dy) - r);
+        }
+        if (d >= 0) { mejor = c; mejorQ = q; break; }
+        if (d > mejorD) { mejor = c; mejorD = d; mejorQ = q; }
+      }
+      nom.etiqueta = mejor || nom.candidatos[0];
+      if (mejorQ) puestos.push({ x: mejorQ.x, y: mejorQ.y, hw, hh });
+    }
+    pedirCuadro();
+  }
+
   function renderizar() {
     renderer.render(scene, camera);
     pendiente = false;
@@ -352,9 +380,11 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     if (!movidoPorUsuario && !anim) vista(vistaActual, true);
+    else colocarNombres();
     pedirCuadro();
   }
 
+  let enMovimiento = false;
   function cuadro(ahora) {
     requestAnimationFrame(cuadro);
     if (anim) {
@@ -366,6 +396,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       pendiente = true;
     }
     const movio = controls ? controls.update() : false;
+    // Cuando la cámara se queda quieta, los nombres buscan su lugar.
+    if (anim || movio) enMovimiento = true;
+    else if (enMovimiento) { enMovimiento = false; colocarNombres(); }
     if (pendiente || movio) renderizar();
   }
 
@@ -373,5 +406,5 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   redimensionar();
   requestAnimationFrame(cuadro);
 
-  return { lienzo: renderer.domElement, mostrarPaso, vista, resaltar, opacidadSombra, proyectar, anclas, renderizar, pedirCuadro };
+  return { lienzo: renderer.domElement, mostrarPaso, vista, resaltar, opacidadSombra, proyectar, anclas, colocarNombres, renderizar, pedirCuadro };
 }
