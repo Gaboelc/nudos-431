@@ -99,7 +99,9 @@ function cajaDeEncuadre(modelo) {
   return { x0: x0 - MARGEN, x1: x1 + MARGEN, y0: y0 - MARGEN, y1: y1 + MARGEN };
 }
 
-export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null } = {}) {
+/* «reservado»: rectángulos en px del contenedor ({ x0, y0, x1, y1 }) donde no van los
+   nombres, por ejemplo el número del paso que la ficha impresa pone encima de la imagen. */
+export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null, reservado = [] } = {}) {
   // Si el navegador no tiene WebGL, esto lanza una excepción y quien llama muestra el aviso.
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: !interactiva });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -322,8 +324,8 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   }
 
   /* Elige en pantalla dónde va cada nombre: el primer lugar, de cerca hacia afuera, donde la
-     etiqueta entra completa en el escenario sin tapar ningún tramo. Si no hay ninguno, el
-     menos tapado. Se recalcula cuando la cámara se queda quieta, no mientras se mueve, para
+     etiqueta entra completa en el escenario, fuera de las zonas reservadas, sin tapar ningún
+     tramo. Si no hay ninguno, el menos tapado. Se recalcula cuando la cámara se queda quieta, no mientras se mueve, para
      que los nombres no salten. «medidasNombres» devuelve el tamaño de cada etiqueta en px. */
   function colocarNombres() {
     if (!activo || !medidasNombres) return;
@@ -344,10 +346,12 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       const m = medidas[clave];
       if (!m || !m.w) continue;
       const hw = m.w / 2 + 3, hh = m.h / 2 + 3;
+      // Como el borde del escenario, una zona reservada no se tapa nunca, ni como último recurso.
+      const enReservado = (q) => reservado.some((z) => q.x + hw > z.x0 && q.x - hw < z.x1 && q.y + hh > z.y0 && q.y - hh < z.y1);
       let mejor = null, mejorD = -Infinity, mejorQ = null;
       for (const c of nom.candidatos) {
         const q = pantalla(c);
-        if (q.z > 1 || q.x - hw < 0 || q.x + hw > w || q.y - hh < 0 || q.y + hh > h) continue;
+        if (q.z > 1 || q.x - hw < 0 || q.x + hw > w || q.y - hh < 0 || q.y + hh > h || enReservado(q)) continue;
         let d = Infinity;
         for (const o of puestos) {
           const dx = Math.max(Math.abs(o.x - q.x) - hw - o.hw, 0), dy = Math.max(Math.abs(o.y - q.y) - hh - o.hh, 0);
