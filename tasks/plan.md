@@ -503,11 +503,11 @@ Después de cada tanda hay un punto de control:
 - **D6:** confirmar qué nudo es el "nudo aguja" y si el "ballestrinque doble" es el *rolling hitch*. Se resuelve al modelarlos.
 - **D7:** si la dirigencia de la Tropa participa en la revisión de su anexo y en conseguir probadores.
 
-## Lo que se reutiliza del prototipo
+## Lo que se reutilizó del prototipo
 
-El código del prototipo está en `prototipo/`:
+El prototipo del as de guía se portó completo y la carpeta `prototipo/` se borró al cerrar T3. Sigue en el historial de git:
 
-- **`knot.py`:** el generador libre. Arma el trazado, calcula los cruces, eleva a 3D, relaja y valida. Ya está portado a `nudos/` (T1).
-- **`viewer.template.html` y `build_viewer.py`:** la escena three.js y el visor. Son la base de T2.
-- **`shoot.py`:** el render con Chrome sin interfaz. Es la base de T3 y T4.
-- **`render.py`:** un render de verificación hecho en numpy. Ya está portado a `nudos/hoja.py` (T1).
+- **`knot.py`:** el generador libre (trazado, cruces, elevación a 3D, relajación y validación). Pasó a `nudos/` en T1.
+- **`render.py`:** el render de verificación en numpy. Pasó a `nudos/hoja.py` en T1.
+- **`viewer.template.html` y `build_viewer.py`:** la escena three.js y el visor. Pasaron a `render/escena.js` y `sitio/` en T2.
+- **`shoot.py`:** el render con Chrome sin interfaz. Pasó a `nudos/imprimir.py` en T3.

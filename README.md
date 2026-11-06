@@ -37,5 +37,4 @@ Para publicar el sitio, desde `main` ya subido: `scripts/publicar.sh`. Sube el s
 | `tests/` | Pruebas |
 | `docs/` | Documentación del formato |
 | `tasks/` | Plan y lista de tareas |
-| `prototipo/` | Prototipo original del as de guía, de referencia |
 | `entradas/`, `build/` | Fuentes de referencia y archivos generados, fuera de git |

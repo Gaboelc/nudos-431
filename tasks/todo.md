@@ -23,14 +23,14 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] La dirección responde y el visor carga en Chrome como celular, sin errores
   - [x] Gabriel abre https://gaboelc.github.io/nudos-431/as-de-guia/ en su celular y revisa los 7 pasos
 - [x] Punto de control 1: la especificación reproduce el prototipo y el visor está en línea
-- [ ] T3 Imágenes de impresión, error común y vistas finales (M, depende de T2)
+- [x] T3 Imágenes de impresión, error común y vistas finales (M, depende de T2)
   - [x] Error común y nudo terminado en la especificación, con sus pruebas (`tests/test_errores.py`)
   - [x] `python -m nudos imprimir`: 11 imágenes a 300 ppp desde la escena del visor, idénticas al construir dos veces
   - [x] Resaltado del paso 2 movido para que el error se vea: el firme llega azul al cruce
   - [x] `prueba.pdf`: página de prueba en color y en escala de grises
-  - [ ] Gabriel imprime `prueba.pdf` en la Epson a tamaño real y revisa que se distinga qué tramo va encima
-  - [ ] Publicar el sitio: el resaltado del paso 2 cambió
-  - [ ] Borrar `prototipo/`
+  - [x] Gabriel imprime `prueba.pdf` en la Epson a tamaño real y revisa que se distinga qué tramo va encima (aprobada, con los pasos en 3D)
+  - [x] Publicar el sitio: el resaltado del paso 2 cambió
+  - [x] Borrar `prototipo/` (queda en el historial de git)
 - [ ] T4 Ficha impresa del as de guía con QR (M, depende de T3, D1 y D2)
 - [ ] Punto de control A:
   - [ ] La suite pasa
