@@ -12,9 +12,9 @@ if [ -n "$(git status --porcelain)" ]; then
   echo "Hay cambios sin commit. Haz commit antes de publicar: el sitio tiene que salir de un estado guardado." >&2
   exit 1
 fi
-git fetch -q origin main
-if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
-  echo "main no coincide con origin/main. Sube main antes de publicar." >&2; exit 1
+# Se compara con GitHub directamente: un clon superficial puede no tener origin/main.
+if [ "$(git rev-parse HEAD)" != "$(git ls-remote origin refs/heads/main | cut -f1)" ]; then
+  echo "main no coincide con el main de GitHub. Sube main antes de publicar." >&2; exit 1
 fi
 
 python -m nudos sitio --salida build/sitio
