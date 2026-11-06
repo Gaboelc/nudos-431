@@ -7,7 +7,7 @@ name = "nudos"
 version = "0.1.0"
 description = "Libro de nudos del Grupo 431: de la especificación de cada nudo a sus modelos"
 requires-python = ">=3.11"
-dependencies = ["numpy>=1.26", "scipy>=1.11", "pyyaml>=6", "pillow>=10"]
+dependencies = ["numpy>=1.26", "scipy>=1.11", "pyyaml>=6", "pillow>=10", "segno>=1.5"]
 
 [project.optional-dependencies]
 # Playwright dibuja las imágenes de impresión con el Chrome instalado.

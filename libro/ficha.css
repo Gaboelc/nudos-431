@@ -1,0 +1,97 @@
+/* Ficha de un nudo: un pliego de dos páginas tamaño carta (216 × 279 mm), a doble cara y
+   con encuadernación de resorte (D2). La página izquierda lleva el resorte a la derecha y la
+   derecha a la izquierda; de ese lado el margen es de 19 mm.
+   La rejilla tiene tres columnas de 58 mm: es el ancho de cada imagen (CELDA_MM en
+   nudos/imprimir.py). Si cambia aquí, cambia también allí. */
+@font-face { font-family: "Big Shoulders Display"; font-weight: 800; src: url("{{fuentes}}/big-shoulders-display-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; src: url("{{fuentes}}/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 500; src: url("{{fuentes}}/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Literata"; font-weight: 400; src: url("{{fuentes}}/literata-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Literata"; font-weight: 600; src: url("{{fuentes}}/literata-latin-600-normal.woff2") format("woff2"); }
+
+:root {
+  --ink: #16202f;
+  --muted: #586273;
+  --line: #ccd4db;
+  --accent: #d1801a;      /* el ámbar del resaltado */
+  --accent-ink: #8f5208;
+  --bien: #2f6b3a;
+  --mal: #a8261d;
+  --celda: 58mm;
+  --alto: 64mm;
+  --hueco: 5.5mm;
+  --mono: "IBM Plex Mono", monospace;
+  --display: "Big Shoulders Display", sans-serif;
+}
+
+@page { size: letter; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: "Literata", Georgia, serif; font-size: 8.8pt; line-height: 1.32; color: var(--ink); }
+p { margin: 0; }
+
+.pagina {
+  width: 216mm; height: 279mm; overflow: hidden;
+  display: flex; flex-direction: column; gap: 5mm;
+  padding: 12mm 12mm 10mm;
+  break-after: page;
+}
+.pagina:last-child { break-after: auto; }
+.izq { padding-right: 19mm; }   /* resorte */
+.der { padding-left: 19mm; }    /* resorte */
+
+h2 {
+  margin: 0 0 1mm; font: 500 6.8pt/1.2 var(--mono); text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--accent-ink);
+}
+
+/* Cabeza */
+.cabeza { display: grid; grid-template-columns: 1fr 27mm; gap: 6mm; align-items: start; }
+.marca { font: 500 6.4pt/1 var(--mono); text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+h1 { margin: 2mm 0 1.2mm; font: 800 34pt/0.88 var(--display); text-transform: uppercase; letter-spacing: 0.005em; }
+.otros { margin-bottom: 1.2mm; font-style: italic; color: var(--muted); }
+.hechos { display: flex; flex-wrap: wrap; gap: 1mm 6mm; margin: 0 0 3.5mm; }
+.hechos div { display: flex; gap: 1.5mm; align-items: baseline; }
+.hechos dt { font: 400 6.4pt/1 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.hechos dd { margin: 0; font: 500 6.8pt/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.intro { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+.intro > div > p + h2 { margin-top: 2.5mm; }
+.muestra { display: inline-block; width: 6mm; height: 2.2mm; border-radius: 1.1mm; background: var(--accent); vertical-align: 0.1mm; }
+.qr { text-align: center; }
+.qr svg { display: block; width: 27mm; height: 27mm; }
+.qr .t { margin-top: 0.5mm; font: 500 6.8pt/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; }
+.qr .url { margin-top: 0.8mm; font: 400 5.6pt/1.25 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+
+/* Rejilla de imágenes */
+.rejilla { display: grid; grid-template-columns: repeat(3, var(--celda)); column-gap: var(--hueco); row-gap: 4.5mm; align-items: start; }
+figure { margin: 0; }
+.img { position: relative; width: var(--celda); height: var(--alto); border: 0.2mm solid var(--line); border-radius: 1mm; overflow: hidden; }
+.img img { display: block; width: 100%; height: 100%; }
+.num { position: absolute; top: 1.2mm; left: 2.2mm; font: 800 20pt/1 var(--display); }
+figcaption { margin-top: 1.6mm; }
+figcaption .t { display: block; margin-bottom: 0.4mm; font-weight: 600; font-size: 9.2pt; line-height: 1.2; }
+
+.panel { grid-column: span 2; }
+.imgs { display: grid; grid-template-columns: var(--celda) var(--celda); column-gap: var(--hueco); }
+.sello {
+  position: absolute; top: 1.6mm; left: 1.8mm; padding: 0.8mm 1.8mm; border-radius: 0.8mm;
+  font: 500 6.6pt/1 var(--mono); text-transform: uppercase; letter-spacing: 0.1em;
+  color: #fff; background: var(--ink);
+}
+.sello.bien { background: var(--bien); }
+.sello.mal { background: var(--mal); }
+.aviso { display: block; margin-bottom: 0.6mm; font: 500 6.6pt/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--mal); }
+
+.verif ul { margin: 0; padding: 0; list-style: none; }
+.verif li { position: relative; margin: 0 0 1.6mm; padding-left: 4.5mm; }
+.verif li::before {
+  content: ""; position: absolute; left: 0; top: 0.9mm; width: 2.4mm; height: 2.4mm;
+  border: 0.25mm solid var(--ink); border-radius: 0.4mm;
+}
+
+.seguridad { padding: 2.2mm 3mm; border-left: 1mm solid var(--accent); }
+
+.pie {
+  margin-top: auto; display: flex; justify-content: space-between; gap: 6mm;
+  font: 400 6pt/1 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+}

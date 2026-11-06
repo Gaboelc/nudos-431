@@ -16,8 +16,13 @@ El ejemplo completo es `specs/as-de-guia.yaml`.
 |---|---|---|
 | `slug` | sí | Identificador permanente, con minúsculas, números y guiones. Es igual al nombre del archivo. Cuando su QR se imprime, ya no cambia. |
 | `nombre` | sí | Nombre del nudo en la ficha. |
+| `otros_nombres` | no | Lista de otros nombres, cuando una sección lo llama distinto. La ficha los pone bajo el nombre. |
 | `familia` | sí | Familia del índice: De tope, De unión, Gazas, De sujeción, Autoblocantes, Corredizos, De ligadura, Amarres… |
 | `abok` | no | Número en *The Ashley Book of Knots*. |
+| `usos` | para la ficha | Para qué sirve. |
+| `materiales` | para la ficha | Qué cuerda y qué objetos hacen falta. |
+| `verificacion` | para la ficha | Lista de criterios para revisar el nudo terminado. Cada uno se tiene que poder comprobar mirando o tirando del nudo. |
+| `seguridad` | no | Solo cuando aplica. Si el nudo tiene usos con personas, sigue la postura de seguridad del libro (D1 del plan). |
 | `encuadre` | no | Zona de la mesa que se muestra, como `x: [mín, máx]` e `y: [mín, máx]`. Si falta, se calcula con todos los pasos. |
 | `segmentos` | sí | Tramos de cuerda con nombre. Cada uno es una lista de puntos `[x, y]`. |
 | `pasos` | sí | Lista de pasos en orden. |
@@ -25,6 +30,8 @@ El ejemplo completo es `specs/as-de-guia.yaml`.
 | `terminado` | no | Cómo se muestra el nudo terminado (ver abajo). |
 
 Los campos desconocidos producen un error, así que un error de tipeo se detecta al cargar.
+
+Los campos marcados «para la ficha» se pueden dejar para después mientras se modela el nudo, pero `python -m nudos ficha` no genera la ficha sin ellos ni sin `error`. Todo el texto va en tuteo, es propio y no usa términos de ninguna sección: la ficha no se genera si aparece alguno de `config/terminos_seccion.txt`.
 
 ## Segmentos y referencias
 

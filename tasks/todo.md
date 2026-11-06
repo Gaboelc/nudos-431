@@ -32,6 +32,14 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Publicar el sitio: el resaltado del paso 2 cambió
   - [x] Borrar `prototipo/` (queda en el historial de git)
 - [ ] T4 Ficha impresa del as de guía con QR (M, depende de T3, D1 y D2)
+  - [x] Texto de la ficha en la especificación: para qué sirve, materiales, verificación y seguridad
+  - [x] Plantilla `libro/`, `python -m nudos ficha` y QR vectorial al visor; pliego de dos páginas carta con margen de resorte
+  - [x] Prueba de vocabulario (`config/terminos_seccion.txt`) y pruebas de la ficha
+  - [ ] Gabriel revisa el texto de la ficha (en especial seguridad y verificación)
+  - [ ] Gabriel imprime la ficha y escanea el QR
+  - [ ] Filtro 1: Gabriel ata el as de guía paso a paso con cuerda real, siguiendo la ficha impresa
+  - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa
+  - [ ] Registrar los dos filtros en la especificación
 - [ ] Punto de control A:
   - [ ] La suite pasa
   - [ ] El as de guía pasó los dos filtros

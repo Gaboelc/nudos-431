@@ -1,0 +1,26 @@
+# Términos propios de una sección. No van en ninguna ficha: solo en el anexo de su sección.
+# Uno por línea. No importan las mayúsculas ni las tildes, y se busca la palabra completa.
+# «#» empieza un comentario. Si falta alguno, se agrega aquí.
+
+# Wak
+Wak
+Tsurí
+Tsurís
+Trillo
+U-suré
+Sênuk
+Consejo de Wak
+
+# Tropa
+Tropa
+patrulla
+patrullas
+Consejo de Tropa
+
+# Otras secciones
+Manada
+lobato
+lobatos
+Clan
+rover
+rovers

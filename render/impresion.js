@@ -1,6 +1,8 @@
 /* Dibuja una imagen de impresión con la misma escena del visor. nudos/imprimir.py llama a
    window.dibujar(trabajo) y toma la captura cuando la promesa se cumple.
-   trabajo: { modelo, paso, vista, resaltar, nombres: ["firme", "chicote"] } */
+   trabajo: { modelo, paso, vista, resaltar, nombres: ["firme", "chicote"], reservado: [ancho, alto] }
+   «reservado» es la esquina superior izquierda, en px, que la ficha tapa con el número del
+   paso o un sello: ahí no se ponen los nombres. */
 import { crearEscena } from "./recursos/escena.js";
 
 const stage = document.getElementById("stage");
@@ -39,10 +41,12 @@ const cuadro = () => new Promise((listo) => requestAnimationFrame(() => requestA
 window.dibujar = async function (trabajo) {
   await document.fonts.load('400 10px "IBM Plex Mono"');
   const usar = trabajo.nombres || [];
+  const [rw, rh] = trabajo.reservado || [0, 0];
   let escena = null;
   escena = crearEscena(stage, trabajo.modelo, {
     interactiva: false,
     movimientoReducido: true,
+    reservado: rw && rh ? [{ x0: 0, y0: 0, x1: rw, y1: rh }] : [],
     alRenderizar: () => escena && colocar(escena, usar),
     medidasNombres: () => Object.fromEntries(
       Object.entries(tags).map(([k, [el]]) => [k, usar.includes(k) ? medir(el) : { w: 0, h: 0 }])),

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>{{nombre}} · Libro de nudos del Grupo 431</title>
+<style>
+{{css}}
+</style>
+</head>
+<body>
+<section class="pagina izq">
+  <header class="cabeza">
+    <div>
+      <p class="marca">Libro de nudos · Grupo Guía y Scout 431</p>
+      <h1>{{nombre}}</h1>
+{{otros_nombres}}
+      <dl class="hechos">
+{{hechos}}
+      </dl>
+      <div class="intro">
+        <div>
+          <h2>Para qué sirve</h2>
+          <p>{{usos}}</p>
+        </div>
+        <div>
+          <h2>Materiales</h2>
+          <p>{{materiales}}</p>
+          <h2>Cómo leer las imágenes</h2>
+          <p>Ves la cuerda sobre la mesa, como la verías desde tu silla. En ámbar <span class="muestra"></span> está lo que mueves en cada paso.</p>
+        </div>
+      </div>
+    </div>
+    <div class="qr">
+{{qr}}
+      <p class="t">Míralo en 3D</p>
+      <p class="url">{{url_corta}}</p>
+    </div>
+  </header>
+  <div class="rejilla">
+{{pasos_izq}}
+  </div>
+  <footer class="pie"><span>Libro de nudos · Grupo Guía y Scout 431</span><span>{{nombre}} · 1 de 2</span></footer>
+</section>
+
+<section class="pagina der">
+  <div class="rejilla">
+{{pasos_der}}
+{{error}}
+{{terminado}}
+{{verificacion}}
+  </div>
+{{seguridad}}
+  <footer class="pie"><span>{{url_corta}}</span><span>{{nombre}} · 2 de 2</span></footer>
+</section>
+</body>
+</html>

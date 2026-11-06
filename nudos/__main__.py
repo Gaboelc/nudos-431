@@ -9,6 +9,7 @@ from pathlib import Path
 from . import BUILD, RAIZ
 from .construir import construir, guardar
 from .exportar import SitioError, construir_sitio
+from .ficha import FichaError, ficha, url_visor
 from .hoja import hoja
 from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pagina_prueba,
                        px)
@@ -30,6 +31,8 @@ def main(argv=None) -> int:
                    help="carpeta donde queda el sitio (por omisión build/sitio)")
     i = ordenes.add_parser("imprimir", help="imágenes de impresión a 300 ppp y página de prueba")
     i.add_argument("slug")
+    f = ordenes.add_parser("ficha", help="ficha impresa en PDF: pliego de dos páginas con QR")
+    f.add_argument("slug")
     args = p.parse_args(argv)
     try:
         if args.orden == "construir":
@@ -38,10 +41,25 @@ def main(argv=None) -> int:
             return _sitio(args.salida)
         if args.orden == "imprimir":
             return _imprimir(args.slug)
+        if args.orden == "ficha":
+            return _ficha(args.slug)
         return _hoja(args.slug, args.vista)
     except SpecError as e:
         print(f"Error en la especificación: {e}", file=sys.stderr)
         return 2
+
+
+def _ficha(slug: str) -> int:
+    modelo = construir(cargar(slug))
+    carpeta = BUILD / slug
+    try:
+        imprimir(modelo, carpeta / "impresion")
+        destino = ficha(modelo, carpeta)
+    except (ImpresionError, FichaError) as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Ficha en {destino.relative_to(RAIZ)} · QR a {url_visor(slug)}")
+    return 0
 
 
 def _imprimir(slug: str) -> int:

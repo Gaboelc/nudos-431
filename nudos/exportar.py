@@ -62,7 +62,7 @@ def datos_escena(slug: str, e: Encuadre | None, resultados: list[Resultado]) -> 
     }
 
 
-def _rellenar(plantilla: str, valores: dict[str, str]) -> str:
+def rellenar(plantilla: str, valores: dict[str, str]) -> str:
     def poner(m: re.Match) -> str:
         clave = m.group(1)
         if clave not in valores:
@@ -92,7 +92,7 @@ def pagina_nudo(modelo: Modelo) -> str:
         f'<span><span class="t">{esc(p.titulo)}</span><span class="d">{esc(p.texto)}</span></span></button></li>'
         for p in s.pasos)
     datos = json.dumps(datos_visor(modelo), ensure_ascii=False, separators=(",", ":"))
-    return _rellenar((SITIO / "plantilla.html").read_text(encoding="utf-8"), {
+    return rellenar((SITIO / "plantilla.html").read_text(encoding="utf-8"), {
         "titulo": esc(s.nombre),
         "descripcion": esc(f"{s.nombre}, paso a paso, con un modelo 3D de cada paso."),
         "url": esc(f"{URL_BASE}{s.slug}/"),
@@ -146,11 +146,11 @@ def construir_sitio(destino: Path, modelos: list[Modelo] | None = None,
     for m in modelos:
         (destino / m.spec.slug).mkdir()
         (destino / m.spec.slug / "index.html").write_text(pagina_nudo(m), encoding="utf-8")
-    (destino / "index.html").write_text(_rellenar((SITIO / "indice.html").read_text(encoding="utf-8"), {
+    (destino / "index.html").write_text(rellenar((SITIO / "indice.html").read_text(encoding="utf-8"), {
         "url": html.escape(URL_BASE), "nudos": _lista(modelos, ""),
     }), encoding="utf-8")
     base = urlparse(URL_BASE).path
-    (destino / "404.html").write_text(_rellenar((SITIO / "404.html").read_text(encoding="utf-8"), {
+    (destino / "404.html").write_text(rellenar((SITIO / "404.html").read_text(encoding="utf-8"), {
         "base": base, "nudos": _lista(modelos, base),
     }), encoding="utf-8")
     (destino / MARCA).write_text("", encoding="utf-8")

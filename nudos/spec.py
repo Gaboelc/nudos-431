@@ -18,8 +18,8 @@ _NOMBRE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _REF = re.compile(r"^([a-z0-9]+(?:-[a-z0-9]+)*)(?:\[([^\]]*)\])?$")
 DISTANCIA_MIN = 0.05   # entre puntos de control seguidos, en diámetros
 
-_CAMPOS = {"slug", "nombre", "familia", "abok", "encuadre", "segmentos", "pasos", "error",
-           "terminado"}
+_CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materiales",
+           "verificacion", "seguridad", "encuadre", "segmentos", "pasos", "error", "terminado"}
 _CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
 _CAMPOS_ERROR = {"paso", "invierte", "titulo", "texto", "encuadre"}
 _CAMPOS_TERMINADO = {"encuadre"}
@@ -71,6 +71,13 @@ class Spec:
     pasos: tuple[Paso, ...]
     error: Error | None = None
     terminado: Terminado = Terminado()
+    # Texto de la ficha. Es opcional al cargar, para poder modelar un nudo antes de
+    # escribirlo; la ficha no se genera si falta algo (nudos/ficha.py).
+    otros_nombres: tuple[str, ...] = ()
+    usos: str | None = None              # para qué sirve
+    materiales: str | None = None
+    verificacion: tuple[str, ...] = ()   # criterios que se pueden observar en el nudo
+    seguridad: str | None = None         # solo cuando aplica
 
 
 def cargar(slug_o_ruta: str | Path) -> Spec:
@@ -117,7 +124,28 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         pasos=pasos,
         error=_error(datos.get("error"), pasos, falla),
         terminado=_terminado(datos.get("terminado"), falla),
+        otros_nombres=_lista_textos(datos, "otros_nombres", falla),
+        usos=_texto_opcional(datos, "usos", falla),
+        materiales=_texto_opcional(datos, "materiales", falla),
+        verificacion=_lista_textos(datos, "verificacion", falla),
+        seguridad=_texto_opcional(datos, "seguridad", falla),
     )
+
+
+def _texto_opcional(datos: dict, clave: str, falla) -> str | None:
+    if datos.get(clave) is None:
+        return None
+    return _texto(datos, clave, falla)
+
+
+def _lista_textos(datos: dict, clave: str, falla) -> tuple[str, ...]:
+    valor = datos.get(clave)
+    if valor is None:
+        return ()
+    if (not isinstance(valor, list) or not valor
+            or not all(isinstance(v, str) and v.strip() for v in valor)):
+        raise falla(f"«{clave}» es una lista de textos")
+    return tuple(" ".join(v.split()) for v in valor)
 
 
 def _error(datos, pasos: tuple[Paso, ...], falla) -> Error | None:

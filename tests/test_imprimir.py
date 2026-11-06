@@ -4,14 +4,14 @@ import hashlib
 import pytest
 from PIL import Image
 
-from nudos.imprimir import (CELDA_MM, PPP, ImpresionError, _chrome, dibujar, espejo,
+from nudos.imprimir import (CELDA_MM, PPP, ImpresionError, chrome, dibujar, espejo,
                             imagenes, px)
 from nudos.spec import Encuadre
 
 
 def test_tamano_impreso_a_300_ppp():
     assert PPP == 300
-    assert (px(85), px(64)) == (1004, 756)
+    assert (px(58), px(64)) == (685, 756)
 
 
 def test_espejo_del_encuadre():
@@ -36,7 +36,7 @@ def test_el_error_y_el_paso_correcto_comparten_encuadre(modelo_as_de_guia):
 @pytest.fixture(scope="module")
 def con_chrome():
     try:
-        with _chrome():
+        with chrome():
             pass
     except ImpresionError as e:
         pytest.skip(str(e))

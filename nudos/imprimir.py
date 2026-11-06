@@ -33,10 +33,13 @@ from .exportar import ESCENA, SITIO, datos_escena
 from .spec import Encuadre
 
 PPP = 300
-# Tamaño impreso de cada imagen. Es provisional: la ficha (T4) fija el definitivo.
-CELDA_MM = (85.0, 64.0)
+# Tamaño impreso de cada imagen: una celda de la rejilla de tres columnas de la ficha
+# (libro/ficha.css). Si cambia, cambia también allí.
+CELDA_MM = (58.0, 64.0)
 VISTA_PASOS = "3d"         # la vista de quien ata sentado a la mesa
 VISTA_TERMINADO = "arriba"
+ESQUINA_PASO = (11.0, 11.0)    # el número del paso (libro/ficha.css, .num)
+ESQUINA_SELLO = (26.0, 7.0)    # «Bien», «Así no», «Por delante», «Por detrás» (.sello)
 PAGINA = RAIZ / "render" / "impresion.html"
 GUION = RAIZ / "render" / "impresion.js"
 ARGUMENTOS_CHROME = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader",
@@ -56,6 +59,9 @@ class Imagen:
     vista: str
     resaltar: bool
     nombres: tuple[str, ...] = field(default=("firme", "chicote"))
+    # Esquina superior izquierda (ancho, alto en mm) que la ficha tapa con el número del
+    # paso o con un sello. Ahí no se ponen los nombres.
+    reservado_mm: tuple[float, float] = (0.0, 0.0)
 
 
 def px(mm: float) -> int:
@@ -71,20 +77,25 @@ def imagenes(modelo: Modelo) -> list[Imagen]:
     """Las imágenes de la ficha de un nudo."""
     s = modelo.spec
     pasos = datos_escena(s.slug, s.encuadre, modelo.pasos)
-    out = [Imagen(f"paso-{r.n}", f"Paso {r.n}", pasos, i + 1, VISTA_PASOS, True)
+    out = [Imagen(f"paso-{r.n}", f"Paso {r.n}", pasos, i + 1, VISTA_PASOS, True,
+                  reservado_mm=ESQUINA_PASO)
            for i, r in enumerate(modelo.pasos)]
     if modelo.error is not None:
         e = s.error
         correcto = next(r for r in modelo.pasos if r.n == e.paso)
         par = datos_escena(s.slug, e.encuadre or s.encuadre, [correcto, modelo.error])
-        out.append(Imagen("error-correcto", f"Paso {e.paso}, bien", par, 1, VISTA_PASOS, True, ("firme",)))
-        out.append(Imagen("error", f"Error: {e.titulo}", par, 2, VISTA_PASOS, True, ("firme",)))
+        out.append(Imagen("error-correcto", f"Paso {e.paso}, bien", par, 1, VISTA_PASOS, True,
+                          ("firme",), ESQUINA_SELLO))
+        out.append(Imagen("error", f"Error: {e.titulo}", par, 2, VISTA_PASOS, True,
+                          ("firme",), ESQUINA_SELLO))
     enc = s.terminado.encuadre or s.encuadre
     out.append(Imagen("terminado-frente", "Terminado, por delante",
-                      datos_escena(s.slug, enc, [modelo.pasos[-1]]), 1, VISTA_TERMINADO, False))
+                      datos_escena(s.slug, enc, [modelo.pasos[-1]]), 1, VISTA_TERMINADO, False,
+                      reservado_mm=ESQUINA_SELLO))
     if modelo.reverso is not None:
         out.append(Imagen("terminado-reverso", "Terminado, por detrás",
-                          datos_escena(s.slug, espejo(enc), [modelo.reverso]), 1, VISTA_TERMINADO, False))
+                          datos_escena(s.slug, espejo(enc), [modelo.reverso]), 1, VISTA_TERMINADO, False,
+                          reservado_mm=ESQUINA_SELLO))
     return out
 
 
@@ -102,7 +113,7 @@ def dibujar(lista: list[Imagen], destino: Path) -> list[Path]:
     destino.mkdir(parents=True, exist_ok=True)
     ancho, alto = px(CELDA_MM[0]), px(CELDA_MM[1])
     rutas = []
-    with _servidor() as base, _chrome() as navegador:
+    with _servidor() as base, chrome() as navegador:
         for img in lista:
             png = _dibujar(navegador, base, img, ancho, alto)
             ruta = destino / f"{img.nombre}.png"
@@ -143,7 +154,7 @@ def _servidor():
 
 
 @contextmanager
-def _chrome():
+def chrome():
     """Chrome sin interfaz. Usa NUDOS_CHROME si está definida; si no, el Chrome instalado
     en la computadora y, como último recurso, el navegador que trae Playwright."""
     try:
@@ -191,6 +202,7 @@ def _dibujar(navegador, base: str, img: Imagen, ancho: int, alto: int) -> bytes:
         pagina.evaluate("t => window.dibujar(t)", {
             "modelo": img.escena, "paso": img.indice, "vista": img.vista,
             "resaltar": img.resaltar, "nombres": list(img.nombres),
+            "reservado": [px(img.reservado_mm[0]), px(img.reservado_mm[1])],
         })
         if problemas:
             raise ImpresionError(f"{img.nombre}: el navegador dio errores:\n  " + "\n  ".join(problemas))
@@ -259,7 +271,7 @@ figcaption {{ font-size: 8pt; margin-top: 1mm; }}
     origen.parent.mkdir(parents=True, exist_ok=True)
     origen.write_text(documento.replace('src="', 'src="../'), encoding="utf-8")
     destino = carpeta / "prueba.pdf"
-    with _chrome() as navegador:
+    with chrome() as navegador:
         pagina = navegador.new_page()
         pagina.goto(origen.as_uri(), wait_until="load")
         pagina.pdf(path=str(destino), prefer_css_page_size=True, print_background=True)

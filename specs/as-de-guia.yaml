@@ -5,6 +5,29 @@ nombre: As de guía
 familia: Gazas
 abok: 1010
 
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Forma una gaza fija en el extremo de la cuerda: no se cierra ni se corre cuando
+  tiras del firme. Sirve para rodear un poste o un árbol, pasar la cuerda por una
+  argolla o colgar algo de una rama. Aunque haya aguantado mucha carga, se desata
+  con facilidad.
+materiales: >-
+  Una cuerda de unos 2 m. Para aprender, usa una de 6 a 10 mm de grosor que no sea
+  rígida.
+verificacion:
+  - La gaza grande quedó del tamaño que calculaste y no se cierra cuando tiras del firme.
+  - Por delante, el chicote baja por la gaza pequeña junto al tramo que subió.
+  - Por detrás, el chicote rodea al firme como un collar.
+  - El chicote termina dentro de la gaza grande, no afuera.
+  - Te sobra chicote, por lo menos el largo de tu mano.
+seguridad: >-
+  En rescate, este nudo se usa para hacer una gaza alrededor del pecho de una
+  persona. En este libro eso es solo conocimiento: en las actividades del grupo no
+  lo uses para sostener, subir ni bajar a nadie. Esa práctica se hace únicamente con
+  instructor y equipo certificados, y en una emergencia real primero llamas al
+  9-1-1. Además, si la cuerda queda sin carga o es rígida o resbalosa, el nudo se
+  puede aflojar: revísalo cada vez antes de usarlo.
+
 encuadre:
   x: [-11.4, 9.4]
   y: [-15.6, 12.4]

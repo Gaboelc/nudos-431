@@ -16,11 +16,12 @@ python -m pip install -e .[dev]
 python -m nudos construir as-de-guia
 python -m nudos hoja as-de-guia
 python -m nudos imprimir as-de-guia
+python -m nudos ficha as-de-guia
 python -m nudos sitio
 python -m pytest
 ```
 
-`imprimir` necesita Google Chrome instalado (o la ruta de otro Chrome en la variable `NUDOS_CHROME`). Deja en `build/<slug>/impresion/` las imágenes a 300 ppp y `prueba.pdf`, una página de prueba en color y en escala de grises.
+`imprimir` necesita Google Chrome instalado (o la ruta de otro Chrome en la variable `NUDOS_CHROME`). Deja en `build/<slug>/impresion/` las imágenes a 300 ppp y `prueba.pdf`, una página de prueba en color y en escala de grises. `ficha` genera esas imágenes y arma con ellas `build/<slug>/ficha.pdf`, el pliego de dos páginas con QR al visor.
 
 Para publicar el sitio, desde `main` ya subido: `scripts/publicar.sh`. Sube el sitio a la rama `gh-pages`, que es la que sirve GitHub Pages.
 
@@ -31,6 +32,8 @@ Para publicar el sitio, desde `main` ya subido: `scripts/publicar.sh`. Sube el s
 | `specs/` | Una especificación por nudo (formato en `docs/formato-spec.md`) |
 | `nudos/` | Código |
 | `render/` | Escena 3D compartida por el visor y las imágenes de impresión |
+| `libro/` | Plantilla de la ficha impresa |
+| `config/` | Términos propios de cada sección, que las fichas no usan |
 | `sitio/` | Plantillas y página del visor; en `sitio/vendor/`, three.js y las fuentes |
 | `scripts/` | `publicar.sh` |
 | `publicados.txt` | Nudos con QR impreso: su dirección no cambia nunca |
