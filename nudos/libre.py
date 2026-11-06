@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.spatial import cKDTree
 
-from .cruces import (Cruce, emparejar, encimas, encontrar_cruces, numerada,
+from .cruces import (Cruce, emparejar, encima, encimas, encontrar_cruces, numerada,
                      secuencia_obtenida)
 from .spec import Paso
 
@@ -62,12 +62,31 @@ def construir_paso(paso: Paso) -> Resultado:
         raise TrazadoError(
             f"Paso {paso.n}: los cruces del trazado aparecen en otro orden que en la secuencia.")
     X = elevar(X2, h, cruces, encimas(cruces, paso.secuencia))
-    Xr = relajar(X, h)
+    resaltado = None
+    if paso.resaltar is not None:
+        a, b = paso.resaltar
+        resaltado = (float(ctrl_s[a]), float(ctrl_s[b]))
+    return _resultado(paso.n, relajar(X, h), h, paso.secuencia, resaltado)
 
+
+def voltear(r: Resultado, secuencia) -> Resultado:
+    """El paso visto por detrás: la cuerda se voltea sobre el eje y (como una página) y
+    vuelve a asentarse en la mesa. `secuencia` es la declarada del paso; al voltear,
+    cada cruce queda al revés, así que se espera esa misma secuencia invertida."""
+    X = r.puntos.copy()
+    X[:, 0] *= -1
+    X[:, 2] = X[:, 2].max() + R - X[:, 2]
+    X[:3, 2] = R   # los puntos fijos del firme siguen sobre la mesa
+    invertida = tuple(t[:-1] + ("U" if encima(t) else "O") for t in secuencia)
+    return _resultado(r.n, relajar(X, r.h), r.h, invertida, None)
+
+
+def _resultado(n: int, Xr, h: float, secuencia, resaltado) -> Resultado:
+    """Mide la cuerda ya relajada y la compara con la secuencia declarada."""
     cruces_r = encontrar_cruces(Xr, h)
     obtenida = secuencia_obtenida(Xr, h, cruces_r)
-    esperada = numerada(paso.secuencia)
-    etiquetas = emparejar(cruces_r, paso.secuencia) if obtenida == esperada else None
+    esperada = numerada(secuencia)
+    etiquetas = emparejar(cruces_r, secuencia) if obtenida == esperada else None
     largos = np.linalg.norm(np.diff(Xr, axis=0), axis=1)
     radio, donde = curvatura_min(Xr, h, ventana=1)
     medidas = {
@@ -77,12 +96,8 @@ def construir_paso(paso: Paso) -> Resultado:
         "estiramiento_max": float(np.abs(largos / h - 1).max()),
         "altura_max": float(Xr[:, 2].max()),
     }
-    resaltado = None
-    if paso.resaltar is not None:
-        a, b = paso.resaltar
-        resaltado = (float(ctrl_s[a]), float(ctrl_s[b]))
     return Resultado(
-        n=paso.n,
+        n=n,
         puntos=Xr,
         h=h,
         resaltado=resaltado,
@@ -90,7 +105,7 @@ def construir_paso(paso: Paso) -> Resultado:
         secuencia=obtenida,
         esperada=esperada,
         medidas=medidas,
-        fallas=_fallas(paso.n, obtenida, esperada, medidas, donde),
+        fallas=_fallas(n, obtenida, esperada, medidas, donde),
     )
 
 

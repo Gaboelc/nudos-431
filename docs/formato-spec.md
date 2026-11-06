@@ -21,6 +21,8 @@ El ejemplo completo es `specs/as-de-guia.yaml`.
 | `encuadre` | no | Zona de la mesa que se muestra, como `x: [mín, máx]` e `y: [mín, máx]`. Si falta, se calcula con todos los pasos. |
 | `segmentos` | sí | Tramos de cuerda con nombre. Cada uno es una lista de puntos `[x, y]`. |
 | `pasos` | sí | Lista de pasos en orden. |
+| `error` | no | El error más común (ver abajo). La ficha lo necesita, así que todo nudo publicado lo lleva. |
+| `terminado` | no | Cómo se muestra el nudo terminado (ver abajo). |
 
 Los campos desconocidos producen un error, así que un error de tipeo se detecta al cargar.
 
@@ -58,6 +60,28 @@ Reglas:
 - Un cruce no cambia de encima a debajo entre pasos. Si cambia, es otro cruce y lleva otra etiqueta.
 - El trazado tiene que formar exactamente esos cruces, en ese orden.
 
+## Error común
+
+Es un paso con algunos cruces al revés: el mismo trazado, pero con otra secuencia. En la ficha va junto al mismo paso bien hecho y con el mismo encuadre. Como no es un paso del nudo, es el único lugar donde un cruce cambia de encima a debajo.
+
+| Campo | Qué es |
+|---|---|
+| `paso` | Número del paso que se muestra con el error. |
+| `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
+| `titulo` | Nombre corto del error. |
+| `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
+| `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
+
+Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el resaltado debe empezar o terminar fuera del cruce invertido: así un tramo llega azul y el otro resaltado, y se ve cuál va encima.
+
+## Nudo terminado
+
+El último paso se muestra por delante y por detrás. La vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés.
+
+| Campo | Qué es |
+|---|---|
+| `encuadre` | Opcional. Zona que se muestra del nudo terminado, por delante. Por detrás se usa la misma zona volteada. |
+
 ## Qué se comprueba al construir
 
 1. La especificación cumple este formato.
@@ -68,6 +92,9 @@ Reglas:
    - el radio de curvatura no baja de 0,9 diámetros;
    - la cuerda no se estira más de 2 %.
 4. Un cruce con la misma etiqueta no aparece a más de 2,5 diámetros de donde estaba en el paso anterior. Es una heurística para detectar una etiqueta reutilizada para otro cruce.
+5. El error común y el nudo terminado por detrás se construyen como un paso más y cumplen los mismos límites. Además:
+   - la secuencia del error, después de relajar, difiere de la del paso correcto exactamente en los cruces de `invierte`;
+   - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés.
 
 **Lo que no se comprueba es si la secuencia corresponde al nudo correcto.** Un cruce mal leído que se repite igual en todos los pasos pasa todas las pruebas. Para eso está el filtro 1: atar cada paso con cuerda real antes de publicar.
 
@@ -75,5 +102,4 @@ Reglas:
 
 - Varias cuerdas con grosor y color por rol (T6).
 - Objetos anfitriones como poste, argolla o estaca, y cruces sobre su superficie (T5).
-- Error común y vistas finales (T3).
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.

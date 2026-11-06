@@ -10,7 +10,8 @@ from urllib.parse import urlparse
 
 from . import RAIZ, SPECS, URL_BASE
 from .construir import Modelo, construir
-from .spec import cargar
+from .libre import Resultado
+from .spec import Encuadre, cargar
 
 SITIO = RAIZ / "sitio"
 ESCENA = RAIZ / "render" / "escena.js"
@@ -37,9 +38,14 @@ def leer_publicados(ruta: Path = PUBLICADOS) -> list[str]:
 
 def datos_visor(modelo: Modelo) -> dict:
     """Lo que necesita el visor: la cuerda de cada paso y el tramo resaltado."""
-    e = modelo.spec.encuadre
+    return datos_escena(modelo.spec.slug, modelo.spec.encuadre, modelo.pasos)
+
+
+def datos_escena(slug: str, e: Encuadre | None, resultados: list[Resultado]) -> dict:
+    """Lo que necesita render/escena.js para dibujar estos resultados con este encuadre.
+    El encuadre se ajusta a la cuerda de todos los resultados juntos."""
     pasos = []
-    for r in modelo.pasos:
+    for r in resultados:
         largo = r.h * (len(r.puntos) - 1)
         hl = None
         if r.resaltado is not None:
@@ -50,7 +56,7 @@ def datos_visor(modelo: Modelo) -> dict:
         p = [round(float(v), 3) for i in idx for v in r.puntos[i]]
         pasos.append({"n": r.n, "hl": hl, "p": p})
     return {
-        "slug": modelo.spec.slug,
+        "slug": slug,
         "encuadre": None if e is None else {"x": list(e.x), "y": list(e.y)},
         "pasos": pasos,
     }

@@ -18,8 +18,11 @@ _NOMBRE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _REF = re.compile(r"^([a-z0-9]+(?:-[a-z0-9]+)*)(?:\[([^\]]*)\])?$")
 DISTANCIA_MIN = 0.05   # entre puntos de control seguidos, en diámetros
 
-_CAMPOS = {"slug", "nombre", "familia", "abok", "encuadre", "segmentos", "pasos"}
+_CAMPOS = {"slug", "nombre", "familia", "abok", "encuadre", "segmentos", "pasos", "error",
+           "terminado"}
 _CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
+_CAMPOS_ERROR = {"paso", "invierte", "titulo", "texto", "encuadre"}
+_CAMPOS_TERMINADO = {"encuadre"}
 
 
 class SpecError(ValueError):
@@ -43,6 +46,22 @@ class Encuadre:
 
 
 @dataclass(frozen=True)
+class Error:
+    """El error más común: un paso con algunos cruces invertidos."""
+    paso: int
+    invierte: tuple[str, ...]          # etiquetas de los cruces que quedan al revés
+    titulo: str
+    texto: str
+    encuadre: Encuadre | None          # zona que se muestra del error y del paso correcto
+
+
+@dataclass(frozen=True)
+class Terminado:
+    """Cómo se muestra el nudo terminado (el último paso), por delante y por detrás."""
+    encuadre: Encuadre | None = None
+
+
+@dataclass(frozen=True)
 class Spec:
     slug: str
     nombre: str
@@ -50,6 +69,8 @@ class Spec:
     abok: int | None
     encuadre: Encuadre | None
     pasos: tuple[Paso, ...]
+    error: Error | None = None
+    terminado: Terminado = Terminado()
 
 
 def cargar(slug_o_ruta: str | Path) -> Spec:
@@ -86,14 +107,62 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
     pasos = datos.get("pasos")
     if not isinstance(pasos, list) or not pasos:
         raise falla("falta la lista de pasos")
+    pasos = tuple(_paso(i + 1, p, segmentos, falla) for i, p in enumerate(pasos))
     return Spec(
         slug=slug,
         nombre=_texto(datos, "nombre", falla),
         familia=_texto(datos, "familia", falla),
         abok=abok,
         encuadre=_encuadre(datos.get("encuadre"), falla),
-        pasos=tuple(_paso(i + 1, p, segmentos, falla) for i, p in enumerate(pasos)),
+        pasos=pasos,
+        error=_error(datos.get("error"), pasos, falla),
+        terminado=_terminado(datos.get("terminado"), falla),
     )
+
+
+def _error(datos, pasos: tuple[Paso, ...], falla) -> Error | None:
+    if datos is None:
+        return None
+
+    def ef(msg: str) -> SpecError:
+        return falla(f"error: {msg}")
+
+    if not isinstance(datos, dict):
+        raise ef("debe ser un mapa")
+    sobran = set(datos) - _CAMPOS_ERROR
+    if sobran:
+        raise ef(f"campos desconocidos: {', '.join(sorted(sobran))}")
+    n = datos.get("paso")
+    if not isinstance(n, int) or isinstance(n, bool) or not 1 <= n <= len(pasos):
+        raise ef(f"«paso» es el número del paso que se muestra con el error, de 1 a {len(pasos)}")
+    invierte = datos.get("invierte")
+    if not isinstance(invierte, list) or not invierte:
+        raise ef("«invierte» es la lista de cruces que quedan al revés, por ejemplo [1]")
+    etiquetas = tuple(str(e) for e in invierte)
+    if len(set(etiquetas)) != len(etiquetas):
+        raise ef("un cruce aparece dos veces en «invierte»")
+    del_paso = {t[:-1] for t in pasos[n - 1].secuencia}
+    faltan = [e for e in etiquetas if e not in del_paso]
+    if faltan:
+        raise ef(f"el paso {n} no tiene el cruce {', '.join(faltan)}")
+    return Error(
+        paso=n,
+        invierte=etiquetas,
+        titulo=_texto(datos, "titulo", ef),
+        texto=_texto(datos, "texto", ef),
+        encuadre=_encuadre(datos.get("encuadre"), ef),
+    )
+
+
+def _terminado(datos, falla) -> Terminado:
+    if datos is None:
+        return Terminado()
+    if not isinstance(datos, dict):
+        raise falla("terminado: debe ser un mapa")
+    sobran = set(datos) - _CAMPOS_TERMINADO
+    if sobran:
+        raise falla(f"terminado: campos desconocidos: {', '.join(sorted(sobran))}")
+    return Terminado(encuadre=_encuadre(datos.get("encuadre"), lambda m: falla(f"terminado: {m}")))
 
 
 def _texto(datos: dict, clave: str, falla) -> str:

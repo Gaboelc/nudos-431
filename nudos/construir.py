@@ -7,6 +7,7 @@ from pathlib import Path
 
 from . import BUILD
 from .cruces import consistencia
+from .errores import construir_error, construir_reverso
 from .libre import Resultado, TrazadoError, construir_paso
 from .spec import Spec
 
@@ -20,6 +21,8 @@ class Modelo:
     spec: Spec
     pasos: list[Resultado]
     fallas: list[str]
+    error: Resultado | None = None     # el error común, si la especificación lo declara
+    reverso: Resultado | None = None   # el último paso volteado: el nudo terminado por detrás
 
 
 def construir(spec: Spec) -> Modelo:
@@ -34,7 +37,15 @@ def construir(spec: Spec) -> Modelo:
         resultados.append(r)
         fallas.extend(r.fallas)
     fallas.extend(cruces_que_saltan(resultados))
-    return Modelo(spec, resultados, fallas)
+    por_n = {r.n: r for r in resultados}
+    error, f_error = construir_error(spec, por_n.get(spec.error.paso) if spec.error else None)
+    fallas.extend(f_error)
+    reverso = None
+    final = por_n.get(len(spec.pasos))
+    if final is not None:
+        reverso, f_reverso = construir_reverso(spec, final)
+        fallas.extend(f_reverso)
+    return Modelo(spec, resultados, fallas, error, reverso)
 
 
 def cruces_que_saltan(resultados: list[Resultado]) -> list[str]:
@@ -66,23 +77,25 @@ def guardar(modelo: Modelo) -> Path:
         "encuadre": None if spec.encuadre is None else
         {"x": list(spec.encuadre.x), "y": list(spec.encuadre.y)},
         "fallas": modelo.fallas,
-        "pasos": [
-            {
-                "n": r.n,
-                "titulo": titulos[r.n][0],
-                "texto": titulos[r.n][1],
-                "h": round(r.h, 6),
-                "resaltado": None if r.resaltado is None else [round(v, 4) for v in r.resaltado],
-                "cruces": {et: [round(x, 3), round(y, 3)] for et, (x, y) in r.cruces.items()},
-                "secuencia": " ".join(r.secuencia),
-                "medidas": {k: round(v, 4) for k, v in r.medidas.items()},
-                "puntos": [[round(float(v), 4) for v in p] for p in r.puntos],
-            }
-            for r in modelo.pasos
-        ],
+        "pasos": [{"titulo": titulos[r.n][0], "texto": titulos[r.n][1], **_resultado_json(r)}
+                  for r in modelo.pasos],
+        "error": None if modelo.error is None else _resultado_json(modelo.error),
+        "reverso": None if modelo.reverso is None else _resultado_json(modelo.reverso),
     }
     destino = BUILD / spec.slug / "modelo.json"
     destino.parent.mkdir(parents=True, exist_ok=True)
     with open(destino, "w", encoding="utf-8") as f:
         json.dump(datos, f, ensure_ascii=False, separators=(",", ":"))
     return destino
+
+
+def _resultado_json(r: Resultado) -> dict:
+    return {
+        "n": r.n,
+        "h": round(r.h, 6),
+        "resaltado": None if r.resaltado is None else [round(v, 4) for v in r.resaltado],
+        "cruces": {et: [round(x, 3), round(y, 3)] for et, (x, y) in r.cruces.items()},
+        "secuencia": " ".join(r.secuencia),
+        "medidas": {k: round(v, 4) for k, v in r.medidas.items()},
+        "puntos": [[round(float(v), 4) for v in p] for p in r.puntos],
+    }

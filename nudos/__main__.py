@@ -10,6 +10,8 @@ from . import BUILD, RAIZ
 from .construir import construir, guardar
 from .exportar import SitioError, construir_sitio
 from .hoja import hoja
+from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pagina_prueba,
+                       px)
 from .libre import LIMITES
 from .spec import SpecError, cargar
 
@@ -26,16 +28,38 @@ def main(argv=None) -> int:
     s = ordenes.add_parser("sitio", help="construye el sitio con el visor de cada nudo")
     s.add_argument("--salida", type=Path, default=BUILD / "sitio",
                    help="carpeta donde queda el sitio (por omisión build/sitio)")
+    i = ordenes.add_parser("imprimir", help="imágenes de impresión a 300 ppp y página de prueba")
+    i.add_argument("slug")
     args = p.parse_args(argv)
     try:
         if args.orden == "construir":
             return _construir(args.slug)
         if args.orden == "sitio":
             return _sitio(args.salida)
+        if args.orden == "imprimir":
+            return _imprimir(args.slug)
         return _hoja(args.slug, args.vista)
     except SpecError as e:
         print(f"Error en la especificación: {e}", file=sys.stderr)
         return 2
+
+
+def _imprimir(slug: str) -> int:
+    modelo = construir(cargar(slug))
+    carpeta = BUILD / slug / "impresion"
+    try:
+        rutas = imprimir(modelo, carpeta, extra=extra_prueba(modelo))
+        prueba = pagina_prueba(modelo, carpeta)
+    except ImpresionError as e:
+        print(e, file=sys.stderr)
+        return 1
+    ancho, alto = px(CELDA_MM[0]), px(CELDA_MM[1])
+    print(f"{len(rutas)} imágenes de {ancho} × {alto} px ({CELDA_MM[0]:g} × {CELDA_MM[1]:g} mm "
+          f"a {PPP} ppp) en {carpeta.relative_to(RAIZ)}")
+    if modelo.error is None:
+        print("Esta especificación no declara el error común.")
+    print(f"Página de prueba: {prueba.relative_to(RAIZ)}")
+    return 0
 
 
 def _sitio(salida: Path) -> int:

@@ -1,6 +1,6 @@
 # Prototipo: as de guía
 
-Código del prototipo que validó el enfoque. `knot.py` y `render.py` ya se portaron al paquete `nudos/` en T1. `viewer.template.html`, `build_viewer.py` y `shoot.py` se portan en T2 y T3. Cuando T3 esté terminada, esta carpeta se borra.
+Código del prototipo que validó el enfoque. Ya está todo portado: `knot.py` y `render.py` al paquete `nudos/` en T1, `viewer.template.html` y `build_viewer.py` a `render/` y `sitio/` en T2, y `shoot.py` a `nudos/imprimir.py` en T3. Cuando Gabriel apruebe la prueba impresa de T3, esta carpeta se borra.
 
 ## Archivos
 
