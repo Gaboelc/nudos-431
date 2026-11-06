@@ -214,15 +214,48 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       return m;
     };
     grupo.add(tapa(0, matAzul), tapa(1, matPunta));
-    // Nombres: «Firme» al lado de donde la cuerda entra al encuadre, «Chicote» más allá del extremo.
+    // Nombres: «Firme» junto a donde la cuerda entra al encuadre y «Chicote» junto al extremo.
+    // Cada nombre va en espacio libre y una línea fina lo une con su punto. Se prueban
+    // lugares de cerca hacia afuera y gana el primero que esté despejado y más cerca de su
+    // propio tramo que de otro; si no hay, el primero despejado; si tampoco, el más despejado.
+    const DESPEJE = 1.6;   // medio nombre más el radio de la cuerda, en diámetros
+    const arco = [0];
+    for (let i = 1; i < pts.length; i++) arco.push(arco[i - 1] + pts[i].distanceTo(pts[i - 1]));
+    const cercano = (c) => {
+      let m = Infinity, j = 0;
+      pts.forEach((p, i) => { const d = (p.x - c.x) ** 2 + (p.y - c.y) ** 2; if (d < m) { m = d; j = i; } });
+      return { d: Math.sqrt(m), s: arco[j] };
+    };
+    const elegir = (cands, s0) => {
+      let despejado = null, mejor = null, mejorD = -1;
+      for (const c of cands) {
+        const q = cercano(c);
+        if (q.d >= DESPEJE && Math.abs(q.s - s0) <= 3.5) return c;
+        if (q.d >= DESPEJE && !despejado) despejado = c;
+        if (q.d > mejorD) { mejor = c; mejorD = q.d; }
+      }
+      return despejado || mejor;
+    };
+    const plano = (v) => { v.setZ(0); return v.lengthSq() > 1e-12 ? v.normalize() : v.set(1, 0, 0); };
+    const giro = (v, g) => {
+      const a = (g * Math.PI) / 180;
+      return new THREE.Vector3(v.x * Math.cos(a) - v.y * Math.sin(a), v.x * Math.sin(a) + v.y * Math.cos(a), 0);
+    };
+    const alrededor = (p, dir, radios, angulos) =>
+      radios.flatMap((r) => angulos.map((g) => p.clone().addScaledVector(giro(dir, g), r)));
+    const nombre = (punto, cands, s0) => {
+      const etiqueta = elegir(cands, s0);
+      etiqueta.z = punto.z + 0.6;
+      return { punto: punto.clone(), etiqueta };
+    };
     let k = 0;
     while (k < pts.length - 2 && !dentro(pts[k])) k++;
-    const t = pts[k + 1].clone().sub(pts[k]).setZ(0).normalize();
-    const firme = pts[k].clone().add(new THREE.Vector3(-t.y, t.x, 0).multiplyScalar(1.9));
-    firme.z = pts[k].z + 0.6;
-    const fin = curva.getPointAt(1), tanFin = curva.getTangentAt(1).normalize();
-    const chicote = fin.clone().addScaledVector(tanFin, 2.2).add(new THREE.Vector3(0, 0, 0.6));
-    return { grupo, L, firme, chicote };
+    const t = plano(pts[k + 1].clone().sub(pts[k]));
+    const firme = nombre(pts[k], alrededor(pts[k], t, [1.9, 2.8, 3.8], [90, -90]), arco[k]);
+    const fin = curva.getPointAt(1), tanFin = plano(curva.getTangentAt(1));
+    const chicote = nombre(fin, alrededor(fin, tanFin, [2.2, 3.2, 4.4], [0, 45, -45, 90, -90, 135, -135, 180]),
+      arco[arco.length - 1]);
+    return { grupo, L, nombres: { firme, chicote } };
   }
 
   function mostrarPaso(n) {
@@ -301,8 +334,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     return { x: ((tmp.x + 1) / 2) * w, y: ((1 - tmp.y) / 2) * h, visible };
   }
 
+  /* Para cada nombre: el punto de la cuerda que nombra y dónde va la etiqueta. */
   function anclas() {
-    return activo ? { firme: activo.firme, chicote: activo.chicote } : null;
+    return activo ? activo.nombres : null;
   }
 
   function renderizar() {

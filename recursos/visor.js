@@ -10,6 +10,8 @@ const stage = document.getElementById("stage");
 const msg = document.getElementById("stageMsg");
 const tagFirme = document.getElementById("tagFirme");
 const tagChicote = document.getElementById("tagChicote");
+const lineFirme = document.getElementById("lineFirme");
+const lineChicote = document.getElementById("lineChicote");
 const countEl = document.getElementById("count");
 const prevBtn = document.getElementById("prev");
 const nextBtn = document.getElementById("next");
@@ -55,18 +57,21 @@ function setView(v) {
   if (escena) escena.vista(v);
 }
 
-function placeTag(el, p) {
-  if (!optTags.checked || !p) { el.hidden = true; return; }
-  const q = escena.proyectar(p);
-  if (!q.visible) { el.hidden = true; return; }
+function placeTag(el, linea, a) {
+  const q = optTags.checked && a ? escena.proyectar(a.etiqueta) : null;
+  if (!q || !q.visible) { el.hidden = true; linea.setAttribute("visibility", "hidden"); return; }
+  const p = escena.proyectar(a.punto);
   el.hidden = false;
   el.style.transform = `translate(${q.x}px, ${q.y}px) translate(-50%, -50%)`;
+  linea.setAttribute("x1", p.x); linea.setAttribute("y1", p.y);
+  linea.setAttribute("x2", q.x); linea.setAttribute("y2", q.y);
+  linea.setAttribute("visibility", "visible");
 }
 
 function placeTags() {
   const a = escena && escena.anclas();
-  placeTag(tagFirme, a && a.firme);
-  placeTag(tagChicote, a && a.chicote);
+  placeTag(tagFirme, lineFirme, a && a.firme);
+  placeTag(tagChicote, lineChicote, a && a.chicote);
 }
 
 function themeShadow() {
