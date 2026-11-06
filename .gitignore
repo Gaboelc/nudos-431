@@ -1,0 +1,11 @@
+# Fuentes de referencia: entrada, nunca contenido publicado
+entradas/
+# Hojas de revisión privadas
+revision/
+# Archivos generados
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
