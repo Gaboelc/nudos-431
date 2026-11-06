@@ -97,8 +97,18 @@ optTags.addEventListener("change", () => escena && escena.pedirCuadro());
 current = stepFromHash();
 syncUi();
 
+/* Tamaño de cada etiqueta en px. Si está oculta, se muestra un instante sin pintarla para medirla. */
+function medir(el) {
+  const oculto = el.hidden;
+  if (oculto) { el.style.visibility = "hidden"; el.hidden = false; }
+  const m = { w: el.offsetWidth, h: el.offsetHeight };
+  if (oculto) { el.hidden = true; el.style.visibility = ""; }
+  return m;
+}
+const medidasNombres = () => ({ firme: medir(tagFirme), chicote: medir(tagChicote) });
+
 try {
-  escena = crearEscena(stage, datos, { movimientoReducido, alRenderizar: placeTags });
+  escena = crearEscena(stage, datos, { movimientoReducido, alRenderizar: placeTags, medidasNombres });
 } catch (e) {
   msg.textContent = "Este visor necesita WebGL. Ábrelo en un navegador con aceleración gráfica; los pasos escritos siguen abajo.";
 }
@@ -112,6 +122,8 @@ if (escena) {
   escena.resaltar(optHl.checked);
   themeShadow();
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", themeShadow);
+  // Con las fuentes cargadas cambia el ancho de las etiquetas.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => escena.colocarNombres());
   msg.hidden = true;
   window.visorListo = true;
 }
