@@ -19,8 +19,9 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Escena compartida, página del visor, `python -m nudos sitio`, `publicados.txt` y pruebas
   - [x] Revisado en Chrome de escritorio y en celular emulado, sin errores ni pedidos fuera del sitio
   - [x] Sitio subido a la rama `gh-pages`
-  - [ ] Gabriel activa GitHub Pages: Settings → Pages → Deploy from a branch → `gh-pages` / `(root)`
-  - [ ] La dirección responde y Gabriel la abre en su celular
+  - [x] Gabriel activa GitHub Pages: Settings → Pages → Deploy from a branch → `gh-pages` / `(root)`
+  - [x] La dirección responde y el visor carga en Chrome como celular, sin errores
+  - [ ] Gabriel abre https://gaboelc.github.io/nudos-431/as-de-guia/ en su celular y revisa los 7 pasos
 - [ ] Punto de control 1: la especificación reproduce el prototipo y el visor está en línea
 - [ ] T3 Imágenes de impresión, error común y vistas finales (M, depende de T2)
 - [ ] T4 Ficha impresa del as de guía con QR (M, depende de T3, D1 y D2)
