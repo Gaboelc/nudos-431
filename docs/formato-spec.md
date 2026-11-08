@@ -28,6 +28,7 @@ El ejemplo completo es `specs/as-de-guia.yaml`.
 | `pasos` | sí | Lista de pasos en orden. |
 | `error` | no | El error más común (ver abajo). La ficha lo necesita, así que todo nudo publicado lo lleva. |
 | `terminado` | no | Cómo se muestra el nudo terminado (ver abajo). |
+| `filtros` | no | Registro de los dos filtros humanos (ver abajo). |
 
 Los campos desconocidos producen un error, así que un error de tipeo se detecta al cargar.
 
@@ -88,6 +89,21 @@ El último paso se muestra por delante y por detrás. La vista de detrás se obt
 | Campo | Qué es |
 |---|---|
 | `encuadre` | Opcional. Zona que se muestra del nudo terminado, por delante. Por detrás se usa la misma zona volteada. |
+
+## Filtros
+
+Cada vez que se prueba la ficha impresa se agrega una entrada, también si no pasa. El filtro 1 es Gabriel atando cada paso con cuerda real; el filtro 2 es alguien que nunca ha hecho el nudo y lo ata solo con la ficha.
+
+| Campo | Qué es |
+|---|---|
+| `filtro` | 1 o 2. |
+| `fecha` | Día de la prueba, como `2026-11-07`. |
+| `resultado` | `aprobado` o `no aprobado`. |
+| `rol` | En el filtro 2, el rol del probador, por ejemplo «dirigente». Es obligatorio. |
+| `codigo` | En el filtro 2, un código anónimo como `P01`. Es obligatorio. La tabla que une códigos con personas vive fuera del repositorio. |
+| `ficha` | Opcional. El commit de la ficha que se probó, para saber si un cambio posterior obliga a repetir la prueba. |
+
+Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocido, y el código solo acepta letras mayúsculas seguidas de números.
 
 ## Qué se comprueba al construir
 

@@ -24,9 +24,22 @@ seguridad: >-
   En rescate, este nudo se usa para hacer una gaza alrededor del pecho de una
   persona. En este libro eso es solo conocimiento: en las actividades del grupo no
   lo uses para sostener, subir ni bajar a nadie. Esa práctica se hace únicamente con
-  instructor y equipo certificados, y en una emergencia real primero llamas al
-  9-1-1. Además, si la cuerda queda sin carga o es rígida o resbalosa, el nudo se
-  puede aflojar: revísalo cada vez antes de usarlo.
+  instructor y equipo certificados. Además, si la cuerda queda sin carga o es rígida
+  o resbalosa, el nudo se puede aflojar: revísalo cada vez antes de usarlo.
+
+# Los dos filtros humanos (ver la definición de terminado del plan). Del probador del
+# filtro 2 se registran solo el rol y un código; la tabla de códigos vive fuera del repositorio.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-07
+    resultado: aprobado
+    ficha: e1dbffd
+  - filtro: 2
+    fecha: 2026-11-07
+    rol: joven de la Wak
+    codigo: P01
+    resultado: aprobado
+    ficha: e1dbffd
 
 encuadre:
   x: [-11.4, 9.4]

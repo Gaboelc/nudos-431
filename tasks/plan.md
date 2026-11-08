@@ -142,7 +142,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
   - Ningún nudo de este libro se usa para sostener, subir o bajar a una persona en actividades del grupo.
   - Los usos de rescate se explican para conocerlos, no para practicarlos.
   - La práctica con personas solo se hace con instructor y equipo certificados.
-  - En una emergencia real, primero se llama al 9-1-1.
+  - En una emergencia real, primero se llama al 9-1-1. Esto va solo en el material inicial (T11), no en cada ficha: Gabriel lo quitó de la ficha del as de guía porque sobraba.
   - La silla de bombero y la eslinga de andamio se practican sin carga o con un objeto.
   - Esta postura va en el material inicial (T11) y en la sección de seguridad de cada ficha que la necesite.
 - **D2 Formato impreso (resuelta):** tamaño carta (216 × 279 mm), encuadernación de resorte e impresión en imprenta. Consecuencias:

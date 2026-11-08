@@ -4,6 +4,7 @@ El formato está descrito en `docs/formato-spec.md`.
 """
 from __future__ import annotations
 
+import datetime as dt
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,12 +18,17 @@ from .cruces import SecuenciaError, leer_secuencia
 _NOMBRE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _REF = re.compile(r"^([a-z0-9]+(?:-[a-z0-9]+)*)(?:\[([^\]]*)\])?$")
 DISTANCIA_MIN = 0.05   # entre puntos de control seguidos, en diámetros
+# Código anónimo de un probador: letras y números, como P01. Así no cabe un nombre.
+_CODIGO = re.compile(r"^[A-Z]{1,3}[0-9]{2,3}$")
+RESULTADOS = ("aprobado", "no aprobado")
 
 _CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materiales",
-           "verificacion", "seguridad", "encuadre", "segmentos", "pasos", "error", "terminado"}
+           "verificacion", "seguridad", "encuadre", "segmentos", "pasos", "error", "terminado",
+           "filtros"}
 _CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
 _CAMPOS_ERROR = {"paso", "invierte", "titulo", "texto", "encuadre"}
 _CAMPOS_TERMINADO = {"encuadre"}
+_CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 
 
 class SpecError(ValueError):
@@ -62,6 +68,19 @@ class Terminado:
 
 
 @dataclass(frozen=True)
+class Filtro:
+    """Una prueba humana de la ficha impresa.
+    Filtro 1: Gabriel ata cada paso con cuerda real. Filtro 2: alguien que nunca ha hecho
+    el nudo lo ata solo con la ficha. Del probador solo se guardan el rol y un código."""
+    filtro: int
+    fecha: dt.date
+    resultado: str               # «aprobado» o «no aprobado»
+    rol: str | None = None       # obligatorio en el filtro 2
+    codigo: str | None = None    # obligatorio en el filtro 2
+    ficha: str | None = None     # commit de la ficha que se probó
+
+
+@dataclass(frozen=True)
 class Spec:
     slug: str
     nombre: str
@@ -78,6 +97,7 @@ class Spec:
     materiales: str | None = None
     verificacion: tuple[str, ...] = ()   # criterios que se pueden observar en el nudo
     seguridad: str | None = None         # solo cuando aplica
+    filtros: tuple[Filtro, ...] = ()
 
 
 def cargar(slug_o_ruta: str | Path) -> Spec:
@@ -129,7 +149,43 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         materiales=_texto_opcional(datos, "materiales", falla),
         verificacion=_lista_textos(datos, "verificacion", falla),
         seguridad=_texto_opcional(datos, "seguridad", falla),
+        filtros=_filtros(datos.get("filtros"), falla),
     )
+
+
+def _filtros(datos, falla) -> tuple[Filtro, ...]:
+    if datos is None:
+        return ()
+    if not isinstance(datos, list):
+        raise falla("«filtros» es una lista")
+    out = []
+    for i, f in enumerate(datos, 1):
+        def ff(msg: str) -> SpecError:
+            return falla(f"filtro {i}: {msg}")
+        if not isinstance(f, dict):
+            raise ff("debe ser un mapa")
+        sobran = set(f) - _CAMPOS_FILTRO
+        if sobran:
+            raise ff(f"campos desconocidos: {', '.join(sorted(sobran))}")
+        n = f.get("filtro")
+        if n not in (1, 2) or isinstance(n, bool):
+            raise ff("«filtro» es 1 o 2")
+        fecha = f.get("fecha")
+        if not isinstance(fecha, dt.date) or isinstance(fecha, dt.datetime):
+            raise ff("«fecha» va como AAAA-MM-DD")
+        if f.get("resultado") not in RESULTADOS:
+            raise ff(f"«resultado» es {' o '.join(RESULTADOS)}")
+        rol = _texto_opcional(f, "rol", ff)
+        codigo = f.get("codigo")
+        if codigo is not None and (not isinstance(codigo, str) or not _CODIGO.match(codigo)):
+            raise ff("«codigo» es un código anónimo como P01, nunca un nombre")
+        if n == 2 and (rol is None or codigo is None):
+            raise ff("en el filtro 2 van el rol y el código del probador")
+        ficha = f.get("ficha")
+        if ficha is not None and (not isinstance(ficha, str) or not re.fullmatch(r"[0-9a-f]{7,40}", ficha)):
+            raise ff("«ficha» es el commit de la ficha que se probó, por ejemplo e1dbffd")
+        out.append(Filtro(n, fecha, f["resultado"], rol, codigo, ficha))
+    return tuple(out)
 
 
 def _texto_opcional(datos: dict, clave: str, falla) -> str | None:
