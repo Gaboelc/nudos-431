@@ -52,13 +52,13 @@ def test_el_qr_lleva_a_la_direccion_permanente_del_visor(documento):
     url = url_visor("as-de-guia")
     assert url == f"{URL_BASE}as-de-guia/"
     assert qr_svg(url) in documento
-    cv2 = pytest.importorskip("cv2")
-    import numpy as np
+    # Lo lee un decodificador que no es el que lo generó.
     import segno
+    import zxingcpp
     png = io.BytesIO()
     segno.make(url, error="m").save(png, kind="png", scale=8, border=4)
-    im = cv2.imdecode(np.frombuffer(png.getvalue(), np.uint8), cv2.IMREAD_GRAYSCALE)
-    assert cv2.QRCodeDetector().detectAndDecode(im)[0] == url
+    leidos = zxingcpp.read_barcodes(Image.open(io.BytesIO(png.getvalue())))
+    assert [b.text for b in leidos] == [url]
 
 
 def test_sin_texto_de_ficha_no_hay_ficha(modelo_as_de_guia, tmp_path):

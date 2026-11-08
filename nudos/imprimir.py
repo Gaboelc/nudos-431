@@ -2,7 +2,8 @@
 
 Salen de la misma escena 3D del visor (render/escena.js), dibujada con Chrome sin
 interfaz y con WebGL por software (SwiftShader), para que construir dos veces dé
-exactamente las mismas imágenes en cualquier computadora con la misma versión de Chrome.
+exactamente las mismas imágenes, píxel por píxel, en cualquier computadora con la misma
+versión de Chrome. Con otra versión de Pillow cambian los bytes del PNG, no los píxeles.
 
 Para cada nudo se generan, en build/<slug>/impresion/:
 - paso-<n>.png: cada paso, con el tramo que se mueve resaltado y los nombres.
