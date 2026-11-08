@@ -41,8 +41,8 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (7 nov, P01)
   - [x] Registrar los dos filtros en la especificación (campo `filtros`)
 - [ ] Punto de control A:
-  - [ ] La suite pasa
-  - [ ] El as de guía pasó los dos filtros
+  - [x] La suite pasa, también desde un clon limpio en un entorno nuevo (76 pruebas)
+  - [x] El as de guía pasó los dos filtros
   - [ ] Decisión entre three.js y Blender para la impresión
   - [ ] Revisión contigo
 
