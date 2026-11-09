@@ -50,6 +50,8 @@ class Resultado:
 
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None) -> Resultado:
+    if paso.cuerda is not None:
+        raise TrazadoError(f"Paso {paso.n}: la geometría de varias cuerdas todavía no está (T6).")
     if anfitrion is not None:
         from .anfitrion import construir_paso as sobre_anfitrion
         return sobre_anfitrion(paso, anfitrion)

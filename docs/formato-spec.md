@@ -6,9 +6,9 @@ El ejemplo completo es `specs/as-de-guia.yaml`.
 
 ## Unidades y ejes
 
-- El diámetro de la cuerda vale 1. Todas las medidas están en diámetros.
+- El diámetro de la cuerda vale 1. Todas las medidas están en diámetros. En un nudo de varias cuerdas, 1 es el diámetro de la cuerda de siempre y cada cuerda declara su grosor.
 - x crece hacia la derecha, y hacia el fondo de la mesa (lejos de quien ata) y z hacia arriba desde la mesa.
-- La cuerda se recorre desde el firme hasta el chicote. Los primeros puntos del firme quedan fijos.
+- La cuerda se recorre desde el firme hasta el chicote. Los primeros puntos del firme quedan fijos. Con varias cuerdas, cada una se recorre desde su firme.
 
 ## Campos
 
@@ -25,6 +25,7 @@ El ejemplo completo es `specs/as-de-guia.yaml`.
 | `seguridad` | no | Solo cuando aplica. Si el nudo tiene usos con personas, sigue la postura de seguridad del libro (D1 del plan). |
 | `encuadre` | no | Zona de la mesa que se muestra, como `x: [mín, máx]` e `y: [mín, máx]`. Si falta, se calcula con todos los pasos. |
 | `anfitrion` | no | El objeto alrededor del que se ata el nudo, por ejemplo un poste (ver abajo). |
+| `cuerdas` | no | Solo en los nudos de dos o más cuerdas: el nombre, el grosor y el color de cada una (ver abajo). Un nudo de una sola cuerda no lo lleva. |
 | `segmentos` | sí | Tramos de cuerda con nombre. Cada uno es una lista de puntos `[x, y]` sobre la mesa, o `{poste: [[x, ángulo], ...]}` sobre el poste. |
 | `pasos` | sí | Lista de pasos en orden. |
 | `error` | no | El error más común (ver abajo). La ficha lo necesita, así que todo nudo publicado lo lleva. |
@@ -64,23 +65,57 @@ Un segmento sobre el poste se escribe `{poste: [[x, ángulo], ...]}`. `x` es la 
 
 Un paso puede pasar de la mesa al poste y volver. Conviene que la cuerda no suba por el frente del poste para bajar enseguida a la mesa: esa esquina no existe en la cuerda real y la relajación no la resuelve.
 
+## Varias cuerdas
+
+Algunos nudos unen dos cuerdas, a veces de distinto grosor. Se declaran en `cuerdas`, en orden:
+
+```yaml
+cuerdas:
+  - {nombre: gruesa, grosor: 1.5, color: azul}
+  - {nombre: delgada, grosor: 1, color: crema}
+```
+
+| Campo | Qué es |
+|---|---|
+| `nombre` | Nombre de la cuerda, con minúsculas, números y guiones. Es la clave de esa cuerda en el trazado y la secuencia de cada paso. |
+| `grosor` | Diámetro de la cuerda, relativo al de la cuerda de siempre, que mide 1. |
+| `color` | `azul` o `crema`. Cada cuerda lleva uno distinto. El ámbar queda para el tramo que se mueve en cada paso; en gris, el crema queda claro, el ámbar medio y el azul oscuro. |
+
+En cada paso, `trazado` y `secuencia` pasan a ser mapas con todas las cuerdas:
+
+```yaml
+trazado:
+  gruesa: [seno]
+  delgada: [delgada-firme, delgada-sube]
+secuencia:
+  gruesa: "1O 2U"
+  delgada: "1U 2O"
+```
+
+- Cada paso lleva todas las cuerdas. Una cuerda que no pasa por cruces se escribe `""`.
+- Los segmentos son de todo el nudo, pero cada uno pertenece a una sola cuerda: si un paso lo pone en otra cuerda, es un error.
+- Un tramo resaltado va en una sola cuerda, y ahí `fin` es el último punto de la cuerda donde empieza.
+- Por ahora un nudo de varias cuerdas no lleva anfitrión.
+
 ## Pasos
 
 | Campo | Qué es |
 |---|---|
 | `titulo` | Título corto, en imperativo y tuteo. |
 | `texto` | Instrucción del paso, en tuteo y con texto propio. |
-| `trazado` | Segmentos o tramos en el orden de la cuerda. Cada segmento aparece una sola vez. |
-| `secuencia` | La secuencia de cruces (ver abajo). Si el paso no tiene cruces, se escribe `""`. |
+| `trazado` | Segmentos o tramos en el orden de la cuerda. Cada segmento aparece una sola vez. Con varias cuerdas, un mapa por cuerda (ver arriba). |
+| `secuencia` | La secuencia de cruces (ver abajo). Si el paso no tiene cruces, se escribe `""`. Con varias cuerdas, un mapa por cuerda. |
 | `resaltar` | Opcional. Con `desde` y `hasta` marca el tramo que se mueve en este paso. |
 
 ## Secuencia de cruces
 
 Para escribirla, recorre la cuerda desde el firme y anota cada vez que pasa por un cruce: la etiqueta del cruce más `O` si pasa por encima o `U` si pasa por debajo. Por ejemplo, en el paso 4 del as de guía la secuencia es `1U 2O 3U 1O 2U 3O`.
 
+Con varias cuerdas, cada secuencia recorre su cuerda desde su firme. Un cruce entre las dos cuerdas tiene una pasada en cada secuencia, y un cruce de una cuerda consigo misma tiene las dos en la suya.
+
 Reglas:
 
-- En un paso, cada etiqueta aparece dos veces, una con `O` y otra con `U`.
+- En un paso, cada etiqueta aparece dos veces, una con `O` y otra con `U`. Con varias cuerdas, dos veces entre todas.
 - Cada etiqueta nombra un solo cruce en todo el nudo. Un cruce que sigue en el paso siguiente conserva su etiqueta.
 - Un cruce no cambia de encima a debajo entre pasos. Si cambia, es otro cruce y lleva otra etiqueta.
 - El trazado tiene que formar exactamente esos cruces, en ese orden.
@@ -143,7 +178,8 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 
 ## Pendiente para versiones siguientes
 
-- Varias cuerdas con grosor y color por rol (T6).
+- Construir los nudos de varias cuerdas (T6): el formato ya las acepta, pero `python -m nudos construir` todavía no.
+- Varias cuerdas sobre un anfitrión.
 - Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
 - Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Dibujar el anfitrión en la hoja de revisión (`python -m nudos hoja`): hoy solo dibuja la cuerda.

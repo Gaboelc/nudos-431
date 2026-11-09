@@ -2,7 +2,10 @@
 
 Una secuencia recorre la cuerda desde el firme y anota cada paso por un cruce:
 «1U» es pasar por debajo en el cruce 1 y «1O» pasar por encima. En un paso, cada
-etiqueta aparece dos veces, una con O y otra con U.
+etiqueta aparece dos veces, una con O y otra con U. Con varias cuerdas, cada una
+tiene su secuencia desde su firme y las dos pasadas de un cruce pueden ir en la
+misma cuerda o en dos; el resto del código las recibe una tras otra, en el orden
+de las cuerdas, como si fueran una sola cuerda.
 """
 from __future__ import annotations
 
@@ -18,20 +21,28 @@ class SecuenciaError(ValueError):
     """La secuencia de cruces está mal escrita."""
 
 
-def leer_secuencia(texto: str) -> tuple[str, ...]:
-    tokens = tuple(texto.split())
-    letras: dict[str, list[str]] = {}
-    for t in tokens:
-        m = _TOKEN.match(t)
-        if not m:
-            raise SecuenciaError(f"«{t}» no es un paso por un cruce; se escribe como 1O o 1U")
-        letras.setdefault(m.group(1), []).append(m.group(2))
-    for et, vistas in letras.items():
-        if sorted(vistas) != ["O", "U"]:
+def leer_secuencias(textos: dict[str, str]) -> dict[str, tuple[str, ...]]:
+    """Las secuencias de las cuerdas de un paso, por nombre de cuerda. Cada etiqueta
+    aparece dos veces entre todas, una con O y otra con U. Una sola cuerda va sin nombre («»)."""
+    out: dict[str, tuple[str, ...]] = {}
+    vistas: dict[str, list[str]] = {}
+    for cuerda, texto in textos.items():
+        donde = f" en la cuerda {cuerda}" if cuerda else ""
+        tokens = tuple(texto.split())
+        for t in tokens:
+            m = _TOKEN.match(t)
+            if not m:
+                raise SecuenciaError(f"«{t}»{donde} no es un paso por un cruce; se escribe como 1O o 1U")
+            vistas.setdefault(m.group(1), []).append(t + donde)
+        out[cuerda] = tokens
+    for et, pasadas in vistas.items():
+        if sorted(p[len(et)] for p in pasadas) != ["O", "U"]:
+            # Con varias cuerdas: «1O en la cuerda gruesa y 1O en la cuerda delgada».
+            como = " ".join(pasadas) if len(textos) == 1 else " y ".join(pasadas)
             raise SecuenciaError(
-                f"el cruce {et} aparece como {' '.join(et + v for v in vistas)}; cada cruce "
-                "se pasa dos veces, una por encima (O) y otra por debajo (U)")
-    return tokens
+                f"el cruce {et} aparece como {como}; cada cruce se pasa dos veces, una por "
+                "encima (O) y otra por debajo (U)")
+    return out
 
 
 def etiqueta(token: str) -> str:

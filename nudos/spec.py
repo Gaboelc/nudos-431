@@ -13,7 +13,7 @@ import numpy as np
 import yaml
 
 from . import SPECS
-from .cruces import SecuenciaError, leer_secuencia
+from .cruces import SecuenciaError, leer_secuencias
 
 _NOMBRE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _REF = re.compile(r"^([a-z0-9]+(?:-[a-z0-9]+)*)(?:\[([^\]]*)\])?$")
@@ -23,14 +23,18 @@ _CODIGO = re.compile(r"^[A-Z]{1,3}[0-9]{2,3}$")
 RESULTADOS = ("aprobado", "no aprobado")
 
 _CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materiales",
-           "verificacion", "seguridad", "encuadre", "anfitrion", "segmentos", "pasos", "error",
-           "terminado", "filtros"}
+           "verificacion", "seguridad", "encuadre", "anfitrion", "cuerdas", "segmentos", "pasos",
+           "error", "terminado", "filtros"}
 _CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
 _CAMPOS_ERROR = {"paso", "invierte", "titulo", "texto", "encuadre"}
 _CAMPOS_TERMINADO = {"encuadre"}
 _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 _CAMPOS_ANFITRION = {"tipo", "radio", "desde", "hasta"}
 TIPOS_ANFITRION = ("poste",)
+_CAMPOS_CUERDA = {"nombre", "grosor", "color"}
+# Colores de cuerda de render/escena.js. El ámbar no está: es el del tramo que se mueve.
+# Azul y crema siguen distinguiéndose en gris (oscuro y claro, con el ámbar en medio).
+COLORES = ("azul", "crema")
 
 
 class SpecError(ValueError):
@@ -44,10 +48,23 @@ class Paso:
     texto: str
     # (N, 2) puntos de control, en orden de la cuerda. Sobre la mesa son [x, y]; sobre el
     # anfitrión son [x, ángulo en grados] (ver Anfitrion). `sobre` dice cuáles son cuáles.
+    # Con varias cuerdas van una tras otra, en el orden de Spec.cuerdas; `cuerda` dice de cuál es cada punto.
     puntos: np.ndarray
+    # Con varias cuerdas, las secuencias de todas, una tras otra en el mismo orden;
+    # `pasadas` dice cuántos pasos por cruces lleva cada una.
     secuencia: tuple[str, ...]
-    resaltar: tuple[int, int] | None   # índices de puntos de control
+    resaltar: tuple[int, int] | None   # índices de puntos de control, de una misma cuerda
     sobre: np.ndarray | None = None    # (N,) True si el punto va sobre el anfitrión
+    cuerda: np.ndarray | None = None   # (N,) índice en Spec.cuerdas; None con una sola cuerda
+    pasadas: tuple[int, ...] | None = None
+
+
+@dataclass(frozen=True)
+class Cuerda:
+    """Una de las cuerdas de un nudo de varias. Cada una se recorre desde su firme."""
+    nombre: str
+    grosor: float   # diámetro, relativo al de la cuerda de siempre, que mide 1
+    color: str      # uno de COLORES
 
 
 @dataclass(frozen=True)
@@ -115,6 +132,7 @@ class Spec:
     encuadre: Encuadre | None
     pasos: tuple[Paso, ...]
     anfitrion: Anfitrion | None = None
+    cuerdas: tuple[Cuerda, ...] = ()   # vacío en un nudo de una sola cuerda
     error: Error | None = None
     terminado: Terminado = Terminado()
     # Texto de la ficha. Es opcional al cargar, para poder modelar un nudo antes de
@@ -158,11 +176,16 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
     if abok is not None and (not isinstance(abok, int) or isinstance(abok, bool)):
         raise falla("abok debe ser un número entero")
     anfitrion = _anfitrion(datos.get("anfitrion"), falla)
+    cuerdas = _cuerdas(datos.get("cuerdas"), falla)
+    if cuerdas and anfitrion is not None:
+        # Se agrega con el primer nudo de varias cuerdas que se ate sobre un anfitrión.
+        raise falla("por ahora, un nudo de varias cuerdas no lleva anfitrión")
     segmentos = _segmentos(datos.get("segmentos"), anfitrion, falla)
     pasos = datos.get("pasos")
     if not isinstance(pasos, list) or not pasos:
         raise falla("falta la lista de pasos")
-    pasos = tuple(_paso(i + 1, p, segmentos, falla) for i, p in enumerate(pasos))
+    duenos: dict[str, tuple[int, int]] = {}
+    pasos = tuple(_paso(i + 1, p, segmentos, cuerdas, duenos, falla) for i, p in enumerate(pasos))
     return Spec(
         slug=slug,
         nombre=_texto(datos, "nombre", falla),
@@ -171,6 +194,7 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         encuadre=_encuadre(datos.get("encuadre"), falla),
         pasos=pasos,
         anfitrion=anfitrion,
+        cuerdas=cuerdas,
         error=_error(datos.get("error"), pasos, falla),
         terminado=_terminado(datos.get("terminado"), falla),
         otros_nombres=_lista_textos(datos, "otros_nombres", falla),
@@ -312,6 +336,38 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
     return Anfitrion(datos["tipo"], **numeros)
 
 
+def _cuerdas(datos, falla) -> tuple[Cuerda, ...]:
+    if datos is None:
+        return ()
+    if not isinstance(datos, list) or len(datos) < 2:
+        raise falla("«cuerdas» es la lista de las cuerdas de un nudo de dos o más; un nudo "
+                    "de una sola cuerda no lo lleva")
+    out: list[Cuerda] = []
+    for i, c in enumerate(datos, 1):
+        def cf(msg: str) -> SpecError:
+            return falla(f"cuerda {i}: {msg}")
+        if not isinstance(c, dict):
+            raise cf("debe ser un mapa con nombre, grosor y color")
+        sobran = set(c) - _CAMPOS_CUERDA
+        if sobran:
+            raise cf(f"campos desconocidos: {', '.join(sorted(sobran))}")
+        nombre = c.get("nombre")
+        if not isinstance(nombre, str) or not _NOMBRE.match(nombre):
+            raise cf("«nombre» usa minúsculas, números y guiones, como gruesa")
+        if any(o.nombre == nombre for o in out):
+            raise cf(f"ya hay una cuerda que se llama {nombre}")
+        grosor = c.get("grosor")
+        if not isinstance(grosor, (int, float)) or isinstance(grosor, bool) or grosor <= 0:
+            raise cf("«grosor» es el diámetro de la cuerda: 1 es la de siempre, 1.5 una más gruesa")
+        color = c.get("color")
+        if color not in COLORES:
+            raise cf(f"«color» es uno de: {', '.join(COLORES)}")
+        if any(o.color == color for o in out):
+            raise cf(f"la cuerda {nombre} tiene el mismo color que otra; cada cuerda lleva el suyo")
+        out.append(Cuerda(nombre, float(grosor), color))
+    return tuple(out)
+
+
 def _segmentos(datos, anfitrion: Anfitrion | None, falla) -> dict[str, Segmento]:
     if not isinstance(datos, dict) or not datos:
         raise falla("falta el mapa de segmentos")
@@ -353,7 +409,10 @@ def _encuadre(datos, falla) -> Encuadre | None:
     return Encuadre(x, y)
 
 
-def _paso(n: int, datos, segmentos: dict[str, np.ndarray], falla) -> Paso:
+def _paso(n: int, datos, segmentos: dict[str, Segmento], cuerdas: tuple[Cuerda, ...],
+          duenos: dict[str, tuple[int, int]], falla) -> Paso:
+    """`duenos` guarda, de un paso al siguiente, en qué cuerda y en qué paso apareció por
+    primera vez cada segmento: un segmento es un tramo de una cuerda y no cambia de cuerda."""
     def pf(msg: str) -> SpecError:
         return falla(f"paso {n}: {msg}")
 
@@ -362,40 +421,59 @@ def _paso(n: int, datos, segmentos: dict[str, np.ndarray], falla) -> Paso:
     sobran = set(datos) - _CAMPOS_PASO
     if sobran:
         raise pf(f"campos desconocidos: {', '.join(sorted(sobran))}")
-    trazado = datos.get("trazado")
-    if not isinstance(trazado, list) or not trazado:
-        raise pf("falta el trazado")
+    nombres = [c.nombre for c in cuerdas]
+    trazado = _por_cuerda(datos.get("trazado"), "trazado", nombres, pf)
 
-    partes: list[tuple[str, list[int]]] = []
-    for ref in trazado:
-        nombre, sel = _ref(ref, pf)
-        if nombre not in segmentos:
-            raise pf(f"el segmento «{nombre}» no existe")
-        if isinstance(sel, int):
-            raise pf(f"«{ref}»: en el trazado va un segmento o un tramo [a:b], no un punto")
-        if any(nombre == usado for usado, _ in partes):
-            raise pf(f"el segmento {nombre} aparece dos veces")
-        indices = list(range(len(segmentos[nombre].puntos)))[sel]
-        if not indices:
-            raise pf(f"«{ref}» no tiene puntos")
-        partes.append((nombre, indices))
+    # (segmento, índices de sus puntos, índice de la cuerda), en el orden de la cuerda.
+    partes: list[tuple[str, list[int], int]] = []
+    for k, lista in enumerate(trazado):
+        de = f" de la cuerda {nombres[k]}" if cuerdas else ""
+        if not isinstance(lista, list) or not lista:
+            raise pf(f"falta el trazado{de}")
+        antes = len(partes)
+        for ref in lista:
+            nombre, sel = _ref(ref, pf)
+            if nombre not in segmentos:
+                raise pf(f"el segmento «{nombre}» no existe")
+            if isinstance(sel, int):
+                raise pf(f"«{ref}»: en el trazado va un segmento o un tramo [a:b], no un punto")
+            if any(nombre == usado for usado, _, _ in partes):
+                raise pf(f"el segmento {nombre} aparece dos veces")
+            indices = list(range(len(segmentos[nombre].puntos)))[sel]
+            if not indices:
+                raise pf(f"«{ref}» no tiene puntos")
+            if cuerdas:
+                k0, n0 = duenos.setdefault(nombre, (k, n))
+                if k0 != k:
+                    raise pf(f"el segmento {nombre} va en la cuerda {nombres[k0]} en el paso {n0} "
+                             f"y aquí en la cuerda {nombres[k]}; un segmento es de una sola cuerda")
+            partes.append((nombre, indices, k))
+        if sum(len(indices) for _, indices, _ in partes[antes:]) < 2:
+            raise pf(f"el trazado{de} necesita al menos dos puntos")
 
-    puntos = np.vstack([segmentos[nombre].puntos[indices] for nombre, indices in partes])
-    sobre = np.concatenate([np.full(len(indices), segmentos[nombre].sobre) for nombre, indices in partes])
-    if len(puntos) < 2:
-        raise pf("el trazado necesita al menos dos puntos")
+    puntos = np.vstack([segmentos[nombre].puntos[indices] for nombre, indices, _ in partes])
+    sobre = np.concatenate([np.full(len(indices), segmentos[nombre].sobre) for nombre, indices, _ in partes])
+    cuerda = np.concatenate([np.full(len(indices), k) for _, indices, k in partes])
     # Entre dos puntos sobre el poste, la segunda coordenada son grados: 1° cuenta como
     # 0,02 diámetros, más o menos lo que mide en la superficie de un poste delgado.
     paso_xy = np.diff(puntos, axis=0) * np.where((sobre[1:] & sobre[:-1])[:, None], [1.0, 0.02], 1.0)
-    cerca = (np.linalg.norm(paso_xy, axis=1) < DISTANCIA_MIN) & (sobre[1:] == sobre[:-1])
+    cerca = ((np.linalg.norm(paso_xy, axis=1) < DISTANCIA_MIN) & (sobre[1:] == sobre[:-1])
+             & (cuerda[1:] == cuerda[:-1]))
     if cerca.any():
         p = puntos[int(np.argmax(cerca))]
         raise pf(f"hay dos puntos seguidos casi iguales cerca de ({p[0]:g}, {p[1]:g})")
 
     if "secuencia" not in datos:
         raise pf("falta «secuencia» (escribe \"\" si el paso no tiene cruces)")
+    if cuerdas:
+        textos = dict(zip(nombres, _por_cuerda(datos["secuencia"], "secuencia", nombres, pf)))
+        for nombre, texto in textos.items():
+            if not isinstance(texto, str):
+                raise pf(f"falta la secuencia de la cuerda {nombre} (escribe \"\" si no pasa por cruces)")
+    else:
+        textos = {"": str(datos["secuencia"])}
     try:
-        secuencia = leer_secuencia(str(datos["secuencia"]))
+        leidas = leer_secuencias(textos)
     except SecuenciaError as e:
         raise pf(str(e)) from None
 
@@ -404,10 +482,31 @@ def _paso(n: int, datos, segmentos: dict[str, np.ndarray], falla) -> Paso:
         titulo=_texto(datos, "titulo", pf),
         texto=_texto(datos, "texto", pf),
         puntos=puntos,
-        secuencia=secuencia,
-        resaltar=_resaltar(datos.get("resaltar"), partes, segmentos, len(puntos), pf),
+        secuencia=tuple(t for sec in leidas.values() for t in sec),
+        resaltar=_resaltar(datos.get("resaltar"), partes, segmentos, cuerda, pf),
         sobre=sobre if sobre.any() else None,
+        cuerda=cuerda if cuerdas else None,
+        pasadas=tuple(len(sec) for sec in leidas.values()) if cuerdas else None,
     )
+
+
+def _por_cuerda(valor, campo: str, nombres: list[str], pf) -> list:
+    """El trazado o la secuencia de un paso, como lista con un valor por cuerda. Con una
+    sola cuerda (`nombres` vacío) es el valor tal cual; con varias, un mapa por cuerda."""
+    if not nombres:
+        if isinstance(valor, dict):
+            raise pf(f"«{campo}» va por cuerda solo cuando el nudo declara «cuerdas»")
+        return [valor]
+    if not isinstance(valor, dict):
+        ejemplo = ", ".join(f"{c}: [...]" if campo == "trazado" else f'{c}: "..."' for c in nombres)
+        raise pf(f"con varias cuerdas, «{campo}» es un mapa por cuerda: {{{ejemplo}}}")
+    sobran = [c for c in valor if c not in nombres]
+    if sobran:
+        raise pf(f"en «{campo}», la cuerda «{sobran[0]}» no existe")
+    faltan = [c for c in nombres if c not in valor]
+    if faltan:
+        raise pf(f"falta «{campo}» de la cuerda {faltan[0]}; cada paso lleva todas las cuerdas")
+    return [valor[c] for c in nombres]
 
 
 def _ref(texto, pf):
@@ -427,27 +526,36 @@ def _ref(texto, pf):
         raise pf(f"referencia mal escrita: «{texto}»") from None
 
 
-def _resaltar(datos, partes, segmentos, total: int, pf) -> tuple[int, int] | None:
+def _resaltar(datos, partes, segmentos, cuerda: np.ndarray, pf) -> tuple[int, int] | None:
+    """Con varias cuerdas, el tramo resaltado va en una sola y «fin» es el último punto
+    de la cuerda donde empieza."""
     if datos is None:
         return None
     if not isinstance(datos, dict) or set(datos) != {"desde", "hasta"}:
         raise pf("resaltar lleva «desde» y «hasta»")
-    a = _punto(datos["desde"], partes, segmentos, total, pf)
-    b = _punto(datos["hasta"], partes, segmentos, total, pf)
+    varias = len(set(cuerda.tolist())) > 1
+    if varias and datos["desde"] == "fin":
+        raise pf("en resaltar, «desde» es un punto de una cuerda, como segmento[0]; «fin» va en «hasta»")
+    a = _punto(datos["desde"], partes, segmentos, len(cuerda) - 1, pf)
+    fin = int(np.nonzero(cuerda == cuerda[a])[0][-1])
+    b = _punto(datos["hasta"], partes, segmentos, fin, pf)
+    if cuerda[b] != cuerda[a]:
+        raise pf("en resaltar, «desde» y «hasta» van en la misma cuerda")
     if b <= a:
         raise pf("en resaltar, «hasta» debe ir después de «desde»")
     return a, b
 
 
-def _punto(ref, partes, segmentos, total: int, pf) -> int:
-    """Índice, dentro del paso, del punto al que apunta una referencia."""
+def _punto(ref, partes, segmentos, fin: int, pf) -> int:
+    """Índice, dentro del paso, del punto al que apunta una referencia. `fin` es el
+    índice al que apunta «fin»."""
     if ref == "fin":
-        return total - 1
+        return fin
     nombre, sel = _ref(ref, pf)
     if not isinstance(sel, int):
         raise pf(f"«{ref}»: en resaltar va un punto, como segmento[0] o segmento[-1]")
     base = 0
-    for usado, indices in partes:
+    for usado, indices, _ in partes:
         if usado == nombre:
             largo = len(segmentos[nombre].puntos)
             original = sel + largo if sel < 0 else sel
