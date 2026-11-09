@@ -7,11 +7,13 @@ import { OrbitControls } from "./vendor/three/OrbitControls.js";
 export const VISTAS = {
   arriba: { polar: 0.001, az: 0 },
   "3d": { polar: 0.68, az: -0.32 },
+  // Desde el otro lado de la mesa: el nudo terminado sobre un anfitrión, por detrás.
+  detras: { polar: 0.68, az: Math.PI - 0.32 },
 };
 
 const RADIO = 0.5;        // la cuerda mide un diámetro
 const REMATE = 0.8;       // largo del remate en el chicote
-const ALTO = 1.6;         // alto que se considera al encuadrar: una cuerda sobre otra
+const ALTO = 1.6;         // alto mínimo que se considera al encuadrar: una cuerda sobre otra
 const MARGEN = 1.0;       // margen alrededor de la cuerda al encuadrar
 
 /* Trenza de 16 hilos, 2 sobre 2. Un mosaico es una vuelta completa de cada hilo (π·d de largo). */
@@ -99,6 +101,22 @@ function cajaDeEncuadre(modelo) {
   return { x0: x0 - MARGEN, x1: x1 + MARGEN, y0: y0 - MARGEN, y1: y1 + MARGEN };
 }
 
+/* El alto que se encuadra. Sin anfitrión es ALTO, una cuerda sobre otra. Con anfitrión,
+   el de la cuerda dentro de la caja y el del anfitrión. */
+function altoDeEncuadre(modelo, B) {
+  const a = modelo.anfitrion;
+  if (!a) return ALTO;
+  let alto = ALTO;
+  for (const s of modelo.pasos) {
+    for (let k = 0; k < s.p.length; k += 3) {
+      const x = s.p[k], y = s.p[k + 1];
+      if (x >= B.x0 && x <= B.x1 && y >= B.y0 && y <= B.y1) alto = Math.max(alto, s.p[k + 2] + RADIO);
+    }
+  }
+  if (a.tipo === "poste") alto = Math.max(alto, a.z + a.radio);
+  return alto;
+}
+
 /* «reservado»: rectángulos en px del contenedor ({ x0, y0, x1, y1 }) donde no van los
    nombres, por ejemplo el número del paso que la ficha impresa pone encima de la imagen. */
 export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null, reservado = [] } = {}) {
@@ -120,7 +138,8 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const B = cajaDeEncuadre(modelo);
   const cx = (B.x0 + B.x1) / 2, cy = (B.y0 + B.y1) / 2;
   const esquinas = [];
-  for (const x of [B.x0, B.x1]) for (const y of [B.y0, B.y1]) for (const z of [0, ALTO]) esquinas.push(new THREE.Vector3(x, y, z));
+  const altoFit = altoDeEncuadre(modelo, B);
+  for (const x of [B.x0, B.x1]) for (const y of [B.y0, B.y1]) for (const z of [0, altoFit]) esquinas.push(new THREE.Vector3(x, y, z));
   const centroFit = new THREE.Vector3(cx, cy, 0.5);
   // Donde la cuerda entra al encuadre se pone el nombre «Firme».
   const e = modelo.encuadre;
@@ -149,6 +168,19 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const mesa = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), matSombra);
   mesa.receiveShadow = true;
   scene.add(mesa);
+
+  // El anfitrión: por ahora, un poste horizontal a lo largo de x (nudos/anfitrion.py).
+  const a = modelo.anfitrion;
+  if (a && a.tipo === "poste") {
+    const largo = a.hasta - a.desde;
+    const geoPoste = new THREE.CylinderGeometry(a.radio, a.radio, largo, 64, 1, false);
+    const matPoste = new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 });
+    const poste = new THREE.Mesh(geoPoste, matPoste);
+    poste.rotation.z = Math.PI / 2;   // el cilindro de three.js va a lo largo de y
+    poste.position.set((a.desde + a.hasta) / 2, a.y, a.z);
+    poste.castShadow = true; poste.receiveShadow = true;
+    scene.add(poste);
+  }
 
   // Materiales: azul, ámbar para lo que se mueve en el paso y el remate del chicote.
   const azul = texturasTrenza(renderer, [118, 156, 238], [42, 88, 200], [12, 30, 86], [196, 36, 44]);
