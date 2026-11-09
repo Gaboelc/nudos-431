@@ -12,7 +12,7 @@ from . import RAIZ, SPECS, URL_BASE
 from .construir import Modelo, construir
 from .anfitrion import Poste
 from .libre import Resultado
-from .spec import Anfitrion, Encuadre, cargar
+from .spec import Cuerda, Encuadre, cargar
 
 SITIO = RAIZ / "sitio"
 ESCENA = RAIZ / "render" / "escena.js"
@@ -39,30 +39,80 @@ def leer_publicados(ruta: Path = PUBLICADOS) -> list[str]:
 
 def datos_visor(modelo: Modelo) -> dict:
     """Lo que necesita el visor: la cuerda de cada paso y el tramo resaltado."""
-    return datos_escena(modelo.spec.slug, modelo.spec.encuadre, modelo.pasos, modelo.spec.anfitrion)
+    return datos_escena(modelo, modelo.spec.encuadre, modelo.pasos)
 
 
-def datos_escena(slug: str, e: Encuadre | None, resultados: list[Resultado],
-                 anfitrion: Anfitrion | None = None) -> dict:
-    """Lo que necesita render/escena.js para dibujar estos resultados con este encuadre.
-    El encuadre se ajusta a la cuerda de todos los resultados juntos."""
+def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado]) -> dict:
+    """Lo que necesita render/escena.js para dibujar estos resultados del nudo con este
+    encuadre. El encuadre se ajusta a la cuerda de todos los resultados juntos.
+
+    Con una cuerda, cada paso lleva sus puntos («p») y su tramo resaltado («hl»). Con
+    varias, la lista de cuerdas va aparte y cada paso lleva los puntos y el resaltado de
+    cada una, y cuál lleva el nombre «Chicote»: la que se mueve en ese paso o, en uno sin
+    resaltado (el nudo terminado), la última que se movió."""
+    s = modelo.spec
+    mueve = cuerda_que_se_mueve(modelo.pasos)
     pasos = []
     for r in resultados:
-        largo = r.h * (len(r.puntos) - 1)
-        hl = None
-        if r.resaltado is not None:
-            hl = [round(min(max(s / largo, 0.0), 1.0), 4) for s in r.resaltado]
-        idx = list(range(0, len(r.puntos), 2))
-        if idx[-1] != len(r.puntos) - 1:
-            idx.append(len(r.puntos) - 1)
-        p = [round(float(v), 3) for i in idx for v in r.puntos[i]]
-        pasos.append({"n": r.n, "hl": hl, "p": p})
-    return {
-        "slug": slug,
+        if r.reparto is None:
+            pasos.append({"n": r.n, "hl": _resaltado(r, 0, len(r.puntos) - 1), "p": _puntos(r.puntos)})
+            continue
+        cuerdas = [{"p": _puntos(r.puntos[i0:i1 + 1]), "hl": _resaltado(r, i0, i1)}
+                   for i0, i1 in r.reparto.tramos]
+        chicote = mueve if r.resaltado is None else _cuerda_resaltada(r)
+        pasos.append({"n": r.n, "cuerdas": cuerdas, "chicote": chicote})
+    datos = {
+        "slug": s.slug,
         "encuadre": None if e is None else {"x": list(e.x), "y": list(e.y)},
-        "anfitrion": None if anfitrion is None else Poste(anfitrion).datos(),
+        "anfitrion": None if s.anfitrion is None else Poste(s.anfitrion).datos(),
         "pasos": pasos,
     }
+    if s.cuerdas:
+        datos["cuerdas"] = [{"nombre": c.nombre, "etiqueta": etiqueta(c), "grosor": c.grosor,
+                             "color": c.color} for c in s.cuerdas]
+    return datos
+
+
+def etiqueta(cuerda: Cuerda) -> str:
+    """El nombre de una cuerda en las imágenes, junto a su firme: «gruesa» → «Gruesa»."""
+    texto = cuerda.nombre.replace("-", " ")
+    return texto[:1].upper() + texto[1:]
+
+
+def cuerda_que_se_mueve(resultados: list[Resultado]) -> int | None:
+    """La cuerda resaltada en el último paso que tiene un resaltado; si ninguno lo tiene,
+    la última cuerda. None con una sola cuerda."""
+    if not resultados or resultados[0].reparto is None:
+        return None
+    for r in reversed(resultados):
+        if r.resaltado is not None:
+            return _cuerda_resaltada(r)
+    return len(resultados[0].reparto.tramos) - 1
+
+
+def _cuerda_resaltada(r: Resultado) -> int:
+    # El punto medio del tramo resaltado: sus dos extremos son de la misma cuerda, pero
+    # el comienzo puede caer justo en el primer punto de ella.
+    return r.reparto.de((r.resaltado[0] + r.resaltado[1]) / 2, r.h)
+
+
+def _resaltado(r: Resultado, i0: int, i1: int) -> list[float] | None:
+    """El tramo resaltado como fracción del largo de la cuerda que va de i0 a i1, o None
+    si el resaltado no es de esa cuerda."""
+    if r.resaltado is None:
+        return None
+    s0, largo = i0 * r.h, (i1 - i0) * r.h
+    if r.reparto is not None and r.reparto.tramos[_cuerda_resaltada(r)][0] != i0:
+        return None
+    return [round(min(max((s - s0) / largo, 0.0), 1.0), 4) for s in r.resaltado]
+
+
+def _puntos(X) -> list[float]:
+    """Uno de cada dos puntos, y siempre el último, con tres decimales."""
+    idx = list(range(0, len(X), 2))
+    if idx[-1] != len(X) - 1:
+        idx.append(len(X) - 1)
+    return [round(float(v), 3) for i in idx for v in X[i]]
 
 
 def rellenar(plantilla: str, valores: dict[str, str]) -> str:

@@ -84,6 +84,10 @@ def guardar(modelo: Modelo) -> Path:
         "error": None if modelo.error is None else _resultado_json(modelo.error),
         "reverso": None if modelo.reverso is None else _resultado_json(modelo.reverso),
     }
+    if spec.cuerdas:
+        # Con varias cuerdas, cada resultado lleva además el primer y el último punto de cada una.
+        datos["cuerdas"] = [{"nombre": c.nombre, "grosor": c.grosor, "color": c.color}
+                            for c in spec.cuerdas]
     destino = BUILD / spec.slug / "modelo.json"
     destino.parent.mkdir(parents=True, exist_ok=True)
     with open(destino, "w", encoding="utf-8") as f:
@@ -92,7 +96,7 @@ def guardar(modelo: Modelo) -> Path:
 
 
 def _resultado_json(r: Resultado) -> dict:
-    return {
+    datos = {
         "n": r.n,
         "h": round(r.h, 6),
         "resaltado": None if r.resaltado is None else [round(v, 4) for v in r.resaltado],
@@ -101,3 +105,6 @@ def _resultado_json(r: Resultado) -> dict:
         "medidas": {k: round(v, 4) for k, v in r.medidas.items()},
         "puntos": [[round(float(v), 4) for v in p] for p in r.puntos],
     }
+    if r.reparto is not None:
+        datos["tramos"] = [list(t) for t in r.reparto.tramos]
+    return datos

@@ -1,10 +1,18 @@
-"""Geometría de varias cuerdas: cortes entre ellas, radio de cada una y separación por
-la suma de los radios. Con cuerdas sintéticas, sin un nudo real."""
+"""Varias cuerdas: cortes entre ellas, radio de cada una y separación por la suma de los
+radios, y cómo se dibujan. Con cuerdas sintéticas, sin un nudo real."""
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
-from nudos.construir import construir
+from PIL import Image
+
+from nudos import hoja
+from nudos.construir import _resultado_json, construir
 from nudos.cruces import encontrar_cruces
+from nudos.exportar import datos_escena
+from nudos.ficha import html_ficha
+from nudos.imprimir import ImpresionError, chrome, dibujar, imagenes, nombres
 from nudos.libre import (LIMITES, R, Reparto, TrazadoError, _texto, construir_paso, curvatura_min,
                          separacion_min)
 from nudos.spec import desde_datos
@@ -12,13 +20,13 @@ from nudos.spec import desde_datos
 GRUESA = 1.6
 
 
-def dos_cuerdas(trazado, secuencia, segmentos):
+def dos_cuerdas(trazado, secuencia, segmentos, **paso):
     return desde_datos({
         "slug": "prueba", "nombre": "Prueba", "familia": "De unión",
         "cuerdas": [{"nombre": "gruesa", "grosor": GRUESA, "color": "azul"},
                     {"nombre": "delgada", "grosor": 1, "color": "crema"}],
         "segmentos": segmentos,
-        "pasos": [{"titulo": "T", "texto": "X.", "trazado": trazado, "secuencia": secuencia}],
+        "pasos": [{"titulo": "T", "texto": "X.", "trazado": trazado, "secuencia": secuencia, **paso}],
     })
 
 
@@ -33,7 +41,8 @@ TEJIDA = dos_cuerdas({"gruesa": ["recta"], "delgada": ["vuelta"]},
                      {"gruesa": "1U 2O", "delgada": "1O 2U"},
                      {"recta": RECTA,
                       "vuelta": [[-2, 12], [-2, 6], [-2, 0], [-2, -4], [0, -6], [2, -4], [2, 0],
-                                 [2, 6], [2, 12]]})
+                                 [2, 6], [2, 12]]},
+                     resaltar={"desde": "vuelta[3]", "hasta": "fin"})
 
 
 @pytest.fixture(scope="module")
@@ -141,3 +150,88 @@ def test_la_secuencia_se_escribe_por_cuerda():
     assert _texto(["1O", "2U", "1U", "2O"]) == "«1O 2U 1U 2O»"
     assert (_texto(["1O", "2U", "1U", "2O"], ("gruesa", "delgada"), (2, 2))
             == "gruesa «1O 2U», delgada «1U 2O»")
+
+
+# --------------------------------------------------------------------------
+# Escena, impresión y hoja de revisión
+# --------------------------------------------------------------------------
+def test_la_escena_lleva_cada_cuerda(tejida):
+    datos = datos_escena(tejida, None, tejida.pasos)
+    assert datos["cuerdas"] == [
+        {"nombre": "gruesa", "etiqueta": "Gruesa", "grosor": GRUESA, "color": "azul"},
+        {"nombre": "delgada", "etiqueta": "Delgada", "grosor": 1.0, "color": "crema"}]
+    paso = datos["pasos"][0]
+    assert "p" not in paso and len(paso["cuerdas"]) == 2
+    r = tejida.pasos[0]
+    for c, (i0, i1) in zip(paso["cuerdas"], r.reparto.tramos):
+        # Uno de cada dos puntos de esa cuerda, y su último punto.
+        assert len(c["p"]) == 3 * len(range(i0, i1 + 1, 2)) + 3 * ((i1 - i0) % 2)
+        assert c["p"][-3:] == [round(float(v), 3) for v in r.puntos[i1]]
+    # El resaltado es de la delgada, medido a lo largo de ella, y por eso lleva «Chicote».
+    gruesa, delgada = paso["cuerdas"]
+    assert gruesa["hl"] is None
+    assert 0 < delgada["hl"][0] < delgada["hl"][1] == 1.0
+    assert paso["chicote"] == 1
+
+
+def test_sin_resaltado_el_chicote_es_el_de_la_ultima_que_se_movio(tejida):
+    datos = datos_escena(tejida, None, [tejida.reverso])
+    assert [c["hl"] for c in datos["pasos"][0]["cuerdas"]] == [None, None]
+    assert datos["pasos"][0]["chicote"] == 1
+
+
+def test_una_cuerda_no_cambia_la_escena(modelo_as_de_guia):
+    datos = datos_escena(modelo_as_de_guia, None, modelo_as_de_guia.pasos[:1])
+    assert "cuerdas" not in datos
+    assert set(datos["pasos"][0]) == {"n", "hl", "p"}
+
+
+def test_las_imagenes_nombran_cada_cuerda(tejida, modelo_as_de_guia):
+    assert nombres(tejida) == ("cuerda-gruesa", "cuerda-delgada", "chicote")
+    assert nombres(tejida, chicote=False) == ("cuerda-gruesa", "cuerda-delgada")
+    assert nombres(modelo_as_de_guia) == ("firme", "chicote")
+    assert {i.nombres for i in imagenes(tejida)} == {nombres(tejida)}
+
+
+def test_la_hoja_dibuja_cada_cuerda_con_su_radio_y_su_color(tejida):
+    r = tejida.pasos[0]
+    datos = {"encuadre": None, "cuerdas": [{"nombre": c.nombre, "grosor": c.grosor, "color": c.color}
+                                          for c in tejida.spec.cuerdas],
+             "pasos": [{"n": 1, **_resultado_json(r)}]}
+    p = datos["pasos"][0]
+    gruesa, delgada = hoja._cuerdas(datos, p)
+    assert (gruesa[1], delgada[1]) == (GRUESA * R, R)
+    assert gruesa[2] is hoja.AZUL and delgada[2] is hoja.CREMA
+    assert len(gruesa[0]) + len(delgada[0]) == len(r.puntos)
+    assert gruesa[3] is None
+    # El resaltado de la delgada, a lo largo de la delgada.
+    i0 = r.reparto.tramos[1][0]
+    assert delgada[3] == pytest.approx([s - i0 * p["h"] for s in p["resaltado"]])
+    assert hoja.hoja(datos).size[0] == hoja.COLUMNAS * hoja.ANCHO
+
+
+@pytest.fixture(scope="module")
+def con_chrome():
+    try:
+        with chrome():
+            pass
+    except ImpresionError as e:
+        pytest.skip(str(e))
+
+
+def test_las_dos_cuerdas_se_dibujan_con_su_color(con_chrome, tejida, tmp_path):
+    frente = next(i for i in imagenes(tejida) if i.nombre == "terminado-frente")
+    [ruta] = dibujar([frente], tmp_path)
+    with Image.open(ruta) as im:
+        rgb = np.asarray(im.convert("RGB"), int)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    azul = (b > r + 60).sum()
+    crema = ((r > 180) & (g > 170) & (b > 140) & (r - b > 15)).sum()
+    assert azul > 5000 and crema > 5000, (azul, crema)
+
+
+def test_la_ficha_explica_que_cada_cuerda_lleva_su_nombre(modelo_as_de_guia):
+    una = html_ficha(modelo_as_de_guia)
+    assert "Ves la cuerda sobre la mesa" in una
+    dos = html_ficha(replace(modelo_as_de_guia, spec=replace(modelo_as_de_guia.spec, cuerdas=TEJIDA.cuerdas)))
+    assert "Ves las cuerdas sobre la mesa" in dos and "cada una con su nombre junto a su firme" in dos

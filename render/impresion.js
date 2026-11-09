@@ -1,15 +1,30 @@
 /* Dibuja una imagen de impresión con la misma escena del visor. nudos/imprimir.py llama a
    window.dibujar(trabajo) y toma la captura cuando la promesa se cumple.
    trabajo: { modelo, paso, vista, resaltar, nombres: ["firme", "chicote"], reservado: [ancho, alto] }
-   «reservado» es la esquina superior izquierda, en px, que la ficha tapa con el número del
-   paso o un sello: ahí no se ponen los nombres. */
-import { crearEscena } from "./recursos/escena.js";
+   «nombres» son claves de nombresDe (escena.js). «reservado» es la esquina superior
+   izquierda, en px, que la ficha tapa con el número del paso o un sello: ahí no se ponen
+   los nombres. */
+import { crearEscena, nombresDe } from "./recursos/escena.js";
 
 const stage = document.getElementById("stage");
 const tags = {
   firme: [document.getElementById("tagFirme"), document.getElementById("lineFirme")],
   chicote: [document.getElementById("tagChicote"), document.getElementById("lineChicote")],
 };
+
+/* Con varias cuerdas, una etiqueta más por cuerda, con su nombre. */
+function agregarNombres(modelo) {
+  const lineas = document.querySelector(".lineas"), caja = document.querySelector(".tags");
+  for (const { clave, texto } of nombresDe(modelo)) {
+    if (tags[clave]) continue;
+    const el = document.createElement("span");
+    el.className = "tag"; el.hidden = true; el.textContent = texto;
+    const linea = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    linea.setAttribute("visibility", "hidden");
+    lineas.append(linea); caja.append(el);
+    tags[clave] = [el, linea];
+  }
+}
 
 function medir(el) {
   const oculto = el.hidden;
@@ -42,6 +57,7 @@ window.dibujar = async function (trabajo) {
   await document.fonts.load('400 10px "IBM Plex Mono"');
   const usar = trabajo.nombres || [];
   const [rw, rh] = trabajo.reservado || [0, 0];
+  agregarNombres(trabajo.modelo);
   let escena = null;
   escena = crearEscena(stage, trabajo.modelo, {
     interactiva: false,

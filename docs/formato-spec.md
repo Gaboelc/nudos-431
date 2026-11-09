@@ -96,6 +96,7 @@ secuencia:
 - Los segmentos son de todo el nudo, pero cada uno pertenece a una sola cuerda: si un paso lo pone en otra cuerda, es un error.
 - Un tramo resaltado va en una sola cuerda, y ahí `fin` es el último punto de la cuerda donde empieza.
 - Por ahora un nudo de varias cuerdas no lleva anfitrión.
+- En las imágenes, cada cuerda lleva su nombre junto a su firme («gruesa» se escribe «Gruesa») y «Chicote» va en la que se mueve en ese paso. En una imagen sin resaltado, como el nudo terminado, va en la última que se movió.
 
 ## Pasos
 
@@ -178,7 +179,6 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 
 ## Pendiente para versiones siguientes
 
-- Dibujar los nudos de varias cuerdas en el visor, la impresión, la hoja de revisión y la ficha (T6): hoy se construyen y se comprueban, pero todavía no se dibujan.
 - Varias cuerdas sobre un anfitrión.
 - Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
 - Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.

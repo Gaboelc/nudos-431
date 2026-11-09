@@ -75,6 +75,12 @@ class Reparto:
         """Índice del primer punto (el firme) de cada cuerda."""
         return np.concatenate([[0], np.nonzero(~self.seguido)[0] + 1])
 
+    @property
+    def tramos(self) -> list[tuple[int, int]]:
+        """Primer y último índice de cada cuerda."""
+        inicios = self.inicios.tolist()
+        return list(zip(inicios, [i - 1 for i in inicios[1:]] + [len(self.cuerda) - 1]))
+
     def de(self, s: float, h: float) -> int:
         """La cuerda del punto que está a `s` a lo largo de la polilínea."""
         return int(self.cuerda[min(int(s / h), len(self.cuerda) - 1)])

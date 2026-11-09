@@ -1,6 +1,6 @@
 /* Página del visor: navegación entre pasos, vistas y nombres. La escena está en escena.js.
    Los pasos escritos están en el HTML, así que se pueden leer aunque el 3D no cargue. */
-import { crearEscena } from "./escena.js";
+import { crearEscena, nombresDe } from "./escena.js";
 
 const datos = JSON.parse(document.getElementById("modelo").textContent);
 const N = datos.pasos.length;
@@ -8,10 +8,22 @@ const movimientoReducido = matchMedia("(prefers-reduced-motion: reduce)").matche
 
 const stage = document.getElementById("stage");
 const msg = document.getElementById("stageMsg");
-const tagFirme = document.getElementById("tagFirme");
-const tagChicote = document.getElementById("tagChicote");
-const lineFirme = document.getElementById("lineFirme");
-const lineChicote = document.getElementById("lineChicote");
+// Cada nombre con su etiqueta y su línea. «Firme» y «Chicote» están en el HTML; con varias
+// cuerdas se agrega una etiqueta con el nombre de cada una.
+const tags = {
+  firme: [document.getElementById("tagFirme"), document.getElementById("lineFirme")],
+  chicote: [document.getElementById("tagChicote"), document.getElementById("lineChicote")],
+};
+for (const { clave, texto } of nombresDe(datos)) {
+  if (tags[clave]) continue;
+  const el = document.createElement("span");
+  el.className = "tag"; el.hidden = true; el.textContent = texto;
+  const linea = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  linea.setAttribute("visibility", "hidden");
+  document.querySelector("#tags .lineas").append(linea);
+  document.getElementById("tags").append(el);
+  tags[clave] = [el, linea];
+}
 const countEl = document.getElementById("count");
 const prevBtn = document.getElementById("prev");
 const nextBtn = document.getElementById("next");
@@ -70,8 +82,7 @@ function placeTag(el, linea, a) {
 
 function placeTags() {
   const a = escena && escena.anclas();
-  placeTag(tagFirme, lineFirme, a && a.firme);
-  placeTag(tagChicote, lineChicote, a && a.chicote);
+  for (const [clave, [el, linea]] of Object.entries(tags)) placeTag(el, linea, a && a[clave]);
 }
 
 function themeShadow() {
@@ -105,7 +116,7 @@ function medir(el) {
   if (oculto) { el.hidden = true; el.style.visibility = ""; }
   return m;
 }
-const medidasNombres = () => ({ firme: medir(tagFirme), chicote: medir(tagChicote) });
+const medidasNombres = () => Object.fromEntries(Object.entries(tags).map(([clave, [el]]) => [clave, medir(el)]));
 
 try {
   escena = crearEscena(stage, datos, { movimientoReducido, alRenderizar: placeTags, medidasNombres });

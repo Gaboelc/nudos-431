@@ -23,7 +23,7 @@ import shutil
 import tempfile
 import threading
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image, ImageOps
@@ -61,7 +61,7 @@ class Imagen:
     indice: int          # qué paso de la escena se dibuja, desde 1
     vista: str
     resaltar: bool
-    nombres: tuple[str, ...] = field(default=("firme", "chicote"))
+    nombres: tuple[str, ...]   # claves de los nombres que lleva (ver nombres())
     # Esquina superior izquierda (ancho, alto en mm) que la ficha tapa con el número del
     # paso o con un sello. Ahí no se ponen los nombres.
     reservado_mm: tuple[float, float] = (0.0, 0.0)
@@ -76,38 +76,46 @@ def espejo(e: Encuadre | None) -> Encuadre | None:
     return None if e is None else Encuadre((-e.x[1], -e.x[0]), e.y)
 
 
+def nombres(modelo: Modelo, chicote: bool = True) -> tuple[str, ...]:
+    """Los nombres que llevan las imágenes, como claves de render/escena.js: «Firme» y
+    «Chicote» con una cuerda; con varias, el de cada cuerda junto a su firme y «Chicote»."""
+    firmes = tuple(f"cuerda-{c.nombre}" for c in modelo.spec.cuerdas) or ("firme",)
+    return firmes + (("chicote",) if chicote else ())
+
+
 def imagenes(modelo: Modelo) -> list[Imagen]:
     """Las imágenes de la ficha de un nudo."""
     s = modelo.spec
-    a = s.anfitrion
-    pasos = datos_escena(s.slug, s.encuadre, modelo.pasos, a)
-    out = [Imagen(f"paso-{r.n}", f"Paso {r.n}", pasos, i + 1, VISTA_PASOS, True,
+    todos = nombres(modelo)
+    pasos = datos_escena(modelo, s.encuadre, modelo.pasos)
+    out = [Imagen(f"paso-{r.n}", f"Paso {r.n}", pasos, i + 1, VISTA_PASOS, True, todos,
                   reservado_mm=ESQUINA_PASO)
            for i, r in enumerate(modelo.pasos)]
     if modelo.error is not None:
         e = s.error
         correcto = next(r for r in modelo.pasos if r.n == e.paso)
-        par = datos_escena(s.slug, e.encuadre or s.encuadre, [correcto, modelo.error], a)
+        par = datos_escena(modelo, e.encuadre or s.encuadre, [correcto, modelo.error])
+        firmes = nombres(modelo, chicote=False)
         out.append(Imagen("error-correcto", f"Paso {e.paso}, bien", par, 1, VISTA_PASOS, True,
-                          ("firme",), ESQUINA_SELLO))
+                          firmes, ESQUINA_SELLO))
         out.append(Imagen("error", f"Error: {e.titulo}", par, 2, VISTA_PASOS, True,
-                          ("firme",), ESQUINA_SELLO))
+                          firmes, ESQUINA_SELLO))
     enc = s.terminado.encuadre or s.encuadre
-    if a is not None:
-        final = datos_escena(s.slug, enc, [modelo.pasos[-1]], a)
+    if s.anfitrion is not None:
+        final = datos_escena(modelo, enc, [modelo.pasos[-1]])
         delante, detras = VISTAS_TERMINADO_ANFITRION
         out.append(Imagen("terminado-frente", "Terminado, por delante", final, 1, delante, False,
-                          reservado_mm=ESQUINA_SELLO))
+                          todos, reservado_mm=ESQUINA_SELLO))
         out.append(Imagen("terminado-reverso", "Terminado, por detrás", final, 1, detras, False,
-                          reservado_mm=ESQUINA_SELLO))
+                          todos, reservado_mm=ESQUINA_SELLO))
         return out
     out.append(Imagen("terminado-frente", "Terminado, por delante",
-                      datos_escena(s.slug, enc, [modelo.pasos[-1]]), 1, VISTA_TERMINADO, False,
-                      reservado_mm=ESQUINA_SELLO))
+                      datos_escena(modelo, enc, [modelo.pasos[-1]]), 1, VISTA_TERMINADO, False,
+                      todos, reservado_mm=ESQUINA_SELLO))
     if modelo.reverso is not None:
         out.append(Imagen("terminado-reverso", "Terminado, por detrás",
-                          datos_escena(s.slug, espejo(enc), [modelo.reverso]), 1, VISTA_TERMINADO, False,
-                          reservado_mm=ESQUINA_SELLO))
+                          datos_escena(modelo, espejo(enc), [modelo.reverso]), 1, VISTA_TERMINADO,
+                          False, todos, reservado_mm=ESQUINA_SELLO))
     return out
 
 
@@ -228,10 +236,10 @@ def _dibujar(navegador, base: str, img: Imagen, ancho: int, alto: int) -> bytes:
 # --------------------------------------------------------------------------
 def extra_prueba(modelo: Modelo) -> list[Imagen]:
     """El último paso también desde arriba, para comparar las dos vistas impresas."""
-    s = modelo.spec
-    pasos = datos_escena(s.slug, s.encuadre, modelo.pasos, s.anfitrion)
+    pasos = datos_escena(modelo, modelo.spec.encuadre, modelo.pasos)
     n = len(modelo.pasos)
-    return [Imagen(f"prueba/paso-{n}-arriba", f"Paso {n}, desde arriba", pasos, n, "arriba", True)]
+    return [Imagen(f"prueba/paso-{n}-arriba", f"Paso {n}, desde arriba", pasos, n, "arriba", True,
+                   nombres(modelo))]
 
 
 def pagina_prueba(modelo: Modelo, carpeta: Path) -> Path:

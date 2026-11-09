@@ -14,6 +14,8 @@ from scipy.spatial import cKDTree
 from .libre import R
 
 AZUL = np.array([0.10, 0.25, 0.75])
+CREMA = np.array([0.93, 0.89, 0.78])
+COLORES = {"azul": AZUL, "crema": CREMA}   # los de nudos/spec.py COLORES
 AMBAR = np.array([0.95, 0.55, 0.12])
 REMATE = np.array([0.35, 0.06, 0.06])
 MESA = np.array([0.80, 0.81, 0.80])
@@ -32,8 +34,7 @@ def hoja(datos: dict, vista: str = "arriba") -> Image.Image:
     angulo = "arriba" if vista == "arriba" else float(vista)
     cuadros = []
     for p in datos["pasos"]:
-        im = Image.fromarray(_cuadro(np.asarray(p["puntos"], float), p["resaltado"],
-                                     angulo, ANCHO, alto, ppd, centro))
+        im = Image.fromarray(_cuadro(_cuerdas(datos, p), angulo, ANCHO, alto, ppd, centro))
         ImageDraw.Draw(im).text((12, 10), f"Paso {p['n']}", fill=(30, 30, 30))
         cuadros.append(im)
     filas = (len(cuadros) + COLUMNAS - 1) // COLUMNAS
@@ -50,6 +51,22 @@ def _encuadre(datos: dict) -> tuple[float, float, float, float]:
     todos = np.vstack([np.asarray(p["puntos"], float)[:, :2] for p in datos["pasos"]])
     (x0, y0), (x1, y1) = todos.min(0) - MARGEN_AUTO, todos.max(0) + MARGEN_AUTO
     return float(x0), float(x1), float(y0), float(y1)
+
+
+def _cuerdas(datos: dict, p: dict) -> list[tuple[np.ndarray, float, np.ndarray, list | None]]:
+    """Las cuerdas de un paso de modelo.json: sus puntos, su radio, su color y el tramo
+    resaltado a lo largo de esa cuerda (None si no está en ella)."""
+    X = np.asarray(p["puntos"], float)
+    if "cuerdas" not in datos:
+        return [(X, R, AZUL, p["resaltado"])]
+    out = []
+    for c, (i0, i1) in zip(datos["cuerdas"], p["tramos"]):
+        hl = p["resaltado"]
+        s0, s1 = i0 * p["h"], i1 * p["h"]
+        if hl is not None:
+            hl = [v - s0 for v in hl] if s0 <= (hl[0] + hl[1]) / 2 <= s1 else None
+        out.append((X[i0:i1 + 1], c["grosor"] * R, COLORES[c["color"]], hl))
+    return out
 
 
 def _densificar(X, paso=0.06):
@@ -73,13 +90,14 @@ def _base(vista):
     return np.stack([xc, yc, zc])
 
 
-def _esferas(C, W, H, ppd, normales=True):
-    """Dibuja una esfera de radio R en cada punto, con z-buffer."""
+def _esferas(C, W, H, ppd, radios, normales=True):
+    """Dibuja una esfera en cada punto, del radio de su cuerda, con z-buffer."""
     zb = np.full((H, W), -np.inf)
     idx = np.full((H, W), -1, int)
     nrm = np.zeros((H, W, 3)) if normales else None
-    rad = R * ppd
     for m in range(len(C)):
+        radio = float(radios[m])
+        rad = radio * ppd
         px, py = W / 2 + C[m, 0] * ppd, H / 2 - C[m, 1] * ppd
         x0, x1 = int(max(0, np.floor(px - rad))), int(min(W, np.ceil(px + rad) + 1))
         y0, y1 = int(max(0, np.floor(py - rad))), int(min(H, np.ceil(py + rad) + 1))
@@ -89,10 +107,10 @@ def _esferas(C, W, H, ppd, normales=True):
         ys = -(np.arange(y0, y1) + 0.5 - py) / ppd
         dx, dy = np.meshgrid(xs, ys)
         r2 = dx * dx + dy * dy
-        msk = r2 < R * R
+        msk = r2 < radio * radio
         if not msk.any():
             continue
-        dz = np.sqrt(np.maximum(R * R - r2, 0))
+        dz = np.sqrt(np.maximum(radio * radio - r2, 0))
         prof = C[m, 2] + dz
         win = zb[y0:y1, x0:x1]
         upd = msk & (prof > win)
@@ -100,19 +118,27 @@ def _esferas(C, W, H, ppd, normales=True):
         idx[y0:y1, x0:x1][upd] = m
         if normales:
             nw = nrm[y0:y1, x0:x1]
-            nw[upd] = np.stack([dx[upd], dy[upd], dz[upd]], 1) / R
+            nw[upd] = np.stack([dx[upd], dy[upd], dz[upd]], 1) / radio
     return zb, idx, nrm
 
 
-def _cuadro(X, resaltado, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0)):
-    Xd, sd, L = _densificar(X)
-    col = np.tile(AZUL, (len(Xd), 1))
-    if resaltado is not None:
-        col[(sd >= resaltado[0]) & (sd <= resaltado[1])] = AMBAR
-    col[sd > L - 0.8] = REMATE
+def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0)):
+    """`cuerdas` es la lista de _cuerdas. Cada una se densifica por separado: entre el final
+    de una y el comienzo de la siguiente no hay cuerda."""
+    partes = []
+    for X, radio, color, resaltado in cuerdas:
+        Xd, sd, L = _densificar(X)
+        col = np.tile(color, (len(Xd), 1))
+        if resaltado is not None:
+            col[(sd >= resaltado[0]) & (sd <= resaltado[1])] = AMBAR
+        col[sd > L - 0.8 * (radio / R)] = REMATE
+        partes.append((Xd, col, np.full(len(Xd), radio)))
+    Xd = np.vstack([x for x, _, _ in partes])
+    col = np.vstack([c for _, c, _ in partes])
+    radios = np.concatenate([r for _, _, r in partes])
     B = _base(vista)
     C = (Xd - centro) @ B.T
-    zb, idx, nrm = _esferas(C, W, H, ppd)
+    zb, idx, nrm = _esferas(C, W, H, ppd, radios)
     cuerda = idx >= 0
 
     # posición en el mundo de cada píxel (cuerda o mesa)
@@ -137,7 +163,7 @@ def _cuadro(X, resaltado, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0)):
     sppd = 14.0
     ext = np.abs(CL[:, :2]).max(0) + 2
     SW, SH = int(2 * ext[0] * sppd), int(2 * ext[1] * sppd)
-    szb, _, _ = _esferas(CL, SW, SH, sppd, normales=False)
+    szb, _, _ = _esferas(CL, SW, SH, sppd, radios, normales=False)
     PL = (Pw - centro) @ BL.T
     u = np.clip((SW / 2 + PL[..., 0] * sppd).astype(int), 0, SW - 1)
     v = np.clip((SH / 2 - PL[..., 1] * sppd).astype(int), 0, SH - 1)
@@ -146,8 +172,8 @@ def _cuadro(X, resaltado, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0)):
     lit = gaussian_filter(lit, sigma=max(1.0, 0.08 * ppd))
 
     # oscurecimiento de contacto sobre la mesa
-    dist, _ = cKDTree(Xd).query(Pw.reshape(-1, 3), k=1)
-    dist = (dist - R).reshape(H, W)
+    dist, cual = cKDTree(Xd).query(Pw.reshape(-1, 3), k=1)
+    dist = (dist - radios[cual]).reshape(H, W)
     ao = 1 - 0.45 * np.exp(-np.maximum(dist, 0) / 0.3)
 
     img = np.zeros((H, W, 3))

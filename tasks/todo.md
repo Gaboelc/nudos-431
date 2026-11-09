@@ -61,7 +61,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Diseño escrito en el plan (formato, geometría, color, escena); falta implementarlo
   - [x] Formato con `cuerdas` y trazado y secuencia por cuerda, con sus pruebas (`tests/test_spec.py`)
   - [x] Geometría de varias cuerdas: cortes, radio por punto, separación por suma de radios (`tests/test_cuerdas.py`)
-  - [ ] Escena, impresión, hoja y ficha con dos cuerdas; nudos de una cuerda idénticos píxel por píxel
+  - [x] Escena, impresión, hoja y ficha con dos cuerdas; nudos de una cuerda idénticos píxel por píxel (38 imágenes del as de guía y del ballestrinque, con Edge)
   - [ ] `specs/vuelta-de-escota.yaml` y `tests/test_vuelta_de_escota.py`
   - [ ] Filtro 1 (el filtro 2, cuando se retome)
 - [ ] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas

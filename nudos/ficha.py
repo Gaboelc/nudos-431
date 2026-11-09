@@ -115,6 +115,9 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
                  f'  <section class="seguridad"><h2>Seguridad</h2><p>{esc(s.seguridad)}</p></section>')
     otros = ("" if not s.otros_nombres else
              f'      <p class="otros">También se llama {esc(_y(s.otros_nombres))}.</p>')
+    como_leer = ("Ves las cuerdas sobre la mesa, como las verías desde tu silla, cada una con su "
+                 "nombre junto a su firme." if s.cuerdas else
+                 "Ves la cuerda sobre la mesa, como la verías desde tu silla.")
     url = url_visor(s.slug)
     css = (LIBRO / "ficha.css").read_text(encoding="utf-8")
     plantilla = (LIBRO / "ficha.html").read_text(encoding="utf-8").replace("{{css}}", css)
@@ -125,6 +128,7 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
         "hechos": "\n".join(f"        <div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in hechos),
         "usos": esc(s.usos),
         "materiales": esc(s.materiales),
+        "como_leer": como_leer,
         "qr": "      " + qr_svg(url),
         "url_corta": esc(url.removeprefix("https://").rstrip("/")),
         "pasos_izq": "\n".join(paso(p) for p in s.pasos[:PASOS_IZQUIERDA]),
