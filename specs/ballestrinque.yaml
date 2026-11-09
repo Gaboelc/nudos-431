@@ -111,3 +111,10 @@ terminado:
   encuadre:
     x: [-4.5, 4.5]
     y: [-6.0, 6.0]
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-09
+    resultado: aprobado
+    ficha: ed9ac1e

@@ -54,7 +54,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] `specs/ballestrinque.yaml`: 5 pasos con el chicote, error común y texto de la ficha; pruebas en `tests/test_ballestrinque.py`
   - [x] El poste en la escena, el visor y la ficha; el nudo terminado se mira desde el otro lado
   - [ ] Gabriel revisa el texto de la ficha
-  - [ ] Filtro 1: Gabriel lo ata paso a paso con cuerda real y un palo, siguiendo la ficha impresa
+  - [x] Filtro 1: Gabriel lo ata paso a paso con cuerda real y un palo, siguiendo la ficha impresa (9 nov)
   - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (en pausa desde el 9 nov)
   - [ ] Registrar los filtros en la especificación
 - [ ] T6 Dos cuerdas con la vuelta de escota (M, depende de T4; puede ir en paralelo con T5)
@@ -109,7 +109,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [ ] Tensor (*trucker's hitch*)
 - [ ] Tensor ajustable (*tautline hitch*, sobre una estaca)
 - [ ] Constrictor
-- [ ] Amarre de liberación rápida (*mooring hitch*)
+- [ ] Nudo de liberación rápida (*mooring hitch*)
 - [ ] Presilla de alondra
 - [ ] Prusik
 - [ ] Punto de control de la tanda 3

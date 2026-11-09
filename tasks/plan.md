@@ -161,7 +161,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
   - **Nudo aguja:** va el de la página 25 del manual de la Tropa, el que se ata a un destorcedor. El *needle knot* de pesca con mosca que había llegado a `entradas/` no se usa.
   - **Ballestrinque doble:** su entrada es la página del manual de la Tropa. Por lo que describe (la cuerda tira a lo largo del mástil), es el *rolling hitch*.
   - **El *tautline hitch* se llama «tensor ajustable»**, para no confundirlo con el tensor (*trucker's hitch*).
-  - **El *mooring hitch* se llama «amarre de liberación rápida»**, el nombre que ya tenía en el manual v0.1.
+  - **El *mooring hitch* se llama «nudo de liberación rápida».** En el manual v0.1 era «nudo de amarre de liberación rápida»; se quitó «amarre» para no confundirlo con los amarres.
 
 ### Fase 1: primer corte vertical, el as de guía de principio a fin
 
@@ -423,7 +423,7 @@ Cada nudo es una tarea pequeña con la misma definición de terminado. Se trabaj
 |---|---|---|
 | 1 | Libres, una cuerda | simple, ocho, ocho doble, as de guía español, mariposa alpina, margarita, arnés de hombre, silla de bombero (requiere D1) |
 | 2 | Libres, dos cuerdas o dos extremos | rizo, pescador, nudo aguja (el del manual de la Tropa) |
-| 3 | Sobre anfitrión | ballestrinque doble (*rolling hitch*), leñador o vuelta de braza, media llave y dos cotes, fugitivo, tensor (*trucker's hitch*), tensor ajustable (*tautline hitch*, sobre una estaca), constrictor, amarre de liberación rápida (*mooring hitch*), presilla de alondra, prusik |
+| 3 | Sobre anfitrión | ballestrinque doble (*rolling hitch*), leñador o vuelta de braza, media llave y dos cotes, fugitivo, tensor (*trucker's hitch*), tensor ajustable (*tautline hitch*, sobre una estaca), constrictor, nudo de liberación rápida (*mooring hitch*), presilla de alondra, prusik |
 | 4 | Plantillas | amarre redondo, amarre diagonal, amarre trípode, refuerzo de cabo, adujado, puño de mono |
 | 5 | Anfitriones especiales | eslinga de barril, eslinga de andamio (requiere D1), vuelta de cornamusa (*cleat hitch*, sobre una cornamusa) |
 
@@ -456,7 +456,7 @@ El ocho doble, el tensor ajustable y la vuelta de cornamusa se agregaron el 9 de
 | Tensor (*trucker's hitch*) | 3 | `tensor` |
 | Tensor ajustable (*tautline hitch*) | 3 | `tensor-ajustable` |
 | Constrictor | 3 | `constrictor/con-el-chicote`, `constrictor/torciendo` |
-| Amarre de liberación rápida (*mooring hitch*) | 3 | `amarre-de-liberacion-rapida` |
+| Nudo de liberación rápida (*mooring hitch*) | 3 | `nudo-de-liberacion-rapida` |
 | Presilla de alondra | 3 | `presilla-de-alondra/con-el-chicote`, `presilla-de-alondra/con-gazas` |
 | Prusik | 3 | `prusik` |
 | Amarre redondo | 4 | `amarre-redondo` |
