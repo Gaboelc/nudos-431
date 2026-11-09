@@ -15,6 +15,13 @@ const RADIO = 0.5;        // la cuerda mide un diámetro
 const REMATE = 0.8;       // largo del remate en el chicote
 const ALTO = 1.6;         // alto mínimo que se considera al encuadrar: una cuerda sobre otra
 const MARGEN = 1.0;       // margen alrededor de la cuerda al encuadrar
+// Colores de cuerda (los de nudos/spec.py COLORES): claro, medio y oscuro de la trenza, y el
+// hilo trazador. En gris, la crema queda clara, el ámbar del resaltado medio y el azul oscuro.
+const COLORES = {
+  azul: [[118, 156, 238], [42, 88, 200], [12, 30, 86], [196, 36, 44]],
+  crema: [[255, 250, 238], [236, 225, 198], [138, 124, 96], [196, 36, 44]],
+};
+const AMBAR = [[255, 214, 140], [222, 140, 34], [92, 46, 6], [150, 30, 30]];
 
 /* Trenza de 16 hilos, 2 sobre 2. Un mosaico es una vuelta completa de cada hilo (π·d de largo). */
 function texturasTrenza(renderer, top, mid, low, tracer) {
@@ -80,10 +87,32 @@ function texturaRemate() {
   return t;
 }
 
-function puntos(paso) {
+function puntos(cuerda) {
   const pts = [];
-  for (let k = 0; k < paso.p.length; k += 3) pts.push(new THREE.Vector3(paso.p[k], paso.p[k + 1], paso.p[k + 2]));
+  for (let k = 0; k < cuerda.p.length; k += 3) pts.push(new THREE.Vector3(cuerda.p[k], cuerda.p[k + 1], cuerda.p[k + 2]));
   return pts;
+}
+
+/* Las cuerdas de un paso, cada una con sus puntos («p»), su tramo resaltado («hl»), su
+   grosor, su color, la clave del nombre que va junto a su firme y si lleva el nombre
+   «Chicote». Un nudo de una sola cuerda trae los puntos en el paso: es una cuerda azul de
+   grosor 1, con «Firme» y «Chicote». */
+function cuerdasDe(modelo, paso) {
+  if (!modelo.cuerdas) return [{ p: paso.p, hl: paso.hl, grosor: 1, color: "azul", clave: "firme", chicote: true }];
+  return modelo.cuerdas.map((c, k) => ({
+    p: paso.cuerdas[k].p, hl: paso.cuerdas[k].hl, grosor: c.grosor, color: c.color,
+    clave: `cuerda-${c.nombre}`, chicote: k === paso.chicote,
+  }));
+}
+
+/* Los nombres que puede llevar la escena, en el orden en que se colocan: con una cuerda,
+   «Firme» y «Chicote»; con varias, el de cada cuerda junto a su firme y «Chicote» en la que
+   se mueve. Las páginas crean una etiqueta para cada uno. */
+export function nombresDe(modelo) {
+  const firmes = modelo.cuerdas
+    ? modelo.cuerdas.map((c) => ({ clave: `cuerda-${c.nombre}`, texto: c.etiqueta }))
+    : [{ clave: "firme", texto: "Firme" }];
+  return [...firmes, { clave: "chicote", texto: "Chicote" }];
 }
 
 /* La caja que se encuadra: la parte de la cuerda que queda dentro del encuadre de la
@@ -92,28 +121,34 @@ function cajaDeEncuadre(modelo) {
   const e = modelo.encuadre;
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const s of modelo.pasos) {
-    for (let k = 0; k < s.p.length; k += 3) {
-      const x = s.p[k], y = s.p[k + 1];
-      if (e && (x < e.x[0] || x > e.x[1] || y < e.y[0] || y > e.y[1])) continue;
-      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    for (const c of cuerdasDe(modelo, s)) {
+      for (let k = 0; k < c.p.length; k += 3) {
+        const x = c.p[k], y = c.p[k + 1];
+        if (e && (x < e.x[0] || x > e.x[1] || y < e.y[0] || y > e.y[1])) continue;
+        x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      }
     }
   }
   return { x0: x0 - MARGEN, x1: x1 + MARGEN, y0: y0 - MARGEN, y1: y1 + MARGEN };
 }
 
-/* El alto que se encuadra. Sin anfitrión es ALTO, una cuerda sobre otra. Con anfitrión,
-   el de la cuerda dentro de la caja y el del anfitrión. */
+/* El alto que se encuadra. Con una cuerda y sin anfitrión es ALTO, una cuerda sobre otra.
+   Con un anfitrión o con varias cuerdas (una gruesa sube más), el de la cuerda dentro de
+   la caja y el del anfitrión. */
 function altoDeEncuadre(modelo, B) {
   const a = modelo.anfitrion;
-  if (!a) return ALTO;
+  if (!a && !modelo.cuerdas) return ALTO;
   let alto = ALTO;
   for (const s of modelo.pasos) {
-    for (let k = 0; k < s.p.length; k += 3) {
-      const x = s.p[k], y = s.p[k + 1];
-      if (x >= B.x0 && x <= B.x1 && y >= B.y0 && y <= B.y1) alto = Math.max(alto, s.p[k + 2] + RADIO);
+    for (const c of cuerdasDe(modelo, s)) {
+      const r = RADIO * c.grosor;
+      for (let k = 0; k < c.p.length; k += 3) {
+        const x = c.p[k], y = c.p[k + 1];
+        if (x >= B.x0 && x <= B.x1 && y >= B.y0 && y <= B.y1) alto = Math.max(alto, c.p[k + 2] + r);
+      }
     }
   }
-  if (a.tipo === "poste") alto = Math.max(alto, a.z + a.radio);
+  if (a && a.tipo === "poste") alto = Math.max(alto, a.z + a.radio);
   return alto;
 }
 
@@ -182,15 +217,20 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     scene.add(poste);
   }
 
-  // Materiales: azul, ámbar para lo que se mueve en el paso y el remate del chicote.
-  const azul = texturasTrenza(renderer, [118, 156, 238], [42, 88, 200], [12, 30, 86], [196, 36, 44]);
-  const ambar = texturasTrenza(renderer, [255, 214, 140], [222, 140, 34], [92, 46, 6], [150, 30, 30]);
-  const matAzul = new THREE.MeshStandardMaterial({ map: azul.map, bumpMap: azul.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0 });
-  const matAmbar = new THREE.MeshStandardMaterial({ map: ambar.map, bumpMap: ambar.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0 });
-  const matRemate = new THREE.MeshStandardMaterial({ map: texturaRemate(), roughness: 0.6, metalness: 0 });
+  // Materiales de cada cuerda: su color, ámbar para lo que se mueve en el paso y el remate
+  // del chicote. Cada cuerda tiene los suyos, porque la trenza se repite según su largo.
+  const cuerdas = modelo.cuerdas || [{ grosor: 1, color: "azul" }];
+  const grosorMax = Math.max(...cuerdas.map((c) => c.grosor));
+  const materiales = cuerdas.map((c) => {
+    const color = texturasTrenza(renderer, ...COLORES[c.color]);
+    const ambar = texturasTrenza(renderer, ...AMBAR);
+    const base = new THREE.MeshStandardMaterial({ map: color.map, bumpMap: color.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0 });
+    const matAmbar = new THREE.MeshStandardMaterial({ map: ambar.map, bumpMap: ambar.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0 });
+    const remate = new THREE.MeshStandardMaterial({ map: texturaRemate(), roughness: 0.6, metalness: 0 });
+    return { base, ambar: matAmbar, remate, mats: [base, matAmbar, remate] };
+  });
   const matPunta = new THREE.MeshStandardMaterial({ color: 0x1b1517, roughness: 0.45, metalness: 0 });
   const geoTapa = new THREE.SphereGeometry(RADIO, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-  const mats = [matAzul, matAmbar, matRemate];
 
   let controls = null;
   if (interactiva) {
@@ -215,61 +255,73 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     controls.addEventListener("start", () => { movidoPorUsuario = true; anim = null; });
   }
 
+  // Nombres: el de cada cuerda («Firme» con una sola) junto a donde entra al encuadre y
+  // «Chicote» junto al extremo de la que se mueve. Aquí solo se preparan los lugares
+  // posibles, de cerca hacia afuera. Cuál se usa se decide en pantalla (colocarNombres),
+  // porque depende del tamaño del nombre y de la cámara.
+  const plano = (v) => { v.setZ(0); return v.lengthSq() > 1e-12 ? v.normalize() : v.set(1, 0, 0); };
+  const giro = (v, g) => {
+    const a = (g * Math.PI) / 180;
+    return new THREE.Vector3(v.x * Math.cos(a) - v.y * Math.sin(a), v.x * Math.sin(a) + v.y * Math.cos(a), 0);
+  };
+  const alrededor = (p, dir, radios, angulos) => radios.flatMap((r) => angulos.map((g) => {
+    const c = p.clone().addScaledVector(giro(dir, g), r);
+    c.z = p.z + 0.6;
+    return c;
+  }));
+
   function construirPaso(paso) {
-    const pts = puntos(paso);
-    let L = 0;
-    for (let k = 1; k < pts.length; k++) L += pts[k].distanceTo(pts[k - 1]);
-    const curva = new THREE.CatmullRomCurve3(pts, false, "centripetal");
-    curva.arcLengthDivisions = Math.max(200, pts.length * 4);
-    const T = Math.ceil(L / 0.08);
-    const RS = 20;
-    const geo = new THREE.TubeGeometry(curva, T, RADIO, RS, false);
-    const porSegmento = RS * 6;
-    const w = Math.max(1, Math.round(((L - REMATE) / L) * T));
-    const a = paso.hl ? Math.min(w, Math.round(paso.hl[0] * T)) : w;
-    const b = paso.hl ? Math.min(w, Math.round(paso.hl[1] * T)) : w;
-    geo.clearGroups();
-    [[0, a, 0], [a, b, 1], [b, w, 0], [w, T, 2]].forEach(([s0, s1, m]) => {
-      if (s1 > s0) geo.addGroup(s0 * porSegmento, (s1 - s0) * porSegmento, m);
-    });
-    const cuerda = new THREE.Mesh(geo, mats);
-    cuerda.castShadow = true; cuerda.receiveShadow = true;
     const grupo = new THREE.Group();
-    grupo.add(cuerda);
-    const tapa = (t, mat) => {
-      const p = curva.getPointAt(t);
-      const tan = curva.getTangentAt(t).normalize();
-      if (t === 0) tan.negate();
-      const m = new THREE.Mesh(geoTapa, mat);
-      m.position.copy(p);
-      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tan);
-      m.scale.set(1, 0.3, 1);
-      m.castShadow = true;
-      return m;
-    };
-    grupo.add(tapa(0, matAzul), tapa(1, matPunta));
-    // Nombres: «Firme» junto a donde la cuerda entra al encuadre y «Chicote» junto al extremo.
-    // Aquí solo se preparan los lugares posibles, de cerca hacia afuera. Cuál se usa se decide
-    // en pantalla (colocarNombres), porque depende del tamaño del nombre y de la cámara.
-    const plano = (v) => { v.setZ(0); return v.lengthSq() > 1e-12 ? v.normalize() : v.set(1, 0, 0); };
-    const giro = (v, g) => {
-      const a = (g * Math.PI) / 180;
-      return new THREE.Vector3(v.x * Math.cos(a) - v.y * Math.sin(a), v.x * Math.sin(a) + v.y * Math.cos(a), 0);
-    };
-    const alrededor = (p, dir, radios, angulos) => radios.flatMap((r) => angulos.map((g) => {
-      const c = p.clone().addScaledVector(giro(dir, g), r);
-      c.z = p.z + 0.6;
-      return c;
-    }));
-    let k = 0;
-    while (k < pts.length - 2 && !dentro(pts[k])) k++;
-    const t = plano(pts[k + 1].clone().sub(pts[k]));
-    const firme = { punto: pts[k].clone(), candidatos: alrededor(pts[k], t, [1.9, 2.8, 3.8, 5.0], [90, -90, 135, -135, 45, -45]) };
-    const fin = curva.getPointAt(1), tanFin = plano(curva.getTangentAt(1));
-    const chicote = { punto: fin.clone(), candidatos: alrededor(fin, tanFin, [2.2, 3.2, 4.4, 5.6, 7.0], [0, 45, -45, 90, -90, 135, -135, 180]) };
-    firme.etiqueta = firme.candidatos[0];
-    chicote.etiqueta = chicote.candidatos[0];
-    return { grupo, L, pts, nombres: { firme, chicote } };
+    const tubos = [], todos = [], nombres = {};
+    let chicote = null;
+    cuerdasDe(modelo, paso).forEach((c, n) => {
+      const pts = puntos(c);
+      let L = 0;
+      for (let k = 1; k < pts.length; k++) L += pts[k].distanceTo(pts[k - 1]);
+      const curva = new THREE.CatmullRomCurve3(pts, false, "centripetal");
+      curva.arcLengthDivisions = Math.max(200, pts.length * 4);
+      const T = Math.ceil(L / 0.08);
+      const RS = 20;
+      const geo = new THREE.TubeGeometry(curva, T, RADIO * c.grosor, RS, false);
+      const porSegmento = RS * 6;
+      const w = Math.max(1, Math.round(((L - REMATE * c.grosor) / L) * T));
+      const a = c.hl ? Math.min(w, Math.round(c.hl[0] * T)) : w;
+      const b = c.hl ? Math.min(w, Math.round(c.hl[1] * T)) : w;
+      geo.clearGroups();
+      [[0, a, 0], [a, b, 1], [b, w, 0], [w, T, 2]].forEach(([s0, s1, m]) => {
+        if (s1 > s0) geo.addGroup(s0 * porSegmento, (s1 - s0) * porSegmento, m);
+      });
+      const tubo = new THREE.Mesh(geo, materiales[n].mats);
+      tubo.castShadow = true; tubo.receiveShadow = true;
+      grupo.add(tubo);
+      const tapa = (t, mat) => {
+        const p = curva.getPointAt(t);
+        const tan = curva.getTangentAt(t).normalize();
+        if (t === 0) tan.negate();
+        const m = new THREE.Mesh(geoTapa, mat);
+        m.position.copy(p);
+        m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tan);
+        m.scale.set(c.grosor, 0.3 * c.grosor, c.grosor);
+        m.castShadow = true;
+        return m;
+      };
+      grupo.add(tapa(0, materiales[n].base), tapa(1, matPunta));
+      tubos.push({ malla: tubo, n, L, grosor: c.grosor });
+      todos.push(...pts);
+      let k = 0;
+      while (k < pts.length - 2 && !dentro(pts[k])) k++;
+      const t = plano(pts[k + 1].clone().sub(pts[k]));
+      const firme = { punto: pts[k].clone(), candidatos: alrededor(pts[k], t, [1.9, 2.8, 3.8, 5.0], [90, -90, 135, -135, 45, -45]) };
+      firme.etiqueta = firme.candidatos[0];
+      nombres[c.clave] = firme;
+      if (c.chicote) {
+        const fin = curva.getPointAt(1), tanFin = plano(curva.getTangentAt(1));
+        chicote = { punto: fin.clone(), candidatos: alrededor(fin, tanFin, [2.2, 3.2, 4.4, 5.6, 7.0], [0, 45, -45, 90, -90, 135, -135, 180]) };
+        chicote.etiqueta = chicote.candidatos[0];
+      }
+    });
+    if (chicote) nombres.chicote = chicote;
+    return { grupo, tubos, pts: todos, nombres };
   }
 
   function mostrarPaso(n) {
@@ -279,16 +331,20 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     if (activo) scene.remove(activo.grupo);
     activo = c;
     scene.add(c.grupo);
-    const rep = c.L / Math.PI;
-    for (const m of [matAzul, matAmbar]) { m.map.repeat.set(rep, 1); m.bumpMap.repeat.set(rep, 1); }
-    matRemate.map.repeat.set(c.L / 0.5, 1);
+    // La trenza se repite una vez cada π diámetros de esa cuerda.
+    for (const t of c.tubos) {
+      const m = materiales[t.n];
+      const rep = t.L / (Math.PI * t.grosor);
+      for (const mm of [m.base, m.ambar]) { mm.map.repeat.set(rep, 1); mm.bumpMap.repeat.set(rep, 1); }
+      m.remate.map.repeat.set(t.L / (0.5 * t.grosor), 1);
+    }
     colocarNombres();
     pedirCuadro();
   }
 
   function resaltar(si) {
-    mats[1] = si ? matAmbar : matAzul;
-    construidos.forEach((c) => { c.grupo.children[0].material = mats; });
+    for (const m of materiales) m.mats[1] = si ? m.ambar : m.base;
+    construidos.forEach((c) => { for (const t of c.tubos) t.malla.material = materiales[t.n].mats; });
     pedirCuadro();
   }
 
@@ -371,8 +427,8 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     };
     const P = activo.pts.map(pantalla).filter((p) => p.z <= 1);
     const derecha = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
-    const a = pantalla(centroFit), b = pantalla(centroFit.clone().addScaledVector(derecha, RADIO));
-    const r = Math.hypot(b.x - a.x, b.y - a.y);   // radio de la cuerda en px
+    const a = pantalla(centroFit), b = pantalla(centroFit.clone().addScaledVector(derecha, RADIO * grosorMax));
+    const r = Math.hypot(b.x - a.x, b.y - a.y);   // radio de la cuerda más gruesa en px
     const puestos = [];   // etiquetas ya colocadas: tampoco se pueden tapar entre sí
     for (const [clave, nom] of Object.entries(activo.nombres)) {
       const m = medidas[clave];
