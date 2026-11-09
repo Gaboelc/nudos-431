@@ -55,9 +55,15 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] El poste en la escena, el visor y la ficha; el nudo terminado se mira desde el otro lado
   - [ ] Gabriel revisa el texto de la ficha
   - [ ] Filtro 1: Gabriel lo ata paso a paso con cuerda real y un palo, siguiendo la ficha impresa
-  - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa
-  - [ ] Registrar los dos filtros en la especificación
+  - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (en pausa desde el 9 nov)
+  - [ ] Registrar los filtros en la especificación
 - [ ] T6 Dos cuerdas con la vuelta de escota (M, depende de T4; puede ir en paralelo con T5)
+  - [x] Diseño escrito en el plan (formato, geometría, color, escena); falta implementarlo
+  - [ ] Formato con `cuerdas` y trazado y secuencia por cuerda, con sus pruebas
+  - [ ] Geometría de varias cuerdas: cortes, radio por punto, separación por suma de radios
+  - [ ] Escena, impresión, hoja y ficha con dos cuerdas; nudos de una cuerda idénticos píxel por píxel
+  - [ ] `specs/vuelta-de-escota.yaml` y `tests/test_vuelta_de_escota.py`
+  - [ ] Filtro 1 (el filtro 2, cuando se retome)
 - [ ] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas
 - [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
@@ -76,7 +82,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 
 ## Fase 4: producción de los 30 nudos restantes
 
-Cada nudo cumple la definición de terminado: pruebas automáticas, error común, imágenes, visor, ficha, filtro 1, filtro 2 y estado `publicado`.
+Cada nudo cumple la definición de terminado: pruebas automáticas, error común, imágenes, visor, ficha, filtro 1, filtro 2 y estado `publicado`. El filtro 2 está en pausa desde el 9 de noviembre (ver la definición de terminado en el plan).
 
 ### Tanda 1: libres, una cuerda
 - [ ] Simple
