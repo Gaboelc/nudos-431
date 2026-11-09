@@ -2,3 +2,5 @@
 # Un slug de esta lista no se cambia ni se borra nunca: su dirección tiene que seguir
 # funcionando en el sitio, y «python -m nudos sitio» falla si falta su página.
 as-de-guia
+ballestrinque
+vuelta-de-escota

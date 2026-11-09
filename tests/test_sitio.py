@@ -11,9 +11,10 @@ from nudos.exportar import (EXTENSIONES, SitioError, archivos_no_permitidos, con
 
 
 @pytest.fixture(scope="module")
-def sitio(tmp_path_factory, modelo_as_de_guia):
+def sitio(tmp_path_factory, modelo_as_de_guia, modelo_ballestrinque, modelo_vuelta_de_escota):
     destino = tmp_path_factory.mktemp("sitio") / "sitio"
-    slugs = construir_sitio(destino, modelos=[modelo_as_de_guia])
+    slugs = construir_sitio(destino, modelos=[modelo_as_de_guia, modelo_ballestrinque,
+                                              modelo_vuelta_de_escota])
     return destino, slugs
 
 
@@ -48,7 +49,7 @@ def test_el_sitio_no_tiene_imagenes_ni_archivos_extranos(sitio):
 def test_no_borra_una_carpeta_que_no_es_un_sitio(tmp_path, modelo_as_de_guia):
     (tmp_path / "importante.txt").write_text("no me borres")
     with pytest.raises(SitioError, match="no la borro"):
-        construir_sitio(tmp_path, modelos=[modelo_as_de_guia])
+        construir_sitio(tmp_path, modelos=[modelo_as_de_guia], publicados=[])
     assert (tmp_path / "importante.txt").exists()
 
 
