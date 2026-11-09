@@ -9,8 +9,7 @@ abok: 1245
 
 usos: >-
   Sujeta una cuerda a un poste, un tubo o una baranda. Con él empiezan y terminan muchos
-  amarres. Se hace rápido y se afloja fácil para correrlo o deshacerlo. Si la carga tira
-  hacia distintos lados o el poste gira, se puede correr: remátalo con un cote.
+  amarres. Se hace rápido y se afloja fácil para correrlo o deshacerlo.
 materiales: >-
   Una cuerda de 1 a 2 m y un palo redondo, como el de una escoba.
 verificacion:
@@ -18,6 +17,26 @@ verificacion:
   - El firme y el chicote salen por debajo de la diagonal, hacia lados opuestos.
   - Por detrás se ven dos vueltas paralelas, una junto a la otra.
   - Al tirar del firme, las vueltas aprietan el poste y el nudo no se corre.
+# Texto propio. Pendiente: que Gabriel lo revise.
+precauciones:
+  - Si la carga tira hacia distintos lados o el poste gira, se puede correr y soltar. No lo
+    dejes solo cuando importa que aguante; remátalo con un cote.
+  - Si le haces varias vueltas seguidas para asegurarlo, con mucha carga las primeras se
+    aprietan tanto que después no se pueden desatar.
+  - >-
+    No lo uses para amarrar algo que tira con fuerza y cambia de dirección, como un bote:
+    se suelta.
+alternativas:
+  - nudo: Media llave y dos cotes
+    cuando: >-
+      Cuando la cuerda va a quedar atada mucho tiempo o la carga cambia de dirección: no se
+      corre y se desata fácil.
+  - nudo: Ballestrinque doble
+    cuando: Cuando la carga tira a lo largo del poste o de otra cuerda; en ese sentido no se corre.
+  - nudo: Constrictor
+    cuando: >-
+      Cuando quieres apretar algo y que no se afloje, como la boca de una bolsa: aguanta
+      mucho más, pero cuesta desatarlo.
 
 anfitrion:
   tipo: poste

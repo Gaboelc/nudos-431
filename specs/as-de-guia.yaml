@@ -26,6 +26,22 @@ seguridad: >-
   lo uses para sostener, subir ni bajar a nadie. Esa práctica se hace únicamente con
   instructor y equipo certificados. Además, si la cuerda queda sin carga o es rígida
   o resbalosa, el nudo se puede aflojar: revísalo cada vez antes de usarlo.
+# Texto propio: los cuidados que ya dice «seguridad» no se repiten aquí. Pendiente: que
+# Gabriel lo revise.
+precauciones:
+  - La gaza no se ajusta. Si te quedó grande o chica, deshaz el nudo y vuelve a empezar.
+  - Mientras la cuerda tiene carga no se puede desatar. Espera a que quede floja.
+  - Aguanta bien cuando tiras del firme. Si la carga abre la gaza hacia los lados, como un
+    anillo, el nudo se puede deformar y soltar.
+alternativas:
+  - nudo: Ocho doble
+    cuando: >-
+      Cuando la gaza tiene que aguantar mucho o va a quedar sin revisar: no se afloja sola,
+      aunque después de cargarla cuesta más desatarla.
+  - nudo: Mariposa alpina
+    cuando: Cuando necesitas la gaza en el medio de la cuerda y no en el extremo.
+  - nudo: As de guía español
+    cuando: Cuando necesitas dos gazas en vez de una.
 
 # Los dos filtros humanos (ver la definición de terminado del plan). Del probador del
 # filtro 2 se registran solo el rol y un código; la tabla de códigos vive fuera del repositorio.

@@ -22,6 +22,8 @@ El ejemplo completo es `specs/as-de-guia.yaml`; el de un nudo de dos cuerdas, `s
 | `usos` | para la ficha | Para qué sirve. |
 | `materiales` | para la ficha | Qué cuerda y qué objetos hacen falta. |
 | `verificacion` | para la ficha | Lista de criterios para revisar el nudo terminado. Cada uno se tiene que poder comprobar mirando o tirando del nudo. |
+| `precauciones` | para la ficha | Lista de cuidados y peligros al usar el nudo: cuándo se afloja, se corre o se aprieta demasiado, y qué hacer. Lo que va en `seguridad` no se repite aquí. |
+| `alternativas` | para la ficha | Lista de otros nudos que convienen en su lugar, cada uno con `nudo` (su nombre) y `cuando` (en qué caso conviene más que este). Si el otro nudo está en el libro, usa el mismo nombre de su ficha. |
 | `seguridad` | no | Solo cuando aplica. Si el nudo tiene usos con personas, sigue la postura de seguridad del libro (D1 del plan). |
 | `encuadre` | no | Zona de la mesa que se muestra, como `x: [mín, máx]` e `y: [mín, máx]`. Si falta, se calcula con todos los pasos. |
 | `anfitrion` | no | El objeto alrededor del que se ata el nudo, por ejemplo un poste (ver abajo). |
@@ -33,6 +35,8 @@ El ejemplo completo es `specs/as-de-guia.yaml`; el de un nudo de dos cuerdas, `s
 | `filtros` | no | Registro de los dos filtros humanos (ver abajo). |
 
 Los campos desconocidos producen un error, así que un error de tipeo se detecta al cargar.
+
+Los datos de `entradas/` (por ejemplo, los `info.txt` de Animated Knots) sirven para saber qué escribir en estos campos, pero el texto se escribe de nuevo: nunca se copia. La ficha y la página del visor muestran los mismos campos.
 
 Los campos marcados «para la ficha» se pueden dejar para después mientras se modela el nudo, pero `python -m nudos ficha` no genera la ficha sin ellos ni sin `error`. Todo el texto va en tuteo, es propio y no usa términos de ninguna sección: la ficha no se genera si aparece alguno de `config/terminos_seccion.txt`.
 

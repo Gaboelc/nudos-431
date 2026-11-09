@@ -1,5 +1,6 @@
 """El sitio: cada nudo con QR tiene su página y no se cuela nada de las fuentes."""
 import dataclasses
+import html
 import json
 import re
 
@@ -62,6 +63,28 @@ def test_la_pagina_trae_los_pasos_de_la_especificacion(sitio, modelo_as_de_guia)
                                  pagina, re.S).group(1))
     assert [p["n"] for p in datos["pasos"]] == list(range(1, 8))
     assert f'href="{URL_BASE}as-de-guia/"' in pagina
+
+
+def test_la_pagina_dice_lo_mismo_que_la_ficha_sobre_el_nudo(sitio, modelo_vuelta_de_escota):
+    """Debajo de los pasos: para qué sirve, materiales, precauciones y alternativas, con el
+    mismo texto de la especificación, y los otros nombres bajo el título."""
+    destino, _ = sitio
+    s = modelo_vuelta_de_escota.spec
+    pagina = (destino / "vuelta-de-escota" / "index.html").read_text(encoding="utf-8")
+    sobre = re.search(r'<section class="sobre".*?</section>', pagina, re.S).group(0)
+    texto = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", sobre)).split())
+    for parte in ["Sobre el nudo", "Para qué sirve", "Materiales", "Precauciones", "Alternativas",
+                  s.usos, s.materiales, *s.precauciones, *(f"{a.nudo}. {a.cuando}" for a in s.alternativas)]:
+        assert parte in texto, parte
+    assert "Seguridad" not in texto   # la vuelta de escota no lleva
+    assert "También se llama vuelta de escota simple." in pagina
+
+
+def test_la_seguridad_va_en_la_pagina_cuando_la_hay(sitio, modelo_as_de_guia):
+    destino, _ = sitio
+    pagina = (destino / "as-de-guia" / "index.html").read_text(encoding="utf-8")
+    assert '<div class="seguridad"><h3>Seguridad</h3>' in pagina
+    assert html.escape(modelo_as_de_guia.spec.seguridad) in pagina
 
 
 def test_las_rutas_de_la_pagina_existen(sitio):

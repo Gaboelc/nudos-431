@@ -89,6 +89,13 @@ figcaption .t { display: block; margin-bottom: 0.4mm; font-weight: 600; font-siz
   border: 0.25mm solid var(--ink); border-radius: 0.4mm;
 }
 
+/* Precauciones y alternativas, debajo de la rejilla de la página derecha. */
+.detalles { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+.detalles ul { margin: 0; padding: 0 0 0 3.6mm; }
+.detalles li { margin: 0 0 1.4mm; }
+.detalles li::marker { color: var(--accent-ink); }
+.detalles .t { font-weight: 600; }
+
 .seguridad { padding: 2.2mm 3mm; border-left: 1mm solid var(--accent); }
 
 .pie {

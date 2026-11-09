@@ -11,8 +11,7 @@ abok: 1431
 # Pendiente: que Gabriel lo revise.
 usos: >-
   Une dos cuerdas, sobre todo si una es más gruesa que la otra, por ejemplo para alargar
-  una con la otra. También sirve si son del mismo grosor. Si las cuerdas quedan sueltas
-  o se sacuden, se puede aflojar: revísala antes de volver a tirar.
+  una con la otra. También sirve si son del mismo grosor.
 materiales: >-
   Dos cuerdas de 1 m más o menos, una más gruesa que la otra; por ejemplo, una de 10 mm
   y otra de 6 mm. Para aprender, que no sean rígidas.
@@ -22,6 +21,23 @@ verificacion:
   - El chicote de la delgada queda apretado entre el seno y el tramo de la delgada que sale de él.
   - Al tirar de los dos firmes, el nudo se aprieta y no se desliza.
   - A cada chicote le sobra por lo menos el largo de tu mano.
+precauciones:
+  - Si las cuerdas quedan sueltas o se sacuden, se puede aflojar. Revísala antes de volver
+    a tirar.
+  - Si los chicotes quedan en lados opuestos del nudo, aguanta menos. Deshazla y átala otra
+    vez.
+  - >-
+    No sirve para atar apretado alrededor de algo: se hace con las dos cuerdas sueltas en
+    la mano, sin carga.
+alternativas:
+  - nudo: Vuelta de escota doble
+    cuando: >-
+      Cuando una cuerda es mucho más gruesa que la otra o las dos son resbalosas: la delgada
+      da una vuelta más alrededor del seno.
+  - nudo: Pescador
+    cuando: Para unir dos cuerdas delgadas del mismo grosor, como dos sedales.
+  - nudo: Rizo
+    cuando: Para atar apretado alrededor de algo, como un paquete o una venda.
 
 cuerdas:
   - {nombre: gruesa, grosor: 1.5, color: azul}

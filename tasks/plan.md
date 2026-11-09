@@ -321,6 +321,27 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 - La vuelta de escota tiene 4 pasos, con la gruesa de grosor 1,5. El error común es el chicote por encima de sí misma (cruce 6). En el modelo, la delgada pasa por debajo de sí misma justo después de cruzar la rama del chicote de la gruesa, no dentro del seno: es el mismo nudo, porque esa rama queda debajo de las dos pasadas de la delgada.
 - Esta computadora no tiene Chrome. Las comparaciones píxel por píxel (38 imágenes, antes y después del cambio) y las pruebas que dibujan se hicieron con Edge, poniendo `NUDOS_CHROME` en la ruta de `msedge.exe`. Las imágenes de un mismo navegador salen idénticas; entre Chrome y Edge pueden cambiar un poco.
 
+#### T6b: Alternativas y precauciones en la página y la ficha
+
+**Descripción:** pedido de Gabriel el 9 de noviembre de 2026. El visor y la ficha impresa muestran, además de los pasos, los detalles del nudo: para qué sirve, qué otros nudos convienen en su lugar y cuándo, y los cuidados y peligros de usarlo. Los `info.txt` de `entradas/` traen esos datos, pero son texto de Animated Knots: se usan como entrada y el texto del libro es propio, como el resto de la ficha.
+
+**Criterios de aceptación:**
+- [ ] La especificación lleva `alternativas` (otro nudo y cuándo conviene) y `precauciones` (cuidados y peligros), con texto propio. Sin ellos, la ficha no se genera.
+- [ ] El visor muestra para qué sirve, también se llama, alternativas, precauciones y seguridad, debajo de los pasos.
+- [ ] La ficha los muestra en la página 2 y sigue cabiendo en el pliego, en los tres nudos.
+- [ ] Gabriel revisa el texto de cada nudo.
+
+**Verificación:**
+- [ ] `pytest`
+- [ ] `python -m nudos ficha <slug>` para los tres nudos
+- [ ] Manual: el visor en el celular y las fichas impresas.
+
+**Dependencias:** T4. Va antes del Punto de control B, porque agrega campos al formato.
+
+**Archivos:** `nudos/spec.py`, `nudos/ficha.py`, `libro/ficha.html`, `libro/ficha.css`, `nudos/exportar.py`, `sitio/plantilla.html`, `sitio/visor.css`, `specs/*.yaml`, `docs/formato-spec.md`, `tests/`
+
+**Tamaño:** S
+
 #### Punto de control 2: después de T5 y T6
 
 - [ ] El anfitrión y las dos cuerdas funcionan.

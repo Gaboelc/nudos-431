@@ -41,8 +41,10 @@ def test_la_ficha_tiene_todas_sus_secciones(modelo_as_de_guia, documento):
     texto = " ".join(texto_visible(documento).split())
     for parte in ["Para qué sirve", "Materiales", "Cómo leer las imágenes", "Míralo en 3D",
                   "Error común · paso 2", s.error.titulo, "El nudo terminado", "Por delante",
-                  "Por detrás", "Revisa tu nudo", "Seguridad", s.usos, s.materiales, s.seguridad,
-                  *s.verificacion, *(p.titulo for p in s.pasos), *(p.texto for p in s.pasos)]:
+                  "Por detrás", "Revisa tu nudo", "Precauciones", "Alternativas", "Seguridad",
+                  s.usos, s.materiales, s.seguridad, *s.verificacion, *s.precauciones,
+                  *(f"{a.nudo}. {a.cuando}" for a in s.alternativas),
+                  *(p.titulo for p in s.pasos), *(p.texto for p in s.pasos)]:
         assert parte in texto, parte
     for img in imagenes(modelo_as_de_guia):
         assert f'src="impresion/{img.nombre}.png"' in documento
@@ -66,6 +68,12 @@ def test_sin_texto_de_ficha_no_hay_ficha(modelo_as_de_guia, tmp_path):
     assert faltantes(incompleto) == ["usos", "verificacion"]
     with pytest.raises(FichaError, match="le falta usos, verificacion"):
         ficha(incompleto, tmp_path)
+
+
+def test_sin_precauciones_ni_alternativas_no_hay_ficha(modelo_as_de_guia):
+    incompleto = replace(modelo_as_de_guia,
+                         spec=replace(modelo_as_de_guia.spec, precauciones=(), alternativas=()))
+    assert faltantes(incompleto) == ["precauciones", "alternativas"]
 
 
 # Las que siguen arman el PDF con Chrome. Las imágenes son de relleno, del tamaño real:

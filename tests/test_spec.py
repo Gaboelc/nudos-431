@@ -66,6 +66,24 @@ def test_puntos_seguidos_casi_iguales():
         desde_datos(datos(segmentos={"a": [[0, 0], [0.01, 0]], "b": [[3, 0], [4, 1]]}))
 
 
+def test_precauciones_y_alternativas():
+    spec = desde_datos(datos(precauciones=["Revísalo antes de usarlo."],
+                             alternativas=[{"nudo": "Ocho doble", "cuando": "Si va a aguantar\n mucho."}]))
+    assert spec.precauciones == ("Revísalo antes de usarlo.",)
+    assert [(a.nudo, a.cuando) for a in spec.alternativas] == [("Ocho doble", "Si va a aguantar mucho.")]
+
+
+@pytest.mark.parametrize("alternativas, pista", [
+    ([], "lista de otros nudos"),
+    (["Ocho doble"], "un mapa con «nudo» y «cuando»"),
+    ([{"nudo": "Ocho doble"}], "alternativa 1: falta «cuando»"),
+    ([{"nudo": "Ocho doble", "cuando": "Siempre.", "slug": "ocho-doble"}], "campos desconocidos: slug"),
+])
+def test_alternativas_mal_escritas(alternativas, pista):
+    with pytest.raises(SpecError, match=pista):
+        desde_datos(datos(alternativas=alternativas))
+
+
 def test_campo_desconocido():
     with pytest.raises(SpecError, match="campos desconocidos"):
         desde_datos(datos(autor="yo"))

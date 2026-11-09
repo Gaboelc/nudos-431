@@ -23,8 +23,9 @@ _CODIGO = re.compile(r"^[A-Z]{1,3}[0-9]{2,3}$")
 RESULTADOS = ("aprobado", "no aprobado")
 
 _CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materiales",
-           "verificacion", "seguridad", "encuadre", "anfitrion", "cuerdas", "segmentos", "pasos",
-           "error", "terminado", "filtros"}
+           "verificacion", "precauciones", "alternativas", "seguridad", "encuadre", "anfitrion",
+           "cuerdas", "segmentos", "pasos", "error", "terminado", "filtros"}
+_CAMPOS_ALTERNATIVA = {"nudo", "cuando"}
 _CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
 _CAMPOS_ERROR = {"paso", "invierte", "titulo", "texto", "encuadre"}
 _CAMPOS_TERMINADO = {"encuadre"}
@@ -124,6 +125,13 @@ class Filtro:
 
 
 @dataclass(frozen=True)
+class Alternativa:
+    """Otro nudo que conviene en lugar de este, y cuándo."""
+    nudo: str
+    cuando: str
+
+
+@dataclass(frozen=True)
 class Spec:
     slug: str
     nombre: str
@@ -141,6 +149,8 @@ class Spec:
     usos: str | None = None              # para qué sirve
     materiales: str | None = None
     verificacion: tuple[str, ...] = ()   # criterios que se pueden observar en el nudo
+    precauciones: tuple[str, ...] = ()   # cuidados y peligros al usarlo
+    alternativas: tuple[Alternativa, ...] = ()
     seguridad: str | None = None         # solo cuando aplica
     filtros: tuple[Filtro, ...] = ()
 
@@ -201,9 +211,29 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         usos=_texto_opcional(datos, "usos", falla),
         materiales=_texto_opcional(datos, "materiales", falla),
         verificacion=_lista_textos(datos, "verificacion", falla),
+        precauciones=_lista_textos(datos, "precauciones", falla),
+        alternativas=_alternativas(datos.get("alternativas"), falla),
         seguridad=_texto_opcional(datos, "seguridad", falla),
         filtros=_filtros(datos.get("filtros"), falla),
     )
+
+
+def _alternativas(datos, falla) -> tuple[Alternativa, ...]:
+    if datos is None:
+        return ()
+    if not isinstance(datos, list) or not datos:
+        raise falla("«alternativas» es una lista de otros nudos, cada uno con «nudo» y «cuando»")
+    out = []
+    for i, a in enumerate(datos, 1):
+        def af(msg: str) -> SpecError:
+            return falla(f"alternativa {i}: {msg}")
+        if not isinstance(a, dict):
+            raise af("debe ser un mapa con «nudo» y «cuando»")
+        sobran = set(a) - _CAMPOS_ALTERNATIVA
+        if sobran:
+            raise af(f"campos desconocidos: {', '.join(sorted(sobran))}")
+        out.append(Alternativa(_texto(a, "nudo", af), " ".join(_texto(a, "cuando", af).split())))
+    return tuple(out)
 
 
 def _filtros(datos, falla) -> tuple[Filtro, ...]:

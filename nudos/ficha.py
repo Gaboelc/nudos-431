@@ -17,7 +17,7 @@ import segno
 
 from . import RAIZ, URL_BASE
 from .construir import Modelo
-from .exportar import SITIO, rellenar
+from .exportar import SITIO, lista_o, rellenar
 from .imprimir import chrome
 
 LIBRO = RAIZ / "libro"
@@ -37,7 +37,9 @@ def faltantes(modelo: Modelo) -> list[str]:
     """Lo que la especificación todavía no tiene y la ficha necesita."""
     s = modelo.spec
     faltan = [campo for campo, valor in (("usos", s.usos), ("materiales", s.materiales),
-                                         ("verificacion", s.verificacion), ("error", s.error))
+                                         ("verificacion", s.verificacion),
+                                         ("precauciones", s.precauciones),
+                                         ("alternativas", s.alternativas), ("error", s.error))
               if not valor]
     if modelo.reverso is None and s.anfitrion is None:
         faltan.append("el nudo terminado por detrás (no se pudo construir el último paso)")
@@ -111,10 +113,16 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
                  f'</div><figcaption><span class="t">El nudo terminado</span>{detras}</figcaption></figure>')
     verificacion = ('    <section class="verif"><h2>Revisa tu nudo</h2><ul>'
                     + "".join(f"<li>{esc(v)}</li>" for v in s.verificacion) + "</ul></section>")
+    detalles = ('  <section class="detalles"><div><h2>Precauciones</h2><ul>'
+                + "".join(f"<li>{esc(t)}</li>" for t in s.precauciones)
+                + '</ul></div><div><h2>Alternativas</h2><ul>'
+                + "".join(f'<li><span class="t">{esc(a.nudo)}.</span> {esc(a.cuando)}</li>'
+                          for a in s.alternativas)
+                + "</ul></div></section>")
     seguridad = ("" if not s.seguridad else
                  f'  <section class="seguridad"><h2>Seguridad</h2><p>{esc(s.seguridad)}</p></section>')
     otros = ("" if not s.otros_nombres else
-             f'      <p class="otros">También se llama {esc(_y(s.otros_nombres))}.</p>')
+             f'      <p class="otros">También se llama {esc(lista_o(s.otros_nombres))}.</p>')
     como_leer = ("Ves las cuerdas sobre la mesa, como las verías desde tu silla, cada una con su "
                  "nombre junto a su firme." if s.cuerdas else
                  "Ves la cuerda sobre la mesa, como la verías desde tu silla.")
@@ -136,13 +144,9 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
         "error": error,
         "terminado": terminado,
         "verificacion": verificacion,
+        "detalles": detalles,
         "seguridad": seguridad,
     })
-
-
-def _y(nombres) -> str:
-    nombres = list(nombres)
-    return nombres[0] if len(nombres) == 1 else ", ".join(nombres[:-1]) + " o " + nombres[-1]
 
 
 # --------------------------------------------------------------------------

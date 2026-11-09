@@ -145,8 +145,12 @@ def pagina_nudo(modelo: Modelo) -> str:
         f'<span><span class="t">{esc(p.titulo)}</span><span class="d">{esc(p.texto)}</span></span></button></li>'
         for p in s.pasos)
     datos = json.dumps(datos_visor(modelo), ensure_ascii=False, separators=(",", ":"))
+    otros = ("" if not s.otros_nombres else
+             f'    <p class="lede">También se llama {esc(lista_o(s.otros_nombres))}.</p>\n')
     return rellenar((SITIO / "plantilla.html").read_text(encoding="utf-8"), {
         "titulo": esc(s.nombre),
+        "otros": otros,
+        "sobre": _sobre(s),
         "descripcion": esc(f"{s.nombre}, paso a paso, con un modelo 3D de cada paso."),
         "url": esc(f"{URL_BASE}{s.slug}/"),
         "hechos": "\n".join(f"      <div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in hechos),
@@ -154,6 +158,36 @@ def pagina_nudo(modelo: Modelo) -> str:
         "pasos": pasos,
         "datos": datos.replace("</", "<\\/"),
     })
+
+
+def lista_o(nombres) -> str:
+    """«a», «a o b», «a, b o c»."""
+    nombres = list(nombres)
+    return nombres[0] if len(nombres) == 1 else ", ".join(nombres[:-1]) + " o " + nombres[-1]
+
+
+def _sobre(s) -> str:
+    """Lo que la página dice del nudo debajo de los pasos: el mismo texto de la ficha. Cada
+    parte va solo si la especificación la tiene."""
+    esc = html.escape
+    partes = []
+    if s.usos:
+        partes.append(f"      <h3>Para qué sirve</h3><p>{esc(s.usos)}</p>")
+    if s.materiales:
+        partes.append(f"      <h3>Materiales</h3><p>{esc(s.materiales)}</p>")
+    if s.precauciones:
+        partes.append("      <h3>Precauciones</h3><ul>"
+                      + "".join(f"<li>{esc(t)}</li>" for t in s.precauciones) + "</ul>")
+    if s.alternativas:
+        partes.append("      <h3>Alternativas</h3><ul>"
+                      + "".join(f"<li><strong>{esc(a.nudo)}.</strong> {esc(a.cuando)}</li>"
+                                for a in s.alternativas) + "</ul>")
+    if s.seguridad:
+        partes.append(f'      <div class="seguridad"><h3>Seguridad</h3><p>{esc(s.seguridad)}</p></div>')
+    if not partes:
+        return ""
+    return ('    <section class="sobre" aria-label="Sobre el nudo">\n      <h2>Sobre el nudo</h2>\n'
+            + "\n".join(partes) + "\n    </section>")
 
 
 def _limpiar(destino: Path) -> None:
