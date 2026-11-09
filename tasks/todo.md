@@ -92,18 +92,18 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 ### Tanda 2: libres, dos cuerdas o dos extremos
 - [ ] Rizo
 - [ ] Pescador
-- [ ] Nudo aguja (D9: falta confirmar qué nudo es)
+- [ ] Nudo aguja (el del manual de la Tropa)
 - [ ] Punto de control de la tanda 2
 
 ### Tanda 3: sobre anfitrión
-- [ ] Ballestrinque doble (D9: falta la entrada; por confirmar si es el *rolling hitch*)
+- [ ] Ballestrinque doble (*rolling hitch*, entrada en el manual de la Tropa)
 - [ ] Leñador o vuelta de braza
 - [ ] Media llave y dos cotes
 - [ ] Fugitivo
 - [ ] Tensor (*trucker's hitch*)
 - [ ] Tensor ajustable (*tautline hitch*, sobre una estaca)
 - [ ] Constrictor
-- [ ] *Mooring hitch*
+- [ ] Amarre de liberación rápida (*mooring hitch*)
 - [ ] Presilla de alondra
 - [ ] Prusik
 - [ ] Punto de control de la tanda 3

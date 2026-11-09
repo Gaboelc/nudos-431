@@ -156,10 +156,11 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
   - Que el repositorio sea público está bien mientras `entradas/` nunca entre a git (ya está excluida) y la tabla de probadores viva fuera del repositorio.
 - **D5 Entorno (resuelta):** se trabaja desde la app de Claude con la computadora vinculada (ver la decisión de arquitectura 8).
 - **D8 Especificaciones de la imprenta:** sangrado, perfil de color y formato del archivo. Se resuelve antes de T13.
-- **D9 Nudos por identificar y nombrar.** Se resuelve antes de la tanda de cada uno:
-  - **Nudo aguja:** la entrada `nudo-de-aguja` es el *needle knot* de pesca con mosca, que se hace con una aguja sobre una línea hueca. No coincide con el de la página 25 del manual de la Tropa, que se ata a un destorcedor. Falta saber cuál de los dos va en el libro, o si es otro.
-  - **Ballestrinque doble:** no tiene entrada. Falta confirmar si es el *rolling hitch*.
-  - **Nombre del *tautline hitch*:** mientras tanto se llama «tensor ajustable», para no confundirlo con el tensor (*trucker's hitch*).
+- **D9 Nudos por identificar y nombrar (resuelta, 9 de noviembre de 2026; incluye la que era la pregunta abierta D6):**
+  - **Nudo aguja:** va el de la página 25 del manual de la Tropa, el que se ata a un destorcedor. El *needle knot* de pesca con mosca que había llegado a `entradas/` no se usa.
+  - **Ballestrinque doble:** su entrada es la página del manual de la Tropa. Por lo que describe (la cuerda tira a lo largo del mástil), es el *rolling hitch*.
+  - **El *tautline hitch* se llama «tensor ajustable»**, para no confundirlo con el tensor (*trucker's hitch*).
+  - **El *mooring hitch* se llama «amarre de liberación rápida»**, el nombre que ya tenía en el manual v0.1.
 
 ### Fase 1: primer corte vertical, el as de guía de principio a fin
 
@@ -413,54 +414,54 @@ Cada nudo es una tarea pequeña con la misma definición de terminado. Se trabaj
 | Tanda | Tipo | Nudos |
 |---|---|---|
 | 1 | Libres, una cuerda | simple, ocho, ocho doble, as de guía español, mariposa alpina, margarita, arnés de hombre, silla de bombero (requiere D1) |
-| 2 | Libres, dos cuerdas o dos extremos | rizo, pescador, nudo aguja (D9) |
-| 3 | Sobre anfitrión | ballestrinque doble (D9), leñador o vuelta de braza, media llave y dos cotes, fugitivo, tensor (*trucker's hitch*), tensor ajustable (*tautline hitch*, sobre una estaca), constrictor, *mooring hitch*, presilla de alondra, prusik |
+| 2 | Libres, dos cuerdas o dos extremos | rizo, pescador, nudo aguja (el del manual de la Tropa) |
+| 3 | Sobre anfitrión | ballestrinque doble (*rolling hitch*), leñador o vuelta de braza, media llave y dos cotes, fugitivo, tensor (*trucker's hitch*), tensor ajustable (*tautline hitch*, sobre una estaca), constrictor, amarre de liberación rápida (*mooring hitch*), presilla de alondra, prusik |
 | 4 | Plantillas | amarre redondo, amarre diagonal, amarre trípode, refuerzo de cabo, adujado, puño de mono |
 | 5 | Anfitriones especiales | eslinga de barril, eslinga de andamio (requiere D1), vuelta de cornamusa (*cleat hitch*, sobre una cornamusa) |
 
 El ocho doble, el tensor ajustable y la vuelta de cornamusa se agregaron el 9 de noviembre de 2026: no estaban en la lista original y Gabriel los sumó a `entradas/`.
 
-**Entradas de cada nudo.** Las carpetas de `entradas/` conservan el nombre que tenían al llegar; esta tabla dice cuál es la de cada nudo.
+**Entradas de cada nudo.** Desde el 9 de noviembre de 2026, cada nudo tiene en `entradas/` una carpeta con el nombre de su especificación. Si hay varios métodos, cada uno va en una subcarpeta. Si la entrada es una página del manual de la Tropa, la carpeta solo tiene un `fuente.md` que dice cuál. `entradas/LEEME.md` lo explica.
 
 | Nudo | Tanda | Carpeta en `entradas/` |
 |---|---|---|
 | As de guía | T1 | `as-de-guia` |
-| Ballestrinque | T5 | `clove-hitch-rope-end`; también `clove-hitch-loops` y `clove-hitch-half-hitches`, con otros métodos |
-| Vuelta de escota | T6 | `sheet-bend` |
+| Ballestrinque | T5 | `ballestrinque/con-el-chicote`; también `con-dos-gazas` y `con-dos-cotes`, otros métodos |
+| Vuelta de escota | T6 | `vuelta-de-escota` |
 | Amarre cuadrado | T7 | `amarre-cuadrado` |
 | Cabeza de turco | T8 | `cabeza-de-turco` |
-| Simple | 1 | `overhand-Knot` |
+| Simple | 1 | `simple` |
 | Ocho | 1 | `ocho` |
 | Ocho doble | 1 | `ocho-doble` |
-| As de guía español | 1 | `spanish-Bowline` |
-| Mariposa alpina | 1 | `nudo-Mariposa` |
+| As de guía español | 1 | `as-de-guia-espanol` |
+| Mariposa alpina | 1 | `mariposa-alpina` |
 | Margarita | 1 | `margarita` |
 | Arnés de hombre | 1 | `arnes-de-hombre` |
-| Silla de bombero | 1 | `silla-de-bomberos` |
-| Rizo | 2 | `square-knot` |
+| Silla de bombero | 1 | `silla-de-bombero` |
+| Rizo | 2 | `rizo` |
 | Pescador | 2 | `pescador` |
-| Nudo aguja | 2 | `nudo-de-aguja`, por confirmar (D9) |
-| Ballestrinque doble | 3 | falta (D9) |
-| Leñador o vuelta de braza | 3 | `timber-hitch` |
-| Media llave y dos cotes | 3 | `round-turn-and-two-half-hitches` |
+| Nudo aguja | 2 | `nudo-aguja` (apunta al manual de la Tropa) |
+| Ballestrinque doble | 3 | `ballestrinque-doble` (apunta al manual de la Tropa) |
+| Leñador o vuelta de braza | 3 | `vuelta-de-braza` |
+| Media llave y dos cotes | 3 | `media-llave-y-dos-cotes` |
 | Fugitivo | 3 | `fugitivo` |
-| Tensor (*trucker's hitch*) | 3 | `trucker’s-hitch-quick-release` |
-| Tensor ajustable (*tautline hitch*) | 3 | `Tautline Hitch` |
-| Constrictor | 3 | `constrictor-rope-end`, `constrictor-twist` |
-| *Mooring hitch* | 3 | `mooring-hitch` |
-| Presilla de alondra | 3 | `cow-hitch-end-method`, `cow-hitch-loops-method` |
+| Tensor (*trucker's hitch*) | 3 | `tensor` |
+| Tensor ajustable (*tautline hitch*) | 3 | `tensor-ajustable` |
+| Constrictor | 3 | `constrictor/con-el-chicote`, `constrictor/torciendo` |
+| Amarre de liberación rápida (*mooring hitch*) | 3 | `amarre-de-liberacion-rapida` |
+| Presilla de alondra | 3 | `presilla-de-alondra/con-el-chicote`, `presilla-de-alondra/con-gazas` |
 | Prusik | 3 | `prusik` |
 | Amarre redondo | 4 | `amarre-redondo` |
 | Amarre diagonal | 4 | `amarre-diagonal` |
 | Amarre trípode | 4 | `amarre-tripode` |
-| Refuerzo de cabo | 4 | `common-whipping-knot` |
-| Adujado | 4 | `coil-unattached-rope` |
-| Puño de mono | 4 | `puño-de-mono` |
+| Refuerzo de cabo | 4 | `refuerzo-de-cabo` |
+| Adujado | 4 | `adujado` |
+| Puño de mono | 4 | `puno-de-mono` |
 | Eslinga de barril | 5 | `eslinga-de-barril` |
-| Eslinga de andamio | 5 | `eslinga de andamio` |
-| Vuelta de cornamusa | 5 | `ceat hitch-(halyard)` |
+| Eslinga de andamio | 5 | `eslinga-de-andamio` |
+| Vuelta de cornamusa | 5 | `vuelta-de-cornamusa` |
 
-Las páginas de `_manual-tropa/` sirven de entrada adicional para los nudos que pide la Tropa.
+Las páginas de `_manual-tropa/` sirven de entrada adicional para los nudos que pide la Tropa. Lo que llegó y no se usa está en `_descartadas/`.
 
 Después de cada tanda hay un punto de control:
 - Todos los nudos de la tanda están publicados.
@@ -551,8 +552,7 @@ Después de cada tanda hay un punto de control:
 
 ## Preguntas abiertas
 
-- **D3, D8 y D9:** las decisiones previas que siguen abiertas.
-- **D6:** confirmar qué nudo es el "nudo aguja" y si el "ballestrinque doble" es el *rolling hitch*. Se resuelve al modelarlos.
+- **D3 y D8:** las decisiones previas que siguen abiertas.
 - **D7:** si la dirigencia de la Tropa participa en la revisión de su anexo y en conseguir probadores.
 
 ## Lo que se reutilizó del prototipo
