@@ -313,6 +313,14 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 - **Escena e impresión:** `datos_escena` lleva una lista de cuerdas por paso, cada una con sus puntos, radio, color y tramo resaltado; los nudos de una cuerda se exportan igual que ahora. Nombres en la imagen: el nombre de cada cuerda junto a su firme y «Chicote» solo en la que se mueve. Hay que revisar la hoja de revisión (`nudos/hoja.py`) y la ficha.
 - **Riesgo:** los nudos de una cuerda tienen que seguir dando exactamente las mismas imágenes (comprobado píxel por píxel contra el as de guía y el ballestrinque).
 
+**Cómo se hizo (9 de noviembre de 2026):** se implementó el diseño tal cual, con estos detalles que salieron al hacerlo.
+- Todas las cuerdas comparten el mismo paso de muestreo, así que la posición a lo largo de la polilínea es índice × paso. Cada pasada tiene que caer en la cuerda donde se declaró, y las fallas escriben la secuencia de cada cuerda.
+- Con varias cuerdas se corrige el largo 12 veces por vuelta, no 4: una gruesa empuja hacia arriba a la delgada que pasa encima, y la delgada se estiraba hasta su firme.
+- Una cuerda gruesa que sube sobre otra lo hace en un largo proporcional a su grosor. Con grosor 1 el cálculo es el de siempre.
+- Una gruesa que cruza en ángulo recto por encima de una delgada se apoya sobre ella con un radio igual a la suma de los radios (1,25 con grosores 1,5 y 1), que es 0,83 de su diámetro y no pasa la prueba de curvatura. No se cambió la prueba: en la vuelta de escota, la delgada cruza a la gruesa en diagonal en todos esos cruces, también los que quedan al revés en la vista de detrás. Está en `docs/formato-spec.md`.
+- La vuelta de escota tiene 4 pasos, con la gruesa de grosor 1,5. El error común es el chicote por encima de sí misma (cruce 6). En el modelo, la delgada pasa por debajo de sí misma justo después de cruzar la rama del chicote de la gruesa, no dentro del seno: es el mismo nudo, porque esa rama queda debajo de las dos pasadas de la delgada.
+- Esta computadora no tiene Chrome. Las comparaciones píxel por píxel (38 imágenes, antes y después del cambio) y las pruebas que dibujan se hicieron con Edge, poniendo `NUDOS_CHROME` en la ruta de `msedge.exe`. Las imágenes de un mismo navegador salen idénticas; entre Chrome y Edge pueden cambiar un poco.
+
 #### Punto de control 2: después de T5 y T6
 
 - [ ] El anfitrión y las dos cuerdas funcionan.

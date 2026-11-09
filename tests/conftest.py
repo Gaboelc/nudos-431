@@ -14,3 +14,9 @@ def modelo_as_de_guia():
 def modelo_ballestrinque():
     """El ballestrinque sobre el poste, construido una sola vez."""
     return construir(cargar("ballestrinque"))
+
+
+@pytest.fixture(scope="session")
+def modelo_vuelta_de_escota():
+    """La vuelta de escota, con dos cuerdas, construida una sola vez."""
+    return construir(cargar("vuelta-de-escota"))

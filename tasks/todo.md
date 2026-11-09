@@ -62,8 +62,12 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Formato con `cuerdas` y trazado y secuencia por cuerda, con sus pruebas (`tests/test_spec.py`)
   - [x] Geometría de varias cuerdas: cortes, radio por punto, separación por suma de radios (`tests/test_cuerdas.py`)
   - [x] Escena, impresión, hoja y ficha con dos cuerdas; nudos de una cuerda idénticos píxel por píxel (38 imágenes del as de guía y del ballestrinque, con Edge)
-  - [ ] `specs/vuelta-de-escota.yaml` y `tests/test_vuelta_de_escota.py`
-  - [ ] Filtro 1 (el filtro 2, cuando se retome)
+  - [x] `specs/vuelta-de-escota.yaml` y `tests/test_vuelta_de_escota.py`: 4 pasos, error común (el chicote por encima de sí misma) y texto de la ficha; la ficha cabe en el pliego
+  - [ ] Gabriel revisa el texto de la ficha
+  - [ ] Gabriel imprime la ficha (`python -m nudos ficha vuelta-de-escota`) y revisa en gris que se distingan la gruesa, la delgada y el ámbar
+  - [ ] Filtro 1: Gabriel la ata paso a paso con dos cuerdas reales de distinto grosor, siguiendo la ficha impresa (el filtro 2, cuando se retome)
+  - [ ] Registrar el filtro en la especificación
+  - [ ] Publicar el sitio: la vuelta de escota es nueva y el visor cambió (`scripts/publicar.sh`)
 - [ ] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas
 - [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)

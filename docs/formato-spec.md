@@ -2,7 +2,7 @@
 
 Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. El formato puede cambiar hasta el Punto de control B del plan; ahí se congela como v1, y desde entonces cualquier cambio lleva un script de migración.
 
-El ejemplo completo es `specs/as-de-guia.yaml`.
+El ejemplo completo es `specs/as-de-guia.yaml`; el de un nudo de dos cuerdas, `specs/vuelta-de-escota.yaml`.
 
 ## Unidades y ejes
 
@@ -96,6 +96,7 @@ secuencia:
 - Los segmentos son de todo el nudo, pero cada uno pertenece a una sola cuerda: si un paso lo pone en otra cuerda, es un error.
 - Un tramo resaltado va en una sola cuerda, y ahí `fin` es el último punto de la cuerda donde empieza.
 - Por ahora un nudo de varias cuerdas no lleva anfitrión.
+- Donde una cuerda gruesa pasa por encima de una más delgada, dibuja el cruce en diagonal, a unos 60° o menos. En ángulo recto, la gruesa se apoya sobre la delgada con un radio igual a la suma de los dos radios, que es menos de 0,9 de su diámetro, y la prueba de curvatura falla. En diagonal se apoya más abierta. Como el nudo terminado se voltea para verlo por detrás, y entonces cada cruce queda al revés, esto vale para todos los cruces entre una gruesa y una delgada.
 - En las imágenes, cada cuerda lleva su nombre junto a su firme («gruesa» se escribe «Gruesa») y «Chicote» va en la que se mueve en ese paso. En una imagen sin resaltado, como el nudo terminado, va en la última que se movió.
 
 ## Pasos

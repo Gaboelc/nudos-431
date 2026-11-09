@@ -350,7 +350,8 @@ def elevar(X2, h, cruces: list[Cruce], primera_encima: list[bool], reparto: Repa
             ro = float(r[rep.cuerda == ko][0])
             # Con una cuerda: zu + SEPARACION - R, con SEPARACION = 2R.
             alto = zu + (ro + float(r[rep.cuerda == ku][0])) - ro
-            w = float(np.clip(2.6 / max(c.seno, 0.25), 2.6, 5.0))
+            # Una cuerda más gruesa sube en un largo proporcional a su grosor: se dobla menos.
+            w = float(np.clip(2.6 / max(c.seno, 0.25), 2.6, 5.0)) * (ro / R)
             b = _suave((1.0 - np.abs(s - so) / w) / 0.65) * (rep.cuerda == ko)
             z = np.maximum(z, r + alto * b)
     return np.column_stack([X2, z])
