@@ -67,7 +67,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [ ] Gabriel imprime la ficha (`python -m nudos ficha vuelta-de-escota`) y revisa en gris que se distingan la gruesa, la delgada y el ámbar
   - [ ] Filtro 1: Gabriel la ata paso a paso con dos cuerdas reales de distinto grosor, siguiendo la ficha impresa (el filtro 2, cuando se retome)
   - [ ] Registrar el filtro en la especificación
-  - [ ] Publicar el sitio: la vuelta de escota es nueva y el visor cambió (`scripts/publicar.sh`)
+  - [x] Publicar el sitio: la vuelta de escota es nueva y el visor cambió (9 nov, construido desde d352483; revisado en línea)
 - [ ] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas
 - [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
