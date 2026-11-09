@@ -254,6 +254,8 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 - [ ] Decidir si la impresión se queda con three.js o pasa a Blender, según cómo se ve la página impresa.
 - [ ] Revisar contigo el diseño de la ficha y el formato de especificación.
 
+**Resultado (9 de noviembre de 2026):** la impresión se queda con three.js: la prueba impresa y los dos filtros pasaron con esas imágenes, y el visor y la ficha salen de la misma escena. La ficha se queda como está, incluido el espacio libre al final de la página derecha. Cómo caben los nudos de más de 6 pasos se decide en T7, con el amarre cuadrado.
+
 ### Fase 2: piloto por tipo de nudo
 
 #### T5: Objeto anfitrión con el ballestrinque sobre poste
@@ -275,6 +277,8 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 **Archivos:** `nudos/anfitrion.py`, `nudos/libre.py`, `render/escena.js`, `specs/ballestrinque.yaml`, `tests/test_ballestrinque.py`
 
 **Tamaño:** M. Es el mayor riesgo técnico del proyecto, por eso va primero en la fase.
+
+**Cómo se hizo (9 de noviembre de 2026):** se implementó solo el poste. La argolla, la estaca, el tablón, el barril y la cuerda anfitriona se agregan con el primer nudo que los necesite, para no dejar código sin un nudo que lo pruebe. Sobre el poste los puntos van como [x, ángulo], sin capa: qué tramo queda encima lo decide la secuencia, igual que en la mesa, y así el error común funciona sin cambios. Cerca del poste la cuerda se relaja sin gravedad ni suavizado, como si estuviera algo tensa, y con más correcciones de largo. El nudo terminado sobre un anfitrión no se voltea: se mira desde el otro lado (vista «detras»). Se usó el método con el chicote, que sirve en cualquier poste y es el que empieza los amarres.
 
 #### T6: Dos cuerdas con la vuelta de escota
 

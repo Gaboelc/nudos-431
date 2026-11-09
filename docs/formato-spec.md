@@ -24,7 +24,8 @@ El ejemplo completo es `specs/as-de-guia.yaml`.
 | `verificacion` | para la ficha | Lista de criterios para revisar el nudo terminado. Cada uno se tiene que poder comprobar mirando o tirando del nudo. |
 | `seguridad` | no | Solo cuando aplica. Si el nudo tiene usos con personas, sigue la postura de seguridad del libro (D1 del plan). |
 | `encuadre` | no | Zona de la mesa que se muestra, como `x: [mín, máx]` e `y: [mín, máx]`. Si falta, se calcula con todos los pasos. |
-| `segmentos` | sí | Tramos de cuerda con nombre. Cada uno es una lista de puntos `[x, y]`. |
+| `anfitrion` | no | El objeto alrededor del que se ata el nudo, por ejemplo un poste (ver abajo). |
+| `segmentos` | sí | Tramos de cuerda con nombre. Cada uno es una lista de puntos `[x, y]` sobre la mesa, o `{poste: [[x, ángulo], ...]}` sobre el poste. |
 | `pasos` | sí | Lista de pasos en orden. |
 | `error` | no | El error más común (ver abajo). La ficha lo necesita, así que todo nudo publicado lo lleva. |
 | `terminado` | no | Cómo se muestra el nudo terminado (ver abajo). |
@@ -46,6 +47,22 @@ Un segmento es una lista de puntos de control por donde pasa la curva. Cada paso
 | `fin` | El último punto del paso | resaltar |
 
 Los índices se cuentan sobre el segmento tal como está definido. Dos puntos seguidos no pueden quedar a menos de 0,05 diámetros.
+
+## Anfitrión
+
+Algunos nudos se atan alrededor de un objeto rígido. Por ahora el único es el poste; los demás (argolla, estaca, tablón, barril, cuerda anfitriona) se agregan con el primer nudo que los necesite.
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `poste`. |
+| `radio` | Radio del poste, en diámetros de cuerda. Un palo de escoba con una cuerda de 8 mm da alrededor de 1,5. |
+| `desde`, `hasta` | Dónde empieza y termina el poste a lo largo de x. |
+
+El poste es horizontal y va a lo largo de x, con el eje en y = 0. Se apoya sobre la cuerda que pasa por debajo, así que su eje queda a la altura `radio + 1`.
+
+Un segmento sobre el poste se escribe `{poste: [[x, ángulo], ...]}`. `x` es la posición a lo largo del eje y `ángulo`, en grados, el giro alrededor del eje: 0 arriba, 90 hacia quien ata, 180 abajo y 270 atrás. El ángulo no vuelve a 0: una vuelta por encima del poste que empieza al frente va, por ejemplo, de 90 a -270, y la siguiente sigue bajando. Así el sentido de cada vuelta queda escrito en los números. No hay capas: qué tramo queda encima en cada cruce lo dice la secuencia, igual que sobre la mesa.
+
+Un paso puede pasar de la mesa al poste y volver. Conviene que la cuerda no suba por el frente del poste para bajar enseguida a la mesa: esa esquina no existe en la cuerda real y la relajación no la resuelve.
 
 ## Pasos
 
@@ -84,7 +101,7 @@ Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el r
 
 ## Nudo terminado
 
-El último paso se muestra por delante y por detrás. La vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés.
+El último paso se muestra por delante y por detrás. Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Con un anfitrión el nudo no se voltea: se mira desde el otro lado de la mesa.
 
 | Campo | Qué es |
 |---|---|
@@ -114,15 +131,20 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
    - ningún tramo queda a menos de 0,97 diámetros de otro;
    - el radio de curvatura no baja de 0,9 diámetros;
    - la cuerda no se estira más de 2 %.
+   - con un anfitrión, la cuerda no entra en él más de 0,05 diámetros.
 4. Un cruce con la misma etiqueta no aparece a más de 2,5 diámetros de donde estaba en el paso anterior. Es una heurística para detectar una etiqueta reutilizada para otro cruce.
 5. El error común y el nudo terminado por detrás se construyen como un paso más y cumplen los mismos límites. Además:
    - la secuencia del error, después de relajar, difiere de la del paso correcto exactamente en los cruces de `invierte`;
    - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés.
+
+**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
 
 **Lo que no se comprueba es si la secuencia corresponde al nudo correcto.** Un cruce mal leído que se repite igual en todos los pasos pasa todas las pruebas. Para eso está el filtro 1: atar cada paso con cuerda real antes de publicar.
 
 ## Pendiente para versiones siguientes
 
 - Varias cuerdas con grosor y color por rol (T6).
-- Objetos anfitriones como poste, argolla o estaca, y cruces sobre su superficie (T5).
+- Los anfitriones que faltan (argolla, estaca, tablón, barril, cuerda anfitriona), con el primer nudo que los use.
+- Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
+- Dibujar el anfitrión en la hoja de revisión (`python -m nudos hoja`): hoy solo dibuja la cuerda.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.

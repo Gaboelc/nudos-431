@@ -38,7 +38,8 @@ def construir_error(spec: Spec, correcto: Resultado | None) -> tuple[Resultado |
         return None, []
     paso = spec.pasos[e.paso - 1]
     try:
-        r = construir_paso(replace(paso, secuencia=invertir(paso.secuencia, e.invierte)))
+        r = construir_paso(replace(paso, secuencia=invertir(paso.secuencia, e.invierte)),
+                           spec.anfitrion)
     except TrazadoError as err:
         return None, [f"Error común: {err}"]
     fallas = [f"Error común: {f}" for f in r.fallas]

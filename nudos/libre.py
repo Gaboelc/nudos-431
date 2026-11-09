@@ -19,7 +19,7 @@ from scipy.spatial import cKDTree
 
 from .cruces import (Cruce, emparejar, encima, encimas, encontrar_cruces, numerada,
                      secuencia_obtenida)
-from .spec import Paso
+from .spec import Anfitrion, Paso
 
 H = 0.2            # paso de muestreo a lo largo de la cuerda
 R = 0.5            # radio de la cuerda
@@ -49,7 +49,10 @@ class Resultado:
     fallas: list[str] = field(default_factory=list)
 
 
-def construir_paso(paso: Paso) -> Resultado:
+def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None) -> Resultado:
+    if anfitrion is not None:
+        from .anfitrion import construir_paso as sobre_anfitrion
+        return sobre_anfitrion(paso, anfitrion)
     D, ctrl = catmull_rom(paso.puntos)
     X2, h, ctrl_s = remuestrear(D, ctrl)
     cruces = encontrar_cruces(X2, h)
@@ -81,10 +84,16 @@ def voltear(r: Resultado, secuencia) -> Resultado:
     return _resultado(r.n, relajar(X, r.h), r.h, invertida, None)
 
 
-def _resultado(n: int, Xr, h: float, secuencia, resaltado) -> Resultado:
-    """Mide la cuerda ya relajada y la compara con la secuencia declarada."""
-    cruces_r = encontrar_cruces(Xr, h)
-    obtenida = secuencia_obtenida(Xr, h, cruces_r)
+def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=None) -> Resultado:
+    """Mide la cuerda ya relajada y la compara con la secuencia declarada.
+
+    `buscar(X)` devuelve los cruces y la altura de sus dos pasadas (por omisión, los de
+    la proyección sobre la mesa). `medir(X)` agrega medidas y fallas propias."""
+    if buscar is None:
+        cruces_r, alturas = encontrar_cruces(Xr, h), None
+    else:
+        cruces_r, alturas = buscar(Xr)
+    obtenida = secuencia_obtenida(Xr, h, cruces_r, alturas)
     esperada = numerada(secuencia)
     etiquetas = emparejar(cruces_r, secuencia) if obtenida == esperada else None
     largos = np.linalg.norm(np.diff(Xr, axis=0), axis=1)
@@ -96,6 +105,10 @@ def _resultado(n: int, Xr, h: float, secuencia, resaltado) -> Resultado:
         "estiramiento_max": float(np.abs(largos / h - 1).max()),
         "altura_max": float(Xr[:, 2].max()),
     }
+    otras = []
+    if medir is not None:
+        extra, otras = medir(Xr)
+        medidas.update(extra)
     return Resultado(
         n=n,
         puntos=Xr,
@@ -105,7 +118,7 @@ def _resultado(n: int, Xr, h: float, secuencia, resaltado) -> Resultado:
         secuencia=obtenida,
         esperada=esperada,
         medidas=medidas,
-        fallas=_fallas(n, obtenida, esperada, medidas, donde),
+        fallas=_fallas(n, obtenida, esperada, medidas, donde) + otras,
     )
 
 
@@ -246,35 +259,47 @@ def _limitar_curva(X, h, libre, rmin=1.0, ganancia=0.5):
     return len(malos)
 
 
-def relajar(X, h, iteraciones=1000, fijos=3):
+def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasadas_largo=4):
     """Relajación por posiciones. Las anclas en xy imitan el roce con la mesa; son
     débiles para que la cuerda se deslice y dé el largo que cuesta subir sobre otro
-    tramo. La gravedad asienta cada tramo de encima sobre el de abajo."""
+    tramo. La gravedad asienta cada tramo de encima sobre el de abajo. Con un
+    anfitrión (nudos/anfitrion.py), la cuerda tampoco puede entrar en él.
+    `gravedad` dice qué puntos caen y se alisan (por omisión, todos los que no están
+    fijos). Cerca de un anfitrión no se alisan: el poste y el largo ya dan la forma.
+    `pasadas_largo` es cuántas veces se corrige el largo en cada vuelta; alrededor de un
+    poste hacen falta más, porque el poste empuja la cuerda hacia afuera todo el tiempo."""
     X = X.copy()
     ancla = X[:, :2].copy()
     N = len(X)
     salto = int(math.ceil(1.6 / h))
     libre = np.ones(N, bool)
     libre[:fijos] = False
+    cae = libre if gravedad is None else libre & gravedad
+    # Sin anfitrión se alisa toda la cuerda, como siempre; con anfitrión, solo lo que cae.
+    alisa = np.ones(N, bool) if gravedad is None else cae
     for it in range(iteraciones):
         tarde = it > iteraciones * 0.75
         g = 0.0 if tarde else 0.003
         ka = 0.004 if tarde else 0.012
-        X[libre, 2] -= g
+        X[cae, 2] -= g
         lap = X[:-2] + X[2:] - 2 * X[1:-1]
-        X[1:-1, 2] += 0.45 * lap[:, 2]
-        X[1:-1, :2] += 0.02 * lap[:, :2]
+        X[1:-1, 2] += 0.45 * lap[:, 2] * alisa[1:-1]
+        X[1:-1, :2] += 0.02 * lap[:, :2] * alisa[1:-1, None]
         X[libre, :2] += ka * (ancla[libre] - X[libre, :2])
         for _ in range(2):
             _limitar_curva(X, h, libre, rmin=1.1, ganancia=0.35)
             _colisiones(X, salto, libre)
             X[:, 2] = np.maximum(X[:, 2], R)
-            _largos(X, h, libre, pasadas=4)
+            if anfitrion is not None:
+                anfitrion.empujar(X, libre)
+            _largos(X, h, libre, pasadas=pasadas_largo)
     for _ in range(80):
         _limitar_curva(X, h, libre, rmin=1.1, ganancia=0.25)
         _colisiones(X, salto, libre)
         X[:, 2] = np.maximum(X[:, 2], R)
-        _largos(X, h, libre, pasadas=4)
+        if anfitrion is not None:
+            anfitrion.empujar(X, libre)
+        _largos(X, h, libre, pasadas=pasadas_largo)
     return X
 
 

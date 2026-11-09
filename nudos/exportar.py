@@ -10,8 +10,9 @@ from urllib.parse import urlparse
 
 from . import RAIZ, SPECS, URL_BASE
 from .construir import Modelo, construir
+from .anfitrion import Poste
 from .libre import Resultado
-from .spec import Encuadre, cargar
+from .spec import Anfitrion, Encuadre, cargar
 
 SITIO = RAIZ / "sitio"
 ESCENA = RAIZ / "render" / "escena.js"
@@ -38,10 +39,11 @@ def leer_publicados(ruta: Path = PUBLICADOS) -> list[str]:
 
 def datos_visor(modelo: Modelo) -> dict:
     """Lo que necesita el visor: la cuerda de cada paso y el tramo resaltado."""
-    return datos_escena(modelo.spec.slug, modelo.spec.encuadre, modelo.pasos)
+    return datos_escena(modelo.spec.slug, modelo.spec.encuadre, modelo.pasos, modelo.spec.anfitrion)
 
 
-def datos_escena(slug: str, e: Encuadre | None, resultados: list[Resultado]) -> dict:
+def datos_escena(slug: str, e: Encuadre | None, resultados: list[Resultado],
+                 anfitrion: Anfitrion | None = None) -> dict:
     """Lo que necesita render/escena.js para dibujar estos resultados con este encuadre.
     El encuadre se ajusta a la cuerda de todos los resultados juntos."""
     pasos = []
@@ -58,6 +60,7 @@ def datos_escena(slug: str, e: Encuadre | None, resultados: list[Resultado]) -> 
     return {
         "slug": slug,
         "encuadre": None if e is None else {"x": list(e.x), "y": list(e.y)},
+        "anfitrion": None if anfitrion is None else Poste(anfitrion).datos(),
         "pasos": pasos,
     }
 

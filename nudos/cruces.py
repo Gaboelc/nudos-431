@@ -153,16 +153,20 @@ def encimas(cruces: list[Cruce], secuencia) -> list[bool]:
     return out
 
 
-def secuencia_obtenida(X: np.ndarray, h: float, cruces: list[Cruce]) -> list[str]:
+def secuencia_obtenida(X: np.ndarray, h: float, cruces: list[Cruce], alturas=None) -> list[str]:
     """La secuencia que resulta de la altura de la cuerda en cada cruce, numerada
-    en orden de aparición."""
+    en orden de aparición. `alturas` da, para cada cruce, la de sus dos pasadas cuando no
+    es la altura sobre la mesa (sobre un poste es la distancia al eje)."""
     s = np.arange(len(X)) * h
     nums: dict[int, int] = {}
     out = []
     for _, k, cual in _ocurrencias(cruces):
         c = cruces[k]
-        za = np.interp(c.sa, s, X[:, 2])
-        zb = np.interp(c.sb, s, X[:, 2])
+        if alturas is None:
+            za = np.interp(c.sa, s, X[:, 2])
+            zb = np.interp(c.sb, s, X[:, 2])
+        else:
+            za, zb = alturas[k]
         primera_encima = za > zb
         arriba = primera_encima if cual == 0 else not primera_encima
         n = nums.setdefault(k, len(nums) + 1)

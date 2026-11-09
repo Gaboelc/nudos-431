@@ -22,7 +22,7 @@ class Modelo:
     pasos: list[Resultado]
     fallas: list[str]
     error: Resultado | None = None     # el error común, si la especificación lo declara
-    reverso: Resultado | None = None   # el último paso volteado: el nudo terminado por detrás
+    reverso: Resultado | None = None   # el último paso volteado: el nudo terminado por detrás (sin anfitrión)
 
 
 def construir(spec: Spec) -> Modelo:
@@ -30,7 +30,7 @@ def construir(spec: Spec) -> Modelo:
     resultados = []
     for paso in spec.pasos:
         try:
-            r = construir_paso(paso)
+            r = construir_paso(paso, spec.anfitrion)
         except TrazadoError as e:
             fallas.append(str(e))
             continue
@@ -42,7 +42,9 @@ def construir(spec: Spec) -> Modelo:
     fallas.extend(f_error)
     reverso = None
     final = por_n.get(len(spec.pasos))
-    if final is not None:
+    # Un nudo sobre un anfitrión no se voltea: por detrás se mira desde el otro lado
+    # (la vista «detras» de render/escena.js).
+    if final is not None and spec.anfitrion is None:
         reverso, f_reverso = construir_reverso(spec, final)
         fallas.extend(f_reverso)
     return Modelo(spec, resultados, fallas, error, reverso)

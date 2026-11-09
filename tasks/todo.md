@@ -40,15 +40,23 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Filtro 1: Gabriel ata el as de guía paso a paso con cuerda real, siguiendo la ficha impresa (7 nov)
   - [x] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (7 nov, P01)
   - [x] Registrar los dos filtros en la especificación (campo `filtros`)
-- [ ] Punto de control A:
+- [x] Punto de control A:
   - [x] La suite pasa, también desde un clon limpio en un entorno nuevo (76 pruebas)
   - [x] El as de guía pasó los dos filtros
-  - [ ] Decisión entre three.js y Blender para la impresión
-  - [ ] Revisión contigo
+  - [x] Decisión entre three.js y Blender para la impresión: se queda three.js
+  - [x] Revisión contigo: la ficha se queda como está, con el espacio libre de la página derecha; los nudos de más de 6 pasos se resuelven en T7
 
 ## Fase 2: piloto por tipo de nudo
 
 - [ ] T5 Objeto anfitrión con el ballestrinque sobre poste (M, depende de T4; es el mayor riesgo técnico)
+  - [x] El poste en la especificación (`anfitrion`, segmentos `{poste: [[x, ángulo], ...]}`) y en la relajación, sin que la cuerda lo atraviese
+  - [x] Cruces sobre la superficie desenrollada del poste (`nudos/anfitrion.py`)
+  - [x] `specs/ballestrinque.yaml`: 5 pasos con el chicote, error común y texto de la ficha; pruebas en `tests/test_ballestrinque.py`
+  - [x] El poste en la escena, el visor y la ficha; el nudo terminado se mira desde el otro lado
+  - [ ] Gabriel revisa el texto de la ficha
+  - [ ] Filtro 1: Gabriel lo ata paso a paso con cuerda real y un palo, siguiendo la ficha impresa
+  - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa
+  - [ ] Registrar los dos filtros en la especificación
 - [ ] T6 Dos cuerdas con la vuelta de escota (M, depende de T4; puede ir en paralelo con T5)
 - [ ] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas
 - [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)

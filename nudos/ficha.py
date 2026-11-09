@@ -39,7 +39,7 @@ def faltantes(modelo: Modelo) -> list[str]:
     faltan = [campo for campo, valor in (("usos", s.usos), ("materiales", s.materiales),
                                          ("verificacion", s.verificacion), ("error", s.error))
               if not valor]
-    if modelo.reverso is None:
+    if modelo.reverso is None and s.anfitrion is None:
         faltan.append("el nudo terminado por detrás (no se pudo construir el último paso)")
     return faltan
 
@@ -103,11 +103,12 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
              f'<div class="img"><img src="{img("error")}" alt=""><span class="sello mal">Así no</span></div>'
              f'</div><figcaption><span class="aviso">Error común · paso {e.paso}</span>'
              f'<span class="t">{esc(e.titulo)}</span>{esc(e.texto)}</figcaption></figure>')
+    detras = ("Por detrás es como lo ves desde el otro lado del poste." if s.anfitrion else
+              "Por detrás es como lo ves si lo volteas como la página de un libro.")
     terminado = (f'    <figure class="panel terminado"><div class="imgs">'
                  f'<div class="img"><img src="{img("terminado-frente")}" alt=""><span class="sello">Por delante</span></div>'
                  f'<div class="img"><img src="{img("terminado-reverso")}" alt=""><span class="sello">Por detrás</span></div>'
-                 f'</div><figcaption><span class="t">El nudo terminado</span>Por detrás es como lo ves si '
-                 f'lo volteas como la página de un libro.</figcaption></figure>')
+                 f'</div><figcaption><span class="t">El nudo terminado</span>{detras}</figcaption></figure>')
     verificacion = ('    <section class="verif"><h2>Revisa tu nudo</h2><ul>'
                     + "".join(f"<li>{esc(v)}</li>" for v in s.verificacion) + "</ul></section>")
     seguridad = ("" if not s.seguridad else

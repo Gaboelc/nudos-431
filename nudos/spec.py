@@ -23,12 +23,14 @@ _CODIGO = re.compile(r"^[A-Z]{1,3}[0-9]{2,3}$")
 RESULTADOS = ("aprobado", "no aprobado")
 
 _CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materiales",
-           "verificacion", "seguridad", "encuadre", "segmentos", "pasos", "error", "terminado",
-           "filtros"}
+           "verificacion", "seguridad", "encuadre", "anfitrion", "segmentos", "pasos", "error",
+           "terminado", "filtros"}
 _CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
 _CAMPOS_ERROR = {"paso", "invierte", "titulo", "texto", "encuadre"}
 _CAMPOS_TERMINADO = {"encuadre"}
 _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
+_CAMPOS_ANFITRION = {"tipo", "radio", "desde", "hasta"}
+TIPOS_ANFITRION = ("poste",)
 
 
 class SpecError(ValueError):
@@ -40,9 +42,33 @@ class Paso:
     n: int
     titulo: str
     texto: str
-    puntos: np.ndarray                 # (N, 2) puntos de control, en orden de la cuerda
+    # (N, 2) puntos de control, en orden de la cuerda. Sobre la mesa son [x, y]; sobre el
+    # anfitrión son [x, ángulo en grados] (ver Anfitrion). `sobre` dice cuáles son cuáles.
+    puntos: np.ndarray
     secuencia: tuple[str, ...]
     resaltar: tuple[int, int] | None   # índices de puntos de control
+    sobre: np.ndarray | None = None    # (N,) True si el punto va sobre el anfitrión
+
+
+@dataclass(frozen=True)
+class Anfitrion:
+    """El objeto rígido alrededor del que se ata el nudo.
+
+    Poste: un cilindro horizontal a lo largo de x, con el eje en y = 0. Se apoya sobre la
+    cuerda que pasa por debajo, así que su eje queda a la altura radio + 1 (un diámetro de
+    cuerda sobre la mesa). Sobre el poste, un punto es [x, ángulo]: el ángulo va en grados
+    alrededor del eje, 0 arriba, 90 hacia quien ata, 180 abajo y 270 atrás. Se escribe sin
+    volver a 0, de modo que una vuelta completa por arriba va, por ejemplo, de 90 a -270."""
+    tipo: str
+    radio: float
+    desde: float     # extremos del poste a lo largo de x
+    hasta: float
+
+
+@dataclass(frozen=True)
+class Segmento:
+    puntos: np.ndarray   # (N, 2)
+    sobre: bool          # True: [x, ángulo] sobre el anfitrión; False: [x, y] sobre la mesa
 
 
 @dataclass(frozen=True)
@@ -88,6 +114,7 @@ class Spec:
     abok: int | None
     encuadre: Encuadre | None
     pasos: tuple[Paso, ...]
+    anfitrion: Anfitrion | None = None
     error: Error | None = None
     terminado: Terminado = Terminado()
     # Texto de la ficha. Es opcional al cargar, para poder modelar un nudo antes de
@@ -130,7 +157,8 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
     abok = datos.get("abok")
     if abok is not None and (not isinstance(abok, int) or isinstance(abok, bool)):
         raise falla("abok debe ser un número entero")
-    segmentos = _segmentos(datos.get("segmentos"), falla)
+    anfitrion = _anfitrion(datos.get("anfitrion"), falla)
+    segmentos = _segmentos(datos.get("segmentos"), anfitrion, falla)
     pasos = datos.get("pasos")
     if not isinstance(pasos, list) or not pasos:
         raise falla("falta la lista de pasos")
@@ -142,6 +170,7 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         abok=abok,
         encuadre=_encuadre(datos.get("encuadre"), falla),
         pasos=pasos,
+        anfitrion=anfitrion,
         error=_error(datos.get("error"), pasos, falla),
         terminado=_terminado(datos.get("terminado"), falla),
         otros_nombres=_lista_textos(datos, "otros_nombres", falla),
@@ -256,20 +285,57 @@ def _texto(datos: dict, clave: str, falla) -> str:
     return valor.strip()
 
 
-def _segmentos(datos, falla) -> dict[str, np.ndarray]:
+def _anfitrion(datos, falla) -> Anfitrion | None:
+    if datos is None:
+        return None
+
+    def af(msg: str) -> SpecError:
+        return falla(f"anfitrion: {msg}")
+
+    if not isinstance(datos, dict):
+        raise af("debe ser un mapa")
+    sobran = set(datos) - _CAMPOS_ANFITRION
+    if sobran:
+        raise af(f"campos desconocidos: {', '.join(sorted(sobran))}")
+    if datos.get("tipo") not in TIPOS_ANFITRION:
+        raise af(f"«tipo» es uno de: {', '.join(TIPOS_ANFITRION)}")
+    numeros = {}
+    for clave in ("radio", "desde", "hasta"):
+        v = datos.get(clave)
+        if not isinstance(v, (int, float)) or isinstance(v, bool):
+            raise af(f"falta «{clave}», en diámetros de cuerda")
+        numeros[clave] = float(v)
+    if numeros["radio"] < 0.5:
+        raise af("el radio del poste es de al menos medio diámetro de cuerda")
+    if numeros["desde"] >= numeros["hasta"]:
+        raise af("«desde» va antes que «hasta»")
+    return Anfitrion(datos["tipo"], **numeros)
+
+
+def _segmentos(datos, anfitrion: Anfitrion | None, falla) -> dict[str, Segmento]:
     if not isinstance(datos, dict) or not datos:
         raise falla("falta el mapa de segmentos")
     out = {}
     for nombre, puntos in datos.items():
         if not isinstance(nombre, str) or not _NOMBRE.match(nombre):
             raise falla(f"segmento «{nombre}»: usa minúsculas, números y guiones")
+        sobre = isinstance(puntos, dict)
+        if sobre:
+            if set(puntos) != {"poste"}:
+                raise falla(f"segmento {nombre}: un segmento sobre el anfitrión se escribe "
+                            "{poste: [[x, ángulo], ...]}")
+            if anfitrion is None:
+                raise falla(f"segmento {nombre}: va sobre el poste y la especificación no "
+                            "declara «anfitrion»")
+            puntos = puntos["poste"]
         try:
             arr = np.asarray(puntos, dtype=float)
         except (TypeError, ValueError):
             arr = None
         if arr is None or arr.ndim != 2 or arr.shape[1] != 2 or len(arr) == 0:
-            raise falla(f"segmento {nombre}: los puntos deben ser pares [x, y]")
-        out[nombre] = arr
+            forma = "[x, ángulo]" if sobre else "[x, y]"
+            raise falla(f"segmento {nombre}: los puntos deben ser pares {forma}")
+        out[nombre] = Segmento(arr, sobre)
     return out
 
 
@@ -309,15 +375,19 @@ def _paso(n: int, datos, segmentos: dict[str, np.ndarray], falla) -> Paso:
             raise pf(f"«{ref}»: en el trazado va un segmento o un tramo [a:b], no un punto")
         if any(nombre == usado for usado, _ in partes):
             raise pf(f"el segmento {nombre} aparece dos veces")
-        indices = list(range(len(segmentos[nombre])))[sel]
+        indices = list(range(len(segmentos[nombre].puntos)))[sel]
         if not indices:
             raise pf(f"«{ref}» no tiene puntos")
         partes.append((nombre, indices))
 
-    puntos = np.vstack([segmentos[nombre][indices] for nombre, indices in partes])
+    puntos = np.vstack([segmentos[nombre].puntos[indices] for nombre, indices in partes])
+    sobre = np.concatenate([np.full(len(indices), segmentos[nombre].sobre) for nombre, indices in partes])
     if len(puntos) < 2:
         raise pf("el trazado necesita al menos dos puntos")
-    cerca = np.linalg.norm(np.diff(puntos, axis=0), axis=1) < DISTANCIA_MIN
+    # Entre dos puntos sobre el poste, la segunda coordenada son grados: 1° cuenta como
+    # 0,02 diámetros, más o menos lo que mide en la superficie de un poste delgado.
+    paso_xy = np.diff(puntos, axis=0) * np.where((sobre[1:] & sobre[:-1])[:, None], [1.0, 0.02], 1.0)
+    cerca = (np.linalg.norm(paso_xy, axis=1) < DISTANCIA_MIN) & (sobre[1:] == sobre[:-1])
     if cerca.any():
         p = puntos[int(np.argmax(cerca))]
         raise pf(f"hay dos puntos seguidos casi iguales cerca de ({p[0]:g}, {p[1]:g})")
@@ -336,6 +406,7 @@ def _paso(n: int, datos, segmentos: dict[str, np.ndarray], falla) -> Paso:
         puntos=puntos,
         secuencia=secuencia,
         resaltar=_resaltar(datos.get("resaltar"), partes, segmentos, len(puntos), pf),
+        sobre=sobre if sobre.any() else None,
     )
 
 
@@ -378,7 +449,7 @@ def _punto(ref, partes, segmentos, total: int, pf) -> int:
     base = 0
     for usado, indices in partes:
         if usado == nombre:
-            largo = len(segmentos[nombre])
+            largo = len(segmentos[nombre].puntos)
             original = sel + largo if sel < 0 else sel
             if original not in indices:
                 raise pf(f"«{ref}» no está en el tramo de {nombre} que usa este paso")
