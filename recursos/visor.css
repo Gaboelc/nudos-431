@@ -116,7 +116,8 @@ h1 {
 .hint { margin: 0; font-size: 0.68rem; color: var(--muted); }
 
 /* Pasos */
-.steps h2 { margin: 0 0 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 0.02em; }
+.lado { display: grid; gap: 32px; }
+.steps h2, .sobre h2 { margin: 0 0 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 0.02em; }
 .steps ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .step {
   appearance: none; display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 12px; width: 100%;
@@ -129,6 +130,21 @@ h1 {
 .step .d { display: block; margin-top: 3px; font-size: 0.94rem; line-height: 1.5; }
 .step[aria-current="step"] { background: var(--surface); color: var(--ink); }
 .step[aria-current="step"] .num { color: var(--accent); }
+
+/* Sobre el nudo: para qué sirve, materiales, precauciones, alternativas y seguridad */
+.sobre { border-top: 1px solid var(--line); }
+.sobre h2 { margin-top: 0; padding-top: 14px; }
+.sobre h3 {
+  margin: 18px 0 4px; font-family: var(--font-mono); font-weight: 500; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.09em; color: var(--accent-ink);
+}
+.sobre h2 + h3 { margin-top: 4px; }
+.sobre p, .sobre ul { margin: 0; font-size: 0.94rem; line-height: 1.5; }
+.sobre ul { padding-left: 1.1rem; }
+.sobre li + li { margin-top: 6px; }
+.sobre li::marker { color: var(--accent); }
+.sobre .seguridad { margin-top: 18px; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--surface); }
+.sobre .seguridad h3 { margin-top: 0; }
 
 /* Pie */
 .foot { margin: 0; padding-top: 18px; border-top: 1px solid var(--line); font-size: 0.68rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; }
