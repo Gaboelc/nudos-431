@@ -39,7 +39,7 @@ def construir_error(spec: Spec, correcto: Resultado | None) -> tuple[Resultado |
     paso = spec.pasos[e.paso - 1]
     try:
         r = construir_paso(replace(paso, secuencia=invertir(paso.secuencia, e.invierte)),
-                           spec.anfitrion)
+                           spec.anfitrion, spec.cuerdas)
     except TrazadoError as err:
         return None, [f"Error común: {err}"]
     fallas = [f"Error común: {f}" for f in r.fallas]
@@ -63,7 +63,7 @@ def construir_error(spec: Spec, correcto: Resultado | None) -> tuple[Resultado |
 
 def construir_reverso(spec: Spec, final: Resultado) -> tuple[Resultado, list[str]]:
     """El último paso volteado, para mostrar el nudo terminado por detrás."""
-    r = voltear(final, spec.pasos[-1].secuencia)
+    r = voltear(final, spec.pasos[-1].secuencia, spec.pasos[-1].pasadas)
     return r, [f"Reverso del nudo terminado: {f}" for f in r.fallas]
 
 

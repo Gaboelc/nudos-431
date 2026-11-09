@@ -17,7 +17,7 @@ import math
 
 import numpy as np
 
-from .cruces import Cruce, emparejar, encimas
+from .cruces import Cruce, cruces_2d, emparejar, encimas
 from .libre import R, Resultado, TrazadoError, _resultado, catmull_rom, elevar, relajar, remuestrear
 from .spec import Anfitrion, Paso
 
@@ -175,47 +175,14 @@ def _cruces(X, h, sobre, poste: Poste) -> tuple[list[Cruce], list[tuple[float, f
     # Sobre el poste, el ángulo se desenrolla a lo largo de la cuerda y se compara módulo
     # una vuelta.
     u = np.unwrap(th) * poste.rb
-    en_poste = _cruces_2d(np.column_stack([x, u]), seg_poste, h, periodo=2 * math.pi * poste.rb)
-    en_mesa = _cruces_2d(X[:, :2], seg_mesa, h)
+    en_poste = cruces_2d(np.column_stack([x, u]), seg_poste, h, periodo=2 * math.pi * poste.rb)
+    en_mesa = cruces_2d(X[:, :2], seg_mesa, h)
     s = np.arange(len(X)) * h
     cruces, alturas = [], []
-    for (sa, sb, seno), valor in [(c, r) for c in en_poste] + [(c, X[:, 2]) for c in en_mesa]:
+    for (sa, sb, seno, _), valor in [(c, r) for c in en_poste] + [(c, X[:, 2]) for c in en_mesa]:
         p = np.array([np.interp(sa, s, X[:, k]) for k in range(2)])
         cruces.append(Cruce(sa, sb, (float(p[0]), float(p[1])), seno))
         alturas.append((float(np.interp(sa, s, valor)), float(np.interp(sb, s, valor))))
     orden = sorted(range(len(cruces)), key=lambda k: cruces[k].sa)
     return [cruces[k] for k in orden], [alturas[k] for k in orden]
 
-
-def _cruces_2d(P, validos, h, periodo=None) -> list[tuple[float, float, float]]:
-    """Cruces entre los segmentos válidos de una polilínea en un plano. Con `periodo`, la
-    segunda coordenada es periódica: cada par se compara en la vuelta más cercana."""
-    idx = np.nonzero(validos)[0]
-    if len(idx) < 2:
-        return []
-    A, B = P[idx], P[idx + 1]
-    i, j = np.triu_indices(len(idx), k=1)
-    lejos = idx[j] - idx[i] >= 2
-    i, j = i[lejos], j[lejos]
-    Ai, Bi, Aj, Bj = A[i], B[i], A[j].copy(), B[j].copy()
-    if periodo is not None:
-        corr = np.round(((Aj[:, 1] + Bj[:, 1]) - (Ai[:, 1] + Bi[:, 1])) / 2 / periodo) * periodo
-        Aj[:, 1] -= corr
-        Bj[:, 1] -= corr
-    rr, ss = Bi - Ai, Bj - Aj
-    qp = Aj - Ai
-    rxs = rr[:, 0] * ss[:, 1] - rr[:, 1] * ss[:, 0]
-    nz = np.abs(rxs) > 1e-12
-    t = np.full(len(i), -1.0)
-    v = np.full(len(i), -1.0)
-    t[nz] = (qp[nz, 0] * ss[nz, 1] - qp[nz, 1] * ss[nz, 0]) / rxs[nz]
-    v[nz] = (qp[nz, 0] * rr[nz, 1] - qp[nz, 1] * rr[nz, 0]) / rxs[nz]
-    hit = nz & (t >= 0) & (t < 1) & (v >= 0) & (v < 1)
-    out: list[tuple[float, float, float]] = []
-    for k in np.nonzero(hit)[0]:
-        sa, sb = (idx[i[k]] + t[k]) * h, (idx[j[k]] + v[k]) * h
-        if any(abs(a - sa) < 0.3 and abs(b - sb) < 0.3 for a, b, _ in out):
-            continue
-        seno = abs(rxs[k]) / (np.linalg.norm(rr[k]) * np.linalg.norm(ss[k]))
-        out.append((float(sa), float(sb), float(seno)))
-    return out

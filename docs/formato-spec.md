@@ -162,9 +162,9 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 1. La especificación cumple este formato.
 2. **Consistencia entre pasos:** cada cruce conserva su encima/debajo en todos los pasos donde aparece. Así se detecta un cruce invertido en un solo paso.
 3. En cada paso, después de relajar la cuerda:
-   - la secuencia de cruces es la declarada;
-   - ningún tramo queda a menos de 0,97 diámetros de otro;
-   - el radio de curvatura no baja de 0,9 diámetros;
+   - la secuencia de cruces es la declarada; con varias cuerdas, además, cada pasada cae en la cuerda donde se declaró;
+   - ningún tramo queda a menos de 0,97 diámetros de otro; con varias cuerdas, a menos de 0,97 veces la suma de los radios de los dos tramos, que es la distancia a la que se tocan;
+   - el radio de curvatura no baja de 0,9 diámetros, medidos en los diámetros de cada cuerda;
    - la cuerda no se estira más de 2 %.
    - con un anfitrión, la cuerda no entra en él más de 0,05 diámetros.
 4. Un cruce con la misma etiqueta no aparece a más de 2,5 diámetros de donde estaba en el paso anterior. Es una heurística para detectar una etiqueta reutilizada para otro cruce.
@@ -172,13 +172,13 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
    - la secuencia del error, después de relajar, difiere de la del paso correcto exactamente en los cruces de `invierte`;
    - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés.
 
-**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
+**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
 
 **Lo que no se comprueba es si la secuencia corresponde al nudo correcto.** Un cruce mal leído que se repite igual en todos los pasos pasa todas las pruebas. Para eso está el filtro 1: atar cada paso con cuerda real antes de publicar.
 
 ## Pendiente para versiones siguientes
 
-- Construir los nudos de varias cuerdas (T6): el formato ya las acepta, pero `python -m nudos construir` todavía no.
+- Dibujar los nudos de varias cuerdas en el visor, la impresión, la hoja de revisión y la ficha (T6): hoy se construyen y se comprueban, pero todavía no se dibujan.
 - Varias cuerdas sobre un anfitrión.
 - Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
 - Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.

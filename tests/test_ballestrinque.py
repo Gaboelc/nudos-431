@@ -5,7 +5,8 @@ import pytest
 import yaml
 
 from nudos import SPECS
-from nudos.anfitrion import PENETRACION_MAX, Poste, _cruces_2d
+from nudos.anfitrion import PENETRACION_MAX, Poste
+from nudos.cruces import cruces_2d
 from nudos.errores import cruces_distintos
 from nudos.imprimir import imagenes
 from nudos.libre import LIMITES
@@ -56,8 +57,8 @@ def test_los_cruces_sobre_el_poste_se_buscan_en_la_superficie_desenrollada():
     P = np.vstack([a, b])
     validos = np.ones(len(P) - 1, bool)
     validos[20] = False   # el salto entre los dos tramos no es cuerda
-    assert len(_cruces_2d(P, validos, 1.0)) == 0
-    assert len(_cruces_2d(P, validos, 1.0, periodo=periodo)) == 1
+    assert len(cruces_2d(P, validos, 1.0)) == 0
+    assert len(cruces_2d(P, validos, 1.0, periodo=periodo)) == 1
 
 
 # --- La especificación ----------------------------------------------------

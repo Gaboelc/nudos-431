@@ -30,7 +30,7 @@ def construir(spec: Spec) -> Modelo:
     resultados = []
     for paso in spec.pasos:
         try:
-            r = construir_paso(paso, spec.anfitrion)
+            r = construir_paso(paso, spec.anfitrion, spec.cuerdas)
         except TrazadoError as e:
             fallas.append(str(e))
             continue

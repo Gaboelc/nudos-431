@@ -101,35 +101,53 @@ class Cruce:
     seno: float               # |sen| del ángulo entre los dos tramos
 
 
-def encontrar_cruces(X: np.ndarray, h: float) -> list[Cruce]:
-    """Cruces de la proyección sobre la mesa de una cuerda muestreada cada h."""
-    P = X[:, :2]
-    A, B = P[:-1], P[1:]
-    i, j = np.triu_indices(len(A), k=2)
-    lo, hi = np.minimum(A, B), np.maximum(A, B)
-    ok = ((lo[i, 0] <= hi[j, 0]) & (lo[j, 0] <= hi[i, 0]) &
-          (lo[i, 1] <= hi[j, 1]) & (lo[j, 1] <= hi[i, 1]))
-    i, j = i[ok], j[ok]
-    r, s = B[i] - A[i], B[j] - A[j]
-    qp = A[j] - A[i]
-    rxs = r[:, 0] * s[:, 1] - r[:, 1] * s[:, 0]
+def encontrar_cruces(X: np.ndarray, h: float, validos: np.ndarray | None = None) -> list[Cruce]:
+    """Cruces de la proyección sobre la mesa de una cuerda muestreada cada h. `validos`
+    dice qué segmentos cuentan: con varias cuerdas, el que une el final de una cuerda con
+    el comienzo de la siguiente no es cuerda."""
+    if validos is None:
+        validos = np.ones(len(X) - 1, bool)
+    return [Cruce(sa, sb, p, seno) for sa, sb, seno, p in cruces_2d(X[:, :2], validos, h)]
+
+
+def cruces_2d(P, validos, h, periodo=None) -> list[tuple[float, float, float, tuple[float, float]]]:
+    """Cruces entre los segmentos válidos de una polilínea en un plano: para cada uno, la
+    posición a lo largo de la polilínea de sus dos pasadas, el |sen| del ángulo entre ellas
+    y el punto del plano donde se cruzan. Con `periodo`, la segunda coordenada es
+    periódica: cada par se compara en la vuelta más cercana."""
+    idx = np.nonzero(validos)[0]
+    if len(idx) < 2:
+        return []
+    A, B = P[idx], P[idx + 1]
+    i, j = np.triu_indices(len(idx), k=1)
+    lejos = idx[j] - idx[i] >= 2
+    i, j = i[lejos], j[lejos]
+    Ai, Bi, Aj, Bj = A[i], B[i], A[j].copy(), B[j].copy()
+    if periodo is not None:
+        corr = np.round(((Aj[:, 1] + Bj[:, 1]) - (Ai[:, 1] + Bi[:, 1])) / 2 / periodo) * periodo
+        Aj[:, 1] -= corr
+        Bj[:, 1] -= corr
+    rr, ss = Bi - Ai, Bj - Aj
+    qp = Aj - Ai
+    rxs = rr[:, 0] * ss[:, 1] - rr[:, 1] * ss[:, 0]
     nz = np.abs(rxs) > 1e-12
-    i, j, r, s, qp, rxs = i[nz], j[nz], r[nz], s[nz], qp[nz], rxs[nz]
-    t = (qp[:, 0] * s[:, 1] - qp[:, 1] * s[:, 0]) / rxs
-    u = (qp[:, 0] * r[:, 1] - qp[:, 1] * r[:, 0]) / rxs
-    hit = (t >= 0) & (t < 1) & (u >= 0) & (u < 1)
-    out: list[Cruce] = []
+    t = np.full(len(i), -1.0)
+    v = np.full(len(i), -1.0)
+    t[nz] = (qp[nz, 0] * ss[nz, 1] - qp[nz, 1] * ss[nz, 0]) / rxs[nz]
+    v[nz] = (qp[nz, 0] * rr[nz, 1] - qp[nz, 1] * rr[nz, 0]) / rxs[nz]
+    hit = nz & (t >= 0) & (t < 1) & (v >= 0) & (v < 1)
+    out: list[tuple[float, float, float, tuple[float, float]]] = []
     for k in np.nonzero(hit)[0]:
-        sa, sb = (i[k] + t[k]) * h, (j[k] + u[k]) * h
-        if any(abs(c.sa - sa) < 0.3 and abs(c.sb - sb) < 0.3 for c in out):
+        sa, sb = (idx[i[k]] + t[k]) * h, (idx[j[k]] + v[k]) * h
+        if any(abs(a - sa) < 0.3 and abs(b - sb) < 0.3 for a, b, _, _ in out):
             continue
-        seno = abs(rxs[k]) / (np.linalg.norm(r[k]) * np.linalg.norm(s[k]))
-        p = A[i[k]] + t[k] * r[k]
-        out.append(Cruce(float(sa), float(sb), (float(p[0]), float(p[1])), float(seno)))
+        seno = abs(rxs[k]) / (np.linalg.norm(rr[k]) * np.linalg.norm(ss[k]))
+        p = Ai[k] + t[k] * rr[k]
+        out.append((float(sa), float(sb), float(seno), (float(p[0]), float(p[1]))))
     return out
 
 
-def _ocurrencias(cruces: list[Cruce]) -> list[tuple[float, int, int]]:
+def ocurrencias(cruces: list[Cruce]) -> list[tuple[float, int, int]]:
     occ = ([(c.sa, k, 0) for k, c in enumerate(cruces)] +
            [(c.sb, k, 1) for k, c in enumerate(cruces)])
     occ.sort()
@@ -144,7 +162,7 @@ def _canonica(etiquetas) -> list[int]:
 def emparejar(cruces: list[Cruce], secuencia) -> list[str] | None:
     """La etiqueta de la secuencia que corresponde a cada cruce geométrico, o
     None si el orden de los cruces en la cuerda no coincide con la secuencia."""
-    occ = _ocurrencias(cruces)
+    occ = ocurrencias(cruces)
     if _canonica(k for _, k, _ in occ) != _canonica(etiqueta(t) for t in secuencia):
         return None
     etiquetas: list[str] = [""] * len(cruces)
@@ -158,7 +176,7 @@ def encimas(cruces: list[Cruce], secuencia) -> list[bool]:
     """Para cada cruce geométrico, si su primera pasada va por encima. Supone que
     `emparejar` ya confirmó que el orden coincide."""
     out = [False] * len(cruces)
-    for (_, k, cual), t in zip(_ocurrencias(cruces), secuencia):
+    for (_, k, cual), t in zip(ocurrencias(cruces), secuencia):
         if cual == 0:
             out[k] = encima(t)
     return out
@@ -171,7 +189,7 @@ def secuencia_obtenida(X: np.ndarray, h: float, cruces: list[Cruce], alturas=Non
     s = np.arange(len(X)) * h
     nums: dict[int, int] = {}
     out = []
-    for _, k, cual in _ocurrencias(cruces):
+    for _, k, cual in ocurrencias(cruces):
         c = cruces[k]
         if alturas is None:
             za = np.interp(c.sa, s, X[:, 2])

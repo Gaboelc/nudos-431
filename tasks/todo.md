@@ -60,7 +60,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 - [ ] T6 Dos cuerdas con la vuelta de escota (M, depende de T4; puede ir en paralelo con T5)
   - [x] Diseño escrito en el plan (formato, geometría, color, escena); falta implementarlo
   - [x] Formato con `cuerdas` y trazado y secuencia por cuerda, con sus pruebas (`tests/test_spec.py`)
-  - [ ] Geometría de varias cuerdas: cortes, radio por punto, separación por suma de radios
+  - [x] Geometría de varias cuerdas: cortes, radio por punto, separación por suma de radios (`tests/test_cuerdas.py`)
   - [ ] Escena, impresión, hoja y ficha con dos cuerdas; nudos de una cuerda idénticos píxel por píxel
   - [ ] `specs/vuelta-de-escota.yaml` y `tests/test_vuelta_de_escota.py`
   - [ ] Filtro 1 (el filtro 2, cuando se retome)

@@ -8,6 +8,11 @@ Cada paso se construye así:
 
 Unidades: el diámetro de la cuerda es 1. x a la derecha, y hacia el fondo de la
 mesa (lejos de quien ata), z hacia arriba desde la mesa.
+
+Con varias cuerdas, sus líneas centrales van una tras otra en una sola polilínea, con
+un corte entre cada cuerda y la siguiente (ver Reparto). Ningún segmento, largo ni
+suavizado cruza un corte; las colisiones y la separación usan la suma de los radios de
+los dos tramos, y la curvatura se mide en los diámetros de cada cuerda.
 """
 from __future__ import annotations
 
@@ -18,12 +23,13 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 from .cruces import (Cruce, emparejar, encima, encimas, encontrar_cruces, numerada,
-                     secuencia_obtenida)
-from .spec import Anfitrion, Paso
+                     ocurrencias, secuencia_obtenida)
+from .spec import Anfitrion, Cuerda, Paso
 
 H = 0.2            # paso de muestreo a lo largo de la cuerda
 R = 0.5            # radio de la cuerda
 SEPARACION = 1.0   # distancia mínima entre los ejes de dos tramos que se tocan
+PASADAS_LARGO_CUERDAS = 12   # correcciones de largo por vuelta con varias cuerdas (con una son 4)
 
 LIMITES = {
     "separacion_min": 0.97,    # diámetros
@@ -34,6 +40,61 @@ LIMITES = {
 
 class TrazadoError(ValueError):
     """El trazado de un paso no corresponde a su secuencia de cruces."""
+
+
+@dataclass(frozen=True)
+class Reparto:
+    """Cómo se reparte la polilínea entre las cuerdas. Con una sola cuerda (`una`), todos
+    los puntos son de la cuerda 0, de grosor 1."""
+    cuerda: np.ndarray   # (N,) índice de la cuerda de cada punto, en orden: 0, 0, …, 1, 1, …
+    grosor: np.ndarray   # (N,) diámetro de la cuerda de cada punto
+    nombres: tuple[str, ...] = ()
+
+    @staticmethod
+    def una(n: int) -> "Reparto":
+        return Reparto(np.zeros(n, int), np.ones(n))
+
+    @property
+    def radio(self) -> np.ndarray:
+        return self.grosor * R
+
+    @property
+    def seguido(self) -> np.ndarray:
+        """(N-1,) True si el segmento une dos puntos de la misma cuerda."""
+        return self.cuerda[1:] == self.cuerda[:-1]
+
+    @property
+    def interior(self) -> np.ndarray:
+        """(N,) True si el punto no es un extremo de su cuerda."""
+        out = np.zeros(len(self.cuerda), bool)
+        out[1:-1] = self.seguido[1:] & self.seguido[:-1]
+        return out
+
+    @property
+    def inicios(self) -> np.ndarray:
+        """Índice del primer punto (el firme) de cada cuerda."""
+        return np.concatenate([[0], np.nonzero(~self.seguido)[0] + 1])
+
+    def de(self, s: float, h: float) -> int:
+        """La cuerda del punto que está a `s` a lo largo de la polilínea."""
+        return int(self.cuerda[min(int(s / h), len(self.cuerda) - 1)])
+
+    def salto(self, h: float) -> np.ndarray:
+        """(N,) cuántos vecinos de la misma cuerda no cuentan como otro tramo: los que quedan
+        a menos de 1,6 diámetros de esa cuerda a lo largo de ella."""
+        por_grosor = {g: int(math.ceil(1.6 * g / h)) for g in set(self.grosor.tolist())}
+        return np.array([por_grosor[g] for g in self.grosor.tolist()])
+
+    def lejos(self, pares: np.ndarray, salto: np.ndarray) -> np.ndarray:
+        """Qué pares de puntos son de tramos distintos: de dos cuerdas, o de la misma y
+        separados por más de `salto` puntos."""
+        a, b = pares[:, 0], pares[:, 1]
+        return (self.cuerda[a] != self.cuerda[b]) | (np.abs(a - b) > salto[a])
+
+    def pasadas(self, posiciones, h: float) -> tuple[int, ...]:
+        """Cuántas de las posiciones (a lo largo de la polilínea) caen en cada cuerda."""
+        cuerdas = [self.de(s, h) for s in posiciones]
+        return tuple(cuerdas.count(k) for k in range(len(self.inicios)))
 
 
 @dataclass
@@ -47,17 +108,17 @@ class Resultado:
     esperada: list[str]                     # declarada, numerada igual
     medidas: dict[str, float]
     fallas: list[str] = field(default_factory=list)
+    reparto: Reparto | None = None          # con varias cuerdas, de cuál es cada punto
 
 
-def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None) -> Resultado:
-    if paso.cuerda is not None:
-        raise TrazadoError(f"Paso {paso.n}: la geometría de varias cuerdas todavía no está (T6).")
+def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None,
+                   cuerdas: tuple[Cuerda, ...] = ()) -> Resultado:
+    """`cuerdas` son las de la especificación, cuando el nudo tiene varias."""
     if anfitrion is not None:
         from .anfitrion import construir_paso as sobre_anfitrion
         return sobre_anfitrion(paso, anfitrion)
-    D, ctrl = catmull_rom(paso.puntos)
-    X2, h, ctrl_s = remuestrear(D, ctrl)
-    cruces = encontrar_cruces(X2, h)
+    X2, h, ctrl_s, reparto = _curva(paso, cuerdas)
+    cruces = encontrar_cruces(X2, h, None if reparto is None else reparto.seguido)
     declarados = len(paso.secuencia) // 2
     if len(cruces) != declarados:
         raise TrazadoError(
@@ -66,43 +127,93 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None) -> Resultado:
     if cruces and emparejar(cruces, paso.secuencia) is None:
         raise TrazadoError(
             f"Paso {paso.n}: los cruces del trazado aparecen en otro orden que en la secuencia.")
-    X = elevar(X2, h, cruces, encimas(cruces, paso.secuencia))
+    if reparto is not None:
+        en_trazado = reparto.pasadas([s for s, _, _ in ocurrencias(cruces)], h)
+        if en_trazado != paso.pasadas:
+            raise TrazadoError(
+                f"Paso {paso.n}: en el trazado, las pasadas por cruces son "
+                f"{_cuantas(reparto.nombres, en_trazado)}; la secuencia declara "
+                f"{_cuantas(reparto.nombres, paso.pasadas)}.")
+    X = elevar(X2, h, cruces, encimas(cruces, paso.secuencia), reparto)
     resaltado = None
     if paso.resaltar is not None:
         a, b = paso.resaltar
         resaltado = (float(ctrl_s[a]), float(ctrl_s[b]))
-    return _resultado(paso.n, relajar(X, h), h, paso.secuencia, resaltado)
+    return _resultado(paso.n, relajar(X, h, reparto=reparto), h, paso.secuencia, resaltado,
+                      reparto=reparto, pasadas=paso.pasadas)
 
 
-def voltear(r: Resultado, secuencia) -> Resultado:
+def _curva(paso: Paso, cuerdas: tuple[Cuerda, ...]):
+    """La línea central muestreada cada h, la posición a lo largo de ella de cada punto de
+    control y, con varias cuerdas, cómo se reparte entre ellas (None con una sola).
+
+    Cada cuerda se muestrea por separado, de punta a punta, y todas comparten el mismo h:
+    el largo de todas entre el total de tramos. Así ninguna cambia de largo en más de
+    medio tramo, y la posición a lo largo de la polilínea es siempre índice × h."""
+    if paso.cuerda is None:
+        D, ctrl = catmull_rom(paso.puntos)
+        X2, h, ctrl_s = remuestrear(D, ctrl)
+        return X2, h, ctrl_s, None
+    partes = [remuestrear(*catmull_rom(paso.puntos[paso.cuerda == k])) for k in range(len(cuerdas))]
+    tramos = [len(Xk) - 1 for Xk, _, _ in partes]
+    h = sum(hk * n for (_, hk, _), n in zip(partes, tramos)) / sum(tramos)
+    inicio, ctrl_s = 0, []
+    for Xk, hk, sk in partes:
+        ctrl_s.append((inicio + sk / hk) * h)
+        inicio += len(Xk)
+    cuerda = np.concatenate([np.full(len(Xk), k) for k, (Xk, _, _) in enumerate(partes)])
+    reparto = Reparto(cuerda, np.array([cuerdas[k].grosor for k in cuerda]),
+                      tuple(c.nombre for c in cuerdas))
+    return np.vstack([Xk for Xk, _, _ in partes]), h, np.concatenate(ctrl_s), reparto
+
+
+def voltear(r: Resultado, secuencia, pasadas=None) -> Resultado:
     """El paso visto por detrás: la cuerda se voltea sobre el eje y (como una página) y
     vuelve a asentarse en la mesa. `secuencia` es la declarada del paso; al voltear,
-    cada cruce queda al revés, así que se espera esa misma secuencia invertida."""
+    cada cruce queda al revés, así que se espera esa misma secuencia invertida. Con
+    varias cuerdas, `pasadas` es la del paso: cada pasada sigue en su cuerda."""
+    rep = r.reparto or Reparto.una(len(r.puntos))
     X = r.puntos.copy()
     X[:, 0] *= -1
-    X[:, 2] = X[:, 2].max() + R - X[:, 2]
-    X[:3, 2] = R   # los puntos fijos del firme siguen sobre la mesa
+    # La cara de arriba de la cuerda pasa a ser la de abajo. Con una cuerda: máx(z) + R - z.
+    X[:, 2] = (X[:, 2] + rep.radio).max() - X[:, 2]
+    for i in rep.inicios:   # los puntos fijos de cada firme siguen sobre la mesa
+        X[i:i + 3, 2] = rep.radio[i]
     invertida = tuple(t[:-1] + ("U" if encima(t) else "O") for t in secuencia)
-    return _resultado(r.n, relajar(X, r.h), r.h, invertida, None)
+    return _resultado(r.n, relajar(X, r.h, reparto=r.reparto), r.h, invertida, None,
+                      reparto=r.reparto, pasadas=pasadas)
 
 
-def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=None) -> Resultado:
+def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=None,
+               reparto: Reparto | None = None, pasadas=None) -> Resultado:
     """Mide la cuerda ya relajada y la compara con la secuencia declarada.
 
     `buscar(X)` devuelve los cruces y la altura de sus dos pasadas (por omisión, los de
-    la proyección sobre la mesa). `medir(X)` agrega medidas y fallas propias."""
+    la proyección sobre la mesa). `medir(X)` agrega medidas y fallas propias. Con varias
+    cuerdas, `pasadas` dice cuántas pasadas de la secuencia declarada son de cada una."""
+    rep = reparto or Reparto.una(len(Xr))
     if buscar is None:
-        cruces_r, alturas = encontrar_cruces(Xr, h), None
+        cruces_r, alturas = encontrar_cruces(Xr, h, rep.seguido), None
     else:
         cruces_r, alturas = buscar(Xr)
     obtenida = secuencia_obtenida(Xr, h, cruces_r, alturas)
     esperada = numerada(secuencia)
-    etiquetas = emparejar(cruces_r, secuencia) if obtenida == esperada else None
-    largos = np.linalg.norm(np.diff(Xr, axis=0), axis=1)
-    radio, donde = curvatura_min(Xr, h, ventana=1)
+    # Con varias cuerdas, además, cada pasada tiene que caer en su cuerda.
+    textos = (_texto(obtenida), _texto(esperada)) if reparto is None else (
+        _texto(obtenida, reparto.nombres, reparto.pasadas([s for s, _, _ in ocurrencias(cruces_r)], h)),
+        _texto(esperada, reparto.nombres, pasadas))
+    etiquetas = emparejar(cruces_r, secuencia) if textos[0] == textos[1] else None
+    largos = np.linalg.norm(np.diff(Xr, axis=0), axis=1)[rep.seguido]
+    radio, donde = math.inf, None
+    for k in range(len(rep.inicios)):
+        en_k = rep.cuerda == k
+        rk, dk = curvatura_min(Xr[en_k], h, ventana=1)
+        rk /= float(rep.grosor[en_k][0])   # en diámetros de esa cuerda
+        if rk < radio:
+            radio, donde = rk, dk
     medidas = {
         "largo": float(largos.sum()),
-        "separacion_min": separacion_min(Xr, h),
+        "separacion_min": separacion_min(Xr, h, rep),
         "curvatura_min": radio,
         "estiramiento_max": float(np.abs(largos / h - 1).max()),
         "altura_max": float(Xr[:, 2].max()),
@@ -120,15 +231,36 @@ def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=No
         secuencia=obtenida,
         esperada=esperada,
         medidas=medidas,
-        fallas=_fallas(n, obtenida, esperada, medidas, donde) + otras,
+        fallas=_fallas(n, textos, medidas, donde) + otras,
+        reparto=reparto,
     )
 
 
-def _fallas(n, obtenida, esperada, medidas, donde) -> list[str]:
+def _cuantas(nombres, pasadas) -> str:
+    """«gruesa 2 y delgada 2»."""
+    return " y ".join(f"{nombre} {n}" for nombre, n in zip(nombres, pasadas))
+
+
+def _texto(secuencia, nombres=(), pasadas=()) -> str:
+    """Una secuencia en un mensaje: «1O 2U» con una cuerda; con varias, la de cada una,
+    como gruesa «1O», delgada «1U». `pasadas` dice cuántas pasadas son de cada cuerda."""
+    if not nombres:
+        return f"«{' '.join(secuencia)}»"
+    partes, i = [], 0
+    for nombre, n in zip(nombres, pasadas):
+        partes.append(f"{nombre} «{' '.join(secuencia[i:i + n])}»")
+        i += n
+    return ", ".join(partes)
+
+
+def _fallas(n, textos, medidas, donde) -> list[str]:
+    """`textos` son la secuencia obtenida y la esperada, escritas con _texto; son iguales
+    si coinciden."""
     out = []
+    obtenida, esperada = textos
     if obtenida != esperada:
-        out.append(f"Paso {n}: después de relajar, la secuencia es «{' '.join(obtenida)}» "
-                   f"y debía ser «{' '.join(esperada)}».")
+        out.append(f"Paso {n}: después de relajar, la secuencia es {obtenida} "
+                   f"y debía ser {esperada}.")
     if medidas["separacion_min"] < LIMITES["separacion_min"]:
         out.append(f"Paso {n}: dos tramos quedan a {medidas['separacion_min']:.2f} diámetros; "
                    f"el mínimo es {LIMITES['separacion_min']}.")
@@ -196,32 +328,45 @@ def _suave(x):
     return x * x * (3 - 2 * x)
 
 
-def elevar(X2, h, cruces: list[Cruce], primera_encima: list[bool]):
-    """Sube el tramo de encima de cada cruce sobre el de abajo."""
+def elevar(X2, h, cruces: list[Cruce], primera_encima: list[bool], reparto: Reparto | None = None):
+    """Sube el tramo de encima de cada cruce sobre el de abajo, hasta que los dos se tocan.
+    Solo sube la cuerda del tramo de encima."""
     N = len(X2)
+    rep = reparto or Reparto.una(N)
     s = np.arange(N) * h
-    z = np.full(N, R)
+    r = rep.radio
+    z = r.copy()
     for _ in range(6):
         for k, c in enumerate(cruces):
             so, su = (c.sa, c.sb) if primera_encima[k] else (c.sb, c.sa)
             zu = np.interp(su, s, z)
-            alto = zu + SEPARACION - R
+            ko, ku = rep.de(so, h), rep.de(su, h)
+            ro = float(r[rep.cuerda == ko][0])
+            # Con una cuerda: zu + SEPARACION - R, con SEPARACION = 2R.
+            alto = zu + (ro + float(r[rep.cuerda == ku][0])) - ro
             w = float(np.clip(2.6 / max(c.seno, 0.25), 2.6, 5.0))
-            b = _suave((1.0 - np.abs(s - so) / w) / 0.65)
-            z = np.maximum(z, R + alto * b)
+            b = _suave((1.0 - np.abs(s - so) / w) / 0.65) * (rep.cuerda == ko)
+            z = np.maximum(z, r + alto * b)
     return np.column_stack([X2, z])
 
 
-def _colisiones(X, salto, libre, ganancia=1.0):
+def _colisiones(X, salto, libre, rep: Reparto, radio, ganancia=1.0) -> None:
+    """Separa los tramos que se tocan hasta la suma de sus radios. `salto` y `radio` son
+    los de `rep`, calculados una vez por relajación."""
+    alcance = 2 * float(radio.max())
     arbol = cKDTree(X)
-    pares = arbol.query_pairs(r=SEPARACION, output_type="ndarray")
+    pares = arbol.query_pairs(r=alcance, output_type="ndarray")
     if len(pares):
-        pares = pares[np.abs(pares[:, 0] - pares[:, 1]) > salto]
+        pares = pares[rep.lejos(pares, salto)]
     if not len(pares):
-        return 0.0
+        return
     d = X[pares[:, 1]] - X[pares[:, 0]]
     dist = np.linalg.norm(d, axis=1)
-    corr = ((SEPARACION - dist) / 2.0 / np.maximum(dist, 1e-9))[:, None] * d
+    junto = radio[pares[:, 0]] + radio[pares[:, 1]]
+    if junto.min() < alcance:   # cuerdas de distinto grosor: el alcance es el de la más gruesa
+        toca = dist < junto
+        pares, d, dist, junto = pares[toca], d[toca], dist[toca], junto[toca]
+    corr = ((junto - dist) / 2.0 / np.maximum(dist, 1e-9))[:, None] * d
     acc = np.zeros_like(X)
     cnt = np.zeros(len(X))
     np.add.at(acc, pares[:, 0], -corr)
@@ -230,15 +375,17 @@ def _colisiones(X, salto, libre, ganancia=1.0):
     np.add.at(cnt, pares[:, 1], 1)
     m = (cnt > 0) & libre
     X[m] += ganancia * acc[m] / cnt[m][:, None]
-    return float((SEPARACION - dist).max())
 
 
-def _largos(X, h, libre, pasadas=8):
-    """Gauss-Seidel rojo-negro sobre el largo de cada tramo (vectorizado)."""
+def _largos(X, h, libre, pasadas=8, seguido=None):
+    """Gauss-Seidel rojo-negro sobre el largo de cada tramo (vectorizado). `seguido` dice
+    qué segmentos son de cuerda: con varias cuerdas, el de un corte no tiene largo."""
     N = len(X)
     for _ in range(pasadas):
         for paridad in (0, 1):
             i = np.arange(paridad, N - 1, 2)
+            if seguido is not None:
+                i = i[seguido[i]]
             seg = X[i + 1] - X[i]
             L = np.linalg.norm(seg, axis=1)
             c = ((L - h) / np.maximum(L, 1e-9))[:, None] * seg
@@ -249,19 +396,25 @@ def _largos(X, h, libre, pasadas=8):
             X[i + 1] -= wb[:, None] * c
 
 
-def _limitar_curva(X, h, libre, rmin=1.0, ganancia=0.5):
-    """Suaviza solo donde el radio local es menor que rmin, sin mover el resto."""
+def _limitar_curva(X, h, libre, rmin=1.0, ganancia=0.5, grosor=None, interior=None):
+    """Suaviza solo donde el radio local es menor que rmin, sin mover el resto. Con
+    varias cuerdas, rmin va en diámetros de cada cuerda (`grosor`, por punto) y solo
+    cuentan los puntos que no son extremos de su cuerda (`interior`)."""
     t = X[1:] - X[:-1]
     t /= np.maximum(np.linalg.norm(t, axis=1), 1e-9)[:, None]
     ang = np.arccos(np.clip((t[1:] * t[:-1]).sum(1), -1, 1))
-    malos = np.nonzero(ang > h / rmin)[0] + 1
+    malos = ang > (h / rmin if grosor is None else h / (rmin * grosor[1:-1]))
+    if interior is not None:
+        malos &= interior[1:-1]
+    malos = np.nonzero(malos)[0] + 1
     malos = malos[libre[malos]]
     if len(malos):
         X[malos] += ganancia * (X[malos - 1] + X[malos + 1] - 2 * X[malos])
     return len(malos)
 
 
-def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasadas_largo=4):
+def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasadas_largo=None,
+            reparto: Reparto | None = None):
     """Relajación por posiciones. Las anclas en xy imitan el roce con la mesa; son
     débiles para que la cuerda se deslice y dé el largo que cuesta subir sobre otro
     tramo. La gravedad asienta cada tramo de encima sobre el de abajo. Con un
@@ -269,16 +422,25 @@ def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasa
     `gravedad` dice qué puntos caen y se alisan (por omisión, todos los que no están
     fijos). Cerca de un anfitrión no se alisan: el poste y el largo ya dan la forma.
     `pasadas_largo` es cuántas veces se corrige el largo en cada vuelta; alrededor de un
-    poste hacen falta más, porque el poste empuja la cuerda hacia afuera todo el tiempo."""
+    poste hacen falta más, porque el poste empuja la cuerda hacia afuera todo el tiempo.
+    Con varias cuerdas (`reparto`), los primeros puntos de cada firme quedan fijos y cada
+    cuerda se apoya en la mesa según su radio. También hacen falta más correcciones de
+    largo: una cuerda gruesa empuja hacia arriba a la que pasa encima, y con las de
+    siempre esa cuerda se estiraba hasta su firme."""
     X = X.copy()
     ancla = X[:, :2].copy()
     N = len(X)
-    salto = int(math.ceil(1.6 / h))
+    rep = reparto or Reparto.una(N)
+    if pasadas_largo is None:
+        pasadas_largo = 4 if reparto is None else PASADAS_LARGO_CUERDAS
+    salto, radio, seguido, interior = rep.salto(h), rep.radio, rep.seguido, rep.interior
     libre = np.ones(N, bool)
-    libre[:fijos] = False
+    for i in rep.inicios:
+        libre[i:i + fijos] = False
     cae = libre if gravedad is None else libre & gravedad
     # Sin anfitrión se alisa toda la cuerda, como siempre; con anfitrión, solo lo que cae.
-    alisa = np.ones(N, bool) if gravedad is None else cae
+    # Los extremos de cada cuerda no se alisan: sus vecinos de un lado son de otra.
+    alisa = (np.ones(N, bool) if gravedad is None else cae) & interior
     for it in range(iteraciones):
         tarde = it > iteraciones * 0.75
         g = 0.0 if tarde else 0.003
@@ -289,35 +451,39 @@ def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasa
         X[1:-1, :2] += 0.02 * lap[:, :2] * alisa[1:-1, None]
         X[libre, :2] += ka * (ancla[libre] - X[libre, :2])
         for _ in range(2):
-            _limitar_curva(X, h, libre, rmin=1.1, ganancia=0.35)
-            _colisiones(X, salto, libre)
-            X[:, 2] = np.maximum(X[:, 2], R)
+            _limitar_curva(X, h, libre, rmin=1.1, ganancia=0.35, grosor=rep.grosor, interior=interior)
+            _colisiones(X, salto, libre, rep, radio)
+            X[:, 2] = np.maximum(X[:, 2], radio)
             if anfitrion is not None:
                 anfitrion.empujar(X, libre)
-            _largos(X, h, libre, pasadas=pasadas_largo)
+            _largos(X, h, libre, pasadas=pasadas_largo, seguido=seguido)
     for _ in range(80):
-        _limitar_curva(X, h, libre, rmin=1.1, ganancia=0.25)
-        _colisiones(X, salto, libre)
-        X[:, 2] = np.maximum(X[:, 2], R)
+        _limitar_curva(X, h, libre, rmin=1.1, ganancia=0.25, grosor=rep.grosor, interior=interior)
+        _colisiones(X, salto, libre, rep, radio)
+        X[:, 2] = np.maximum(X[:, 2], radio)
         if anfitrion is not None:
             anfitrion.empujar(X, libre)
-        _largos(X, h, libre, pasadas=pasadas_largo)
+        _largos(X, h, libre, pasadas=pasadas_largo, seguido=seguido)
     return X
 
 
 # --------------------------------------------------------------------------
 # Medidas
 # --------------------------------------------------------------------------
-def separacion_min(X, h) -> float:
-    """Distancia mínima entre ejes de tramos que no son vecinos en la cuerda."""
-    salto = int(math.ceil(1.6 / h))
+def separacion_min(X, h, reparto: Reparto | None = None) -> float:
+    """Distancia mínima entre ejes de tramos que no son vecinos en la cuerda, en
+    diámetros. Con varias cuerdas, cada distancia se divide por la suma de los radios de
+    sus dos tramos, que es la distancia a la que se tocan."""
+    rep = reparto or Reparto.una(len(X))
+    radio = rep.radio
     arbol = cKDTree(X)
-    pares = arbol.query_pairs(r=SEPARACION * 1.05, output_type="ndarray")
+    pares = arbol.query_pairs(r=2 * float(radio.max()) * 1.05, output_type="ndarray")
     if len(pares):
-        pares = pares[np.abs(pares[:, 0] - pares[:, 1]) > salto]
+        pares = pares[rep.lejos(pares, rep.salto(h))]
     if not len(pares):
         return SEPARACION * 1.05
-    return float(np.linalg.norm(X[pares[:, 1]] - X[pares[:, 0]], axis=1).min())
+    dist = np.linalg.norm(X[pares[:, 1]] - X[pares[:, 0]], axis=1)
+    return float((dist / (radio[pares[:, 0]] + radio[pares[:, 1]])).min())
 
 
 def curvatura_min(X, h, ventana=3) -> tuple[float, np.ndarray]:
