@@ -50,7 +50,7 @@ Los índices se cuentan sobre el segmento tal como está definido. Dos puntos se
 
 ## Anfitrión
 
-Algunos nudos se atan alrededor de un objeto rígido. Por ahora el único es el poste; los demás (argolla, estaca, tablón, barril, cuerda anfitriona) se agregan con el primer nudo que los necesite.
+Algunos nudos se atan alrededor de un objeto rígido. Por ahora el único es el poste; los demás (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
 
 | Campo | Qué es |
 |---|---|
@@ -144,7 +144,7 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 ## Pendiente para versiones siguientes
 
 - Varias cuerdas con grosor y color por rol (T6).
-- Los anfitriones que faltan (argolla, estaca, tablón, barril, cuerda anfitriona), con el primer nudo que los use.
+- Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
 - Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Dibujar el anfitrión en la hoja de revisión (`python -m nudos hoja`): hoy solo dibuja la cuerda.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.

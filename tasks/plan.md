@@ -2,7 +2,7 @@
 
 ## Resumen
 
-Un solo libro de nudos para la Wak y la Tropa del Grupo 431, impreso por ediciones, que reemplaza al manual v1.2. Cada nudo es una especificación de datos. De ella salen la geometría 3D, las imágenes de impresión, el visor web y la ficha del PDF. La IA interviene en un solo paso, que es convertir las imágenes de referencia en un borrador de especificación. Cada ficha pasa dos filtros humanos antes de publicarse. La primera edición lleva 32 nudos.
+Un solo libro de nudos para la Wak y la Tropa del Grupo 431, impreso por ediciones, que reemplaza al manual v1.2. Cada nudo es una especificación de datos. De ella salen la geometría 3D, las imágenes de impresión, el visor web y la ficha del PDF. La IA interviene en un solo paso, que es convertir las imágenes de referencia en un borrador de especificación. Cada ficha pasa dos filtros humanos antes de publicarse. La primera edición lleva 35 nudos.
 
 **Ubicación:** el repositorio es [`Gaboelc/nudos-431`](https://github.com/Gaboelc/nudos-431). La carpeta `A:\Scouts\06 Identidad\Diseños Propios\Libro Nudos` es una copia que se actualiza al final de cada sesión, y es el único lugar donde viven las imágenes de `entradas/`.
 
@@ -103,7 +103,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
                  │
           [Punto de control C]
                  │
-  Fase 4: tandas 1 a 5 (27 nudos)
+  Fase 4: tandas 1 a 5 (30 nudos)
                  │
   T11 material inicial     T12 anexos ◄── D3
                  │
@@ -156,6 +156,10 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
   - Que el repositorio sea público está bien mientras `entradas/` nunca entre a git (ya está excluida) y la tabla de probadores viva fuera del repositorio.
 - **D5 Entorno (resuelta):** se trabaja desde la app de Claude con la computadora vinculada (ver la decisión de arquitectura 8).
 - **D8 Especificaciones de la imprenta:** sangrado, perfil de color y formato del archivo. Se resuelve antes de T13.
+- **D9 Nudos por identificar y nombrar.** Se resuelve antes de la tanda de cada uno:
+  - **Nudo aguja:** la entrada `nudo-de-aguja` es el *needle knot* de pesca con mosca, que se hace con una aguja sobre una línea hueca. No coincide con el de la página 25 del manual de la Tropa, que se ata a un destorcedor. Falta saber cuál de los dos va en el libro, o si es otro.
+  - **Ballestrinque doble:** no tiene entrada. Falta confirmar si es el *rolling hitch*.
+  - **Nombre del *tautline hitch*:** mientras tanto se llama «tensor ajustable», para no confundirlo con el tensor (*trucker's hitch*).
 
 ### Fase 1: primer corte vertical, el as de guía de principio a fin
 
@@ -260,7 +264,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 #### T5: Objeto anfitrión con el ballestrinque sobre poste
 
-**Descripción:** agregar a la especificación objetos anfitriones rígidos: poste, argolla, estaca, tablón, barril y cuerda anfitriona. Agregar a la relajación las colisiones contra ellos. Las vueltas se describen en coordenadas del anfitrión: posición a lo largo, ángulo y capa. Los cruces se verifican sobre la superficie desenrollada del anfitrión, no en la proyección.
+**Descripción:** agregar a la especificación objetos anfitriones rígidos: poste, argolla, estaca, tablón, barril, cornamusa y cuerda anfitriona. Agregar a la relajación las colisiones contra ellos. Las vueltas se describen en coordenadas del anfitrión: posición a lo largo, ángulo y capa. Los cruces se verifican sobre la superficie desenrollada del anfitrión, no en la proyección.
 
 **Criterios de aceptación:**
 - [ ] El ballestrinque sobre un poste se construye en todos sus pasos sin que la cuerda atraviese el poste.
@@ -278,7 +282,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 **Tamaño:** M. Es el mayor riesgo técnico del proyecto, por eso va primero en la fase.
 
-**Cómo se hizo (9 de noviembre de 2026):** se implementó solo el poste. La argolla, la estaca, el tablón, el barril y la cuerda anfitriona se agregan con el primer nudo que los necesite, para no dejar código sin un nudo que lo pruebe. Sobre el poste los puntos van como [x, ángulo], sin capa: qué tramo queda encima lo decide la secuencia, igual que en la mesa, y así el error común funciona sin cambios. Cerca del poste la cuerda se relaja sin gravedad ni suavizado, como si estuviera algo tensa, y con más correcciones de largo. El nudo terminado sobre un anfitrión no se voltea: se mira desde el otro lado (vista «detras»). Se usó el método con el chicote, que sirve en cualquier poste y es el que empieza los amarres.
+**Cómo se hizo (9 de noviembre de 2026):** se implementó solo el poste. La argolla, la estaca, el tablón, el barril, la cornamusa y la cuerda anfitriona se agregan con el primer nudo que los necesite, para no dejar código sin un nudo que lo pruebe. Sobre el poste los puntos van como [x, ángulo], sin capa: qué tramo queda encima lo decide la secuencia, igual que en la mesa, y así el error común funciona sin cambios. Cerca del poste la cuerda se relaja sin gravedad ni suavizado, como si estuviera algo tensa, y con más correcciones de largo. El nudo terminado sobre un anfitrión no se voltea: se mira desde el otro lado (vista «detras»). Se usó el método con el chicote, que sirve en cualquier poste y es el que empieza los amarres.
 
 #### T6: Dos cuerdas con la vuelta de escota
 
@@ -380,10 +384,10 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
 
 #### T10: Estado de producción y registro de pruebas
 
-**Descripción:** agregar a la especificación el campo de estado y el registro de los dos filtros. Cada prueba guarda la fecha, el rol del probador y un código anónimo, para no repetir probador en un nudo que ya conoce. Generar una tabla con el estado de los 32 nudos.
+**Descripción:** agregar a la especificación el campo de estado y el registro de los dos filtros. Cada prueba guarda la fecha, el rol del probador y un código anónimo, para no repetir probador en un nudo que ya conoce. Generar una tabla con el estado de los 35 nudos.
 
 **Criterios de aceptación:**
-- [ ] `python -m nudos estado` muestra los 32 nudos con su estado y qué los bloquea.
+- [ ] `python -m nudos estado` muestra los 35 nudos con su estado y qué los bloquea.
 - [ ] Una prueba impide marcar un nudo como `publicado` si no tiene los dos filtros registrados.
 - [ ] El registro solo acepta roles y códigos, no nombres.
 
@@ -402,17 +406,61 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
 - [ ] Las pruebas doradas pasan, y un nudo nuevo salió de la skill con correcciones menores.
 - [ ] Decidir si se usan subagentes en paralelo para los borradores de la tanda 1.
 
-### Fase 4: producción de los 27 nudos restantes
+### Fase 4: producción de los 30 nudos restantes
 
 Cada nudo es una tarea pequeña con la misma definición de terminado. Se trabaja por tandas agrupadas por tipo de generador, para reutilizar lo construido en el piloto.
 
 | Tanda | Tipo | Nudos |
 |---|---|---|
-| 1 | Libres, una cuerda | simple, ocho, as de guía español, mariposa alpina, margarita, arnés de hombre, silla de bombero (requiere D1) |
-| 2 | Libres, dos cuerdas o dos extremos | rizo, pescador, nudo aguja (falta confirmar qué nudo es) |
-| 3 | Sobre anfitrión | ballestrinque doble (por confirmar si es el *rolling hitch*), leñador o vuelta de braza, media llave y dos cotes, fugitivo, tensor, constrictor, *mooring hitch*, presilla de alondra, prusik |
+| 1 | Libres, una cuerda | simple, ocho, ocho doble, as de guía español, mariposa alpina, margarita, arnés de hombre, silla de bombero (requiere D1) |
+| 2 | Libres, dos cuerdas o dos extremos | rizo, pescador, nudo aguja (D9) |
+| 3 | Sobre anfitrión | ballestrinque doble (D9), leñador o vuelta de braza, media llave y dos cotes, fugitivo, tensor (*trucker's hitch*), tensor ajustable (*tautline hitch*, sobre una estaca), constrictor, *mooring hitch*, presilla de alondra, prusik |
 | 4 | Plantillas | amarre redondo, amarre diagonal, amarre trípode, refuerzo de cabo, adujado, puño de mono |
-| 5 | Anfitriones especiales | eslinga de barril, eslinga de andamio (requiere D1) |
+| 5 | Anfitriones especiales | eslinga de barril, eslinga de andamio (requiere D1), vuelta de cornamusa (*cleat hitch*, sobre una cornamusa) |
+
+El ocho doble, el tensor ajustable y la vuelta de cornamusa se agregaron el 9 de noviembre de 2026: no estaban en la lista original y Gabriel los sumó a `entradas/`.
+
+**Entradas de cada nudo.** Las carpetas de `entradas/` conservan el nombre que tenían al llegar; esta tabla dice cuál es la de cada nudo.
+
+| Nudo | Tanda | Carpeta en `entradas/` |
+|---|---|---|
+| As de guía | T1 | `as-de-guia` |
+| Ballestrinque | T5 | `clove-hitch-rope-end`; también `clove-hitch-loops` y `clove-hitch-half-hitches`, con otros métodos |
+| Vuelta de escota | T6 | `sheet-bend` |
+| Amarre cuadrado | T7 | `amarre-cuadrado` |
+| Cabeza de turco | T8 | `cabeza-de-turco` |
+| Simple | 1 | `overhand-Knot` |
+| Ocho | 1 | `ocho` |
+| Ocho doble | 1 | `ocho-doble` |
+| As de guía español | 1 | `spanish-Bowline` |
+| Mariposa alpina | 1 | `nudo-Mariposa` |
+| Margarita | 1 | `margarita` |
+| Arnés de hombre | 1 | `arnes-de-hombre` |
+| Silla de bombero | 1 | `silla-de-bomberos` |
+| Rizo | 2 | `square-knot` |
+| Pescador | 2 | `pescador` |
+| Nudo aguja | 2 | `nudo-de-aguja`, por confirmar (D9) |
+| Ballestrinque doble | 3 | falta (D9) |
+| Leñador o vuelta de braza | 3 | `timber-hitch` |
+| Media llave y dos cotes | 3 | `round-turn-and-two-half-hitches` |
+| Fugitivo | 3 | `fugitivo` |
+| Tensor (*trucker's hitch*) | 3 | `trucker’s-hitch-quick-release` |
+| Tensor ajustable (*tautline hitch*) | 3 | `Tautline Hitch` |
+| Constrictor | 3 | `constrictor-rope-end`, `constrictor-twist` |
+| *Mooring hitch* | 3 | `mooring-hitch` |
+| Presilla de alondra | 3 | `cow-hitch-end-method`, `cow-hitch-loops-method` |
+| Prusik | 3 | `prusik` |
+| Amarre redondo | 4 | `amarre-redondo` |
+| Amarre diagonal | 4 | `amarre-diagonal` |
+| Amarre trípode | 4 | `amarre-tripode` |
+| Refuerzo de cabo | 4 | `common-whipping-knot` |
+| Adujado | 4 | `coil-unattached-rope` |
+| Puño de mono | 4 | `puño-de-mono` |
+| Eslinga de barril | 5 | `eslinga-de-barril` |
+| Eslinga de andamio | 5 | `eslinga de andamio` |
+| Vuelta de cornamusa | 5 | `ceat hitch-(halyard)` |
+
+Las páginas de `_manual-tropa/` sirven de entrada adicional para los nudos que pide la Tropa.
 
 Después de cada tanda hay un punto de control:
 - Todos los nudos de la tanda están publicados.
@@ -465,7 +513,7 @@ Después de cada tanda hay un punto de control:
 
 **Criterios de aceptación:**
 - [ ] Un solo comando construye el libro completo desde un clon limpio.
-- [ ] Los 32 nudos están en `publicado` y todos sus QR responden.
+- [ ] Los 35 nudos están en `publicado` y todos sus QR responden.
 - [ ] Revisaste una prueba de la imprenta antes del tiraje.
 
 **Verificación:**
@@ -499,11 +547,11 @@ Después de cada tanda hay un punto de control:
 | Solo tú haces el filtro 1 y se vuelve un cuello de botella | Medio | Sesiones de atado por tandas; otro dirigente con experiencia también puede hacer el filtro 1 |
 | El formato de especificación cambia después de modelar muchos nudos | Medio | Formato congelado en el Punto de control B; cualquier cambio posterior lleva un script de migración |
 | Aparecen términos de una sola sección en las fichas | Medio | Prueba automática de vocabulario por sección; esos términos solo van en los anexos |
-| El proyecto no cierra porque no hay fecha | Medio | La edición 1 se define como los 32 nudos; tabla de estado; puntos de control con revisión |
+| El proyecto no cierra porque no hay fecha | Medio | La edición 1 se define como los 35 nudos; tabla de estado; puntos de control con revisión |
 
 ## Preguntas abiertas
 
-- **D3 y D8:** las decisiones previas que siguen abiertas.
+- **D3, D8 y D9:** las decisiones previas que siguen abiertas.
 - **D6:** confirmar qué nudo es el "nudo aguja" y si el "ballestrinque doble" es el *rolling hitch*. Se resuelve al modelarlos.
 - **D7:** si la dirigencia de la Tropa participa en la revisión de su anexo y en conseguir probadores.
 

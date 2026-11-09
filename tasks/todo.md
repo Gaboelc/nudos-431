@@ -74,13 +74,14 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [ ] Un nudo nuevo salió de la skill con correcciones menores
   - [ ] Decisión sobre usar subagentes
 
-## Fase 4: producción de los 27 nudos restantes
+## Fase 4: producción de los 30 nudos restantes
 
 Cada nudo cumple la definición de terminado: pruebas automáticas, error común, imágenes, visor, ficha, filtro 1, filtro 2 y estado `publicado`.
 
 ### Tanda 1: libres, una cuerda
 - [ ] Simple
 - [ ] Ocho
+- [ ] Ocho doble
 - [ ] As de guía español
 - [ ] Mariposa alpina
 - [ ] Margarita
@@ -91,15 +92,16 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 ### Tanda 2: libres, dos cuerdas o dos extremos
 - [ ] Rizo
 - [ ] Pescador
-- [ ] Nudo aguja (falta confirmar qué nudo es)
+- [ ] Nudo aguja (D9: falta confirmar qué nudo es)
 - [ ] Punto de control de la tanda 2
 
 ### Tanda 3: sobre anfitrión
-- [ ] Ballestrinque doble (por confirmar si es el *rolling hitch*)
+- [ ] Ballestrinque doble (D9: falta la entrada; por confirmar si es el *rolling hitch*)
 - [ ] Leñador o vuelta de braza
 - [ ] Media llave y dos cotes
 - [ ] Fugitivo
-- [ ] Tensor
+- [ ] Tensor (*trucker's hitch*)
+- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca)
 - [ ] Constrictor
 - [ ] *Mooring hitch*
 - [ ] Presilla de alondra
@@ -118,6 +120,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 ### Tanda 5: anfitriones especiales
 - [ ] Eslinga de barril
 - [ ] Eslinga de andamio (requiere D1)
+- [ ] Vuelta de cornamusa (*cleat hitch*, sobre una cornamusa)
 - [ ] Punto de control de la tanda 5
 
 ## Fase 5: libro y primera edición
