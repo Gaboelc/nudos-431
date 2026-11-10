@@ -9,8 +9,9 @@ familia: Amarres
 abok: 2114
 
 # Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
-# {vueltas} y {ahorcados} salen en letras. Pendiente: que Gabriel lo revise y confirme
-# el largo de la cuerda al atarlo (la del modelo mide unos 3,7 m sin los extremos).
+# {vueltas} y {ahorcados} salen en letras. Gabriel lo revisó el 10 de noviembre de 2026.
+# Pendiente: confirmar el largo de la cuerda al atarlo (la del modelo mide unos 3,7 m sin
+# los extremos).
 usos: >-
   Une dos palos que se cruzan en ángulo recto, o casi, para que no se corran ni giren
   uno sobre el otro. Con él se arman mesas, torres, puentes y portones.
