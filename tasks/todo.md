@@ -88,8 +88,8 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Error común construido: los ahorcados por encima del palo de arriba, como variante de la cuerda, construidos y comprobados como un paso más, junto al paso 5 en la impresión (10 nov: los mismos 38 cruces que el paso 5; sin fallas con 3 y 3, 2 y 2, 4 y 3, 3 y 4 y 6 y 6; ver «Cómo se hizo el error y la especificación» en el plan)
   - [x] `specs/amarre-cuadrado.yaml`: pasos, error común y texto de la ficha; la ficha cabe; de 3 a 4 vueltas regenera los pasos (10 nov: 7 pasos, error y la cuerda floja sin imagen, encuadre; ficha de dos páginas que cabe; nudos publicados idénticos contra 6151f02)
   - [x] Gabriel revisa el texto de la ficha (10 nov: aprobado; al atarlo, Gabriel confirmó que con 4 m de cuerda alcanza)
-  - [ ] Filtro 1: Gabriel lo ata con dos palos y cuerda real, siguiendo la ficha impresa
-  - [ ] Registrar el filtro 1 en la especificación
+  - [x] Filtro 1: Gabriel lo ata con dos palos y cuerda real, siguiendo la ficha impresa (10 nov, ficha e745c28; con 4 m de cuerda alcanza)
+  - [x] Registrar el filtro 1 en la especificación
   - [ ] Publicar el sitio con el amarre cuadrado
 - [ ] T7b Mejoras del render (M, pedido de Gabriel el 10 nov; después de T7 y antes de T8)
   - [ ] Página de prueba en color y en gris: hoy contra cada mejora por separado (contorno, sombra de contacto, supermuestreo, sombras suaves, nudo terminado apretado)

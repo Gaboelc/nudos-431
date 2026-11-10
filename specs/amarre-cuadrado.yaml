@@ -42,6 +42,13 @@ alternativas:
   - nudo: Amarre trípode
     cuando: Para unir tres palos por una punta y abrirlos como un trípode.
 
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-10
+    resultado: aprobado
+    ficha: e745c28
+
 anfitrion:
   tipo: cruz
   radio: 2.5      # un palo de 4 cm con una cuerda de 8 mm

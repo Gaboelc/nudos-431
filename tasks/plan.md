@@ -481,6 +481,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 - **El encuadre** es x de −11 a 14 e y de −14 a 10, para los pasos, el error y el terminado. Los restos salen unos 18 diámetros del amarre: en los pasos 5 y 6 su punta queda fuera y no se ve «Chicote».
 - **La ficha cabe:** a la página 1 le sobran unos 6 mm (se acortaron los textos de los pasos 1, 2, 4 y 6 para que cada uno ocupe 4 o 5 líneas) y a la 2, unos 26 mm.
 - **Nudos publicados:** iguales que en 6151f02, los 3 modelos byte a byte y las 49 imágenes píxel por píxel, con Edge.
+- **Filtro 1 (10 de noviembre):** Gabriel revisó y aprobó el texto de la ficha, y ató el amarre con dos palos y cuerda real siguiendo la ficha impresa (e745c28): aprobado, y con 4 m de cuerda alcanza. Queda registrado en la especificación. El filtro 2 sigue en pausa.
 
 #### T7b: Mejoras del render
 
