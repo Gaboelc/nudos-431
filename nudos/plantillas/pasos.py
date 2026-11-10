@@ -54,6 +54,24 @@ def construir_pasos(spec: Spec) -> tuple[list[Resultado], list[str], list[tuple[
     return resultados, fallas, secuencias
 
 
+def construir_error(spec: Spec) -> tuple[Resultado | None, list[str]]:
+    """El error común de un nudo de plantilla: la cuerda de su variante del método
+    (Error.variante) hasta el mismo hito que el paso del error. Se construye y se comprueba
+    como un paso más, con la secuencia de cruces que la plantilla escribe para la variante,
+    y resalta lo mismo que el paso bien hecho. Devuelve el resultado y sus fallas."""
+    e = spec.error
+    if e is None:
+        return None, []
+    cruz = Cruz(spec.anfitrion)
+    c = cuerda(spec.plantilla, cruz, e.variante)
+    previo = spec.pasos[e.paso - 2].hasta if e.paso > 1 else None
+    try:
+        r = construir_paso(e.paso, c, spec.pasos[e.paso - 1].hasta, previo, cruz)
+    except TrazadoError as err:
+        return None, [f"Error común: {err}"]
+    return r, [f"Error común: {f}" for f in r.fallas]
+
+
 def construir_paso(n: int, c, hito: str, previo: str | None, cruz: Cruz) -> Resultado:
     """El paso n: la cuerda hasta `hito`, más el resto. Se resalta lo que agrega desde `previo`.
     `hito` puede ser también «vueltas» o «ahorcados», que son la última vuelta y el último ahorcado."""

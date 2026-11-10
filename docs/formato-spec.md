@@ -178,13 +178,15 @@ Reglas:
 
 Es un paso con algunos cruces al revés: el mismo trazado, pero con otra secuencia. En la ficha va junto al mismo paso bien hecho y con el mismo encuadre. Como no es un paso del nudo, es el único lugar donde un cruce cambia de encima a debajo.
 
+En un nudo de plantilla, el error no son cruces al revés sino una variante del método (`variante`): la plantilla calcula la cuerda de esa variante y el error es su comienzo hasta el mismo `hasta` que el paso del error. Se construye y se comprueba como un paso más, con la secuencia de cruces que la plantilla escribe para la variante, y resalta lo mismo que el paso bien hecho.
+
 | Campo | Qué es |
 |---|---|
 | `paso` | Número del paso que se muestra con el error. |
 | `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
 | `titulo` | Nombre corto del error. |
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
-| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado tiene `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. |
+| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado tiene `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
 | `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. En la ficha van debajo del error con imagen, como «Otro error común». |
 
@@ -227,7 +229,7 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
    - con un anfitrión, la cuerda no entra en él más de 0,05 diámetros.
 4. Un cruce con la misma etiqueta no aparece a más de 2,5 diámetros de donde estaba en el paso anterior. Es una heurística para detectar una etiqueta reutilizada para otro cruce.
 5. El error común y el nudo terminado por detrás se construyen como un paso más y cumplen los mismos límites. Además:
-   - la secuencia del error, después de relajar, difiere de la del paso correcto exactamente en los cruces de `invierte`;
+   - la secuencia del error, después de relajar, difiere de la del paso correcto exactamente en los cruces de `invierte`; en un nudo de plantilla, es la que la plantilla escribe para la variante;
    - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés. El amarre volteado con sus palos no se construye otra vez: es un giro rígido del último paso.
 
 **Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
@@ -237,7 +239,6 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 ## Pendiente para versiones siguientes
 
 - Varias cuerdas sobre un anfitrión.
-- El error de una plantilla construido como variante del método (`ahorcados-por-fuera`): hoy el modelo no lo lleva, así que la ficha del amarre todavía no se arma. Llega con la subtarea siguiente de T7.
 - Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
 - Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Dibujar el anfitrión en la hoja de revisión (`python -m nudos hoja`): hoy solo dibuja la cuerda.

@@ -14,7 +14,7 @@ from nudos.libre import LIMITES, R
 from nudos.plantillas.amarre import AmarreCuadrado, Extremo, cuerda
 from nudos.plantillas.pasos import buscar
 from nudos.plantillas.trazo import ABAJO, CINTURA
-from nudos.spec import Anfitrion, SpecError, desde_datos
+from nudos.spec import Anfitrion, SpecError, cargar, desde_datos
 
 PASOS = [
     ("Haz un ballestrinque en el palo de abajo", "inicio"),
@@ -236,9 +236,12 @@ def test_empujar_saca_lo_que_entro_a_cualquiera_de_los_dos_palos():
 
 
 # --- La cuerda entera -------------------------------------------------------
-def la_cuerda(**cambios):
+def la_cuerda(variante=None, **cambios):
     spec = desde_datos(con(**cambios))
-    return cuerda(spec.plantilla, Cruz(spec.anfitrion))
+    return cuerda(spec.plantilla, Cruz(spec.anfitrion), variante)
+
+
+POR_FUERA = "ahorcados-por-fuera"
 
 
 @pytest.mark.parametrize("vueltas, ahorcados", [(2, 2), (3, 3), (4, 3), (3, 4), (6, 6)])
@@ -291,16 +294,48 @@ def test_los_cruces_se_buscan_solo_dentro_de_cada_zona():
     assert buscar(X, 1.0, zonas, c)[0] == []
 
 
+# --- El error común como variante del método ----------------------------------
+@pytest.mark.parametrize("vueltas, ahorcados", [(2, 2), (3, 3), (4, 3), (3, 4), (6, 6)])
+def test_el_error_cruza_las_mismas_esquinas(vueltas, ahorcados):
+    """Los ahorcados por encima del palo de arriba cruzan las mismas esquinas que los bien
+    hechos, y en el mismo orden al recorrerlos: por donde pasan el palo de arriba no cruzan
+    nada. Como en el error cada ahorcado va más bajo que el anterior, sobre cada esquina
+    pasan en el orden contrario."""
+    bien = la_cuerda(vueltas=vueltas, ahorcados=ahorcados).secuencias
+    mal = la_cuerda(POR_FUERA, vueltas=vueltas, ahorcados=ahorcados).secuencias
+    assert mal.keys() == bien.keys()
+    for hito in bien:
+        assert sorted(mal[hito]) == sorted(bien[hito]), hito
+        assert [t for t in mal[hito] if t.endswith("O")] == [t for t in bien[hito] if t.endswith("O")]
+    assert mal["inicio"] == bien["inicio"] and mal["vueltas"] == bien["vueltas"]
+    assert mal["ahorcados"] != bien["ahorcados"]
+
+
+def test_el_error_es_el_mismo_amarre_hasta_las_vueltas():
+    bien, mal = la_cuerda(), la_cuerda(POR_FUERA)
+    i = bien.hitos["vuelta-3"]
+    assert mal.hitos["vuelta-3"] == i
+    assert np.array_equal(mal.puntos[:i + 1], bien.puntos[:i + 1])
+
+
+def test_una_variante_que_la_plantilla_no_sabe_construir():
+    spec = desde_datos(datos())
+    with pytest.raises(ValueError, match="no tiene la variante vueltas-sin-alternar"):
+        cuerda(spec.plantilla, Cruz(spec.anfitrion), "vueltas-sin-alternar")
+
+
 # --- El nudo ------------------------------------------------------------------
 @pytest.fixture(scope="module")
 def modelo():
-    return construir(desde_datos(datos()))
+    """La especificación de specs/, con las mismas medidas que datos()."""
+    return construir(cargar("amarre-cuadrado"))
 
 
 def test_todos_los_pasos_se_construyen_sin_fallas(modelo):
     assert modelo.fallas == []
     assert [r.n for r in modelo.pasos] == list(range(1, 8))
-    assert modelo.error is None and modelo.reverso is None   # el error es la subtarea siguiente
+    assert modelo.error is not None and modelo.error.n == 5
+    assert modelo.reverso is None   # por detrás, el amarre se voltea con los palos (Cruz.voltear)
 
 
 def test_la_cuerda_no_atraviesa_los_palos_ni_otras_vueltas(modelo):
@@ -317,6 +352,38 @@ def test_los_cruces_coinciden_con_el_metodo(modelo):
     for r, (_, hasta) in zip(modelo.pasos, PASOS):
         assert r.secuencia == r.esperada == numerada(c.secuencias[hasta]), r.n
     assert len(modelo.pasos[-1].secuencia) == 80   # 40 cruces
+
+
+def test_el_error_se_construye_como_un_paso_mas(modelo):
+    """El error se relaja y se comprueba como un paso: cumple los mismos límites y, después
+    de relajar, cruza lo que la plantilla escribe para la variante."""
+    e = modelo.error
+    m = e.medidas
+    assert m["penetracion_palos"] <= PENETRACION_MAX
+    assert m["separacion_min"] >= LIMITES["separacion_min"]
+    assert m["curvatura_min"] >= LIMITES["curvatura_min"]
+    assert m["estiramiento_max"] <= LIMITES["estiramiento_max"]
+    assert e.secuencia == e.esperada == numerada(la_cuerda(POR_FUERA).secuencias["ahorcados"])
+    # Resalta lo mismo que el paso 5: los ahorcados que agrega desde el primero.
+    assert 0 < e.resaltado[0] < e.resaltado[1]
+
+
+def test_en_el_error_los_ahorcados_pasan_por_encima_del_palo_de_arriba(modelo):
+    """A los dos lados de las vueltas, la cuerda del error pasa por encima del palo de
+    arriba; la del paso 5 bien hecho, no."""
+    cruz = Cruz(CRUZ)
+    X = modelo.pasos[2].puntos   # hasta las vueltas
+    sobre = (np.abs(X[:, 1]) < 1.0) & (X[:, 2] > cruz.zt)
+    vueltas = np.abs(X[sobre, 0]).max()   # hasta dónde llegan las vueltas sobre el palo
+
+    def por_encima(r, signo):
+        Y = r.puntos
+        fuera = (signo * Y[:, 0] > vueltas + 0.5) & (np.abs(Y[:, 0]) < CRUZ.largo / 2)
+        return bool((fuera & (np.abs(Y[:, 1]) < 1.0) & (Y[:, 2] > cruz.zt)).any())
+
+    for signo in (1, -1):
+        assert por_encima(modelo.error, signo), signo
+        assert not por_encima(modelo.pasos[4], signo), signo
 
 
 def test_cada_paso_resalta_lo_que_agrega(modelo):
@@ -339,8 +406,9 @@ def test_un_cruce_conserva_su_etiqueta_y_su_lugar(modelo):
 
 def test_de_3_a_4_vueltas_se_regeneran_los_pasos():
     m = construir(desde_datos(con(vueltas=4)))
-    assert m.fallas == []
+    assert m.fallas == []   # también las del error
     assert len(m.pasos) == 7
+    assert len(m.error.secuencia) == len(m.pasos[4].secuencia)
     assert len(m.pasos[-1].secuencia) // 2 == 4 * 4 * 3 + 4
     assert len(m.pasos[3].secuencia) // 2 == 4 * 4 + 2   # el primer ahorcado cruza 16 esquinas
 
@@ -392,10 +460,15 @@ def test_por_detras_el_amarre_se_voltea_con_los_palos(modelo):
 
 def test_las_imagenes_del_amarre(modelo):
     imgs = imagenes(modelo)
-    # El error con imagen llega con la subtarea siguiente de T7.
     assert [i.nombre for i in imgs] == [f"paso-{n}" for n in range(1, 8)] + [
-        "terminado-frente", "terminado-reverso"]
+        "error-correcto", "error", "terminado-frente", "terminado-reverso"]
     assert {i.vista for i in imgs} == {"3d"}   # el terminado, como los pasos, por delante y por detrás
+    # El error va junto al paso 5 bien hecho, en la misma escena y con el mismo encuadre.
+    por_nombre = {i.nombre: i for i in imgs}
+    bien, mal = por_nombre["error-correcto"], por_nombre["error"]
+    assert bien.escena is mal.escena and (bien.indice, mal.indice) == (1, 2)
+    assert bien.escena["encuadre"] == por_nombre["paso-5"].escena["encuadre"]
+    assert [p["n"] for p in bien.escena["pasos"]] == [5, 5]
     frente, reverso = imgs[-2:]
     assert frente.escena["anfitrion"] == Cruz(CRUZ).datos()
     assert reverso.escena["anfitrion"] == Cruz(CRUZ).voltear(modelo.pasos[-1])[1]

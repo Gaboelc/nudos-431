@@ -1,0 +1,123 @@
+# Amarre cuadrado: une dos palos cruzados en ángulo recto. Es el primer nudo de plantilla:
+# la plantilla calcula la cuerda entera a partir de las medidas (nudos/plantillas/amarre.py),
+# y cada paso dice con «hasta» hasta dónde llega. El método es el del diseño de T7 en
+# tasks/plan.md. Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa.
+# El palo de abajo va a lo largo de y y el de arriba, apoyado en él, a lo largo de x.
+slug: amarre-cuadrado
+nombre: Amarre cuadrado
+familia: Amarres
+abok: 2114
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+# {vueltas} y {ahorcados} salen en letras. Pendiente: que Gabriel lo revise y confirme
+# el largo de la cuerda al atarlo (la del modelo mide unos 3,7 m sin los extremos).
+usos: >-
+  Une dos palos que se cruzan en ángulo recto, o casi, para que no se corran ni giren
+  uno sobre el otro. Con él se arman mesas, torres, puentes y portones.
+materiales: >-
+  Dos palos redondos de unos 4 cm de grosor y una cuerda de 6 a 8 mm y unos 4 m de largo.
+  Que la cuerda no sea rígida.
+verificacion:
+  - Las {vueltas} vueltas van una junto a otra, sin montarse, por encima del palo de arriba y
+    por debajo del de abajo.
+  - Los {ahorcados} ahorcados van entre los dos palos, por debajo del de arriba, y rodean las
+    vueltas apretándolas.
+  - Cada ballestrinque está apretado contra su palo.
+  - Si empujas un palo, no se corre ni gira respecto al otro.
+precauciones:
+  - Antes de subirte a una construcción, revisa cada amarre. Si uno se mueve, gira o tiene
+    la cuerda floja, rehazlo.
+  - Revisa también los palos. Que no estén podridos ni rajados y que sean lo bastante
+    gruesos para el peso que van a llevar.
+  - >-
+    Con el uso, la lluvia y el sol, los amarres se aflojan. Si la construcción queda armada
+    varios días, revísalos antes de volver a usarla.
+alternativas:
+  - nudo: Amarre diagonal
+    cuando: >-
+      Cuando los palos se cruzan en un ángulo que no es recto o tienden a separarse, como
+      las dos diagonales de un refuerzo.
+  - nudo: Amarre redondo
+    cuando: Para unir dos palos uno junto al otro, a lo largo, por ejemplo para alargar uno.
+  - nudo: Amarre trípode
+    cuando: Para unir tres palos por una punta y abrirlos como un trípode.
+
+anfitrion:
+  tipo: cruz
+  radio: 2.5      # un palo de 4 cm con una cuerda de 8 mm
+  largo: 40
+
+plantilla:
+  tipo: amarre-cuadrado
+  vueltas: 3
+  ahorcados: 3
+  inicio: {poste: abajo, lado: delante}
+  cierre: {poste: arriba, lado: derecha}
+
+# Zona que se muestra en todos los pasos, el error y el nudo terminado. Los extremos de la
+# cuerda salen unos 18 diámetros del amarre: en los pasos 5 y 6 su punta queda fuera, y
+# ahí no se ve el nombre «Chicote».
+encuadre:
+  x: [-11.0, 14.0]
+  y: [-14.0, 10.0]
+
+pasos:
+  - titulo: Haz un ballestrinque en el palo de abajo
+    texto: >-
+      Cruza un palo sobre el otro. En el de abajo, de tu lado y pegado al de arriba, ata un
+      ballestrinque como en su ficha. Deja el chicote corto.
+    hasta: inicio
+
+  - titulo: Da la primera vuelta
+    texto: >-
+      Ahora mueves la parte larga. Rodea el cruce: por encima del palo de arriba, por debajo
+      del de abajo, por encima del de arriba y por debajo del de abajo, delante del
+      ballestrinque.
+    hasta: vuelta-1
+
+  - titulo: Completa las {vueltas} vueltas
+    texto: >-
+      Da más vueltas por el mismo camino hasta tener {vueltas}. Sobre el palo de arriba, cada
+      una va más lejos del cruce que la anterior; por debajo del de abajo, más cerca. Tira
+      fuerte en cada una.
+    hasta: vueltas
+
+  - titulo: Da el primer ahorcado
+    texto: >-
+      Pasa la cuerda entre los palos, por debajo del de arriba y por encima del de abajo,
+      rodeando las vueltas. Es un ahorcado: tira fuerte.
+    hasta: ahorcado-1
+
+  - titulo: Completa los {ahorcados} ahorcados
+    texto: >-
+      Da más ahorcados por el mismo camino, cada uno por fuera del anterior, hasta tener
+      {ahorcados}. Tira fuerte en cada uno.
+    hasta: ahorcados
+
+  - titulo: Empieza el ballestrinque de cierre
+    texto: >-
+      En el palo de arriba, junto a los ahorcados, pasa la cuerda por debajo, dale la vuelta
+      y crúzala en diagonal sobre sí misma, hacia afuera.
+    hasta: cierre-1
+
+  - titulo: Termina el ballestrinque
+    texto: >-
+      Da otra vuelta al palo, por fuera de la primera, y mete el chicote por debajo de la
+      diagonal, entre las dos vueltas. Tira del chicote para apretar.
+    hasta: cierre
+
+# El error con imagen lo construye la plantilla: los ahorcados por encima del palo de
+# arriba, en lugar de entre los palos. Va junto al paso 5, con el mismo encuadre.
+error:
+  paso: 5
+  variante: ahorcados-por-fuera
+  titulo: Los ahorcados por encima del palo de arriba
+  texto: >-
+    Pasaste los ahorcados por encima del palo de arriba, así que no aprietan las vueltas y
+    el amarre queda flojo. Pásalos entre los dos palos: por debajo del de arriba y por
+    encima del de abajo.
+  otros:
+    - titulo: La cuerda floja mientras atas
+      texto: >-
+        Si sueltas la cuerda entre una vuelta y otra, el amarre queda flojo y los palos se
+        mueven, aunque esté bien hecho. Mantenla tensa de principio a fin.
