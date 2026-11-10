@@ -14,7 +14,7 @@ dependencies = ["numpy>=1.26", "scipy>=1.11", "pyyaml>=6", "pillow>=10", "segno>
 dev = ["pytest>=8", "playwright>=1.40", "zxing-cpp>=2.2"]
 
 [tool.setuptools]
-packages = ["nudos"]
+packages = ["nudos", "nudos.plantillas"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

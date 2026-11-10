@@ -26,9 +26,10 @@ El ejemplo completo es `specs/as-de-guia.yaml`; el de un nudo de dos cuerdas, `s
 | `alternativas` | para la ficha | Lista de otros nudos que convienen en su lugar, cada uno con `nudo` (su nombre) y `cuando` (en qué caso conviene más que este). Si el otro nudo está en el libro, usa el mismo nombre de su ficha. |
 | `seguridad` | no | Solo cuando aplica. Si el nudo tiene usos con personas, sigue la postura de seguridad del libro (D1 del plan). |
 | `encuadre` | no | Zona de la mesa que se muestra, como `x: [mín, máx]` e `y: [mín, máx]`. Si falta, se calcula con todos los pasos. |
-| `anfitrion` | no | El objeto alrededor del que se ata el nudo, por ejemplo un poste (ver abajo). |
+| `anfitrion` | no | El objeto alrededor del que se ata el nudo, por ejemplo un poste o los dos palos de un amarre (ver abajo). |
 | `cuerdas` | no | Solo en los nudos de dos o más cuerdas: el nombre, el grosor y el color de cada una (ver abajo). Un nudo de una sola cuerda no lo lleva. |
-| `segmentos` | sí | Tramos de cuerda con nombre. Cada uno es una lista de puntos `[x, y]` sobre la mesa, o `{poste: [[x, ángulo], ...]}` sobre el poste. |
+| `segmentos` | sí, salvo con `plantilla` | Tramos de cuerda con nombre. Cada uno es una lista de puntos `[x, y]` sobre la mesa, o `{poste: [[x, ángulo], ...]}` sobre el poste. |
+| `plantilla` | no | En un nudo que se genera a partir de unas pocas medidas, como un amarre, el tipo de plantilla y sus medidas (ver abajo). Entonces el nudo no lleva `segmentos`. |
 | `pasos` | sí | Lista de pasos en orden. |
 | `error` | no | El error más común (ver abajo). La ficha lo necesita, así que todo nudo publicado lo lleva. |
 | `terminado` | no | Cómo se muestra el nudo terminado (ver abajo). |
@@ -55,13 +56,23 @@ Los índices se cuentan sobre el segmento tal como está definido. Dos puntos se
 
 ## Anfitrión
 
-Algunos nudos se atan alrededor de un objeto rígido. Por ahora el único es el poste; los demás (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
+Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste y la cruz de los amarres; los demás (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
 
 | Campo | Qué es |
 |---|---|
-| `tipo` | `poste`. |
+| `tipo` | `poste` o `cruz`. |
 | `radio` | Radio del poste, en diámetros de cuerda. Un palo de escoba con una cuerda de 8 mm da alrededor de 1,5. |
 | `desde`, `hasta` | Dónde empieza y termina el poste a lo largo de x. |
+
+La cruz son dos palos del mismo grosor, cruzados en ángulo recto sobre la mesa, para los amarres. Solo se usa con una `plantilla`.
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `cruz`. |
+| `radio` | Radio de los dos palos, en diámetros de cuerda. Un palo de 4 cm con una cuerda de 8 mm da 2,5. |
+| `largo` | Largo de cada palo. Los dos están centrados en el cruce. |
+
+Los palos se cruzan en x = y = 0. El de abajo va a lo largo de y, hacia el fondo de la mesa, y se apoya en la cuerda que pasa por debajo: su eje queda a la altura `radio + 1`, como el del poste. El de arriba va a lo largo de x y se apoya sobre el de abajo.
 
 El poste es horizontal y va a lo largo de x, con el eje en y = 0. Se apoya sobre la cuerda que pasa por debajo, así que su eje queda a la altura `radio + 1`.
 
@@ -103,6 +114,40 @@ secuencia:
 - Donde una cuerda gruesa pasa por encima de una más delgada, dibuja el cruce en diagonal, a unos 60° o menos. En ángulo recto, la gruesa se apoya sobre la delgada con un radio igual a la suma de los dos radios, que es menos de 0,9 de su diámetro, y la prueba de curvatura falla. En diagonal se apoya más abierta. Como el nudo terminado se voltea para verlo por detrás, y entonces cada cruce queda al revés, esto vale para todos los cruces entre una gruesa y una delgada.
 - En las imágenes, cada cuerda lleva su nombre junto a su firme («gruesa» se escribe «Gruesa») y «Chicote» va en la que se mueve en ese paso. En una imagen sin resaltado, como el nudo terminado, va en la última que se movió.
 
+## Plantillas
+
+Algunos nudos no se dibujan punto por punto: se generan a partir de unas pocas medidas, como los amarres. Un nudo así lleva `plantilla` y no lleva `segmentos`; sus pasos no llevan `trazado`, `secuencia` ni `resaltar`, sino `hasta`, que dice hasta dónde llega cada uno. La plantilla calcula la cuerda entera y cada paso es su comienzo hasta ese punto, así que cambiar una medida, por ejemplo de 3 a 4 vueltas, regenera todos los pasos.
+
+Por ahora la única es el amarre cuadrado, sobre una `cruz`:
+
+```yaml
+anfitrion: {tipo: cruz, radio: 2.5, largo: 40}
+plantilla:
+  tipo: amarre-cuadrado
+  vueltas: 3
+  ahorcados: 3
+  inicio: {poste: abajo, lado: delante}
+  cierre: {poste: arriba, lado: derecha}
+pasos:
+  - {titulo: Haz un ballestrinque en el palo de abajo, texto: …, hasta: inicio}
+  - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+  - {titulo: Da las demás vueltas, texto: …, hasta: vueltas}
+```
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `amarre-cuadrado`. |
+| `vueltas` | Vueltas alrededor de los dos palos, de 2 a 6. |
+| `ahorcados` | Ahorcados entre los palos, alrededor de las vueltas, de 2 a 6. |
+| `inicio` | Dónde va el ballestrinque de inicio: `poste` (`abajo` o `arriba`) y `lado`. Sobre el palo de abajo, el lado es `delante` (hacia quien ata) o `detras`; sobre el de arriba, `izquierda` o `derecha`. |
+| `cierre` | Dónde va el ballestrinque de cierre, igual que `inicio`. |
+
+Por ahora el inicio va en el palo de abajo y el cierre en el de arriba, que es el método del manual de la Tropa.
+
+`hasta` puede ser, en este orden: `inicio-1` (la primera mitad del ballestrinque de inicio), `inicio`, `vuelta-1` … `vuelta-<n>`, `ahorcado-1` … `ahorcado-<n>`, `cierre-1` y `cierre`. `vueltas` es lo mismo que la última vuelta y `ahorcados` que el último ahorcado: así un paso que dice `hasta: vueltas` sigue valiendo si cambia el número de vueltas. Cada paso llega más lejos que el anterior y el último llega a `cierre`. Un `hasta` que no existe con esas medidas, como `vuelta-4` con 3 vueltas, es un error al cargar.
+
+En todo el texto del nudo, `{vueltas}` y `{ahorcados}` se reemplazan por el número en letras («tres»). Otra palabra entre llaves es un error. En los nudos sin plantilla las llaves se dejan como están.
+
 ## Pasos
 
 | Campo | Qué es |
@@ -112,6 +157,7 @@ secuencia:
 | `trazado` | Segmentos o tramos en el orden de la cuerda. Cada segmento aparece una sola vez. Con varias cuerdas, un mapa por cuerda (ver arriba). |
 | `secuencia` | La secuencia de cruces (ver abajo). Si el paso no tiene cruces, se escribe `""`. Con varias cuerdas, un mapa por cuerda. |
 | `resaltar` | Opcional. Con `desde` y `hasta` marca el tramo que se mueve en este paso. |
+| `hasta` | Solo en un nudo de plantilla, en lugar de `trazado`, `secuencia` y `resaltar`: hasta dónde llega el paso (ver arriba). El tramo que se mueve es lo que agrega el paso. |
 
 ## Secuencia de cruces
 
@@ -136,7 +182,9 @@ Es un paso con algunos cruces al revés: el mismo trazado, pero con otra secuenc
 | `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
 | `titulo` | Nombre corto del error. |
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
+| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado tiene `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
+| `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. |
 
 Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el resaltado debe empezar o terminar fuera del cruce invertido: así un tramo llega azul y el otro resaltado, y se ve cuál va encima.
 
@@ -185,6 +233,7 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 ## Pendiente para versiones siguientes
 
 - Varias cuerdas sobre un anfitrión.
+- La geometría de las plantillas: hoy `python -m nudos construir` no construye un nudo de plantilla. Llega con la subtarea siguiente de T7, con lo que se comprueba en él.
 - Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
 - Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Dibujar el anfitrión en la hoja de revisión (`python -m nudos hoja`): hoy solo dibuja la cuerda.

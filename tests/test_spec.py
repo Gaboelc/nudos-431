@@ -89,6 +89,49 @@ def test_campo_desconocido():
         desde_datos(datos(autor="yo"))
 
 
+def error(**cambios):
+    base = {"paso": 1, "invierte": [1], "titulo": "Al revés", "texto": "Texto."}
+    base.update(cambios)
+    return base
+
+
+def test_otros_errores_sin_imagen():
+    spec = desde_datos(datos(pasos=[paso(secuencia="1O 1U")], error=error(otros=[
+        {"titulo": "Flojo", "texto": "Tira fuerte."}, {"titulo": "Corto", "texto": "Deja más."}])))
+    assert [(o.titulo, o.texto) for o in spec.error.otros] == [("Flojo", "Tira fuerte."),
+                                                              ("Corto", "Deja más.")]
+    assert spec.error.variante is None
+    sin = desde_datos(datos(pasos=[paso(secuencia="1O 1U")], error=error()))
+    assert sin.error.otros == ()
+
+
+@pytest.mark.parametrize("otros, pista", [
+    ([], "«otros» es una lista de errores sin imagen"),
+    (["Flojo"], "otro error 1: debe ser un mapa"),
+    ([{"titulo": "Flojo"}], "otro error 1: falta «texto»"),
+    ([{"titulo": "Flojo", "texto": "T.", "paso": 2}], "otro error 1: campos desconocidos: paso"),
+])
+def test_otros_errores_mal_escritos(otros, pista):
+    with pytest.raises(SpecError, match=pista):
+        desde_datos(datos(pasos=[paso(secuencia="1O 1U")], error=error(otros=otros)))
+
+
+def test_la_variante_es_solo_de_las_plantillas():
+    with pytest.raises(SpecError, match="«variante» es el error de un nudo de plantilla"):
+        desde_datos(datos(pasos=[paso(secuencia="1O 1U")], error=error(variante="flojo")))
+
+
+def test_sin_plantilla_las_llaves_quedan_como_estan():
+    spec = desde_datos(datos(pasos=[paso(texto="Da {vueltas} vueltas.")]))
+    assert spec.pasos[0].texto == "Da {vueltas} vueltas."
+    assert spec.plantilla is None and spec.pasos[0].hasta is None
+
+
+def test_hasta_es_solo_de_las_plantillas():
+    with pytest.raises(SpecError, match="campos desconocidos: hasta"):
+        desde_datos(datos(pasos=[paso(hasta="cierre")]))
+
+
 # --------------------------------------------------------------------------
 # Varias cuerdas
 # --------------------------------------------------------------------------

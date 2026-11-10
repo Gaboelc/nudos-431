@@ -26,6 +26,10 @@ class Modelo:
 
 
 def construir(spec: Spec) -> Modelo:
+    if spec.plantilla is not None:
+        # La geometría de las plantillas es la subtarea siguiente de T7 (tasks/todo.md).
+        raise NotImplementedError(f"{spec.slug}: la plantilla {spec.plantilla.tipo} todavía "
+                                  "no calcula la cuerda")
     fallas = consistencia([(p.n, p.secuencia) for p in spec.pasos])
     resultados = []
     for paso in spec.pasos:

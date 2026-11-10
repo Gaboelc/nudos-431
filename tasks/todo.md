@@ -79,7 +79,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 - [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)
   - [x] Diseño escrito en el plan (palos, formato, geometría, cruces, escena y ficha)
   - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (9 nov: cierre arriba, inicio en un paso, error sin imagen por la tensión, los amarres sí sostienen personas)
-  - [ ] Formato: anfitrión `cruz`, `plantilla`, pasos con `hasta` y `error` con `variante` y `otros`, con sus pruebas
+  - [x] Formato: anfitrión `cruz`, `plantilla`, pasos con `hasta` y `error` con `variante` y `otros`, con sus pruebas (`nudos/plantillas/`, `tests/test_amarre_cuadrado.py` y `tests/test_spec.py`; nudos publicados idénticos: 3 modelos byte a byte y 49 imágenes píxel por píxel, con Edge)
   - [ ] Geometría: la cuerda entera, los pasos como prefijos, la relajación con los dos palos y los cruces por zonas (`tests/test_amarre_cuadrado.py`)
   - [ ] Escena, impresión y ficha con los dos palos y el reverso volteado; nudos publicados idénticos (modelos byte a byte, imágenes píxel por píxel)
   - [ ] `specs/amarre-cuadrado.yaml`: pasos, error común y texto de la ficha; la ficha cabe; de 3 a 4 vueltas regenera los pasos
