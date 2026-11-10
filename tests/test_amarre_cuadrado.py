@@ -14,7 +14,7 @@ from nudos.libre import LIMITES, R
 from nudos.plantillas.amarre import AmarreCuadrado, Extremo, cuerda
 from nudos.plantillas.pasos import buscar
 from nudos.plantillas.trazo import ABAJO, CINTURA
-from nudos.spec import Anfitrion, SpecError, cargar, desde_datos
+from nudos.spec import Anfitrion, SpecError, desde_datos
 
 PASOS = [
     ("Haz un ballestrinque en el palo de abajo", "inicio"),
@@ -326,9 +326,9 @@ def test_una_variante_que_la_plantilla_no_sabe_construir():
 
 # --- El nudo ------------------------------------------------------------------
 @pytest.fixture(scope="module")
-def modelo():
+def modelo(modelo_amarre_cuadrado):
     """La especificación de specs/, con las mismas medidas que datos()."""
-    return construir(cargar("amarre-cuadrado"))
+    return modelo_amarre_cuadrado
 
 
 def test_todos_los_pasos_se_construyen_sin_fallas(modelo):

@@ -12,10 +12,11 @@ from nudos.exportar import (EXTENSIONES, SitioError, archivos_no_permitidos, con
 
 
 @pytest.fixture(scope="module")
-def sitio(tmp_path_factory, modelo_as_de_guia, modelo_ballestrinque, modelo_vuelta_de_escota):
+def sitio(tmp_path_factory, modelo_as_de_guia, modelo_ballestrinque, modelo_vuelta_de_escota,
+          modelo_amarre_cuadrado):
     destino = tmp_path_factory.mktemp("sitio") / "sitio"
     slugs = construir_sitio(destino, modelos=[modelo_as_de_guia, modelo_ballestrinque,
-                                              modelo_vuelta_de_escota])
+                                              modelo_vuelta_de_escota, modelo_amarre_cuadrado])
     return destino, slugs
 
 

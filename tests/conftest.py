@@ -31,3 +31,9 @@ def modelo_ballestrinque():
 def modelo_vuelta_de_escota():
     """La vuelta de escota, con dos cuerdas, construida una sola vez."""
     return construir(cargar("vuelta-de-escota"))
+
+
+@pytest.fixture(scope="session")
+def modelo_amarre_cuadrado():
+    """El amarre cuadrado, la primera plantilla, construido una sola vez (tarda cerca de un minuto)."""
+    return construir(cargar("amarre-cuadrado"))

@@ -4,3 +4,4 @@
 as-de-guia
 ballestrinque
 vuelta-de-escota
+amarre-cuadrado
