@@ -88,6 +88,13 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [ ] Filtro 1: Gabriel lo ata con dos palos y cuerda real, siguiendo la ficha impresa
   - [ ] Registrar el filtro 1 en la especificación
   - [ ] Publicar el sitio con el amarre cuadrado
+- [ ] T7b Mejoras del render (M, pedido de Gabriel el 10 nov; después de T7 y antes de T8)
+  - [ ] Página de prueba en color y en gris: hoy contra cada mejora por separado (contorno, sombra de contacto, supermuestreo, sombras suaves, nudo terminado apretado)
+  - [ ] Gabriel imprime la página de prueba y elige qué mejoras entran
+  - [ ] Implementar las elegidas en el visor y la impresión, sin cambiar la geometría ni los cruces de los pasos
+  - [ ] Nudo terminado apretado, con la misma secuencia de cruces que el último paso (si se elige; puede ir en su propia tarea)
+  - [ ] Nueva referencia de imágenes de los nudos ya aprobados, anotada aquí
+  - [ ] El visor sigue fluido en un celular de gama baja
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
 - [ ] Punto de control B:
   - [ ] Los 5 nudos del piloto están publicados

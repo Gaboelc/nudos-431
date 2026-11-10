@@ -462,6 +462,37 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 - **Una ficha de prueba**, con texto de relleno y el paso 5 en lugar del error, cabe en el pliego: 6 pasos en la página 1 y, en la 2, el paso 7, el error con el otro error debajo, el terminado, la verificación, las precauciones y las alternativas, con espacio libre al final.
 - **Nudos publicados:** iguales que antes, los 3 modelos byte a byte y las 49 imágenes píxel por píxel, con Edge.
 
+#### T7b: Mejoras del render
+
+**Descripción:** mejorar cómo se ven las cuerdas en el visor y en la impresión, empezando por lo que ayuda a leer qué tramo va encima en cada cruce. Pedido de Gabriel el 10 de noviembre de 2026. Las mejoras se deciden con una página de prueba impresa, no mirando la pantalla, y solo entran las que se notan en el papel. En orden de prioridad:
+
+1. **Contorno:** un borde oscuro y fino en cada cuerda, como en los manuales técnicos dibujados. En un cruce, el contorno de la cuerda de encima corta a la de abajo, y eso se lee aun a 58 mm y en gris.
+2. **Sombra de contacto:** oscurecer la cuerda de abajo justo donde otra la cruza. Se calcula desde la geometría, para que salga igual cada vez y no dependa de la luz ni del navegador.
+3. **Supermuestreo en la impresión:** dibujar cada imagen al doble de resolución y reducirla a 300 ppp, para que los bordes salgan nítidos.
+4. **Sombras más suaves:** menos oscuras y de borde más blando, sobre todo la del poste y la de los palos, que oscurecen la mesa.
+5. **Nudo terminado apretado:** una geometría aparte, solo para las dos vistas del nudo terminado, con la cuerda ajustada como queda de verdad. Los pasos no cambian. El nudo apretado tiene que tener la misma secuencia de cruces que el último paso y cumplir los mismos límites, y las pruebas lo comprueban.
+
+**Criterios de aceptación:**
+- [ ] Hay una página de prueba en color y en gris, con las imágenes a su tamaño impreso. Muestra el paso 7 del as de guía, el par del error del ballestrinque, un paso de la vuelta de escota y uno del amarre cuadrado, como están hoy y con cada mejora por separado.
+- [ ] Gabriel imprime la página de prueba y elige qué mejoras entran.
+- [ ] La geometría y los cruces de los pasos no cambian, y las pruebas lo comprueban. Así, los filtros 1 ya hechos siguen valiendo.
+- [ ] Construir dos veces sigue dando las mismas imágenes. Las imágenes nuevas de los nudos ya aprobados quedan como la nueva referencia, y eso queda escrito en `tasks/todo.md`.
+- [ ] El visor sigue cargando y girando con fluidez en un celular de gama baja; el contorno agrega geometría que dibujar.
+- [ ] Si el nudo apretado necesita un campo en la especificación, queda documentado en `docs/formato-spec.md` antes del Punto de control B.
+
+**Verificación:**
+- [ ] `python -m pytest`
+- [ ] `python -m nudos imprimir` y `python -m nudos ficha` de cada nudo ya aprobado
+- [ ] Manual: imprimir la página de prueba en la Epson y abrir el visor en el celular.
+
+**Dependencias:** T7 terminada, porque las dos tocan `render/escena.js`. Va antes de T8 y del Punto de control B: cuantos menos nudos estén aprobados, menos imágenes cambian, y el formato se congela en B.
+
+**Archivos:** `render/escena.js`, `render/impresion.js`, `nudos/imprimir.py`, `nudos/libre.py` o un módulo nuevo para apretar el nudo, `docs/formato-spec.md` si hace falta, y las pruebas correspondientes.
+
+**Tamaño:** M. La mejora 5 es la más cara, porque toca la relajación. Si se complica, se separa en su propia tarea y las otras cuatro siguen.
+
+**Riesgo:** pulir sin evidencia de un problema de lectura, porque el único filtro 2 hecho pasó con los renders actuales. Por eso la página de prueba decide qué entra.
+
 #### T8: Plantilla de la cabeza de turco
 
 **Descripción:** crear una plantilla de cabeza de turco alrededor de un cilindro, parametrizada por cabos y senos, con los pasos del método clásico.
@@ -668,6 +699,7 @@ Después de cada tanda hay un punto de control:
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
+| Pulir los renders sin evidencia de un problema de lectura | Bajo | T7b decide con una página de prueba impresa; solo entra lo que se nota en el papel |
 | La IA lee mal un cruce de las fotos y el error pasa todas las pruebas automáticas | Alto | Revisar cada especificación nudo por nudo; filtro 1 con cuerda real; pruebas doradas antes de usar subagentes |
 | Los nudos sobre poste y los amarres no caben en el modelo plano del prototipo | Alto | Se atacan primero en la fase 2 (T5 y T7); si el anfitrión falla, los enganches pasan a plantillas |
 | Un slug cambia y rompe los QR impresos | Alto | Slugs que no cambian nunca; prueba contra `publicados.txt` |
