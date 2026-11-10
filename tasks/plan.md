@@ -48,7 +48,7 @@ Un solo libro de nudos para la Wak y la Tropa del Grupo 431, impreso por edicion
    - three.js y las fuentes van dentro del sitio, con versión fija. El visor no depende de ningún servicio externo mientras existan los QR impresos.
    - El sitio no acepta imágenes ni archivos fuera de una lista corta de tipos, y no se publica si algún nudo tiene fallas.
 8. **El flujo se opera desde la app de Claude,** en conversaciones del proyecto Scouts y con la computadora de Gabriel vinculada.
-   - GitHub es la fuente de verdad. Desde el 10 de noviembre de 2026, la carpeta de `A:\` es un clon de git: cada sesión empieza con `git pull` ahí y termina subiendo los cambios, y el venv vive fuera de `A:\`, que Google Drive respalda entera (detalles en `CLAUDE.md`). Antes cada sesión clonaba el repositorio, armaba su venv y al final copiaba los cambios a `A:\`, y eso le costaba varios minutos.
+   - GitHub es la fuente de verdad. Desde el 10 de noviembre de 2026, la carpeta del libro en `A:\` es un clon de git y tiene todo, también el venv (`.venv/`): cada sesión empieza con `git pull` ahí y termina subiendo los cambios (detalles en `CLAUDE.md`). Antes cada sesión clonaba el repositorio, armaba su venv y al final copiaba los cambios a `A:\`, y eso le costaba varios minutos.
    - Una skill de Claude, `nudo-nuevo`, contiene el procedimiento, y su fuente vive en el repositorio.
    - Se trabaja desde la pestaña Code de la app de Claude.
    - Los subagentes en paralelo entran solo en la fase 4.

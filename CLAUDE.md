@@ -33,11 +33,11 @@ Desde la raíz del repositorio, con Python 3.11 o más reciente:
 
 ## Dónde vive y cómo se trabaja
 
-El trabajo se hace desde la pestaña Code de la app de Claude, en la computadora de Gabriel. El repositorio de GitHub, [`Gaboelc/nudos-431`](https://github.com/Gaboelc/nudos-431), es la fuente de verdad. Su copia de trabajo es la carpeta `A:\Scouts\06 Identidad\Diseños Propios\Libro Nudos`, que es un clon de git en `main`. Ahí también viven `entradas/` y `build/`, que están fuera de git.
+El trabajo se hace desde la pestaña Code de la app de Claude, en la computadora de Gabriel. El repositorio de GitHub, [`Gaboelc/nudos-431`](https://github.com/Gaboelc/nudos-431), es la fuente de verdad. Su copia de trabajo es la carpeta `A:\Scouts\06 Identidad\Diseños Propios\Libro Nudos`, que es un clon de git en `main` y tiene todo: también `entradas/`, `build/` y el venv `.venv/`, que están fuera de git.
 
 - **Al empezar:** `git pull` en esa carpeta. **Al terminar:** commit y `git push`. No hay copia aparte que actualizar.
 - **Los commits** van con el autor `Gabriel León <29740351+Gaboelc@users.noreply.github.com>`, ya configurado en el clon.
-- **El venv** vive fuera de A:, en `C:\Users\gabri\.venvs\nudos-431`, porque Google Drive respalda la unidad A: entera. Los comandos se corren con `C:/Users/gabri/.venvs/nudos-431/Scripts/python -m …` desde la raíz del repositorio. Si cambian las dependencias de `pyproject.toml`, se reinstala con `… -m pip install -e .[dev]`.
+- **El venv** es `.venv/`, en la raíz del repositorio. Los comandos se corren desde ahí con `.venv/Scripts/python -m …`. Si cambian las dependencias de `pyproject.toml`, se reinstala con `.venv/Scripts/python -m pip install -e .[dev]`. Si falta (por ejemplo, en un clon nuevo), se crea con `python -m venv .venv` y esa misma instalación.
 - **Esta computadora no tiene Chrome:** `imprimir`, `ficha` y las pruebas que dibujan usan Edge con `NUDOS_CHROME="C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"`. Con `PYTHONUTF8=1`, la salida de `construir` no falla en Windows.
-- **Una sola sesión a la vez trabaja en la carpeta de A:.** Una sesión en paralelo trabaja en su propio worktree de git, con el mismo venv y desde la raíz de su worktree, para que importe su copia de `nudos`. Sus cambios llegan a `main` con un merge o un rebase.
-- **Si git no puede escribir un archivo** porque Google Drive lo tiene abierto, se reintenta. Si el clon se daña, se vuelve a clonar desde GitHub: todo lo que importa está subido.
+- **Una sola sesión a la vez trabaja en la carpeta de A:.** Una sesión en paralelo trabaja en su propio worktree de git, con el venv de A: (`A:/Scouts/06 Identidad/Diseños Propios/Libro Nudos/.venv/Scripts/python`) y desde la raíz de su worktree, para que importe su copia de `nudos`. Sus cambios llegan a `main` con un merge o un rebase.
+- **Google Drive respalda la unidad A: entera**, también `.git/` y `.venv/`. Si git no puede escribir un archivo porque Drive lo tiene abierto, se reintenta. Si el clon se daña, se vuelve a clonar desde GitHub: todo lo que importa está subido.
