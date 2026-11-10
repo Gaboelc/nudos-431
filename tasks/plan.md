@@ -145,6 +145,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
   - La práctica con personas solo se hace con instructor y equipo certificados.
   - En una emergencia real, primero se llama al 9-1-1. Esto va solo en el material inicial (T11), no en cada ficha: Gabriel lo quitó de la ficha del as de guía porque sobraba.
   - La silla de bombero y la eslinga de andamio se practican sin carga o con un objeto.
+  - Excepción (Gabriel, 9 de noviembre de 2026): los amarres sí sostienen personas, porque con ellos se arman torres, puentes y mesas a los que la gente se sube. Sus fichas no dicen lo contrario; sus cuidados van en `precauciones`.
   - Esta postura va en el material inicial (T11) y en la sección de seguridad de cada ficha que la necesite.
 - **D2 Formato impreso (resuelta):** tamaño carta (216 × 279 mm), encuadernación de resorte e impresión en imprenta. Consecuencias:
   - El libro abierto queda plano sobre la mesa mientras se ata. Por eso cada ficha se diseña como un pliego de dos páginas, para no pasar página a mitad del nudo. Se valida en el Punto de control A.
@@ -368,6 +369,77 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 **Archivos:** `nudos/plantillas/amarre.py`, `specs/amarre-cuadrado.yaml`, `tests/test_amarre_cuadrado.py`, `render/escena.js`
 
 **Tamaño:** M
+
+**Diseño (9 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las respuestas del final).** Referencias: `entradas/amarre-cuadrado/` (18 imágenes) y la página 27 del manual de la Tropa. Las dos usan el mismo método, que es el que sigue la plantilla.
+- **Método:**
+  - Empieza con un ballestrinque en el palo de abajo, del lado de quien ata y pegado al palo de arriba.
+  - Siguen las vueltas alrededor de los dos palos. Cada una pasa por encima del palo de arriba, a los dos lados del de abajo, y por debajo del palo de abajo, a los dos lados del de arriba. Cada vuelta nueva va por dentro de la anterior sobre el palo de arriba y por fuera sobre el de abajo. Así, entre los palos, las vueltas quedan una junto a otra y no unas encima de otras.
+  - Después vienen los ahorcados: vueltas entre los dos palos, por debajo del de arriba y por encima del de abajo, que rodean las vueltas por fuera y las aprietan.
+  - Termina con un ballestrinque en el palo de arriba.
+- **Los dos palos:** son un anfitrión nuevo, `tipo: cruz`, con `radio` (el mismo para los dos, en diámetros de cuerda) y `largo` (el de cada palo).
+  - Están sobre la mesa y se cruzan en ángulo recto en x = y = 0. El de abajo va a lo largo de y, hacia el fondo de la mesa. Se apoya en la cuerda que pasa por debajo, así que su eje queda a la altura radio + 1, como el poste de T5. El de arriba va a lo largo de x y se apoya sobre el de abajo.
+  - Propuesta: radio 2,5, que es un palo de 4 cm con una cuerda de 8 mm.
+  - El ángulo queda fijo en 90°. El amarre diagonal agregará `angulo` cuando llegue. El poste de T5 no cambia.
+- **Formato:** un nudo de plantilla no lleva `segmentos`, `trazado` ni `secuencia`. Lleva `plantilla` con sus medidas, y cada paso dice con `hasta` hasta dónde llega:
+
+  ```yaml
+  anfitrion: {tipo: cruz, radio: 2.5, largo: 40}
+  plantilla:
+    tipo: amarre-cuadrado
+    vueltas: 3                              # alrededor de los dos palos
+    ahorcados: 3                            # entre los palos
+    inicio: {poste: abajo, lado: delante}   # ballestrinque de inicio
+    cierre: {poste: arriba, lado: derecha}  # ballestrinque de cierre
+  pasos:
+    - {titulo: Haz un ballestrinque en el palo de abajo, texto: …, hasta: inicio}
+    - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+    - {titulo: Da las demás vueltas, texto: …, hasta: vueltas}
+    - {titulo: Da el primer ahorcado, texto: …, hasta: ahorcado-1}
+    - {titulo: Da los demás ahorcados, texto: …, hasta: ahorcados}
+    - {titulo: Empieza el ballestrinque de cierre, texto: …, hasta: cierre-1}
+    - {titulo: Termina el ballestrinque, texto: …, hasta: cierre}
+  ```
+
+  - `hasta` puede ser `inicio-1`, `inicio`, `vuelta-<n>`, `vueltas`, `ahorcado-<n>`, `ahorcados`, `cierre-1` o `cierre`. Los pasos van en ese orden y el último llega a `cierre`. Un `hasta` que no existe con esas medidas, como `vuelta-4` con 3 vueltas, es un error al cargar.
+  - El tramo resaltado es lo que agrega cada paso, así que no se escribe.
+  - El texto puede decir `{vueltas}` o `{ahorcados}`, que salen en letras («tres»).
+  - Así, pasar de 3 a 4 vueltas es cambiar un número: los pasos, las imágenes y el texto se regeneran solos.
+  - Los 3 y 3 son los del manual de la Tropa, que pide «tres o cuatro» de cada uno.
+- **Geometría:** la plantilla calcula una sola vez la cuerda entera, desde el chicote corto del ballestrinque de inicio hasta el chicote del cierre.
+  - Cada paso es el comienzo de esa cuerda hasta su `hasta`, más el resto, que sale del amarre hacia afuera y cae a la mesa. Así un cruce es el mismo en todos los pasos y conserva su etiqueta.
+  - Cada tramo va sobre una superficie, en una capa contada en diámetros desde ella. Las vueltas van sobre la cara de arriba del palo de arriba y la de abajo del palo de abajo, a un diámetro una de otra. Entre los palos, las esquinas de las vueltas bajan de un palo al otro, una junto a otra. Los ahorcados van por fuera de las esquinas, a la altura donde se tocan los palos. Los ballestrinques van sobre su palo, como en T5.
+  - Después se pasa la curva suave, se muestrea cada 0,2 diámetros y se relaja como cerca del poste: sin gravedad, porque el amarre va apretado, con choques entre tramos y sin entrar en los palos ni estirarse.
+- **Cruces:** como sobre el poste, cada tramo se compara en la superficie desenrollada del cilindro donde va, y encima es lo más lejos del eje.
+  - Hay tres cilindros: el palo de abajo, el de arriba y, entre los palos, uno vertical alrededor del cruce (la «cintura» del amarre). En la cintura se cruzan los ahorcados con las esquinas de las vueltas.
+  - La plantilla sabe en qué zona va cada tramo. Los cruces entre zonas no se buscan; ahí se comprueba solo la separación, como entre el poste y la mesa.
+  - La plantilla escribe la secuencia que corresponde al método. Cada ahorcado pasa por encima de cada vuelta en las cuatro esquinas; las vueltas no se cruzan entre sí, porque van una junto a otra; y cada ballestrinque tiene sus dos cruces. Con 3 vueltas y 3 ahorcados son 40 cruces.
+  - Esa secuencia se compara con la que se mide en la cuerda relajada, igual que en los nudos libres. La consistencia entre pasos y la heurística del cruce que salta se aplican igual.
+- **Que la cuerda no atraviese nada:** no entra en ninguno de los dos palos más de 0,05 diámetros, como en el poste. Ningún tramo queda a menos de 0,97 diámetros de otro, así que tampoco atraviesa otras vueltas. La curvatura (0,9) y el estiramiento (2 %) se miden como siempre.
+- **Error común:** en una plantilla, el error no es un cruce invertido, sino una variante del método que la plantilla sabe construir, por ejemplo `error: {paso: 5, variante: ahorcados-por-fuera, …}`.
+  - El del amarre: los ahorcados por encima del palo de arriba, en lugar de entre los palos.
+  - Se construye y se comprueba como un paso más, con el mismo encuadre que el paso bien hecho.
+  - `invierte` sigue siendo el error de los nudos libres.
+  - Hay errores comunes que no se ven en una imagen. El del amarre es no mantener la cuerda tensa mientras se ata, y el amarre queda flojo. Para eso, `error` acepta `otros`, una lista de errores con `titulo` y `texto` y sin imagen. En la ficha y en el visor van debajo del error con imagen. Sirve para cualquier nudo; si no hay `otros`, nada cambia. La tensión también se pide en el texto de los pasos y se comprueba en la verificación: los palos no se mueven ni giran uno respecto al otro.
+- **Nudo terminado:** por delante, en la vista de los pasos. Por detrás, el amarre entero, palos y cuerda, se voltea como un marco sobre la mesa. Así queda arriba el palo que estaba abajo y se ven las vueltas que pasan por debajo de él.
+  - Es un giro rígido. Como los cruces se miden respecto a los palos y no a la mesa, la secuencia no cambia.
+  - Sobre un poste el nudo se mira desde el otro lado. En el amarre eso mostraría la misma cara, porque la de atrás queda contra la mesa.
+- **Escena:**
+  - Los dos palos son cilindros de madera, como el poste.
+  - Nombres: en el paso 1 van «Firme» en la parte larga y «Chicote» en el extremo corto, como en el ballestrinque. Desde el paso 2 se mueve la parte larga, y solo lleva «Chicote», en su punta.
+- **Ficha:**
+  - 7 pasos: 6 en la página 1 y 1 en la 2.
+  - El error, junto al paso 5 bien hecho.
+  - El terminado, por delante y por detrás.
+  - Materiales: dos palos y una cuerda de unos 3 m (por confirmar al atarlo).
+  - La hoja de revisión sigue dibujando solo la cuerda vista desde arriba.
+  - Seguridad: con los amarres se arman construcciones que sí sostienen personas, así que la ficha no dice lo contrario (excepción a D1). Los cuidados, como revisar cada amarre y los palos antes de subirse a una construcción, van en `precauciones`. Gabriel los revisa con el texto de la ficha.
+- **Lo que no cambia:** el generador libre y el poste. El as de guía, el ballestrinque y la vuelta de escota tienen que dar los mismos `modelo.json`, byte a byte, y las mismas imágenes, píxel por píxel. Se comprueba como en T6.
+- **Riesgo:** las esquinas entre los palos. Ahí tres o cuatro vueltas bajan de un palo al otro en poco espacio, y los ahorcados pasan por fuera de ellas. Si no caben a un diámetro con estas medidas, se agranda el radio de los palos o se cambia la forma de las esquinas, mirando las imágenes. Los límites no se aflojan.
+- **Lo que decidió Gabriel (9 de noviembre):**
+  1. El cierre va en el palo de arriba, como en la propuesta.
+  2. El ballestrinque de inicio va en un solo paso, que remite a la ficha del Ballestrinque. Son 7 pasos.
+  3. El error con imagen son los ahorcados por fuera de los palos. Además va, sin imagen, no mantener la tensión mientras se ata, porque es muy común que el amarre quede flojo (`error.otros`).
+  4. Los amarres sí sostienen personas: para eso son. La ficha no dice que no, y D1 queda con esa excepción.
 
 #### T8: Plantilla de la cabeza de turco
 

@@ -77,6 +77,16 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Publicar el sitio con «Sobre el nudo» (9 nov, construido desde 9ec2271, a pedido de Gabriel antes de su revisión)
 - [x] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas (aprobado el 9 nov: el ballestrinque y la vuelta de escota pasaron el filtro 1; los enganches siguen con el anfitrión)
 - [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)
+  - [x] Diseño escrito en el plan (palos, formato, geometría, cruces, escena y ficha)
+  - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (9 nov: cierre arriba, inicio en un paso, error sin imagen por la tensión, los amarres sí sostienen personas)
+  - [ ] Formato: anfitrión `cruz`, `plantilla`, pasos con `hasta` y `error` con `variante` y `otros`, con sus pruebas
+  - [ ] Geometría: la cuerda entera, los pasos como prefijos, la relajación con los dos palos y los cruces por zonas (`tests/test_amarre_cuadrado.py`)
+  - [ ] Escena, impresión y ficha con los dos palos y el reverso volteado; nudos publicados idénticos (modelos byte a byte, imágenes píxel por píxel)
+  - [ ] `specs/amarre-cuadrado.yaml`: pasos, error común y texto de la ficha; la ficha cabe; de 3 a 4 vueltas regenera los pasos
+  - [ ] Gabriel revisa el texto de la ficha
+  - [ ] Filtro 1: Gabriel lo ata con dos palos y cuerda real, siguiendo la ficha impresa
+  - [ ] Registrar el filtro 1 en la especificación
+  - [ ] Publicar el sitio con el amarre cuadrado
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
 - [ ] Punto de control B:
   - [ ] Los 5 nudos del piloto están publicados
