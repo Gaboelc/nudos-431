@@ -75,7 +75,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Texto propio del as de guía, el ballestrinque y la vuelta de escota (en los dos últimos, el aviso de que se afloja pasó de «usos» a «precauciones»)
   - [ ] Gabriel revisa el texto de los tres nudos
   - [x] Publicar el sitio con «Sobre el nudo» (9 nov, construido desde 9ec2271, a pedido de Gabriel antes de su revisión)
-- [ ] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas
+- [x] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas (aprobado el 9 nov: el ballestrinque y la vuelta de escota pasaron el filtro 1; los enganches siguen con el anfitrión)
 - [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
 - [ ] Punto de control B:

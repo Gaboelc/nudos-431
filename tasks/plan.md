@@ -344,8 +344,10 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 #### Punto de control 2: después de T5 y T6
 
-- [ ] El anfitrión y las dos cuerdas funcionan.
-- [ ] Si el anfitrión no da resultados confiables, los enganches de la tanda 3 pasan a plantillas y se replanifica la fase 4.
+- [x] El anfitrión y las dos cuerdas funcionan.
+- [x] Si el anfitrión no da resultados confiables, los enganches de la tanda 3 pasan a plantillas y se replanifica la fase 4. No hizo falta.
+
+**Aprobado por Gabriel el 9 de noviembre de 2026.** El ballestrinque sobre el poste y la vuelta de escota con dos cuerdas pasaron el filtro 1 con cuerda real, siguiendo la ficha impresa. Los enganches de la tanda 3 siguen con el anfitrión, y la fase 4 no se replanifica. Las revisiones de texto de T5, T6 y T6b siguen pendientes, pero no bloquean este punto.
 
 #### T7: Plantilla del amarre cuadrado
 
