@@ -90,7 +90,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Gabriel revisa el texto de la ficha (10 nov: aprobado; al atarlo, Gabriel confirmó que con 4 m de cuerda alcanza)
   - [x] Filtro 1: Gabriel lo ata con dos palos y cuerda real, siguiendo la ficha impresa (10 nov, ficha e745c28; con 4 m de cuerda alcanza)
   - [x] Registrar el filtro 1 en la especificación
-  - [ ] Publicar el sitio con el amarre cuadrado
+  - [x] Publicar el sitio con el amarre cuadrado (10 nov, construido desde 7bcb14c, con el amarre en `publicados.txt`; revisado en línea)
 - [ ] T7b Mejoras del render (M, pedido de Gabriel el 10 nov; después de T7 y antes de T8)
   - [ ] Página de prueba en color y en gris: hoy contra cada mejora por separado (contorno, sombra de contacto, supermuestreo, sombras suaves, nudo terminado apretado)
   - [ ] Gabriel imprime la página de prueba y elige qué mejoras entran
