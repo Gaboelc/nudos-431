@@ -39,6 +39,13 @@ alternativas:
   - nudo: Rizo
     cuando: Para atar apretado alrededor de algo, como un paquete o una venda.
 
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-09
+    resultado: aprobado
+    ficha: 9ec2271
+
 cuerdas:
   - {nombre: gruesa, grosor: 1.5, color: azul}
   - {nombre: delgada, grosor: 1, color: crema}
