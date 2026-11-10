@@ -10,6 +10,7 @@ from nudos import URL_BASE
 from nudos.ficha import (FichaError, faltantes, ficha, html_ficha, qr_svg,
                          terminos_de_seccion, terminos_encontrados, texto_visible, url_visor)
 from nudos.imprimir import CELDA_MM, ImpresionError, chrome, imagenes, px
+from nudos.spec import Anfitrion, OtroError
 
 
 @pytest.fixture(scope="module")
@@ -61,6 +62,25 @@ def test_el_qr_lleva_a_la_direccion_permanente_del_visor(documento):
     segno.make(url, error="m").save(png, kind="png", scale=8, border=4)
     leidos = zxingcpp.read_barcodes(Image.open(io.BytesIO(png.getvalue())))
     assert [b.text for b in leidos] == [url]
+
+
+def test_los_errores_sin_imagen_van_debajo_del_error(modelo_as_de_guia):
+    s = modelo_as_de_guia.spec
+    e = replace(s.error, otros=(OtroError("No apretarlo", "Texto del otro error."),))
+    texto = " ".join(texto_visible(html_ficha(replace(modelo_as_de_guia, spec=replace(s, error=e)))).split())
+    assert "Otro error común No apretarlo Texto del otro error." in texto
+    assert texto.index(e.texto) < texto.index("No apretarlo") < texto.index("El nudo terminado")
+    assert "Otro error común" not in texto_visible(html_ficha(modelo_as_de_guia))
+
+
+@pytest.mark.parametrize("anfitrion, detras", [
+    (None, "si lo volteas como la página de un libro"),
+    (Anfitrion("poste", 1.5, desde=-14, hasta=14), "desde el otro lado del poste"),
+    (Anfitrion("cruz", 2.5, largo=40), "si volteas los dos palos juntos como la página de un libro"),
+])
+def test_como_se_ve_por_detras(modelo_as_de_guia, anfitrion, detras):
+    m = replace(modelo_as_de_guia, spec=replace(modelo_as_de_guia.spec, anfitrion=anfitrion))
+    assert f"Por detrás es como lo ves {detras}." in " ".join(texto_visible(html_ficha(m)).split())
 
 
 def test_sin_texto_de_ficha_no_hay_ficha(modelo_as_de_guia, tmp_path):

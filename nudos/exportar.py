@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 from . import RAIZ, SPECS, URL_BASE
 from .construir import Modelo, construir
-from .anfitrion import Poste
+from .anfitrion import solido
 from .libre import Resultado
 from .spec import Cuerda, Encuadre, cargar
 
@@ -42,18 +42,26 @@ def datos_visor(modelo: Modelo) -> dict:
     return datos_escena(modelo, modelo.spec.encuadre, modelo.pasos)
 
 
-def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado]) -> dict:
+def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado],
+                 anfitrion: dict | None = None) -> dict:
     """Lo que necesita render/escena.js para dibujar estos resultados del nudo con este
-    encuadre. El encuadre se ajusta a la cuerda de todos los resultados juntos.
+    encuadre. El encuadre se ajusta a la cuerda de todos los resultados juntos. «anfitrion»
+    reemplaza al de la especificación: es la cruz volteada del amarre visto por detrás.
 
     Con una cuerda, cada paso lleva sus puntos («p») y su tramo resaltado («hl»). Con
     varias, la lista de cuerdas va aparte y cada paso lleva los puntos y el resaltado de
     cada una, y cuál lleva el nombre «Chicote»: la que se mueve en ese paso o, en uno sin
-    resaltado (el nudo terminado), la última que se movió."""
+    resaltado (el nudo terminado), la última que se movió.
+
+    En un nudo de plantilla se ven los dos extremos de la cuerda, y los dos llevan remate
+    («dos_remates»). Ver _paso_de_plantilla."""
     s = modelo.spec
     mueve = cuerda_que_se_mueve(modelo.pasos)
     pasos = []
     for r in resultados:
+        if s.plantilla is not None:
+            pasos.append(_paso_de_plantilla(s, r))
+            continue
         if r.reparto is None:
             pasos.append({"n": r.n, "hl": _resaltado(r, 0, len(r.puntos) - 1), "p": _puntos(r.puntos)})
             continue
@@ -61,16 +69,33 @@ def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado]
                    for i0, i1 in r.reparto.tramos]
         chicote = mueve if r.resaltado is None else _cuerda_resaltada(r)
         pasos.append({"n": r.n, "cuerdas": cuerdas, "chicote": chicote})
+    if anfitrion is None and s.anfitrion is not None:
+        anfitrion = solido(s.anfitrion).datos()
     datos = {
         "slug": s.slug,
         "encuadre": None if e is None else {"x": list(e.x), "y": list(e.y)},
-        "anfitrion": None if s.anfitrion is None else Poste(s.anfitrion).datos(),
+        "anfitrion": anfitrion,
         "pasos": pasos,
     }
+    if s.plantilla is not None:
+        datos["dos_remates"] = True
     if s.cuerdas:
         datos["cuerdas"] = [{"nombre": c.nombre, "etiqueta": etiqueta(c), "grosor": c.grosor,
                              "color": c.color} for c in s.cuerdas]
     return datos
+
+
+def _paso_de_plantilla(s, r: Resultado) -> dict:
+    """Un paso de un nudo de plantilla. La escena pone «Firme» donde empieza la cuerda y
+    «Chicote» donde termina. En los pasos que tienen firme (CON_FIRME de la plantilla, como
+    el ballestrinque de inicio del amarre), la cuerda va al revés: desde la parte larga, que
+    es su firme, hasta el chicote corto. En los demás va desde el chicote corto hasta la
+    punta de la parte larga, que es la que se mueve, y solo lleva «Chicote» («nombres»)."""
+    hl = _resaltado(r, 0, len(r.puntos) - 1)
+    if s.pasos[r.n - 1].hasta in s.plantilla.CON_FIRME:
+        return {"n": r.n, "hl": None if hl is None else [round(1 - hl[1], 4), round(1 - hl[0], 4)],
+                "p": _puntos(r.puntos[::-1])}
+    return {"n": r.n, "hl": hl, "p": _puntos(r.puntos), "nombres": ["chicote"]}
 
 
 def etiqueta(cuerda: Cuerda) -> str:

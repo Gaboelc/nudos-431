@@ -41,6 +41,10 @@ class AmarreCuadrado:
     # El error común que sabe construir, con el primer hito desde el que se ve.
     # Los ahorcados por encima del palo de arriba, en lugar de entre los palos.
     VARIANTES = {"ahorcados-por-fuera": "ahorcado-1"}
+    # Hasta el ballestrinque de inicio, la parte larga de la cuerda es su firme y el chicote
+    # es el extremo corto, como en el ballestrinque. Desde la primera vuelta se mueve la parte
+    # larga y su punta es el chicote.
+    CON_FIRME = ("inicio-1", "inicio")
 
     @classmethod
     def leer(cls, datos: dict, falla) -> AmarreCuadrado:

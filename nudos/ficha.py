@@ -100,13 +100,19 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
     if s.abok is not None:
         hechos.append(("ABOK", f"n.º {s.abok}"))
     e = s.error
+    # Los errores comunes que no se ven en una imagen van debajo del que sí.
+    otros_errores = "".join(f'<span class="otro-error"><span class="aviso">Otro error común</span>'
+                            f'<span class="t">{esc(o.titulo)}</span>{esc(o.texto)}</span>'
+                            for o in e.otros)
     error = (f'    <figure class="panel error"><div class="imgs">'
              f'<div class="img"><img src="{img("error-correcto")}" alt=""><span class="sello bien">Bien</span></div>'
              f'<div class="img"><img src="{img("error")}" alt=""><span class="sello mal">Así no</span></div>'
              f'</div><figcaption><span class="aviso">Error común · paso {e.paso}</span>'
-             f'<span class="t">{esc(e.titulo)}</span>{esc(e.texto)}</figcaption></figure>')
-    detras = ("Por detrás es como lo ves desde el otro lado del poste." if s.anfitrion else
-              "Por detrás es como lo ves si lo volteas como la página de un libro.")
+             f'<span class="t">{esc(e.titulo)}</span>{esc(e.texto)}{otros_errores}</figcaption></figure>')
+    detras = {None: "Por detrás es como lo ves si lo volteas como la página de un libro.",
+              "poste": "Por detrás es como lo ves desde el otro lado del poste.",
+              "cruz": "Por detrás es como lo ves si volteas los dos palos juntos como la página "
+                      "de un libro."}[s.anfitrion and s.anfitrion.tipo]
     terminado = (f'    <figure class="panel terminado"><div class="imgs">'
                  f'<div class="img"><img src="{img("terminado-frente")}" alt=""><span class="sello">Por delante</span></div>'
                  f'<div class="img"><img src="{img("terminado-reverso")}" alt=""><span class="sello">Por detrás</span></div>'

@@ -9,7 +9,10 @@ Cada plantilla es una clase con:
 - `hitos()`: los valores que acepta `hasta`, cada uno con su posición en la cuerda;
 - `VARIANTES`: los errores comunes que sabe construir, cada uno con el primer hito
   desde el que se ve;
-- `medidas()`: las palabras que reemplazan `{vueltas}` y las demás en el texto.
+- `medidas()`: las palabras que reemplazan `{vueltas}` y las demás en el texto;
+- `CON_FIRME`: los hitos en que la cuerda tiene firme, que en las imágenes llevan «Firme»
+  y «Chicote»; en los demás se mueve la parte larga, y solo llevan «Chicote», en su punta
+  (nudos/exportar.py).
 """
 from .amarre import AmarreCuadrado
 

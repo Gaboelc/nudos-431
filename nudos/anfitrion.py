@@ -17,6 +17,7 @@ diferencias:
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 import numpy as np
 
@@ -122,9 +123,34 @@ class Cruz:
         return peor
 
     def datos(self) -> dict:
-        """Lo que necesita render/escena.js para dibujarla."""
+        """Lo que necesita render/escena.js para dibujarla: «z_abajo» y «z_arriba» son las
+        alturas de los ejes del palo de abajo (a lo largo de y) y del de arriba (a lo largo
+        de x)."""
         return {"tipo": "cruz", "radio": self.radio, "largo": self.largo,
                 "z_abajo": self.zb, "z_arriba": self.zt}
+
+    def voltear(self, r: Resultado) -> tuple[Resultado, dict]:
+        """El amarre terminado, visto por detrás: los palos y la cuerda, juntos, se voltean
+        como un marco sobre la mesa, con media vuelta alrededor del eje y (como una página),
+        y se apoyan en lo que queda más abajo. Así el palo de abajo queda encima y se ven las
+        vueltas que pasaban por debajo de él.
+
+        Es un giro rígido: la cuerda no se relaja otra vez y, como los cruces se miden
+        respecto a los palos y no a la mesa, la secuencia no cambia. Devuelve el paso
+        volteado y los datos de la cruz volteada para render/escena.js, donde el palo de
+        abajo tiene su eje más alto que el de arriba."""
+        X = r.puntos
+        alto = max(float((X[:, 2] + R).max()), self.zt + self.radio)   # lo más alto, antes de voltear
+        Y = np.column_stack([-X[:, 0], X[:, 1], alto - X[:, 2]])
+        volteado = replace(r, puntos=Y, resaltado=None,
+                           cruces={et: (-x, y) for et, (x, y) in r.cruces.items()},
+                           medidas={**r.medidas, "altura_max": float(Y[:, 2].max())})
+        return volteado, {**self.datos(), "z_abajo": alto - self.zb, "z_arriba": alto - self.zt}
+
+
+def solido(a: Anfitrion) -> Poste | Cruz:
+    """El anfitrión de la especificación como sólido."""
+    return Cruz(a) if a.tipo == "cruz" else Poste(a)
 
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:

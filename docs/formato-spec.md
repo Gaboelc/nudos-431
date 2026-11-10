@@ -148,6 +148,8 @@ Por ahora el inicio va en el palo de abajo y el cierre en el de arriba, que es e
 
 En todo el texto del nudo, `{vueltas}` y `{ahorcados}` se reemplazan por el número en letras («tres»). Otra palabra entre llaves es un error. En los nudos sin plantilla las llaves se dejan como están.
 
+En las imágenes se ven los dos extremos de la cuerda, y los dos llevan remate. El paso del ballestrinque de inicio (`inicio-1` o `inicio`) lleva «Firme» en la parte larga y «Chicote» en el extremo corto, como el ballestrinque. Desde la primera vuelta se mueve la parte larga, y los pasos solo llevan «Chicote», en su punta.
+
 ## Pasos
 
 | Campo | Qué es |
@@ -184,13 +186,15 @@ Es un paso con algunos cruces al revés: el mismo trazado, pero con otra secuenc
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
 | `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado tiene `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
-| `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. |
+| `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. En la ficha van debajo del error con imagen, como «Otro error común». |
 
 Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el resaltado debe empezar o terminar fuera del cruce invertido: así un tramo llega azul y el otro resaltado, y se ve cuál va encima.
 
 ## Nudo terminado
 
-El último paso se muestra por delante y por detrás. Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Con un anfitrión el nudo no se voltea: se mira desde el otro lado de la mesa.
+El último paso se muestra por delante y por detrás. Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Sobre un poste el nudo no se voltea: se mira desde el otro lado de la mesa.
+
+Sobre la cruz se voltea el amarre entero, palos y cuerda, como un marco sobre la mesa: media vuelta alrededor del eje y, como una página, hasta apoyarse en lo que queda más abajo. El palo de abajo queda encima y se ven las vueltas que pasaban por debajo de él. Es un giro rígido: la cuerda no se relaja otra vez y, como los cruces se miden respecto a los palos, la secuencia no cambia. Por delante y por detrás se mira como los pasos.
 
 | Campo | Qué es |
 |---|---|
@@ -224,7 +228,7 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 4. Un cruce con la misma etiqueta no aparece a más de 2,5 diámetros de donde estaba en el paso anterior. Es una heurística para detectar una etiqueta reutilizada para otro cruce.
 5. El error común y el nudo terminado por detrás se construyen como un paso más y cumplen los mismos límites. Además:
    - la secuencia del error, después de relajar, difiere de la del paso correcto exactamente en los cruces de `invierte`;
-   - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés.
+   - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés. El amarre volteado con sus palos no se construye otra vez: es un giro rígido del último paso.
 
 **Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
 
@@ -233,7 +237,7 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 ## Pendiente para versiones siguientes
 
 - Varias cuerdas sobre un anfitrión.
-- La geometría de las plantillas: hoy `python -m nudos construir` no construye un nudo de plantilla. Llega con la subtarea siguiente de T7, con lo que se comprueba en él.
+- El error de una plantilla construido como variante del método (`ahorcados-por-fuera`): hoy el modelo no lo lleva, así que la ficha del amarre todavía no se arma. Llega con la subtarea siguiente de T7.
 - Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
 - Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Dibujar el anfitrión en la hoja de revisión (`python -m nudos hoja`): hoy solo dibuja la cuerda.

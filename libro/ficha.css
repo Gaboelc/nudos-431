@@ -81,6 +81,7 @@ figcaption .t { display: block; margin-bottom: 0.4mm; font-weight: 600; font-siz
 .sello.bien { background: var(--bien); }
 .sello.mal { background: var(--mal); }
 .aviso { display: block; margin-bottom: 0.6mm; font: 500 6.6pt/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--mal); }
+.otro-error { display: block; margin-top: 2mm; }   /* un error común sin imagen, debajo del que la tiene */
 
 .verif ul { margin: 0; padding: 0; list-style: none; }
 .verif li { position: relative; margin: 0 0 1.6mm; padding-left: 4.5mm; }

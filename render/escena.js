@@ -96,9 +96,13 @@ function puntos(cuerda) {
 /* Las cuerdas de un paso, cada una con sus puntos («p»), su tramo resaltado («hl»), su
    grosor, su color, la clave del nombre que va junto a su firme y si lleva el nombre
    «Chicote». Un nudo de una sola cuerda trae los puntos en el paso: es una cuerda azul de
-   grosor 1, con «Firme» y «Chicote». */
+   grosor 1, con «Firme» y «Chicote». En un nudo de plantilla, el paso puede decir qué
+   nombres lleva («nombres») y la cuerda lleva remate en los dos extremos («dos_remates»). */
 function cuerdasDe(modelo, paso) {
-  if (!modelo.cuerdas) return [{ p: paso.p, hl: paso.hl, grosor: 1, color: "azul", clave: "firme", chicote: true }];
+  if (!modelo.cuerdas) {
+    return [{ p: paso.p, hl: paso.hl, grosor: 1, color: "azul", clave: "firme", chicote: true,
+              nombres: paso.nombres, remateInicio: !!modelo.dos_remates }];
+  }
   return modelo.cuerdas.map((c, k) => ({
     p: paso.cuerdas[k].p, hl: paso.cuerdas[k].hl, grosor: c.grosor, color: c.color,
     clave: `cuerda-${c.nombre}`, chicote: k === paso.chicote,
@@ -149,6 +153,7 @@ function altoDeEncuadre(modelo, B) {
     }
   }
   if (a && a.tipo === "poste") alto = Math.max(alto, a.z + a.radio);
+  if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   return alto;
 }
 
@@ -204,17 +209,25 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   mesa.receiveShadow = true;
   scene.add(mesa);
 
-  // El anfitrión: por ahora, un poste horizontal a lo largo de x (nudos/anfitrion.py).
+  // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x o la
+  // cruz de los amarres. El cilindro de three.js va a lo largo de y.
   const a = modelo.anfitrion;
-  if (a && a.tipo === "poste") {
-    const largo = a.hasta - a.desde;
-    const geoPoste = new THREE.CylinderGeometry(a.radio, a.radio, largo, 64, 1, false);
-    const matPoste = new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 });
-    const poste = new THREE.Mesh(geoPoste, matPoste);
-    poste.rotation.z = Math.PI / 2;   // el cilindro de three.js va a lo largo de y
-    poste.position.set((a.desde + a.hasta) / 2, a.y, a.z);
-    poste.castShadow = true; poste.receiveShadow = true;
-    scene.add(poste);
+  const palo = (largo, x, y, z, aLoLargoDeX) => {
+    const geo = new THREE.CylinderGeometry(a.radio, a.radio, largo, 64, 1, false);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 });
+    const m = new THREE.Mesh(geo, mat);
+    if (aLoLargoDeX) m.rotation.z = Math.PI / 2;
+    m.position.set(x, y, z);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  };
+  if (a && a.tipo === "poste") palo(a.hasta - a.desde, (a.desde + a.hasta) / 2, a.y, a.z, true);
+  // La cruz: el palo de abajo va a lo largo de y y el de arriba a lo largo de x, cruzados en
+  // x = y = 0, con los ejes a las alturas «z_abajo» y «z_arriba». En el amarre volteado
+  // (el nudo terminado por detrás), el de abajo queda encima.
+  if (a && a.tipo === "cruz") {
+    palo(a.largo, 0, 0, a.z_abajo, false);
+    palo(a.largo, 0, 0, a.z_arriba, true);
   }
 
   // Materiales de cada cuerda: su color, ámbar para lo que se mueve en el paso y el remate
@@ -284,11 +297,13 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       const RS = 20;
       const geo = new THREE.TubeGeometry(curva, T, RADIO * c.grosor, RS, false);
       const porSegmento = RS * 6;
+      // El remate va en el chicote, al final; con «remateInicio», también al comienzo.
       const w = Math.max(1, Math.round(((L - REMATE * c.grosor) / L) * T));
-      const a = c.hl ? Math.min(w, Math.round(c.hl[0] * T)) : w;
-      const b = c.hl ? Math.min(w, Math.round(c.hl[1] * T)) : w;
+      const w0 = c.remateInicio ? Math.min(w, Math.round(((REMATE * c.grosor) / L) * T)) : 0;
+      const a = c.hl ? Math.max(w0, Math.min(w, Math.round(c.hl[0] * T))) : w;
+      const b = c.hl ? Math.max(w0, Math.min(w, Math.round(c.hl[1] * T))) : w;
       geo.clearGroups();
-      [[0, a, 0], [a, b, 1], [b, w, 0], [w, T, 2]].forEach(([s0, s1, m]) => {
+      [[0, w0, 2], [w0, a, 0], [a, b, 1], [b, w, 0], [w, T, 2]].forEach(([s0, s1, m]) => {
         if (s1 > s0) geo.addGroup(s0 * porSegmento, (s1 - s0) * porSegmento, m);
       });
       const tubo = new THREE.Mesh(geo, materiales[n].mats);
@@ -305,16 +320,17 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
         m.castShadow = true;
         return m;
       };
-      grupo.add(tapa(0, materiales[n].base), tapa(1, matPunta));
+      grupo.add(tapa(0, c.remateInicio ? matPunta : materiales[n].base), tapa(1, matPunta));
       tubos.push({ malla: tubo, n, L, grosor: c.grosor });
       todos.push(...pts);
+      const lleva = (clave) => !c.nombres || c.nombres.includes(clave);
       let k = 0;
       while (k < pts.length - 2 && !dentro(pts[k])) k++;
       const t = plano(pts[k + 1].clone().sub(pts[k]));
       const firme = { punto: pts[k].clone(), candidatos: alrededor(pts[k], t, [1.9, 2.8, 3.8, 5.0], [90, -90, 135, -135, 45, -45]) };
       firme.etiqueta = firme.candidatos[0];
-      nombres[c.clave] = firme;
-      if (c.chicote) {
+      if (lleva(c.clave)) nombres[c.clave] = firme;
+      if (c.chicote && lleva("chicote")) {
         const fin = curva.getPointAt(1), tanFin = plano(curva.getTangentAt(1));
         chicote = { punto: fin.clone(), candidatos: alrededor(fin, tanFin, [2.2, 3.2, 4.4, 5.6, 7.0], [0, 45, -45, 90, -90, 135, -135, 180]) };
         chicote.etiqueta = chicote.candidatos[0];

@@ -29,6 +29,7 @@ from pathlib import Path
 from PIL import Image, ImageOps
 
 from . import RAIZ
+from .anfitrion import Cruz
 from .construir import Modelo
 from .exportar import ESCENA, SITIO, datos_escena
 from .spec import Encuadre
@@ -39,7 +40,8 @@ PPP = 300
 CELDA_MM = (58.0, 64.0)
 VISTA_PASOS = "3d"         # la vista de quien ata sentado a la mesa
 VISTA_TERMINADO = "arriba"
-# Sobre un anfitrión el nudo no se voltea: se mira por delante y desde el otro lado.
+# Sobre un poste el nudo no se voltea: se mira por delante y desde el otro lado. Sobre la
+# cruz de un amarre se voltea con los palos y se mira, las dos veces, como los pasos.
 VISTAS_TERMINADO_ANFITRION = ("3d", "detras")
 ESQUINA_PASO = (11.0, 11.0)    # el número del paso (libro/ficha.css, .num)
 ESQUINA_SELLO = (26.0, 7.0)    # «Bien», «Así no», «Por delante», «Por detrás» (.sello)
@@ -101,6 +103,18 @@ def imagenes(modelo: Modelo) -> list[Imagen]:
         out.append(Imagen("error", f"Error: {e.titulo}", par, 2, VISTA_PASOS, True,
                           firmes, ESQUINA_SELLO))
     enc = s.terminado.encuadre or s.encuadre
+    if s.anfitrion is not None and s.anfitrion.tipo == "cruz":
+        # El amarre se voltea entero, palos y cuerda, como un marco sobre la mesa, y por
+        # delante y por detrás se mira desde donde se ata.
+        final = modelo.pasos[-1]
+        volteado, cruz = Cruz(s.anfitrion).voltear(final)
+        out.append(Imagen("terminado-frente", "Terminado, por delante",
+                          datos_escena(modelo, enc, [final]), 1, VISTA_PASOS, False, todos,
+                          reservado_mm=ESQUINA_SELLO))
+        out.append(Imagen("terminado-reverso", "Terminado, por detrás",
+                          datos_escena(modelo, espejo(enc), [volteado], anfitrion=cruz), 1,
+                          VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO))
+        return out
     if s.anfitrion is not None:
         final = datos_escena(modelo, enc, [modelo.pasos[-1]])
         delante, detras = VISTAS_TERMINADO_ANFITRION

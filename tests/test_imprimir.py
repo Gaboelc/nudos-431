@@ -4,8 +4,8 @@ import hashlib
 import pytest
 from PIL import Image
 
-from nudos.imprimir import (CELDA_MM, PPP, ImpresionError, chrome, dibujar, espejo,
-                            imagenes, px)
+from nudos.exportar import datos_visor
+from nudos.imprimir import CELDA_MM, PPP, dibujar, espejo, imagenes, px
 from nudos.spec import Encuadre
 
 
@@ -33,13 +33,12 @@ def test_el_error_y_el_paso_correcto_comparten_encuadre(modelo_as_de_guia):
     assert correcto.vista == error.vista
 
 
-@pytest.fixture(scope="module")
-def con_chrome():
-    try:
-        with chrome():
-            pass
-    except ImpresionError as e:
-        pytest.skip(str(e))
+def test_los_nudos_sin_plantilla_no_llevan_lo_de_las_plantillas(modelo_as_de_guia,
+                                                                modelo_ballestrinque):
+    for m in (modelo_as_de_guia, modelo_ballestrinque):
+        d = datos_visor(m)
+        assert "dos_remates" not in d and all("nombres" not in p for p in d["pasos"])
+    assert datos_visor(modelo_ballestrinque)["anfitrion"]["tipo"] == "poste"
 
 
 def test_dibujar_dos_veces_da_las_mismas_imagenes(con_chrome, modelo_as_de_guia, tmp_path):

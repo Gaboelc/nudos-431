@@ -3,11 +3,14 @@ import copy
 
 import numpy as np
 import pytest
+from PIL import Image
 
 from nudos.anfitrion import PENETRACION_MAX, Cruz
 from nudos.construir import DESPLAZAMIENTO_MAX, construir
 from nudos.cruces import numerada
-from nudos.libre import LIMITES
+from nudos.exportar import datos_visor
+from nudos.imprimir import dibujar, imagenes
+from nudos.libre import LIMITES, R
 from nudos.plantillas.amarre import AmarreCuadrado, Extremo, cuerda
 from nudos.plantillas.pasos import buscar
 from nudos.plantillas.trazo import ABAJO, CINTURA
@@ -340,3 +343,73 @@ def test_de_3_a_4_vueltas_se_regeneran_los_pasos():
     assert len(m.pasos) == 7
     assert len(m.pasos[-1].secuencia) // 2 == 4 * 4 * 3 + 4
     assert len(m.pasos[3].secuencia) // 2 == 4 * 4 + 2   # el primer ahorcado cruza 16 esquinas
+
+
+# --- Escena e impresión ---------------------------------------------------------
+def test_la_escena_dibuja_la_cruz(modelo):
+    d = datos_visor(modelo)
+    assert d["anfitrion"] == Cruz(CRUZ).datos() == {
+        "tipo": "cruz", "radio": 2.5, "largo": 40, "z_abajo": 3.5, "z_arriba": 8.5}
+    assert d["dos_remates"] is True   # se ven los dos extremos de la cuerda
+
+
+def test_firme_en_el_ballestrinque_de_inicio_y_despues_solo_chicote(modelo):
+    """En el paso 1, «Firme» va en la parte larga y «Chicote» en el extremo corto, como en el
+    ballestrinque: la cuerda va al revés, desde la parte larga. Desde el paso 2, la cuerda va
+    desde el extremo corto y solo lleva «Chicote», en la punta de la parte larga."""
+    pasos = datos_visor(modelo)["pasos"]
+    r = modelo.pasos[0]
+    p = np.reshape(pasos[0]["p"], (-1, 3))
+    assert np.allclose(p[0], r.puntos[-1], atol=1e-3) and np.allclose(p[-1], r.puntos[0], atol=1e-3)
+    assert "nombres" not in pasos[0]
+    largo = (len(r.puntos) - 1) * r.h
+    desde, hasta = r.resaltado
+    assert pasos[0]["hl"] == pytest.approx([1 - hasta / largo, 1 - desde / largo], abs=1e-4)
+    for paso, r in zip(pasos[1:], modelo.pasos[1:]):
+        p = np.reshape(paso["p"], (-1, 3))
+        assert np.allclose(p[0], r.puntos[0], atol=1e-3) and np.allclose(p[-1], r.puntos[-1], atol=1e-3)
+        assert paso["nombres"] == ["chicote"], r.n
+
+
+def test_por_detras_el_amarre_se_voltea_con_los_palos(modelo):
+    cruz, final = Cruz(CRUZ), modelo.pasos[-1]
+    volteado, datos_cruz = cruz.voltear(final)
+    X, Y = final.puntos, volteado.puntos
+    # Media vuelta alrededor del eje y, como una página: un giro rígido.
+    assert np.allclose(Y[:, 0], -X[:, 0]) and np.allclose(Y[:, 1], X[:, 1])
+    assert np.allclose(Y[:, 2] + X[:, 2], Y[0, 2] + X[0, 2])
+    # El palo de abajo queda encima, lo más bajo se apoya en la mesa y la cuerda sigue sin
+    # entrar en los palos, ahora volteados.
+    assert datos_cruz["z_abajo"] - datos_cruz["z_arriba"] == pytest.approx(2 * CRUZ.radio)
+    assert min(Y[:, 2].min() - R, datos_cruz["z_arriba"] - CRUZ.radio) == pytest.approx(0, abs=1e-9)
+    for de, a_lo_largo, z in ((0, 1, datos_cruz["z_abajo"]), (1, 0, datos_cruz["z_arriba"])):
+        m = np.abs(Y[:, a_lo_largo]) < CRUZ.largo / 2
+        assert np.hypot(Y[m, de], Y[m, 2] - z).min() >= cruz.rb - PENETRACION_MAX
+    # Los cruces se miden respecto a los palos: la secuencia no cambia.
+    assert volteado.secuencia == final.secuencia and volteado.resaltado is None
+    assert volteado.cruces == {et: (-x, y) for et, (x, y) in final.cruces.items()}
+
+
+def test_las_imagenes_del_amarre(modelo):
+    imgs = imagenes(modelo)
+    # El error con imagen llega con la subtarea siguiente de T7.
+    assert [i.nombre for i in imgs] == [f"paso-{n}" for n in range(1, 8)] + [
+        "terminado-frente", "terminado-reverso"]
+    assert {i.vista for i in imgs} == {"3d"}   # el terminado, como los pasos, por delante y por detrás
+    frente, reverso = imgs[-2:]
+    assert frente.escena["anfitrion"] == Cruz(CRUZ).datos()
+    assert reverso.escena["anfitrion"] == Cruz(CRUZ).voltear(modelo.pasos[-1])[1]
+    assert frente.escena["pasos"][0]["nombres"] == reverso.escena["pasos"][0]["nombres"] == ["chicote"]
+
+
+def test_las_imagenes_muestran_los_palos(con_chrome, modelo, tmp_path):
+    """El navegador dibuja el amarre sin errores, y por delante y por detrás se ve la madera."""
+    imgs = {i.nombre: i for i in imagenes(modelo)}
+    rutas = dibujar([imgs["paso-1"], imgs["terminado-frente"], imgs["terminado-reverso"]], tmp_path)
+    vistas = []
+    for ruta in rutas[1:]:
+        a = np.asarray(Image.open(ruta).convert("RGB")).astype(int)
+        madera = (a[..., 0] > a[..., 1]) & (a[..., 1] > a[..., 2]) & (a[..., 0] - a[..., 2] > 40)
+        assert madera.mean() > 0.08, ruta.name   # sin la cruz no hay ningún píxel así
+        vistas.append(a)
+    assert (vistas[0] != vistas[1]).any()

@@ -1,7 +1,18 @@
 import pytest
 
 from nudos.construir import construir
+from nudos.imprimir import ImpresionError, chrome
 from nudos.spec import cargar
+
+
+@pytest.fixture(scope="session")
+def con_chrome():
+    """Las pruebas que dibujan necesitan Chrome (o NUDOS_CHROME); sin él se saltan."""
+    try:
+        with chrome():
+            pass
+    except ImpresionError as e:
+        pytest.skip(str(e))
 
 
 @pytest.fixture(scope="session")
