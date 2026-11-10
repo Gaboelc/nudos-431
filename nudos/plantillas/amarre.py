@@ -7,9 +7,11 @@ de cierre en el palo de arriba.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
+
+from .trazo import PASO
 
 # Cuántas vueltas y ahorcados acepta la plantilla. El manual de la Tropa pide «tres o
 # cuatro» de cada uno; el margen deja probar, y un número se escribe en letras.
@@ -101,14 +103,19 @@ def _extremo(datos, clave: str, falla) -> Extremo:
 # --------------------------------------------------------------------------
 # Medidas en diámetros de cuerda; ver «Cómo se hizo» de T7 en tasks/plan.md.
 PASO_VUELTAS = 1.1      # entre dos vueltas vecinas sobre un palo
-HOLGURA = 1.05          # de una esquina al ahorcado que pasa por fuera
-MARGEN = 1.0            # lo que sigue recto un ahorcado más allá de la última esquina que cruza
+HOLGURA = 1.05          # delante, entre el ballestrinque de inicio y la vuelta más cercana
+ABRIR = 0.4             # cuánto se apartan, a media altura, dos esquinas vecinas
+ESCALON = 1.0           # delante, cuánto más alto sube recta cada esquina que la vecina
+LIBRE = 1.08            # lo que deja un ahorcado entre él y cualquier otro tramo
 CARRIL = 1.1            # entre los carriles de un ballestrinque: dos vueltas, el firme y el chicote
-RADIO_ESQUINA = 1.3     # radio con que se redondean las esquinas de la cuerda
+RADIO_ESQUINA = 1.3     # radio con que se redondean las esquinas entre dos rectas
 R_CUERDA = 0.5          # radio de la cuerda
 # Hacia dónde sale el resto de la cuerda en cada hito, sobre la mesa (antes de reflejar).
-SALIDAS = {"inicio-1": (-0.6, -0.8), "inicio": (0.6, -0.8), "vuelta": (0.8, -0.6),
+SALIDAS = {"inicio-1": (-0.6, -0.8), "inicio": (0.6, -0.8), "vuelta": (1.0, 0.0),
            "ahorcado": (1.0, -0.2), "cierre-1": (0.3, -1.0)}
+# Los cuadrantes entre los palos, con el signo de x y de y: 1 detrás a la derecha, 2 detrás a
+# la izquierda, 3 delante a la izquierda y 4 delante a la derecha.
+CUADRANTES = {1: (1, 1), 2: (-1, 1), 3: (-1, -1), 4: (1, -1)}
 
 
 @dataclass
@@ -127,14 +134,123 @@ class Cuerda:
     alias: dict[str, str]   # «vueltas» y «ahorcados»: el hito al que equivalen
 
 
+class _Palos:
+    """Dónde toca la cuerda a cada palo. En el de arriba, en el plano x = X y con el ángulo a
+    en (y, z); en el de abajo, en el plano y = Y y con el ángulo b en (x, z). Un sentido +1 es
+    antihorario en esas coordenadas."""
+
+    def __init__(self, cruz):
+        self.rb, self.zb, self.zt = cruz.rb, cruz.zb, cruz.zt
+        self.centro_ar, self.centro_ab = np.array([0.0, cruz.zt]), np.array([0.0, cruz.zb])
+
+    def arriba(self, x, a) -> np.ndarray:
+        return np.array([x, self.rb * math.cos(a), self.zt + self.rb * math.sin(a)])
+
+    def abajo(self, y, b) -> np.ndarray:
+        return np.array([self.rb * math.cos(b), y, self.zb + self.rb * math.sin(b)])
+
+    @staticmethod
+    def hacia_arriba(a, sentido) -> np.ndarray:
+        """Hacia dónde va la cuerda que gira en `sentido` sobre el palo de arriba, en a."""
+        return sentido * np.array([0.0, -math.sin(a), math.cos(a)])
+
+    @staticmethod
+    def hacia_abajo(b, sentido) -> np.ndarray:
+        return sentido * np.array([-math.sin(b), 0.0, math.cos(b)])
+
+    def arco_arriba(self, x, a0, a1, sentido) -> np.ndarray:
+        return np.array([self.arriba(x, a) for a in _angulos(a0, a1, sentido, self.rb)])
+
+    def arco_abajo(self, y, b0, b1, sentido) -> np.ndarray:
+        return np.array([self.abajo(y, b) for b in _angulos(b0, b1, sentido, self.rb)])
+
+    def ancho_arriba(self, z) -> float:
+        """Hasta dónde llega, a la altura z, lo que no puede ocupar el eje de la cuerda junto
+        al palo de arriba, medido desde su eje (en y)."""
+        return math.sqrt(max(0.0, self.rb ** 2 - (z - self.zt) ** 2))
+
+    def ancho_abajo(self, z) -> float:
+        return math.sqrt(max(0.0, self.rb ** 2 - (z - self.zb) ** 2))
+
+    def tensa(self, X, Y, s_ar, s_ab, de_arriba) -> tuple[float, float]:
+        """Los ángulos donde la cuerda deja un palo y llega al otro en una esquina que va del
+        palo de arriba (plano x = X) al de abajo (plano y = Y), o al revés: cada punto es la
+        tangente desde el otro, como en una cuerda tensa."""
+        b = 0.0 if X > 0 else math.pi
+        for _ in range(30):
+            L = self.abajo(Y, b)
+            a = _tangente(self.centro_ar, self.rb, L[[1, 2]], s_ar, saliendo=de_arriba)
+            U = self.arriba(X, a)
+            b = _tangente(self.centro_ab, self.rb, U[[0, 2]], s_ab, saliendo=not de_arriba)
+        return a, b
+
+
+def _angulos(a0, a1, sentido, r) -> np.ndarray:
+    giro = ((a1 - a0) * sentido) % (2 * math.pi)
+    return a0 + sentido * np.linspace(0, giro, max(2, int(giro * r / PASO) + 1))
+
+
+@dataclass
+class _Esquina:
+    """Una esquina de una vuelta: el tramo que va de un palo al otro por fuera del cruce.
+
+    Deja un palo y llega al otro siguiendo el arco de cada uno (`t0` y `t1`), así que baja
+    pegada a sus caras, y entre los dos va en una curva suave (de Hermite). A media altura se
+    aparta `abre` de la recta, a lo largo de la banda que forman las esquinas de ese lado, para
+    que dos vecinas no queden a menos de un diámetro. Delante, la esquina sube primero recta y
+    pegada al palo de abajo (`antes` o `despues`), para pasar por encima del ballestrinque de
+    inicio y no junto a él."""
+    cuadrante: int    # dónde va, entre los palos (CUADRANTES)
+    sube: int         # +1 si va del palo de abajo al de arriba
+    P0: np.ndarray    # donde empieza la curva, en el sentido de la cuerda
+    P1: np.ndarray
+    t0: np.ndarray    # hacia dónde va la cuerda en P0 y en P1
+    t1: np.ndarray
+    a: float          # ángulo donde toca el palo de arriba
+    b: float          # ángulo donde toca el palo de abajo
+    antes: np.ndarray | None = None
+    despues: np.ndarray | None = None
+    abre: np.ndarray = field(default_factory=lambda: np.zeros(3))
+
+    def curva(self) -> np.ndarray:
+        return _hermite(self.P0, self.P1, self.t0, self.t1, self.abre)
+
+    def puntos(self) -> np.ndarray:
+        partes = [x for x in (self.antes, self.curva(), self.despues) if x is not None]
+        return np.vstack(partes)
+
+    def medio(self) -> np.ndarray:
+        return 0.5 * (self.P0 + self.P1)
+
+
+def _hermite(P0, P1, t0, t1, abre=None) -> np.ndarray:
+    """Una curva suave de P0 a P1 que sale en la dirección t0 y llega en la t1, en puntos.
+    Con `abre`, a media altura se aparta eso de la curva, sin cambiar sus extremos."""
+    P0, P1 = np.asarray(P0, float), np.asarray(P1, float)
+    largo = float(np.linalg.norm(P1 - P0))
+    u = np.linspace(0, 1, max(8, int(1.3 * largo / PASO)))[:, None]
+    h00, h10 = 2 * u ** 3 - 3 * u ** 2 + 1, u ** 3 - 2 * u ** 2 + u
+    h01, h11 = 3 * u ** 2 - 2 * u ** 3, u ** 3 - u ** 2
+    C = h00 * P0 + h10 * largo * np.asarray(t0) + h01 * P1 + h11 * largo * np.asarray(t1)
+    return C if abre is None else C + np.sin(math.pi * u) ** 2 * abre
+
+
+def _vertical(P, z) -> np.ndarray:
+    """Una recta vertical desde P hasta la altura z, en puntos."""
+    k = max(2, int(abs(z - P[2]) / PASO) + 1)
+    out = np.repeat(np.asarray(P, float)[None], k, axis=0)
+    out[:, 2] = np.linspace(P[2], z, k)
+    return out
+
+
 def cuerda(p: AmarreCuadrado, cruz) -> Cuerda:
     """Calcula la cuerda entera del amarre sobre la cruz (nudos/anfitrion.py)."""
-    from .trazo import ABAJO, ARRIBA, CINTURA, MESA, Plano, Trazo
+    from .trazo import ABAJO, ARRIBA, CINTURA, MESA, Plano, Trazo, _densa
     n, m = p.vueltas, p.ahorcados
+    pal = _Palos(cruz)
     rb, zb, zt = cruz.rb, cruz.zb, cruz.zt
-    z_alta, z_baja = zt - 0.5, zb + 1.0          # entre estas alturas las esquinas bajan rectas
-    medio = (zb + zt) / 2                        # donde se tocan los palos
-    a0 = rb + 0.05                               # la vuelta más pegada al otro palo
+    z_baja = zb + 1.0     # hasta aquí sube cada hito que termina junto al palo de abajo
+    a0 = rb + 0.05        # la vuelta más pegada al otro palo
     # Cada vuelta nueva va por fuera de la anterior sobre el palo de arriba y por dentro
     # sobre el de abajo, como en las referencias.
     A = [None] + [a0 + (k - 1) * PASO_VUELTAS for k in range(1, n + 2)]   # sobre el de arriba
@@ -145,24 +261,80 @@ def cuerda(p: AmarreCuadrado, cruz) -> Cuerda:
     carriles = [-(c1 + k * CARRIL) for k in range(4)]   # vuelta 1, firme, chicote, vuelta 2
     # Delante, las vueltas pasan bajo el palo de abajo por fuera del ballestrinque.
     Bd = [None] + [-carriles[3] + HOLGURA + (n - k) * PASO_VUELTAS for k in range(1, n + 1)]
-    centro_ab, centro_ar = np.array([0.0, zb]), np.array([0.0, zt])
+    sube_z = np.array([0.0, 0.0, 1.0])
+
+    # --- Las esquinas de las vueltas ---
+    esq: dict[tuple[int, int], _Esquina] = {}
+    for k in range(1, n + 1):
+        # Detrás a la derecha: deja el de arriba por detrás y llega al de abajo por la derecha.
+        a, b = pal.tensa(A[k], Bt[k], -1, -1, True)
+        esq[k, 1] = _Esquina(1, -1, pal.arriba(A[k], a), pal.abajo(Bt[k], b),
+                             pal.hacia_arriba(a, -1), pal.hacia_abajo(b, -1), a, b)
+        # Detrás a la izquierda: sube del de abajo al de arriba.
+        a, b = pal.tensa(-A[k], Bt[k], +1, -1, False)
+        esq[k, 2] = _Esquina(2, +1, pal.abajo(Bt[k], b), pal.arriba(-A[k], a),
+                             pal.hacia_abajo(b, -1), pal.hacia_arriba(a, +1), a, b)
+        # Delante a la izquierda: deja el de arriba por delante y baja hasta el de abajo, por
+        # fuera del ballestrinque. El último tramo va recto, pegado a su cara; es más alto en
+        # las primeras vueltas, que pasan por encima de las siguientes.
+        V = np.array([-rb, -Bd[k], z_baja + ESCALON * (n - k)])
+        a = _tangente(pal.centro_ar, rb, V[[1, 2]], +1, saliendo=True)
+        esq[k, 3] = _Esquina(3, -1, pal.arriba(-A[k], a), V, pal.hacia_arriba(a, +1), -sube_z,
+                             a, math.pi, despues=_vertical(V, z_baja)[1:] if k < n else None)
+        if k < n:
+            # Delante a la derecha: sube recta por la cara del de abajo y va a la vuelta siguiente.
+            # La más baja es la salida de la última vuelta hacia los ahorcados.
+            V = np.array([rb, -Bd[k], z_baja + ESCALON * (n - k)])
+            a = _tangente(pal.centro_ar, rb, V[[1, 2]], -1, saliendo=False)
+            esq[k, 4] = _Esquina(4, +1, V, pal.arriba(A[k + 1], a), sube_z, pal.hacia_arriba(a, -1),
+                                 a, 0.0, antes=_vertical([rb, -Bd[k], zb], V[2])[:-1])
+    # A media altura, las esquinas de cada lado se apartan unas de otras a lo largo de su banda.
+    for q in (1, 2, 3, 4):
+        banda = [esq[k, q] for k in range(1, n + 1) if (k, q) in esq]
+        if len(banda) > 1:
+            tau = banda[-1].medio() - banda[0].medio()
+            tau[2] = 0.0
+            tau = _unit(tau)
+            for i, e in enumerate(banda):
+                e.abre = (i - (len(banda) - 1) / 2) * ABRIR * tau
+
+    # El firme sube del ballestrinque de inicio a la primera vuelta, por el costado derecho
+    # del palo de abajo y pegado a la cara delantera del de arriba.
+    F0 = np.array([rb, carriles[1], zb])
+    a = _tangente(pal.centro_ar, rb, F0[[1, 2]], -1, saliendo=False)
+    firme = _Esquina(4, +1, F0, pal.arriba(A[1], a), sube_z, pal.hacia_arriba(a, -1), a, 0.0)
+    F = firme.puntos()
+
+    # --- Alturas de los ahorcados ---
+    # Cada ahorcado pasa bajo el palo de arriba cerca de su cara de abajo y sobre el de abajo
+    # cerca de su cara de arriba; entre los dos sube y baja suave. Cada uno va un poco más
+    # alto que el anterior, así que en el mapa de la cintura no se cruzan.
+    def alto(j, ang):
+        u = (j - 1) / (m - 1)
+        bajo, alto_ = zt - rb - 0.9 + 0.8 * u, zb + rb - 0.4 + 0.8 * u
+        return bajo + (alto_ - bajo) * math.sin(ang) ** 2
+
+    # Delante a la derecha, las esquinas que suben a la vuelta siguiente pasan por fuera del
+    # firme más arriba de los ahorcados. Ahí el firme ya va en la zona del palo de arriba:
+    # en la cintura solo lo cruzan los ahorcados.
+    ang = lambda P: np.arctan2(P[..., 1], P[..., 0])
+    ang_firme = float(ang(F[F[:, 2] <= zt]).min())
+    z_firme = min(float(firme.P1[2]) - 0.5, *[
+        float(e.puntos()[ang(e.puntos()) > ang_firme - math.radians(4), 2].min()) - 0.4
+        for (_, q), e in esq.items() if q == 4])
+    if max(alto(j, ang_firme) for j in range(1, m + 1)) + 0.5 > z_firme:
+        raise ValueError("las esquinas de delante a la derecha pasan por fuera del firme a la "
+                         "altura de los ahorcados")
+
     t = Trazo()
-
-    def sobre_arriba(x, Q, sentido):   # en el corte del palo de arriba, en x
-        t.rodear(centro_ar, Plano(0, x), Q, sentido, ARRIBA, ARRIBA, rb)
-
-    def sobre_abajo(y, Q, sentido):    # en el corte del palo de abajo, en y
-        t.rodear(centro_ab, Plano(1, y), Q, sentido, ABAJO, ABAJO, rb)
 
     # --- Ballestrinque de inicio, desde el chicote: el orden de atado, al revés ---
     # Va de modo que el firme sale por el costado derecho del palo de abajo y sube recto a la
     # primera vuelta; su cruz queda abajo a la derecha. En el orden de atado el ángulo crece;
     # al recorrerlo al revés, alfa = -40 - psi (alfa en el corte del palo, desde +x hacia arriba).
-    psi0 = 0
-    ent = np.array([A[1], carriles[1], z_baja])     # de aquí el firme sube a la primera vuelta
     pts, hito1 = [], None
-    for v, psi, alto, nombre in reversed(_ballestrinque(*carriles, psi0=psi0)):
-        a, r = math.radians(-40 - psi), rb + alto
+    for v, psi, alto_b, nombre in reversed(_ballestrinque(*carriles, psi0=0)):
+        a, r = math.radians(-40 - psi), rb + alto_b
         pts.append([r * math.cos(a), v, zb + r * math.sin(a)])
         if nombre == "diagonal" and hito1 is None:
             hito1 = len(pts)   # inicio-1: hasta antes de la diagonal
@@ -175,82 +347,133 @@ def cuerda(p: AmarreCuadrado, cruz) -> Cuerda:
     t.puntos(pts[:hito1], ABAJO)
     t.marcar("inicio-1")
     t.puntos(pts[hito1 - 1:], ABAJO)
-    t.ir(ent, ABAJO)
+    i1 = int(np.argmax(F[:, 2] >= z_baja))
+    i2 = int(np.argmax(F[:, 2] >= z_firme))
+    t.puntos(F[:i1 + 1], ABAJO)
     t.marcar("inicio")
+    t.puntos(F[i1:i2 + 1], CINTURA)
+    t.puntos(F[i2:], ARRIBA)
 
     # --- Vueltas ---
-    t.ir([A[1], carriles[1], zt - 0.5], CINTURA)       # la primera esquina sube recta
-    esquinas = [((A[1], carriles[1]), +1)]   # en orden de la cuerda: dónde baja y si sube (+1) o baja
+    esquinas = [(firme, F)]   # en el orden de la cuerda, con sus puntos
     for k in range(1, n + 1):
-        a, bt, bd = A[k], Bt[k], Bd[k]
-        sobre_arriba(a, [a, bt, z_alta], -1)                 # por encima, de delante a atrás
-        t.ir([a, bt, z_baja], CINTURA)
-        esquinas.append(((a, bt), -1))
-        sobre_abajo(bt, [-a, bt, z_baja], -1)                # por debajo, de derecha a izquierda
-        t.ir([-a, bt, z_alta], CINTURA)
-        esquinas.append(((-a, bt), +1))
-        sobre_arriba(-a, [-a, -bd, z_alta], +1)              # por encima, de atrás a delante
-        t.ir([-a, -bd, z_baja], CINTURA)
-        esquinas.append(((-a, -bd), -1))
-        sobre_abajo(-bd, [A[k + 1], -bd, z_baja], +1)        # por debajo, de izquierda a derecha
+        e1, e2, e3 = esq[k, 1], esq[k, 2], esq[k, 3]
+        entra = firme if k == 1 else esq[k - 1, 4]
+        t.puntos(pal.arco_arriba(A[k], entra.a, e1.a, -1), ARRIBA)    # por encima, de delante a atrás
+        t.puntos(e1.puntos(), CINTURA)
+        t.puntos(pal.arco_abajo(Bt[k], e1.b, e2.b, -1), ABAJO)        # por debajo, de derecha a izquierda
+        t.puntos(e2.puntos(), CINTURA)
+        t.puntos(pal.arco_arriba(-A[k], e2.a, e3.a, +1), ARRIBA)      # por encima, de atrás a delante
+        t.puntos(e3.puntos(), CINTURA)
+        t.ir(pal.abajo(-Bd[k], math.pi), ABAJO)
+        t.puntos(pal.arco_abajo(-Bd[k], math.pi, 0.0, +1), ABAJO)     # por debajo, de izquierda a derecha
         t.marcar(f"vuelta-{k}")
+        esquinas += [(e1, e1.puntos()), (e2, e2.puntos()), (e3, e3.puntos())]
         if k < n:
-            t.ir([A[k + 1], -bd, z_alta], CINTURA)
-            esquinas.append(((A[k + 1], -bd), +1))
+            t.puntos(esq[k, 4].puntos(), CINTURA)
+            esquinas.append((esq[k, 4], esq[k, 4].puntos()))
 
-    # --- Ahorcados: una espiral hacia fuera entre los palos, alrededor de las esquinas ---
-    raiz2 = math.sqrt(2)
-    s_atras, s_q3, s_q4 = A[1] + Bt[1], A[1] + Bd[1], A[2] + Bd[1]   # x + y de cada grupo de esquinas
+    # --- Ahorcados: vueltas tensas entre los palos, por fuera de todo lo que ya está ---
+    def cerca(j, cuadrante, extra=()):
+        """Lo que tiene que dejar por fuera un ahorcado en un cuadrante: los puntos de la cuerda
+        trazada (menos el tramo que acaba de hacer) que quedan a su altura, cada uno con el
+        radio que tiene que dejarle."""
+        P = np.vstack([_densa(x.puntos) if x.recta else x.puntos for x in t.piezas])
+        s = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))])
+        P = P[s <= s[-1] - 3.5]
+        if len(extra):
+            P = np.vstack([P, extra])
+        sx, sy = CUADRANTES[cuadrante]
+        P = P[(sx * P[:, 0] > 0) & (sy * P[:, 1] > 0)]
+        dz = P[:, 2] - np.array([alto(j, x) for x in ang(P)])
+        lejos = np.abs(dz) < LIBRE
+        return P[lejos, :2], np.sqrt(LIBRE ** 2 - dz[lejos] ** 2)
 
-    def alto(q, j):
-        """Altura de cada ahorcado en cada cuadrante: van uno sobre otro, así que en el mapa de
-        la cintura no se cruzan. Delante a la derecha van en la mitad alta de las esquinas."""
-        u = (j - 1) / (m - 1)
-        return medio + 1.15 + 0.35 * u if q == 4 else medio - 0.4 + 0.8 * u
+    def extremos(j):
+        """Por dónde pasan los ahorcados bajo el palo de arriba (a la derecha y a la izquierda)
+        y sobre el de abajo (detrás y delante): justo por fuera de las esquinas."""
+        out = {}
+        for nombre, cuads, eje, signo in (("der", (1, 4), 0, 1), ("det", (1, 2), 1, 1),
+                                         ("izq", (2, 3), 0, -1), ("del", (3, 4), 1, -1)):
+            lejos = 0.0
+            for e, P in esquinas:
+                if e.cuadrante not in cuads:
+                    continue
+                dz = P[:, 2] - np.array([alto(j, x) for x in ang(P)])
+                ok = np.abs(dz) < LIBRE
+                if ok.any():
+                    lejos = max(lejos, float((signo * P[ok, eje] + np.sqrt(LIBRE ** 2 - dz[ok] ** 2)).max()))
+            out[nombre] = lejos + 0.05
+        return out
 
-    # Cada ahorcado va recto por la cintura antes y después de pasar por cada palo, hasta más
-    # allá (MARGEN) de la esquina de ese cuadrante más cercana al palo, para cruzar todas las
-    # esquinas dentro de la cintura. Lejos (si = 1, con los ahorcados de fuera) eso es más largo.
-    def junto(qx, qy, al_de_arriba):
-        cs = [c for c, _ in esquinas if np.sign(c[0]) == qx and np.sign(c[1]) == qy]
-        return min(cs, key=lambda c: abs(c[1] / c[0]) if al_de_arriba else abs(c[0] / c[1]))
-
-    def recto_arriba(X, qx, qy, d, z):   # |y| donde empieza o termina, en el plano x = X
-        cx, cy = junto(qx, qy, True)
-        libre = math.sqrt(max(0.0, rb ** 2 - (zt - z) ** 2)) + 0.2   # lo que ocupa el palo
-        return max(libre, min(d - abs(X), abs(X * cy / cx)) - MARGEN)
-
-    def recto_abajo(Y, qx, qy, d, z):    # |x| donde empieza o termina, en el plano y = Y
-        cx, cy = junto(qx, qy, False)
-        libre = math.sqrt(max(0.0, rb ** 2 - (z - zb) ** 2)) + 0.2
-        return max(libre, min(d - abs(Y), abs(Y * cx / cy)) - MARGEN)
-
-    # El primer ahorcado sale de la última vuelta derecho hacia abajo del palo de arriba.
+    planos = extremos(1)
     x_cierre = None
+    pasa_ar = lambda z: pal.ancho_arriba(z) + 0.5   # lo que se aparta del eje del palo al pasar
+    pasa_ab = lambda z: pal.ancho_abajo(z) + 0.5
+
+    def punto(x, y, j):
+        return np.array([x, y, alto(j, math.atan2(y, x))])
+
+    def tramo(S, E, j, cuadrante, extra=()):
+        """El ahorcado j en un cuadrante, de S a E, tenso por fuera de lo que ya está."""
+        C, R = cerca(j, cuadrante, extra)
+        for Q in (S, E):
+            if len(C) and (np.linalg.norm(C - Q[:2], axis=1) < R - 1e-6).any():
+                raise ValueError(f"el ahorcado {j} no cabe junto a los palos en el cuadrante {cuadrante}")
+        # Cada recta se parte en pedazos cortos, para que siga la altura de su ahorcado.
+        cadena = _cadena(S[:2], E[:2], C, R)
+        for Q0, Q1 in zip(cadena[:-1], cadena[1:]):
+            for u in np.linspace(0, 1, max(2, int(np.linalg.norm(Q1 - Q0) / PASO) + 1))[1:]:
+                Q = Q0 + u * (Q1 - Q0)
+                t.ir(punto(Q[0], Q[1], j), CINTURA)
+
+    # El último tramo de la última vuelta sube un poco por la cara del palo de abajo, se aparta
+    # de él y va a pasar bajo el palo de arriba, donde empieza el primer ahorcado. Mientras
+    # pasa junto al ballestrinque de inicio va en la zona del palo de abajo, sin acercarse a él
+    # a lo largo del palo; cuando ya se apartó del firme, en la del de arriba.
+    P0 = np.array([rb, -Bd[n], z_baja])
+    Q = np.array([rb + 1.2, -Bd[n] + 0.4, z_baja + 1.0])
+    va = _unit(np.array([0.5, 1.0, 0.0]))
+    zj = alto(1, 0.0)
+    E0 = np.array([planos["der"], -pasa_ar(zj), zj])
+    t.puntos(_vertical(pal.abajo(-Bd[n], 0.0), P0[2]), ABAJO)
+    t.puntos(_hermite(P0, Q, sube_z, va), ABAJO)
+    t.puntos(_hermite(Q, E0, va, [0.0, 1.0, 0.0]), ARRIBA)
     for j in range(1, m + 1):
+        # Cada ahorcado pasa por los palos un diámetro más afuera que el anterior.
         o = (j - 1) * PASO_VUELTAS
-        x0 = A[n + 1] + o
-        d1, d3, d4 = (s + raiz2 * (HOLGURA + o) for s in (s_atras, s_q3, s_q4))
-        yt, xi, yd = Bt[1] + HOLGURA + o, A[n] + HOLGURA + o, Bd[1] + HOLGURA + o
-        z1, z2, z3, z4 = (alto(q, j) for q in (1, 2, 3, 4))
-        sobre_arriba(x0, [x0, recto_arriba(x0, 1, 1, d1, z1), z1], +1)      # por debajo, de delante a atrás
-        t.ir([x0, d1 - x0, z1], CINTURA)
-        t.ir([d1 - yt, yt, z1], CINTURA)
-        t.ir([recto_abajo(yt, 1, 1, d1, z1), yt, z1], CINTURA)
-        sobre_abajo(yt, [-recto_abajo(yt, -1, 1, d1, z2), yt, z2], +1)     # por encima, de derecha a izquierda
-        t.ir([-(d1 - yt), yt, z2], CINTURA)
-        t.ir([-xi, d1 - xi, z2], CINTURA)
-        t.ir([-xi, recto_arriba(xi, -1, 1, d1, z2), z2], CINTURA)
-        sobre_arriba(-xi, [-xi, -recto_arriba(xi, -1, -1, d3, z3), z3], -1)  # por debajo, de atrás a delante
-        t.ir([-xi, -(d3 - xi), z3], CINTURA)
-        t.ir([-(d3 - yd), -yd, z3], CINTURA)
-        t.ir([-recto_abajo(yd, -1, -1, d3, z3), -yd, z3], CINTURA)
-        sobre_abajo(-yd, [recto_abajo(yd, 1, -1, d4, z4), -yd, z4], -1)    # por encima, de izquierda a derecha
-        t.ir([d4 - yd, -yd, z4], CINTURA)
-        # El último ahorcado lleva al firme del ballestrinque de cierre.
-        x_sig = A[n + 1] + j * PASO_VUELTAS if j < m else x0 + PASO_VUELTAS + CARRIL
-        t.ir([x_sig, -(d4 - x_sig), z4], CINTURA)
-        t.ir([x_sig, -recto_arriba(x_sig, 1, -1, d4, z4), z4], CINTURA)
+        Xr, Yt, Xl, Yd = (planos[x] + o for x in ("der", "det", "izq", "del"))
+        # Bajo el palo de arriba, de delante a atrás, y por fuera de las esquinas de detrás a la derecha.
+        z = alto(j, 0.0)
+        S = punto(Xr, pasa_ar(z), j)
+        t.rodear(pal.centro_ar, Plano(0, Xr), S, +1, ARRIBA, ARRIBA, rb)
+        z = alto(j, math.pi / 2)
+        tramo(S, punto(pasa_ab(z), Yt, j), j, 1)
+        # Sobre el palo de abajo, de derecha a izquierda, y detrás a la izquierda.
+        S = punto(-pasa_ab(z), Yt, j)
+        t.rodear(pal.centro_ab, Plano(1, Yt), S, +1, ABAJO, ABAJO, rb)
+        z = alto(j, math.pi)
+        tramo(S, punto(-Xl, pasa_ar(z), j), j, 2)
+        # Bajo el palo de arriba, de atrás a delante, y delante a la izquierda.
+        S = punto(-Xl, -pasa_ar(z), j)
+        t.rodear(pal.centro_ar, Plano(0, -Xl), S, -1, ARRIBA, ARRIBA, rb)
+        z = alto(j, -math.pi / 2)
+        tramo(S, punto(-pasa_ab(z), -Yd, j), j, 3)
+        # Sobre el palo de abajo, de izquierda a derecha, y delante a la derecha, hasta donde
+        # pasa bajo el palo de arriba el ahorcado siguiente. El último lleva al firme del
+        # ballestrinque de cierre, por fuera de su primera vuelta.
+        S = punto(pasa_ab(z), -Yd, j)
+        t.rodear(pal.centro_ab, Plano(1, -Yd), S, -1, ABAJO, ABAJO, rb)
+        z = alto(j, 0.0)
+        extra = ()
+        if j < m:
+            x_sig = Xr + PASO_VUELTAS
+        else:
+            x_sig = Xr + PASO_VUELTAS + CARRIL
+            muro = np.linspace(-rb, 0.0, 12)
+            extra = np.column_stack([np.full(12, x_sig - CARRIL), muro,
+                                     [alto(j, math.atan2(y, x_sig)) for y in muro]])
+        tramo(S, punto(x_sig, -pasa_ar(z), j), j, 4, extra)
         t.marcar(f"ahorcado-{j}")
         x_cierre = x_sig
 
@@ -258,12 +481,12 @@ def cuerda(p: AmarreCuadrado, cruz) -> Cuerda:
     bal = _ballestrinque(x_cierre - CARRIL, x_cierre, x_cierre + CARRIL, x_cierre + 2 * CARRIL,
                          psi0=450)
     P = t.fin
-    a_ent = math.degrees(_tangente(centro_ar, rb, np.array([P[1], P[2]]), +1)) % 360
+    a_ent = math.degrees(_tangente(pal.centro_ar, rb, np.array([P[1], P[2]]), +1)) % 360
     pts = [[x_cierre, rb * math.cos(math.radians(s)), zt + rb * math.sin(math.radians(s))]
            for s in np.arange(a_ent, bal[0][1], 6.0)]
     hito1 = None
-    for v, psi, alto, nombre in bal:
-        a, r = math.radians(psi), rb + alto
+    for v, psi, alto_b, nombre in bal:
+        a, r = math.radians(psi), rb + alto_b
         pts.append([v, r * math.cos(a), zt + r * math.sin(a)])
         if nombre == "vuelta2" and hito1 is None:
             hito1 = len(pts)
@@ -286,7 +509,29 @@ def cuerda(p: AmarreCuadrado, cruz) -> Cuerda:
             restos[nombre] = _resto(X[i], _unit(X[i] - X[max(i - 3, 0)]),
                                     _unit(np.array([*sale, 0.0]) * espejo))
     alias = {"vueltas": f"vuelta-{n}", "ahorcados": f"ahorcado-{m}"}
-    return Cuerda(X, Z, hitos, restos, _secuencias(p, esquinas), alias)
+    # Dónde cruza cada esquina al primer ahorcado: da el orden en que los ahorcados las recorren.
+    donde = []
+    for e, P in esquinas:
+        dz = np.abs(P[:, 2] - np.array([alto(1, x) for x in ang(P)]))
+        if e is firme:
+            dz[P[:, 2] > z_firme] = np.inf
+        donde.append(((*P[int(dz.argmin()), :2],), e.sube))
+    return Cuerda(X, Z, hitos, restos, _secuencias(p, donde), alias)
+
+
+def _cadena(S, E, centros, radios, lados=40) -> np.ndarray:
+    """El camino más corto de S a E, en sentido antihorario, que deja del lado de dentro los
+    discos (centros, radios): el borde de su envolvente convexa, como una cuerda tensa."""
+    from scipy.spatial import ConvexHull
+    t = np.linspace(0, 2 * math.pi, lados, endpoint=False)
+    anillo = np.column_stack([np.cos(t), np.sin(t)])
+    P = np.vstack([S, E] + [c + r * anillo for c, r in zip(centros, radios)])
+    v = [int(i) for i in ConvexHull(P).vertices]   # en sentido antihorario
+    if 0 not in v or 1 not in v:
+        raise ValueError("un ahorcado no puede pasar por fuera de las esquinas")
+    i = v.index(0)
+    v = v[i:] + v[:i]
+    return P[v[:v.index(1) + 1]]
 
 
 def _ballestrinque(c_v1, c_firme, c_chicote, c_v2, psi0, paso=6.0):
