@@ -27,9 +27,7 @@ class Modelo:
 
 def construir(spec: Spec) -> Modelo:
     if spec.plantilla is not None:
-        # La geometría de las plantillas es la subtarea siguiente de T7 (tasks/todo.md).
-        raise NotImplementedError(f"{spec.slug}: la plantilla {spec.plantilla.tipo} todavía "
-                                  "no calcula la cuerda")
+        return _construir_plantilla(spec)
     fallas = consistencia([(p.n, p.secuencia) for p in spec.pasos])
     resultados = []
     for paso in spec.pasos:
@@ -52,6 +50,17 @@ def construir(spec: Spec) -> Modelo:
         reverso, f_reverso = construir_reverso(spec, final)
         fallas.extend(f_reverso)
     return Modelo(spec, resultados, fallas, error, reverso)
+
+
+def _construir_plantilla(spec: Spec) -> Modelo:
+    """Un nudo de plantilla: cada paso es el comienzo de la cuerda entera que calcula la
+    plantilla (nudos/plantillas/pasos.py). La consistencia entre pasos y los cruces que saltan
+    se comprueban igual que en los demás nudos, con la secuencia que escribe la plantilla.
+    El error común construido como variante del método es la subtarea siguiente de T7."""
+    from .plantillas.pasos import construir_pasos
+    resultados, fallas_pasos, secuencias = construir_pasos(spec)
+    fallas = consistencia(secuencias) + fallas_pasos + cruces_que_saltan(resultados)
+    return Modelo(spec, resultados, fallas)
 
 
 def cruces_que_saltan(resultados: list[Resultado]) -> list[str]:

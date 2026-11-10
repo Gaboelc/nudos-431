@@ -1,6 +1,9 @@
-"""Nudos sobre un anfitrión rígido. Por ahora, el poste: un cilindro horizontal.
+"""Nudos sobre un anfitrión rígido: el poste, un cilindro horizontal, y la cruz, los dos
+palos de los amarres. Los pasos sobre la cruz los construye su plantilla
+(nudos/plantillas/pasos.py); aquí está solo la cruz como sólido.
 
-Cada paso se construye como en el generador libre (nudos/libre.py), con tres diferencias:
+Sobre el poste, cada paso se construye como en el generador libre (nudos/libre.py), con tres
+diferencias:
 1. Los puntos sobre el poste se dan como [x, ángulo] y se densifican sobre su superficie
    antes de pasar la curva suave, para que la cuerda no corte por dentro del poste.
 2. Los cruces se buscan en dos mapas. Los tramos que van sobre el poste se comparan en su
@@ -68,6 +71,60 @@ class Poste:
         """Lo que necesita render/escena.js para dibujarlo."""
         return {"tipo": "poste", "radio": self.radio, "desde": self.desde,
                 "hasta": self.hasta, "y": 0.0, "z": self.zc}
+
+
+class Cruz:
+    """Dos palos del mismo radio cruzados en ángulo recto en x = y = 0, para los amarres.
+
+    El de abajo va a lo largo de y, con el eje en x = 0 y a la altura radio + 1: se apoya en
+    la cuerda que pasa por debajo, como el poste. El de arriba va a lo largo de x, con el eje
+    en y = 0, y se apoya sobre el de abajo. Cada palo mide `largo` y está centrado en el cruce.
+    Alrededor de cada palo, un ángulo se mide en su plano de corte, desde su lado positivo
+    (x para el de abajo, y para el de arriba) hacia arriba: 90° es la cara de arriba."""
+
+    def __init__(self, a: Anfitrion):
+        self.radio, self.largo = a.radio, a.largo
+        self.zb = a.radio + 2 * R          # eje del palo de abajo
+        self.zt = self.zb + 2 * a.radio    # eje del palo de arriba
+        self.rb = a.radio + R              # distancia al eje del eje de una cuerda que toca un palo
+
+    def abajo(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Respecto al palo de abajo: posición a lo largo (y), ángulo en radianes y distancia al eje."""
+        dx, dz = X[:, 0], X[:, 2] - self.zb
+        return X[:, 1], np.arctan2(dz, dx), np.hypot(dx, dz)
+
+    def arriba(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Respecto al palo de arriba: posición a lo largo (x), ángulo en radianes y distancia al eje."""
+        dy, dz = X[:, 1], X[:, 2] - self.zt
+        return X[:, 0], np.arctan2(dz, dy), np.hypot(dy, dz)
+
+    def empujar(self, X, libre) -> None:
+        """Saca de los dos palos los puntos que entraron, en dirección radial."""
+        medio = self.largo / 2
+        for eje, otro, zc in ((0, 1, self.zb), (1, 0, self.zt)):
+            # El de abajo: eje a lo largo de y, se mide en (x, z); el de arriba, en (y, z).
+            d1, dz = X[:, eje], X[:, 2] - zc
+            d = np.hypot(d1, dz)
+            m = libre & (d < self.rb) & (np.abs(X[:, otro]) < medio)
+            if m.any():
+                k = self.rb / np.maximum(d[m], 1e-9)
+                X[m, eje] = d1[m] * k
+                X[m, 2] = zc + dz[m] * k
+
+    def penetracion(self, X) -> float:
+        """Cuánto entra la cuerda en el palo donde más entra (0 si no entra)."""
+        medio = self.largo / 2
+        peor = 0.0
+        for (largo, _, r) in (self.abajo(X), self.arriba(X)):
+            m = np.abs(largo) < medio
+            if m.any():
+                peor = max(peor, float((self.rb - r[m]).max()))
+        return peor
+
+    def datos(self) -> dict:
+        """Lo que necesita render/escena.js para dibujarla."""
+        return {"tipo": "cruz", "radio": self.radio, "largo": self.largo,
+                "z_abajo": self.zb, "z_arriba": self.zt}
 
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:

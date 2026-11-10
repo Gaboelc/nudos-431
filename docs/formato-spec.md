@@ -144,7 +144,7 @@ pasos:
 
 Por ahora el inicio va en el palo de abajo y el cierre en el de arriba, que es el método del manual de la Tropa.
 
-`hasta` puede ser, en este orden: `inicio-1` (la primera mitad del ballestrinque de inicio), `inicio`, `vuelta-1` … `vuelta-<n>`, `ahorcado-1` … `ahorcado-<n>`, `cierre-1` y `cierre`. `vueltas` es lo mismo que la última vuelta y `ahorcados` que el último ahorcado: así un paso que dice `hasta: vueltas` sigue valiendo si cambia el número de vueltas. Cada paso llega más lejos que el anterior y el último llega a `cierre`. Un `hasta` que no existe con esas medidas, como `vuelta-4` con 3 vueltas, es un error al cargar.
+`hasta` puede ser, en este orden: `inicio-1` (el ballestrinque de inicio hasta antes de su diagonal, desde el chicote), `inicio`, `vuelta-1` … `vuelta-<n>`, `ahorcado-1` … `ahorcado-<n>`, `cierre-1` (el ballestrinque de cierre hasta que su diagonal cruza el firme) y `cierre`. `vueltas` es lo mismo que la última vuelta y `ahorcados` que el último ahorcado: así un paso que dice `hasta: vueltas` sigue valiendo si cambia el número de vueltas. Cada paso llega más lejos que el anterior y el último llega a `cierre`. Un `hasta` que no existe con esas medidas, como `vuelta-4` con 3 vueltas, es un error al cargar.
 
 En todo el texto del nudo, `{vueltas}` y `{ahorcados}` se reemplazan por el número en letras («tres»). Otra palabra entre llaves es un error. En los nudos sin plantilla las llaves se dejan como están.
 

@@ -80,7 +80,8 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Diseño escrito en el plan (palos, formato, geometría, cruces, escena y ficha)
   - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (9 nov: cierre arriba, inicio en un paso, error sin imagen por la tensión, los amarres sí sostienen personas)
   - [x] Formato: anfitrión `cruz`, `plantilla`, pasos con `hasta` y `error` con `variante` y `otros`, con sus pruebas (`nudos/plantillas/`, `tests/test_amarre_cuadrado.py` y `tests/test_spec.py`; nudos publicados idénticos: 3 modelos byte a byte y 49 imágenes píxel por píxel, con Edge)
-  - [ ] Geometría: la cuerda entera, los pasos como prefijos, la relajación con los dos palos y los cruces por zonas (`tests/test_amarre_cuadrado.py`)
+  - [x] Geometría: la cuerda entera, los pasos como prefijos, la relajación con los dos palos y los cruces por zonas (`nudos/plantillas/amarre.py`, `trazo.py` y `pasos.py`, `tests/test_amarre_cuadrado.py`; 7 pasos sin fallas y 40 cruces con 3 y 3, también con 2 y 2, 4 y 3, 3 y 4 y 6 y 6; las vueltas van en el orden de las referencias y, delante, por fuera del ballestrinque: ver «Cómo se hizo la geometría» en el plan)
+  - [ ] Gabriel revisa en las imágenes el orden de las vueltas y las vueltas por fuera del ballestrinque de inicio (con la escena)
   - [ ] Escena, impresión y ficha con los dos palos y el reverso volteado; nudos publicados idénticos (modelos byte a byte, imágenes píxel por píxel)
   - [ ] `specs/amarre-cuadrado.yaml`: pasos, error común y texto de la ficha; la ficha cabe; de 3 a 4 vueltas regenera los pasos
   - [ ] Gabriel revisa el texto de la ficha

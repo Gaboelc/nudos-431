@@ -4,9 +4,14 @@ import copy
 import numpy as np
 import pytest
 
-from nudos.construir import construir
-from nudos.plantillas.amarre import AmarreCuadrado, Extremo
-from nudos.spec import SpecError, desde_datos
+from nudos.anfitrion import PENETRACION_MAX, Cruz
+from nudos.construir import DESPLAZAMIENTO_MAX, construir
+from nudos.cruces import numerada
+from nudos.libre import LIMITES
+from nudos.plantillas.amarre import AmarreCuadrado, Extremo, cuerda
+from nudos.plantillas.pasos import buscar
+from nudos.plantillas.trazo import ABAJO, CINTURA
+from nudos.spec import Anfitrion, SpecError, desde_datos
 
 PASOS = [
     ("Haz un ballestrinque en el palo de abajo", "inicio"),
@@ -197,12 +202,141 @@ def test_un_nudo_de_plantilla_es_de_una_sola_cuerda():
         desde_datos(d)
 
 
-def test_todavia_no_se_construye():
-    with pytest.raises(NotImplementedError, match="todavía no calcula la cuerda"):
-        construir(desde_datos(datos()))
-
-
 def test_los_hitos_no_tienen_puntos_de_control():
     p = desde_datos(datos()).pasos[0]
     assert isinstance(p.puntos, np.ndarray) and len(p.puntos) == 0
     assert p.resaltar is None and p.sobre is None
+
+
+# --- La cruz ----------------------------------------------------------------
+CRUZ = Anfitrion("cruz", radio=2.5, largo=40)
+
+
+def test_los_palos_se_apoyan_uno_sobre_otro():
+    c = Cruz(CRUZ)
+    assert c.zb == pytest.approx(3.5)          # el de abajo, sobre la cuerda que pasa por debajo
+    assert c.zt - c.zb == pytest.approx(5.0)   # el de arriba, sobre el de abajo
+    y, a, r = c.abajo(np.array([[0.0, 7.0, c.zb + c.rb], [c.rb, -2.0, c.zb]]))
+    assert np.allclose(y, [7, -2]) and np.allclose(np.degrees(a), [90, 0]) and np.allclose(r, c.rb)
+    x, a, r = c.arriba(np.array([[4.0, 0.0, c.zt + c.rb], [-1.0, -c.rb, c.zt]]))
+    assert np.allclose(x, [4, -1]) and np.allclose(np.degrees(a), [90, 180]) and np.allclose(r, c.rb)
+
+
+def test_empujar_saca_lo_que_entro_a_cualquiera_de_los_dos_palos():
+    c = Cruz(CRUZ)
+    X = np.array([[1.0, 8.0, c.zb], [6.0, 0.5, c.zt - 1.0], [0.0, 30.0, c.zb], [5.0, 5.0, 6.0]])
+    assert c.penetracion(X) == pytest.approx(c.rb - 1.0)   # el primero, a 1 del eje de abajo
+    c.empujar(X, np.ones(4, bool))
+    assert c.penetracion(X) == pytest.approx(0, abs=1e-9)
+    assert np.allclose(X[2], [0, 30, c.zb])   # fuera del largo del palo no se toca
+    assert np.allclose(X[3], [5, 5, 6])       # entre los palos no hay nada que empujar
+
+
+# --- La cuerda entera -------------------------------------------------------
+def la_cuerda(**cambios):
+    spec = desde_datos(con(**cambios))
+    return cuerda(spec.plantilla, Cruz(spec.anfitrion))
+
+
+@pytest.mark.parametrize("vueltas, ahorcados", [(2, 2), (3, 3), (4, 3), (3, 4), (6, 6)])
+def test_la_secuencia_del_metodo(vueltas, ahorcados):
+    """Cada ahorcado pasa por encima de cada vuelta en las cuatro esquinas, las vueltas no se
+    cruzan entre sí y cada ballestrinque tiene sus dos cruces: 40 con 3 y 3."""
+    c = la_cuerda(vueltas=vueltas, ahorcados=ahorcados)
+    sec = c.secuencias["cierre"]
+    assert len(sec) // 2 == 4 * vueltas * ahorcados + 4
+    assert sec[:4] == ("1U", "1O", "2O", "2U")
+    esquinas = [t for t in sec[4:-4] if t.endswith("U")]
+    assert len(esquinas) == 4 * vueltas * ahorcados   # todas las esquinas, por debajo
+    assert all(t.endswith("O") for t in sec[4 + len(esquinas):-4])
+    assert len(c.secuencias["inicio"]) == 4 and len(c.secuencias["vueltas"]) == 4
+    assert len(c.secuencias["ahorcado-1"]) // 2 == 4 * vueltas + 2
+
+
+def test_los_hitos_avanzan_por_la_misma_cuerda():
+    c = la_cuerda()
+    orden = list(AmarreCuadrado(3, 3, Extremo("abajo", "delante"), Extremo("arriba", "derecha")).hitos())
+    indices = [c.hitos[h] if h in c.hitos else c.hitos[c.alias[h]] for h in orden]
+    assert indices == sorted(indices)
+    assert c.hitos["cierre"] == len(c.puntos) - 1
+    assert set(c.restos) == set(c.hitos) - {"cierre"}   # el último paso no lleva resto
+    for nombre, resto in c.restos.items():
+        assert resto[-1][2] == pytest.approx(0.5), nombre   # el resto termina sobre la mesa
+
+
+def test_los_lados_de_los_ballestrinques_son_reflejos():
+    base = la_cuerda()
+    izquierda = la_cuerda(cierre={"poste": "arriba", "lado": "izquierda"})
+    detras = la_cuerda(inicio={"poste": "abajo", "lado": "detras"})
+    assert np.allclose(izquierda.puntos * [-1, 1, 1], base.puntos)
+    assert np.allclose(detras.puntos * [1, -1, 1], base.puntos)
+    assert izquierda.secuencias == base.secuencias
+
+
+def test_los_cruces_se_buscan_solo_dentro_de_cada_zona():
+    # Dos tramos que se cruzan en el mapa de la cintura: con las dos en la cintura es un
+    # cruce; si una va sobre el palo de abajo, no se busca.
+    c = Cruz(CRUZ)
+    a = np.column_stack([np.full(21, 6.0), np.linspace(-1, 1, 21), np.linspace(5, 7, 21)])
+    b = np.column_stack([np.full(21, 6.0), np.linspace(-1, 1, 21), np.linspace(7, 5, 21)]) * [1.2, 1.2, 1]
+    X = np.vstack([a, b])
+    zonas = np.full(len(X), CINTURA)
+    zonas[20] = -1   # el salto entre los dos tramos no es cuerda
+    cruces, alturas = buscar(X, 1.0, zonas, c)
+    assert len(cruces) == 1 and alturas[0][1] > alturas[0][0]   # encima, el más lejos del eje
+    zonas[21:] = ABAJO
+    assert buscar(X, 1.0, zonas, c)[0] == []
+
+
+# --- El nudo ------------------------------------------------------------------
+@pytest.fixture(scope="module")
+def modelo():
+    return construir(desde_datos(datos()))
+
+
+def test_todos_los_pasos_se_construyen_sin_fallas(modelo):
+    assert modelo.fallas == []
+    assert [r.n for r in modelo.pasos] == list(range(1, 8))
+    assert modelo.error is None and modelo.reverso is None   # el error es la subtarea siguiente
+
+
+def test_la_cuerda_no_atraviesa_los_palos_ni_otras_vueltas(modelo):
+    for r in modelo.pasos:
+        m = r.medidas
+        assert m["penetracion_palos"] <= PENETRACION_MAX, r.n
+        assert m["separacion_min"] >= LIMITES["separacion_min"], r.n
+        assert m["curvatura_min"] >= LIMITES["curvatura_min"], r.n
+        assert m["estiramiento_max"] <= LIMITES["estiramiento_max"], r.n
+
+
+def test_los_cruces_coinciden_con_el_metodo(modelo):
+    c = la_cuerda()
+    for r, (_, hasta) in zip(modelo.pasos, PASOS):
+        assert r.secuencia == r.esperada == numerada(c.secuencias[hasta]), r.n
+    assert len(modelo.pasos[-1].secuencia) == 80   # 40 cruces
+
+
+def test_cada_paso_resalta_lo_que_agrega(modelo):
+    # Cada paso empieza a resaltar donde terminó el anterior. La curva suave alrededor de ese
+    # punto depende de lo que sigue de la cuerda, así que la posición cambia en milésimas.
+    previo = 0.0
+    for r in modelo.pasos:
+        desde, hasta = r.resaltado
+        assert desde == pytest.approx(previo, abs=0.01) and hasta > desde, r.n
+        previo = hasta
+
+
+def test_un_cruce_conserva_su_etiqueta_y_su_lugar(modelo):
+    final = modelo.pasos[-1].cruces
+    for r in modelo.pasos[:-1]:
+        assert set(r.cruces) <= set(final), r.n
+        for et, (x, y) in r.cruces.items():
+            assert np.hypot(x - final[et][0], y - final[et][1]) <= DESPLAZAMIENTO_MAX, (r.n, et)
+
+
+def test_de_3_a_4_vueltas_se_regeneran_los_pasos():
+    m = construir(desde_datos(con(vueltas=4)))
+    assert m.fallas == []
+    assert len(m.pasos) == 7
+    assert len(m.pasos[-1].secuencia) // 2 == 4 * 4 * 3 + 4
+    assert len(m.pasos[3].secuencia) // 2 == 4 * 4 + 2   # el primer ahorcado cruza 16 esquinas
