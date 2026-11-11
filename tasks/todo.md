@@ -96,8 +96,8 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Gabriel revisa la página de prueba y elige qué mejoras entran (10 nov: la sombra de contacto, el supermuestreo y las sombras suaves; el contorno no, y se quitó del código)
   - [x] Implementar las elegidas en el visor y la impresión, sin cambiar la geometría ni los cruces de los pasos (10 nov: `MEJORAS_ACTIVAS` en las fichas; el visor pasa la sombra de contacto y las sombras suaves; el mapa de sombras se dibuja solo al cambiar de paso; la sombra de contacto, 10 veces más rápida; ver «Cómo se implementaron» en el plan)
   - [x] Nueva referencia de imágenes de los nudos ya aprobados, anotada aquí: desde el commit «T7b: las mejoras elegidas en las fichas y el visor», las imágenes de impresión del as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado son las nuevas; sus modelos no cambian (byte a byte contra 563bed6), así que los filtros 1 siguen valiendo. Construir dos veces da las mismas 67 imágenes, con Edge; las cuatro fichas se arman y caben; 244 pruebas pasan. Las comparaciones de «nudos publicados idénticos» se hacen desde ese commit
-  - [ ] Publicar el sitio: el visor cambió (sombra de contacto y sombras suaves)
-  - [ ] El visor sigue fluido en un celular de gama baja (en la computadora, armar el paso más largo del amarre tarda 37 ms en vez de 20 y girar cuesta lo mismo; falta abrirlo en el celular después de publicar)
+  - [x] Publicar el sitio: el visor cambió (sombra de contacto y sombras suaves) (10 nov, a pedido de Gabriel: construido desde b3ff5ee, gh-pages d4065c8; los cuatro visores cargan en línea sin errores)
+  - [ ] Gabriel abre el visor en un celular de gama baja y revisa que cargue y gire con fluidez (en la computadora, armar el paso más largo del amarre tarda 37 ms en vez de 20 y girar cuesta lo mismo)
 - [ ] T7c Nudo terminado apretado, con la misma secuencia de cruces que el último paso (M, separada de T7b el 10 nov; antes del Punto de control B)
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
 - [ ] Punto de control B:
