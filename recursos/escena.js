@@ -23,6 +23,14 @@ const COLORES = {
 };
 const AMBAR = [[255, 214, 140], [222, 140, 34], [92, 46, 6], [150, 30, 30]];
 
+// Mejoras del render (T7b), elegidas por Gabriel con la página de prueba impresa. Las pide
+// quien crea la escena (el visor y nudos/imprimir.py); sin ellas, la escena de antes de T7b.
+const SOMBRA_MESA = 0.26, SOMBRA_MESA_SUAVE = 0.17;   // cuánto oscurece la sombra a la mesa
+const SOMBRA_BORDE = 0.45;  // con sombras suaves, ancho del degradé del borde, en diámetros
+const CONTACTO_ALCANCE = 1.0;   // hasta dónde llega la sombra de contacto, en diámetros
+const CONTACTO_FUERZA = 0.6;    // cuánto oscurece, donde una cuerda toca a otra
+const CONTACTO_MUESTREO = 0.25;  // cada cuánto se muestrea el eje que oscurece, en diámetros
+
 /* Trenza de 16 hilos, 2 sobre 2. Un mosaico es una vuelta completa de cada hilo (π·d de largo). */
 function texturasTrenza(renderer, top, mid, low, tracer) {
   const S = 512;
@@ -85,6 +93,112 @@ function texturaRemate() {
   const t = new THREE.CanvasTexture(cv);
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace;
   return t;
+}
+
+/* Sombra de contacto: oscurece cada cuerda donde otra la toca o pasa muy cerca, y donde la
+   toca un palo, como la luz que no llega entre dos cuerdas apretadas. Se calcula desde la
+   geometría, vértice por vértice, y va como color de vértice: sale igual cada vez y no
+   depende de la luz. «tubos»: { geo, n, T, L, radio, RS }. «palos»: segmentos de eje con
+   su radio, { a: [x,y,z], b: [x,y,z], radio }.
+
+   Para que un celular lo calcule rápido al cambiar de paso: el eje que oscurece se toma
+   cada CONTACTO_MUESTREO diámetros, y para cada anillo del tubo se juntan primero los
+   tramos y los palos que pueden alcanzarlo; solo con esos se mira cada vértice del anillo. */
+function sombraDeContacto(tubos, palos) {
+  const A = CONTACTO_ALCANCE;
+  const rmax = Math.max(...tubos.map((t) => t.radio));
+  // Un tramo alcanza un anillo solo si sus ejes están a menos de esto: con celdas de ese
+  // lado, basta mirar la celda del anillo y sus vecinas.
+  const CELDA = 2 * rmax + A;
+  const celda = (v) => Math.floor(v / CELDA) + 512;
+  const clave = (i, j, k) => (i * 1024 + j) * 1024 + k;
+  // El centro de cada anillo de cada tubo.
+  const centros = tubos.map((t) => {
+    const P = t.geo.attributes.position.array, c = new Float64Array((t.T + 1) * 3);
+    for (let i = 0; i <= t.T; i++) {
+      let x = 0, y = 0, z = 0;
+      for (let j = 0; j < t.RS; j++) {
+        const o = (i * (t.RS + 1) + j) * 3;
+        x += P[o]; y += P[o + 1]; z += P[o + 2];
+      }
+      c[3 * i] = x / t.RS; c[3 * i + 1] = y / t.RS; c[3 * i + 2] = z / t.RS;
+    }
+    return c;
+  });
+  // Las muestras del eje que oscurece, en una rejilla.
+  const mx = [], my = [], mz = [], mr = [], mn = [], ms = [];
+  const rejilla = new Map();
+  tubos.forEach((t, a) => {
+    const c = centros[a], paso = Math.max(1, Math.round(CONTACTO_MUESTREO / (t.L / t.T)));
+    for (let i = 0; i <= t.T; i += paso) {
+      const m = mx.length;
+      mx.push(c[3 * i]); my.push(c[3 * i + 1]); mz.push(c[3 * i + 2]);
+      mr.push(t.radio); mn.push(t.n); ms.push((i / t.T) * t.L);
+      const k = clave(celda(c[3 * i]), celda(c[3 * i + 1]), celda(c[3 * i + 2]));
+      if (!rejilla.has(k)) rejilla.set(k, []);
+      rejilla.get(k).push(m);
+    }
+  });
+  const cerca = [], palosCerca = [];
+  tubos.forEach((t, a) => {
+    const P = t.geo.attributes.position.array, N = t.geo.attributes.normal.array, c = centros[a];
+    const colores = new Float32Array(P.length);
+    // Un tramo no se oscurece con su propio eje cercano, solo con lo que está más allá.
+    const ventana = 6 * t.radio;
+    for (let i = 0; i <= t.T; i++) {
+      const cx = c[3 * i], cy = c[3 * i + 1], cz = c[3 * i + 2], s = (i / t.T) * t.L;
+      cerca.length = 0;
+      const ci = celda(cx), cj = celda(cy), ck = celda(cz);
+      for (let x = ci - 1; x <= ci + 1; x++) for (let y = cj - 1; y <= cj + 1; y++) for (let z = ck - 1; z <= ck + 1; z++) {
+        const lista = rejilla.get(clave(x, y, z));
+        if (!lista) continue;
+        for (const m of lista) {
+          if (mn[m] === t.n && Math.abs(ms[m] - s) < ventana) continue;
+          const dx = mx[m] - cx, dy = my[m] - cy, dz = mz[m] - cz, l = t.radio + mr[m] + A;
+          if (dx * dx + dy * dy + dz * dz < l * l) cerca.push(m);
+        }
+      }
+      palosCerca.length = 0;
+      for (const p of palos) {
+        const [dx, dy, dz] = alEje(p, cx, cy, cz), l = t.radio + p.radio + A;
+        if (dx * dx + dy * dy + dz * dz < l * l) palosCerca.push(p);
+      }
+      for (let j = 0; j <= t.RS; j++) {
+        const o = (i * (t.RS + 1) + j) * 3;
+        let occ = 0;
+        if (cerca.length || palosCerca.length) {
+          const px = P[o], py = P[o + 1], pz = P[o + 2], nx = N[o], ny = N[o + 1], nz = N[o + 2];
+          for (const m of cerca) {
+            const dx = mx[m] - px, dy = my[m] - py, dz = mz[m] - pz, l = mr[m] + A;
+            const d2 = dx * dx + dy * dy + dz * dz;
+            if (d2 >= l * l || d2 < 1e-18) continue;
+            const d = Math.sqrt(d2), f = (dx * nx + dy * ny + dz * nz) / d;
+            if (f <= 0) continue;
+            const k = Math.min(1, f) * (1 - Math.max(d - mr[m], 0) / A);
+            if (k > occ) occ = k;
+          }
+          for (const p of palosCerca) {
+            const [dx, dy, dz] = alEje(p, px, py, pz), l = p.radio + A;
+            const d2 = dx * dx + dy * dy + dz * dz;
+            if (d2 >= l * l || d2 < 1e-18) continue;
+            const d = Math.sqrt(d2), f = (dx * nx + dy * ny + dz * nz) / d;
+            if (f <= 0) continue;
+            const k = Math.min(1, f) * (1 - Math.max(d - p.radio, 0) / A);
+            if (k > occ) occ = k;
+          }
+        }
+        colores[o] = colores[o + 1] = colores[o + 2] = 1 - CONTACTO_FUERZA * occ;
+      }
+    }
+    t.geo.setAttribute("color", new THREE.BufferAttribute(colores, 3));
+  });
+}
+
+/* Del punto al punto más cercano del eje de un palo. */
+function alEje(p, x, y, z) {
+  const ux = p.b[0] - p.a[0], uy = p.b[1] - p.a[1], uz = p.b[2] - p.a[2];
+  const w = Math.min(1, Math.max(0, ((x - p.a[0]) * ux + (y - p.a[1]) * uy + (z - p.a[2]) * uz) / (ux * ux + uy * uy + uz * uz)));
+  return [p.a[0] + w * ux - x, p.a[1] + w * uy - y, p.a[2] + w * uz - z];
 }
 
 function puntos(cuerda) {
@@ -158,8 +272,10 @@ function altoDeEncuadre(modelo, B) {
 }
 
 /* «reservado»: rectángulos en px del contenedor ({ x0, y0, x1, y1 }) donde no van los
-   nombres, por ejemplo el número del paso que la ficha impresa pone encima de la imagen. */
-export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null, reservado = [] } = {}) {
+   nombres, por ejemplo el número del paso que la ficha impresa pone encima de la imagen.
+   «mejoras» (T7b): «contacto», la sombra de contacto; «sombrasSuaves», sombras más claras y
+   de borde blando. */
+export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null, reservado = [], mejoras = {} } = {}) {
   // Si el navegador no tiene WebGL, esto lanza una excepción y quien llama muestra el aviso.
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: !interactiva });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -169,6 +285,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // La luz y la cuerda no se mueven al girar la cámara: el mapa de sombras se dibuja solo
+  // al cambiar de paso (mostrarPaso), y no en cada cuadro.
+  renderer.shadowMap.autoUpdate = false;
   contenedor.prepend(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -199,12 +318,22 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   sol.shadow.camera.updateProjectionMatrix();
   sol.shadow.bias = -0.0003;
   sol.shadow.normalBias = 0.02;
+  if (mejoras.sombrasSuaves) {
+    // Mapa de sombras de varianza, difuminado: el borde de cada sombra es un degradé de
+    // SOMBRA_BORDE de ancho, sea cual sea el tamaño del nudo. En el visor el mapa es más
+    // chico, para que un celular lo difumine rápido al cambiar de paso; difuminado, se ve igual.
+    const lado = interactiva ? 1024 : 2048;
+    renderer.shadowMap.type = THREE.VSMShadowMap;
+    sol.shadow.mapSize.set(lado, lado);
+    sol.shadow.radius = SOMBRA_BORDE / ((2 * ext) / lado);
+    sol.shadow.blurSamples = 25;
+  }
   scene.add(sol, sol.target);
   const relleno = new THREE.DirectionalLight(0xdfe8ff, 0.6);
   relleno.position.set(cx + 14, cy - 16, 10);
   scene.add(relleno);
 
-  const matSombra = new THREE.ShadowMaterial({ opacity: 0.26 });
+  const matSombra = new THREE.ShadowMaterial({ opacity: mejoras.sombrasSuaves ? SOMBRA_MESA_SUAVE : SOMBRA_MESA });
   const mesa = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), matSombra);
   mesa.receiveShadow = true;
   scene.add(mesa);
@@ -220,7 +349,12 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     m.position.set(x, y, z);
     m.castShadow = true; m.receiveShadow = true;
     scene.add(m);
+    // El eje, para la sombra de contacto.
+    const h = largo / 2;
+    ejesPalos.push(aLoLargoDeX ? { a: [x - h, y, z], b: [x + h, y, z], radio: a.radio }
+      : { a: [x, y - h, z], b: [x, y + h, z], radio: a.radio });
   };
+  const ejesPalos = [];
   if (a && a.tipo === "poste") palo(a.hasta - a.desde, (a.desde + a.hasta) / 2, a.y, a.z, true);
   // La cruz: el palo de abajo va a lo largo de y y el de arriba a lo largo de x, cruzados en
   // x = y = 0, con los ejes a las alturas «z_abajo» y «z_arriba». En el amarre volteado
@@ -234,16 +368,20 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   // del chicote. Cada cuerda tiene los suyos, porque la trenza se repite según su largo.
   const cuerdas = modelo.cuerdas || [{ grosor: 1, color: "azul" }];
   const grosorMax = Math.max(...cuerdas.map((c) => c.grosor));
+  // Con la sombra de contacto, la trenza se multiplica por el color de cada vértice.
+  const vertexColors = !!mejoras.contacto;
   const materiales = cuerdas.map((c) => {
     const color = texturasTrenza(renderer, ...COLORES[c.color]);
     const ambar = texturasTrenza(renderer, ...AMBAR);
-    const base = new THREE.MeshStandardMaterial({ map: color.map, bumpMap: color.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0 });
-    const matAmbar = new THREE.MeshStandardMaterial({ map: ambar.map, bumpMap: ambar.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0 });
+    const base = new THREE.MeshStandardMaterial({ map: color.map, bumpMap: color.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0, vertexColors });
+    const matAmbar = new THREE.MeshStandardMaterial({ map: ambar.map, bumpMap: ambar.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0, vertexColors });
     const remate = new THREE.MeshStandardMaterial({ map: texturaRemate(), roughness: 0.6, metalness: 0 });
     return { base, ambar: matAmbar, remate, mats: [base, matAmbar, remate] };
   });
   const matPunta = new THREE.MeshStandardMaterial({ color: 0x1b1517, roughness: 0.45, metalness: 0 });
   const geoTapa = new THREE.SphereGeometry(RADIO, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+  // La tapa del comienzo usa el material de la cuerda: con la sombra de contacto, sin oscurecer.
+  if (vertexColors) geoTapa.setAttribute("color", new THREE.BufferAttribute(new Float32Array(geoTapa.attributes.position.count * 3).fill(1), 3));
 
   let controls = null;
   if (interactiva) {
@@ -285,7 +423,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
 
   function construirPaso(paso) {
     const grupo = new THREE.Group();
-    const tubos = [], todos = [], nombres = {};
+    const tubos = [], todos = [], nombres = {}, geos = [];
     let chicote = null;
     cuerdasDe(modelo, paso).forEach((c, n) => {
       const pts = puntos(c);
@@ -309,6 +447,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       const tubo = new THREE.Mesh(geo, materiales[n].mats);
       tubo.castShadow = true; tubo.receiveShadow = true;
       grupo.add(tubo);
+      geos.push({ geo, n, T, L, radio: RADIO * c.grosor, RS });
       const tapa = (t, mat) => {
         const p = curva.getPointAt(t);
         const tan = curva.getTangentAt(t).normalize();
@@ -337,6 +476,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       }
     });
     if (chicote) nombres.chicote = chicote;
+    if (vertexColors) sombraDeContacto(geos, ejesPalos);
     return { grupo, tubos, pts: todos, nombres };
   }
 
@@ -347,6 +487,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     if (activo) scene.remove(activo.grupo);
     activo = c;
     scene.add(c.grupo);
+    renderer.shadowMap.needsUpdate = true;
     // La trenza se repite una vez cada π diámetros de esa cuerda.
     for (const t of c.tubos) {
       const m = materiales[t.n];

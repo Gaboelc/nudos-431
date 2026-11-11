@@ -17,7 +17,7 @@
   --accent-ink: #8f5208;
   --table: #dfe4e7;
   --tag-bg: rgba(247, 249, 250, 0.88);
-  --shadow-alpha: 0.26;
+  --shadow-alpha: 0.17;   /* la sombra suave de la mesa (render/escena.js, T7b) */
   --font-display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", sans-serif-condensed, sans-serif;
   --font-body: "Literata", Georgia, "Times New Roman", serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -27,7 +27,7 @@
   :root {
     --paper: #11151b; --surface: #19202a; --ink: #e6eaf0; --muted: #9ba5b4; --line: #2b333e;
     --accent: #eea23e; --accent-ink: #f3b660; --table: #232a33; --tag-bg: rgba(25, 32, 42, 0.88);
-    --shadow-alpha: 0.5; color-scheme: dark;
+    --shadow-alpha: 0.33; color-scheme: dark;
   }
 }
 

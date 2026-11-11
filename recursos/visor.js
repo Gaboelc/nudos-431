@@ -5,6 +5,9 @@ import { crearEscena, nombresDe } from "./escena.js";
 const datos = JSON.parse(document.getElementById("modelo").textContent);
 const N = datos.pasos.length;
 const movimientoReducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+// Las mejoras del render que van también en la impresión (nudos/imprimir.py, MEJORAS_ACTIVAS).
+// El supermuestreo es solo de la impresión: en pantalla, el lienzo ya sigue la densidad de px.
+const MEJORAS = { contacto: true, sombrasSuaves: true };
 
 const stage = document.getElementById("stage");
 const msg = document.getElementById("stageMsg");
@@ -119,7 +122,7 @@ function medir(el) {
 const medidasNombres = () => Object.fromEntries(Object.entries(tags).map(([clave, [el]]) => [clave, medir(el)]));
 
 try {
-  escena = crearEscena(stage, datos, { movimientoReducido, alRenderizar: placeTags, medidasNombres });
+  escena = crearEscena(stage, datos, { movimientoReducido, alRenderizar: placeTags, medidasNombres, mejoras: MEJORAS });
 } catch (e) {
   msg.textContent = "Este visor necesita WebGL. Ábrelo en un navegador con aceleración gráfica; los pasos escritos siguen abajo.";
 }
