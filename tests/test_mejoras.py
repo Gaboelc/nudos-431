@@ -68,11 +68,11 @@ def test_con_mejoras_dibujar_dos_veces_da_lo_mismo(con_chrome, modelo_ballestrin
 
 def test_la_pagina_del_apretado_compara_hoy_a_medias_y_apretado(
         modelo_as_de_guia, modelo_ballestrinque, modelo_vuelta_de_escota):
-    """T7c: el terminado por delante y por detrás, hoy, a medias y apretado, con las mejoras de
-    las fichas. El amarre no va: su plantilla ya traza la cuerda tensa."""
+    """T7c: el terminado por delante y por detrás, sin apretar, a medias y apretado, con las
+    mejoras de las fichas. El amarre no va: su plantilla ya traza la cuerda tensa."""
     modelos = {"as-de-guia": modelo_as_de_guia, "ballestrinque": modelo_ballestrinque,
                "vuelta-de-escota": modelo_vuelta_de_escota}
-    assert [clave for clave, *_ in GRADOS] == ["hoy", "a-medias", "apretado"]
+    assert [clave for clave, *_ in GRADOS] == ["sin-apretar", "a-medias", "apretado"]
     assert [rondas for _, _, rondas, _ in GRADOS] == [0, 15, 30]
     nudos = lista_apretado(modelos)
     assert [slug for slug, _ in nudos] == list(APRETADOS) == list(modelos)
@@ -84,10 +84,12 @@ def test_la_pagina_del_apretado_compara_hoy_a_medias_y_apretado(
             assert all(i.mejoras == MEJORAS_ACTIVAS for i in imgs)
             assert len(cuanto) == 2
         sin_nombre = lambda imgs: [replace(i, nombre="") for i in imgs]
-        # Hoy es el terminado de la ficha, y apretado es el del modelo.
+        # Sin apretar es el último paso; apretado es el del modelo, que es el de la ficha.
         assert sin_nombre(grados[0][1]) == sin_nombre(terminado(m, m.pasos[-1], m.reverso))
         assert sin_nombre(grados[2][1]) == sin_nombre(terminado(m, m.apretado, m.reverso_apretado))
-        assert grados[0][0] == ("como en la ficha", "como en la ficha")
+        ficha = [i for i in imagenes(m) if i.nombre.startswith("terminado")]
+        assert sin_nombre(grados[2][1]) == sin_nombre(ficha)
+        assert grados[0][0] == ("el último paso, tal cual", "el último paso, tal cual")
     # El as de guía se aprieta más con todas las rondas que con la mitad.
     (_, (_, medias, todas)), = [n for n in nudos if n[0] == "as-de-guia"]
     menos = lambda texto: float(texto.split()[0].replace(",", "."))

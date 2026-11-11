@@ -540,15 +540,15 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 **Criterios de aceptación:**
 - [x] El nudo apretado tiene la misma secuencia de cruces que el último paso y cumple los mismos límites, y las pruebas lo comprueban, también sobre el poste y en el amarre (que no se aprieta).
-- [ ] Las dos vistas del nudo terminado salen del nudo apretado; los pasos y sus imágenes no cambian. Está listo detrás de `TERMINADO_APRETADO`, apagado hasta que Gabriel decida; que los pasos y sus imágenes no cambian está comprobado.
+- [x] Las dos vistas del nudo terminado salen del nudo apretado; los pasos y sus imágenes no cambian (`TERMINADO_APRETADO = True` desde el 11 de noviembre).
 - [x] Construir dos veces da el mismo nudo apretado.
 - [x] Si necesita un campo en la especificación, queda documentado en `docs/formato-spec.md` antes del Punto de control B (no lo necesita; «El nudo apretado» explica cómo sale).
-- [ ] Gabriel compara en papel el terminado de hoy con el apretado y decide si entra.
+- [x] Gabriel compara en papel el terminado de hoy con el apretado y decide si entra (11 de noviembre: entra el apretado).
 
 **Verificación:**
 - [x] `python -m pytest`
 - [x] `python -m nudos imprimir` de cada nudo ya aprobado
-- [ ] Manual: imprimir el terminado de hoy junto al apretado (`build/mejoras/apretado.pdf`).
+- [x] Manual: imprimir el terminado de hoy junto al apretado (`build/mejoras/apretado.pdf`).
 
 **Dependencias:** T7b, porque toca las mismas imágenes del nudo terminado. Va antes del Punto de control B, porque puede cambiar el formato.
 
@@ -614,11 +614,17 @@ Lo que da cada nudo publicado (largo de la cuerda en diámetros, de hoy al apret
 
 En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y la penetración en el poste de 0,0003. Las rondas que no cumplen fallan solo por curvatura, entre 0,84 y 0,899. Con 30 rondas, la elegida es siempre la última. A medias, con 15, el as de guía queda en 100,2 y 98,6, la vuelta de escota en 114,0 y 114,8, y el ballestrinque igual.
 
-- **Nudos publicados idénticos.** Los cuatro `modelo.json`, sin `apretado` ni `reverso_apretado`, salen byte a byte iguales a los de 52cb117 (el código no cambió desde b3ff5ee), y las 67 imágenes de impresión, píxel por píxel, con Edge. Una prueba guarda la huella de los pasos y el error de cada nudo publicado (`test_los_pasos_y_el_error_de_los_nudos_publicados_no_cambian`): si una cambia a propósito, hay que repetir el filtro 1 de ese nudo.
+- **Nudos publicados idénticos.** Los cuatro `modelo.json`, sin `apretado` ni `reverso_apretado`, salen byte a byte iguales a los de 52cb117 (el código no cambió desde b3ff5ee). Las imágenes, ver «Elección». Una prueba guarda la huella de los pasos y el error de cada nudo publicado (`test_los_pasos_y_el_error_de_los_nudos_publicados_no_cambian`): si una cambia a propósito, hay que repetir el filtro 1 de ese nudo.
 - **Pruebas** (`tests/test_apretar.py`, 19): las del diseño, la de que la gruesa conserva su forma y la de que la guarda no para en la primera ronda que falla. El nudo pequeño es un nudo simple: un trébol abierto con sus tres cruces alternados, que en tres rondas pasa de 69,0 a 68,1 diámetros. La ronda que se hace fallar invierte un cruce al buscarlo. La página de prueba tiene la suya en `tests/test_mejoras.py`.
 - **Costo:** apretar tarda de 2 a 7 segundos por vista, así que `construir` tarda de 5 a 13 segundos más por nudo, y la suite, alrededor de un minuto más.
 - **Página de prueba:** `python -m nudos mejoras` arma además `build/mejoras/apretado.pdf`: seis hojas, una en color y otra en gris por nudo (as de guía, ballestrinque y vuelta de escota), con el terminado por delante (arriba) y por detrás (abajo), hoy, a medias y apretado, a 58 × 64 mm y con las mejoras de T7b. Cada imagen es como saldría en la ficha, con el encuadre ajustado a su cuerda, y su pie dice cuánta cuerda se quitó del nudo.
-- **Si entra:** `TERMINADO_APRETADO = True` (y, si Gabriel elige la columna a medias, el número de rondas). Las imágenes del terminado de los tres nudos pasan a ser la nueva referencia y se rearman sus fichas; los pasos, el error y el visor no cambian, así que no hay que publicar el sitio ni repetir los filtros 1. **Si no entra,** el código se quita y queda en el historial.
+**Elección (11 de noviembre de 2026):** Gabriel imprimió la página de prueba y eligió el apretado, con las 30 rondas («Apretado»).
+
+**Cómo entró:**
+- `TERMINADO_APRETADO = True` (`nudos/imprimir.py`): las dos vistas del terminado de las fichas salen del apretado. La página de prueba se queda, con la primera columna como «Sin apretar», para volver a mirarla. La prueba de que dos cuerdas se dibujan con su color (`tests/test_cuerdas.py`) dibuja ahora el último paso sin resaltado, como antes: en su nudo sintético, apretado, la vuelta de la delgada se cierra sobre la gruesa y quedaba menos crema que su mínimo.
+- **Nueva referencia.** Desde el commit «T7c: las fichas llevan el nudo apretado», las imágenes del terminado del as de guía, el ballestrinque y la vuelta de escota son las nuevas. De las 67 imágenes de impresión de los cuatro nudos publicados (con las de su página de prueba), cambian solo las 6 del terminado y sus 6 copias en gris; las otras 55 salen iguales a las de 52cb117, píxel por píxel, con Edge. Construir dos veces da los mismos `modelo.json`, byte a byte, y las mismas imágenes del terminado. Las cuatro fichas se arman y caben. Los pasos, el error y el visor no cambian, así que no hubo que publicar el sitio ni repetir los filtros 1.
+- **El script de comparación de imágenes no veía diferencias.** `comparar.py`, el de T7b (fuera del repositorio), comparaba las imágenes en RGBA, y con Pillow 13 `getbbox()` solo mira el canal alfa, que es opaco en todas. Así, decía «iguales» aunque no lo fueran. Las comparaciones «píxel por píxel» hechas con él, en T7b y en la primera de T7c, no comprobaban nada. Ahora se compara en RGB. Los modelos byte a byte sí valían, y también `test_dibujar_dos_veces_da_las_mismas_imagenes`, que compara los bytes de los archivos.
+- **Una variación rara al dibujar.** En la primera de tres construcciones, `error.png` del ballestrinque salió con 25 píxeles distintos, en 1 nivel de 255. En las otras dos y en cuatro dibujos sueltos salió igual a la de 52cb117. No viene de la geometría, porque su modelo es idéntico: es del navegador.
 
 #### T8: Plantilla de la cabeza de turco
 

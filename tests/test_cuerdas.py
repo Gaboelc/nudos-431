@@ -12,7 +12,7 @@ from nudos.construir import _resultado_json, construir
 from nudos.cruces import encontrar_cruces
 from nudos.exportar import datos_escena
 from nudos.ficha import html_ficha
-from nudos.imprimir import ImpresionError, chrome, dibujar, imagenes, nombres
+from nudos.imprimir import ImpresionError, chrome, dibujar, imagenes, nombres, terminado
 from nudos.libre import (LIMITES, R, Reparto, TrazadoError, _texto, construir_paso, curvatura_min,
                          separacion_min)
 from nudos.spec import desde_datos
@@ -220,7 +220,9 @@ def con_chrome():
 
 
 def test_las_dos_cuerdas_se_dibujan_con_su_color(con_chrome, tejida, tmp_path):
-    frente = next(i for i in imagenes(tejida) if i.nombre == "terminado-frente")
+    # El último paso sin resaltado, como el terminado antes de T7c: apretado, la vuelta de la
+    # delgada se cierra sobre la gruesa y se ve menos de ella.
+    frente = terminado(tejida, tejida.pasos[-1], tejida.reverso)[0]
     [ruta] = dibujar([frente], tmp_path)
     with Image.open(ruta) as im:
         rgb = np.asarray(im.convert("RGB"), int)

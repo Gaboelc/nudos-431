@@ -6,10 +6,11 @@ imágenes de los nudos ya aprobados con y sin cada mejora, en color y en gris.
 - prueba.pdf: algunas imágenes sin mejoras, con cada mejora por separado y con todas juntas.
   Con ella Gabriel eligió las que entraron (el 10 de noviembre de 2026: todas menos el
   contorno de tinta, que se quitó). Sirve para volver a mirarlas o para probar una nueva.
-- apretado.pdf: el nudo terminado, por delante y por detrás, como sale hoy, a medias (la
-  mitad de las rondas) y apretado (nudos/apretar.py). La columna a medias está por si el
-  apretado del todo esconde algún cruce. Va cada nudo que se aprieta; el amarre no, porque su
-  plantilla ya traza la cuerda tensa.
+- apretado.pdf: el nudo terminado, por delante y por detrás, sin apretar, a medias (la mitad
+  de las rondas) y apretado (nudos/apretar.py). La columna a medias está por si el apretado
+  del todo esconde algún cruce. Va cada nudo que se aprieta; el amarre no, porque su
+  plantilla ya traza la cuerda tensa. Con ella Gabriel eligió el apretado (el 11 de noviembre
+  de 2026), que es el de las fichas.
 
 Todo queda en build/mejoras/: las imágenes de cada variante en <variante>/ y las del
 apretado en apretado/, sus versiones en gris en gris/ y las dos páginas, con una hoja en color
@@ -61,12 +62,12 @@ VARIANTES = (
 APRETADOS = ("as-de-guia", "ballestrinque", "vuelta-de-escota")
 # (clave, título, rondas, qué es). Con 0 rondas es el último paso tal cual.
 GRADOS = (
-    ("hoy", "Hoy", 0, "El último paso, como sale hoy en la ficha: la cuerda con el largo que "
-     "tenía al atarlo."),
+    ("sin-apretar", "Sin apretar", 0, "El último paso, como salía en la ficha antes de T7c: "
+     "la cuerda con el largo que tenía al atarlo."),
     ("a-medias", "A medias", RONDAS // 2, f"La cuerda acortada dentro del nudo la mitad de las "
      f"rondas ({RONDAS // 2} de {RONDAS}), por si el apretado del todo esconde algún cruce."),
     ("apretado", "Apretado", RONDAS, "Apretado del todo: la ronda más apretada que conserva "
-     "todos los cruces y los límites."),
+     "todos los cruces y los límites. Es el de las fichas."),
 )
 
 
@@ -107,9 +108,9 @@ def lista_apretado(modelos: dict[str, Modelo]) -> list[tuple[str, list[tuple[tup
 def _cuanto(antes, despues, rondas: int) -> str:
     """Cuánta cuerda se quitó del nudo al apretarlo, para el pie de la imagen."""
     if not rondas:
-        return "como en la ficha"
+        return "el último paso, tal cual"
     if despues is antes:
-        return "no se pudo apretar: queda como hoy"
+        return "no se pudo apretar: queda sin apretar"
     menos = antes.medidas["largo"] - despues.medidas["largo"]
     if menos < 0.5:
         return "casi el mismo largo de cuerda"

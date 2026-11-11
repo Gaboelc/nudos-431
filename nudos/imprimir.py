@@ -8,7 +8,8 @@ versión de Chrome. Con otra versión de Pillow cambian los bytes del PNG, no lo
 Para cada nudo se generan, en build/<slug>/impresion/:
 - paso-<n>.png: cada paso, con el tramo que se mueve resaltado y los nombres.
 - error-correcto.png y error.png: el paso del error común, bien y mal, con el mismo encuadre.
-- terminado-frente.png y terminado-reverso.png: el nudo terminado por delante y por detrás.
+- terminado-frente.png y terminado-reverso.png: el nudo terminado por delante y por detrás,
+  apretado (ver TERMINADO_APRETADO).
 - prueba.pdf: página de prueba en tamaño carta, en color y en escala de grises, para
   imprimirla en casa y revisar que se distinga qué tramo va encima en cada cruce.
 """
@@ -58,9 +59,10 @@ MEJORAS = ("contacto", "supermuestreo", "sombras-suaves")
 MEJORAS_ACTIVAS: tuple[str, ...] = MEJORAS
 SUPERMUESTREO = 2   # con «supermuestreo», cada imagen se dibuja a esta escala y se reduce
 # El nudo terminado apretado (T7c, nudos/apretar.py): si es verdadero, las dos vistas del
-# terminado salen del nudo apretado. Queda en falso mientras Gabriel compara en papel el de
-# hoy con el apretado («python -m nudos mejoras», build/mejoras/apretado.pdf).
-TERMINADO_APRETADO = False
+# terminado salen del nudo apretado. Gabriel lo eligió el 11 de noviembre de 2026, después de
+# comparar en papel el terminado sin apretar, a medias y apretado («python -m nudos mejoras»,
+# build/mejoras/apretado.pdf). En falso, el terminado es el último paso, como antes de T7c.
+TERMINADO_APRETADO = True
 
 
 class ImpresionError(Exception):

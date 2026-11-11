@@ -194,7 +194,7 @@ Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el r
 
 ## Nudo terminado
 
-El último paso se muestra por delante y por detrás. Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Sobre un poste el nudo no se voltea: se mira desde el otro lado de la mesa.
+El último paso se muestra por delante y por detrás, apretado (ver «El nudo apretado», abajo). Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Sobre un poste el nudo no se voltea: se mira desde el otro lado de la mesa.
 
 Sobre la cruz se voltea el amarre entero, palos y cuerda, como un marco sobre la mesa: media vuelta alrededor del eje y, como una página, hasta apoyarse en lo que queda más abajo. El palo de abajo queda encima y se ven las vueltas que pasaban por debajo de él. Es un giro rígido: la cuerda no se relaja otra vez y, como los cruces se miden respecto a los palos, la secuencia no cambia. Por delante y por detrás se mira como los pasos.
 
@@ -212,7 +212,7 @@ Cada tramo del último paso conserva el largo que le dio el trazado, así que el
 - **Por detrás** es el nudo por detrás de siempre, el último paso volteado y relajado, apretado igual y con la secuencia invertida. Sobre el poste no hay reverso: se mira el mismo nudo apretado desde el otro lado.
 - **Un nudo de plantilla no se aprieta,** porque su plantilla ya traza la cuerda tensa. El amarre terminado sigue siendo el último paso y su volteo rígido.
 
-`modelo.json` lleva los dos aparte, en `apretado` y `reverso_apretado` (`null` donde no hay). Las fichas todavía muestran el último paso: el apretado entra cuando Gabriel lo apruebe en papel (`TERMINADO_APRETADO` en `nudos/imprimir.py`). La página de prueba es `build/mejoras/apretado.pdf`, de `python -m nudos mejoras`. Si un nudo futuro no debiera apretarse, el campo se agrega con ese nudo.
+`modelo.json` lleva los dos aparte, en `apretado` y `reverso_apretado` (`null` donde no hay). Las dos vistas del terminado en la ficha salen del apretado (`TERMINADO_APRETADO` en `nudos/imprimir.py`): Gabriel lo eligió el 11 de noviembre de 2026 con la página de prueba, `build/mejoras/apretado.pdf` de `python -m nudos mejoras`, que compara el terminado sin apretar, a medias y apretado. Si un nudo futuro no debiera apretarse, el campo se agrega con ese nudo.
 
 ## Filtros
 

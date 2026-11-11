@@ -88,27 +88,28 @@ def test_construir_dos_veces_da_el_mismo_apretado(nombre, request):
 
 def test_el_amarre_no_se_aprieta(modelo_amarre_cuadrado, monkeypatch):
     """Su plantilla ya traza la cuerda tensa: el terminado sigue siendo el último paso y su
-    volteo rígido, como hoy, aunque las fichas lleven el apretado."""
+    volteo rígido, como antes de T7c, aunque las fichas lleven el apretado."""
     m = modelo_amarre_cuadrado
     assert m.apretado is None and m.reverso_apretado is None
-    hoy = [i for i in imagenes(m) if i.nombre.startswith("terminado")]
-    monkeypatch.setattr(imprimir, "TERMINADO_APRETADO", True)
-    assert [i for i in imagenes(m) if i.nombre.startswith("terminado")] == hoy
+    con = [i for i in imagenes(m) if i.nombre.startswith("terminado")]
+    monkeypatch.setattr(imprimir, "TERMINADO_APRETADO", False)
+    assert [i for i in imagenes(m) if i.nombre.startswith("terminado")] == con
 
 
-def test_las_fichas_aun_no_llevan_el_apretado(modelo_as_de_guia, monkeypatch):
-    """Mientras Gabriel decide en papel, el terminado de las fichas es el de hoy."""
+def test_las_fichas_llevan_el_apretado(modelo_as_de_guia, monkeypatch):
+    """Gabriel lo eligió en papel (11 nov 2026). Sin TERMINADO_APRETADO, el terminado es el
+    último paso, como antes de T7c."""
     m = modelo_as_de_guia
-    assert imprimir.TERMINADO_APRETADO is False
+    assert imprimir.TERMINADO_APRETADO is True
 
     def terminado():
         frente, atras = imagenes(m)[-2:]
         assert [frente.nombre, atras.nombre] == ["terminado-frente", "terminado-reverso"]
         return frente.escena["pasos"][0]["p"], atras.escena["pasos"][0]["p"]
 
-    assert terminado() == (_puntos(m.pasos[-1].puntos), _puntos(m.reverso.puntos))
-    monkeypatch.setattr(imprimir, "TERMINADO_APRETADO", True)
     assert terminado() == (_puntos(m.apretado.puntos), _puntos(m.reverso_apretado.puntos))
+    monkeypatch.setattr(imprimir, "TERMINADO_APRETADO", False)
+    assert terminado() == (_puntos(m.pasos[-1].puntos), _puntos(m.reverso.puntos))
 
 
 # --- La guarda, con un nudo pequeño ---------------------------------------
