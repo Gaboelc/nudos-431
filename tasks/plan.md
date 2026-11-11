@@ -552,9 +552,48 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 **Dependencias:** T7b, porque toca las mismas imágenes del nudo terminado. Va antes del Punto de control B, porque puede cambiar el formato.
 
-**Archivos:** `nudos/libre.py` o un módulo nuevo para apretar el nudo, `nudos/construir.py`, `nudos/imprimir.py`, `docs/formato-spec.md` si hace falta, y las pruebas correspondientes.
+**Archivos:** `nudos/apretar.py` (nuevo), `nudos/construir.py`, `nudos/anfitrion.py`, `nudos/imprimir.py`, `nudos/mejoras.py`, `docs/formato-spec.md`, `tests/test_apretar.py`.
 
 **Tamaño:** M.
+
+**Diseño (10 de noviembre de 2026, antes de implementar; falta que Gabriel lo apruebe).** Se probó en un experimento fuera del repositorio con los tres nudos publicados que no son de plantilla. Los números de abajo salen de ahí.
+
+- **Método: acortar la cuerda dentro del nudo, como si se tirara de sus cabos.** Es el método con que se calculan los nudos apretados (SONO, *shrink on no overlaps*): la cuerda se acorta poco a poco donde está el nudo y, después de cada poco, se deshacen los choques. Así ningún tramo atraviesa a otro y ningún cruce cambia. Se parte del último paso ya relajado.
+  - Cada punto de la cuerda pertenece a una de tres partes, según dónde estaba en el último paso:
+    - **El nudo:** lo que está a menos de 6 diámetros, sobre la mesa, de algún cruce. Es lo único que se acorta.
+    - **La cola:** cada cuerda después de su último cruce, que es su chicote. No se acorta ni se sujeta: conserva el largo que le dio el trazado y el nudo la arrastra.
+    - **Lo sujeto:** el resto, como el firme lejos del nudo o la gaza grande del as de guía. Se queda donde está, como si lo sostuvieras con las manos. La cuerda que se quita del nudo es la que sale por ahí, fuera de la imagen.
+  - La primera prueba medía la distancia a los cruces a lo largo de la cuerda, no sobre la mesa. Así, en la vuelta de escota, quedaba sujeto el medio de la vuelta que da la delgada por debajo del seno, lejos de los cruces a lo largo de la cuerda pero cerca de ellos en la mesa, y la cuerda se doblaba contra ella con radio 0,53.
+  - Se aprieta por rondas. En cada ronda:
+    1. **Se acorta.** Cada punto del nudo se acerca al medio entre sus dos vecinos, que es lo que hace una cuerda al tensarla, mientras actúan los choques, la mesa, el poste y el límite de curva. En el nudo la cuerda no puede estirarse; fuera de él conserva su largo.
+    2. **Se suelta.** Sin acortar y sin gravedad, se resuelven los choques y la curva. En el nudo la cuerda puede recuperar largo donde lo necesita para no chocar. Sin este paso, la tensión dejaba tramos encimados, a 0,94.
+    3. **Se vuelve a muestrear** cada cuerda a paso parejo, como al construir un paso. Cada punto recuerda dónde estaba en el último paso, así que su parte y si va sobre el poste no cambian aunque la cuerda se acorte.
+  - Después de cada ronda, la cuerda se comprueba como un paso: la secuencia de cruces del último paso y los mismos límites (sobre el poste, también la penetración). El apretado es la ronda más apretada que los cumple, de 30 como máximo. Si ninguna los cumple, es el último paso tal cual, así que el apretado nunca agrega fallas. No se para en la primera ronda que falla: la curvatura sube y baja unas centésimas de una ronda a otra.
+  - Como la cuerda se vuelve a muestrear en cada ronda, la prueba de estiramiento comprueba aquí que los tramos quedaron parejos. El apretado acorta la cuerda a propósito.
+  - **Mientras se aprieta, los choques son a 1,12 diámetros.** Una cuerda que abraza a otra del mismo grosor se dobla con radio 1,0, así que un nudo apretado del todo queda al borde del límite de 0,9: en el experimento bajaba a entre 0,78 y 0,86. Con esa holgura, las vueltas quedan con radio de 0,91 o más y el nudo se ve igual de apretado: en una cuerda de 8 mm es 1 mm de luz. La plantilla del amarre hace lo mismo, con 1,08 y 1,1.
+  - Un nudo de plantilla no se aprieta: su plantilla ya traza la cuerda tensa.
+- **Dónde vive:**
+  - `nudos/apretar.py`, nuevo. `apretar(...)` recibe el último paso y devuelve un `Resultado` como el de un paso, sin resaltado y con su propio número de puntos y su propio h. Reusa `_colisiones` y `_limitar_curva` de `nudos/libre.py` sin cambiarlas, y tiene su propia corrección de largo, que en el nudo solo impide que la cuerda se estire o se encoja. `relajar` no cambia.
+  - Sobre el poste, `nudos/anfitrion.py` le pasa a `apretar` lo mismo que a `relajar` y a `_resultado`: cómo sacar la cuerda del poste, dónde no cae (cerca del poste no hay gravedad) y cómo buscar los cruces en sus dos mapas.
+  - `Modelo` (`nudos/construir.py`) suma `apretado`, el último paso apretado, y `reverso_apretado`, el apretado volteado con `voltear`, como el reverso de hoy. Sus fallas, si las hay, entran en las del nudo. `modelo.json` los lleva aparte, y `pasos` y `error` no cambian, byte a byte.
+  - `imprimir.imagenes` saca las dos vistas del terminado del apretado cuando `TERMINADO_APRETADO` es verdadero. Mientras Gabriel decide queda en falso, como `MEJORAS_ACTIVAS` en T7b, así que las fichas no cambian. Si no entra, el código se quita y queda en el historial.
+  - El visor no muestra el nudo terminado, así que no cambia y no hay que publicar el sitio.
+- **El formato no cambia.** No hace falta ningún campo: qué se aprieta lo deciden los cruces del último paso y el tipo de nudo, y las medidas (6 diámetros, 1,12 y 30 rondas) están en el código. `docs/formato-spec.md` explica en «Nudo terminado» cómo sale el apretado. Si un nudo futuro no debiera apretarse, el campo se agrega con ese nudo: antes del Punto de control B, o después con su migración.
+- **Pruebas** (`tests/test_apretar.py`):
+  - En el as de guía, el ballestrinque sobre el poste y la vuelta de escota, el apretado tiene la secuencia del último paso y cumple los límites, y su reverso tiene la secuencia invertida.
+  - En el as de guía, el nudo se aprieta de verdad: la cuerda mide al menos 5 diámetros menos que en el último paso.
+  - Construir dos veces da el mismo apretado, punto por punto.
+  - En el amarre, el terminado sigue siendo el último paso y su volteo rígido, como hoy.
+  - No se usa una ronda que cambia un cruce: con un nudo pequeño de prueba y una ronda que se hace fallar a propósito, el apretado es la ronda anterior.
+  - Los pasos y el error de los cuatro nudos publicados no cambian: sus modelos, byte a byte contra b3ff5ee, como en T7b.
+- **Página de prueba:** `python -m nudos mejoras` arma además `build/mejoras/apretado.pdf`. Por cada nudo hay una hoja en color y otra en gris con el terminado, por delante y por detrás, en tres columnas: el de hoy, uno a medias (la mitad de las rondas) y el apretado. Van a su tamaño impreso (58 × 64 mm) y con las mejoras de T7b. La columna a medias está por si el apretado del todo esconde algún cruce. Gabriel elige una de las tres.
+- **Qué pasa con cada nudo publicado** (según el experimento):
+  - **As de guía:** se aprieta de verdad. Con 30 rondas, la cuerda pasa de 110 a 97 diámetros, la gaza pequeña se cierra sobre el chicote y el collar sobre el firme. Cumple los límites (separación 1,05, curvatura de 0,91 o más y estiramiento de 1,2 % o menos) con los mismos 7 cruces.
+  - **Ballestrinque:** casi no cambia, porque cerca del poste la relajación ya deja la cuerda tensa. El firme queda un poco más recto.
+  - **Vuelta de escota: es el riesgo.** Apretada del todo conserva los cruces, pero la gruesa queda doblada sobre la delgada con radio de 0,85 a 0,88. Es el caso que ya documenta `docs/formato-spec.md`: una gruesa de 1,5 apoyada sobre una delgada no pasa de 0,83. En el experimento, la curvatura bajaba de 0,9 desde la tercera ronda, así que con la regla de la ronda más apretada que cumple se acortaría solo unos 2 de sus 118 diámetros. Al implementar se prueba una corrección de curva más firme y que la gruesa, que es más rígida, conserve su forma mientras se ajusta la delgada. Si aun así no cumple, queda casi como hoy: los límites no se aflojan.
+  - **Amarre cuadrado:** queda como está. La plantilla ya traza la cuerda tensa, con las vueltas y los ahorcados a 1,1 y 1,08 diámetros, más juntos que la holgura del apretado. Por delante sigue siendo el paso 7 y por detrás su volteo rígido.
+  - Los filtros 1 siguen valiendo: los pasos no cambian, y el terminado es una vista, no un paso. Si el apretado entra, sus imágenes del terminado pasan a ser la nueva referencia.
+- **Costo:** apretar tarda de 5 a 20 segundos por nudo, así que `construir` y las pruebas tardan un poco más.
 
 #### T8: Plantilla de la cabeza de turco
 
