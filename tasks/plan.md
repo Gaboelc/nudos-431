@@ -646,7 +646,7 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
 
 **Tamaño:** M, no S. Son una plantilla y un anfitrión nuevos, como en T7.
 
-**Diseño (11 de noviembre de 2026, antes de implementar).** Las referencias son `entradas/cabeza-de-turco/` (27 imágenes: una de tres cabos tejida alrededor de una tabla, que se gira mientras se teje, y triplicada) y la página 26 del manual de la Tropa (una de tres cabos y cinco senos atada plana sobre la mesa, doblada y pasada después a un objeto cilíndrico). Los números salen de un experimento fuera del repositorio con la cuerda ideal sobre el tubo, sin relajar y sin los extremos.
+**Diseño (11 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las cuatro propuestas del final).** Las referencias son `entradas/cabeza-de-turco/` (27 imágenes: una de tres cabos tejida alrededor de una tabla, que se gira mientras se teje, y triplicada) y la página 26 del manual de la Tropa (una de tres cabos y cinco senos atada plana sobre la mesa, doblada y pasada después a un objeto cilíndrico). Los números salen de un experimento fuera del repositorio con la cuerda ideal sobre el tubo, sin relajar y sin los extremos.
 
 - **El nudo, sobre el tubo desenrollado.** Si se mira la superficie del tubo desenrollada (a lo largo del eje y alrededor), la cuerda va de un borde al otro y vuelve, como una onda.
   - Da tantas vueltas al tubo como cabos, hace tantos senos en cada borde como senos y se cruza senos × (cabos − 1) veces. Con 3 cabos y 4 senos son 3 vueltas, 4 senos de cada lado y 8 cruces.
@@ -737,11 +737,11 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
   1. Los extremos, por lo apretado que queda el seno por donde salen. Si no caben, el extremo corto entra a media diagonal, lejos de los cruces, o se agranda el tubo, mirando las imágenes. Los límites no se aflojan.
   2. Sobre un tubo liso, los senos de las primeras vueltas pueden correrse hasta que la tercera vuelta los traba. El texto pide sujetarlos con el pulgar. El filtro 1 dirá si alcanza o si conviene un tubo que agarre más, como uno de cartón.
   3. Que se lean 32 cruces en una imagen de 58 × 64 mm. Por eso cada paso pone de frente lo que agrega. Con tres pasadas serían 72.
-- **Lo que tiene que decidir Gabriel:**
-  1. El método: tejer vuelta por vuelta, como se propone, o trenzar como en las fotos, o atarla plana como en el manual. Las dos últimas cambian cruces entre pasos.
-  2. Las medidas: 3 cabos y 4 senos, como se propone, o 3 y 5, como en el manual. Y dos pasadas, como se propone (un tubo de 3 cm y 6 pasos), o tres, como en las fotos (con un cordón de 4 mm, un tubo de unos 4,5 cm, y 7 pasos).
-  3. El error con imagen: empezar a tejer por encima, como se propone. Y si van los dos errores sin imagen.
-  4. El terminado: sobre el tubo, por delante y girado media vuelta, como se propone, o el anillo solo, sin el tubo, acostado en la mesa.
+- **Lo que decidió Gabriel (11 de noviembre): las cuatro propuestas.**
+  1. El método es tejer vuelta por vuelta. No se trenza como en las fotos ni se ata plana como en el manual, porque las dos cambian cruces entre pasos.
+  2. Las medidas son 3 cabos, 4 senos y dos pasadas, sobre un tubo de radio 4 (unos 3 cm), con 6 pasos. No se usan 3 y 5, como en el manual, ni tres pasadas, como en las fotos.
+  3. El error con imagen es empezar a tejer la tercera vuelta por encima (`empieza-por-encima`). Van también los dos errores sin imagen: que la segunda pasada cambie de lado o se monte sobre la primera, y apretar de una vez tirando de un chicote.
+  4. El terminado va sobre el tubo: por delante, y por detrás girado media vuelta. No se muestra el anillo solo, sin el tubo.
 
 #### Punto de control B: después de T7 y T8
 
