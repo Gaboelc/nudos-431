@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import BUILD
+from .apretar import apretado
 from .cruces import consistencia
 from .errores import construir_error, construir_reverso
 from .libre import Resultado, TrazadoError, construir_paso
@@ -23,6 +24,11 @@ class Modelo:
     fallas: list[str]
     error: Resultado | None = None     # el error común, si la especificación lo declara
     reverso: Resultado | None = None   # el último paso volteado: el nudo terminado por detrás (sin anfitrión)
+    # El nudo terminado apretado (nudos/apretar.py), por delante y por detrás. Si no se pudo
+    # apretar, es el último paso o el reverso tal cual. None en un nudo de plantilla; por
+    # detrás, también sobre un poste.
+    apretado: Resultado | None = None
+    reverso_apretado: Resultado | None = None
 
 
 def construir(spec: Spec) -> Modelo:
@@ -49,7 +55,15 @@ def construir(spec: Spec) -> Modelo:
     if final is not None and spec.anfitrion is None:
         reverso, f_reverso = construir_reverso(spec, final)
         fallas.extend(f_reverso)
-    return Modelo(spec, resultados, fallas, error, reverso)
+    delante = detras = None
+    if final is not None:
+        delante, detras = apretado(spec, final, reverso)
+        # Si no se pudo apretar, es el mismo resultado, y sus fallas ya están contadas.
+        for r, base, cual in ((delante, final, "Nudo terminado apretado"),
+                              (detras, reverso, "Nudo terminado apretado, por detrás")):
+            if r is not None and r is not base:
+                fallas.extend(f"{cual}: {f}" for f in r.fallas)
+    return Modelo(spec, resultados, fallas, error, reverso, delante, detras)
 
 
 def _construir_plantilla(spec: Spec) -> Modelo:
@@ -98,6 +112,9 @@ def guardar(modelo: Modelo) -> Path:
                   for r in modelo.pasos],
         "error": None if modelo.error is None else _resultado_json(modelo.error),
         "reverso": None if modelo.reverso is None else _resultado_json(modelo.reverso),
+        "apretado": None if modelo.apretado is None else _resultado_json(modelo.apretado),
+        "reverso_apretado": None if modelo.reverso_apretado is None else
+        _resultado_json(modelo.reverso_apretado),
     }
     if spec.cuerdas:
         # Con varias cuerdas, cada resultado lleva además el primer y el último punto de cada una.

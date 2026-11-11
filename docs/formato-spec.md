@@ -202,6 +202,18 @@ Sobre la cruz se voltea el amarre entero, palos y cuerda, como un marco sobre la
 |---|---|
 | `encuadre` | Opcional. Zona que se muestra del nudo terminado, por delante. Por detrás se usa la misma zona volteada. |
 
+### El nudo apretado
+
+Cada tramo del último paso conserva el largo que le dio el trazado, así que el nudo queda flojo, como cuando se termina de pasar la cuerda y todavía no se tira de ella. Además del último paso, al construir sale el nudo terminado apretado (`nudos/apretar.py`), una geometría aparte solo para sus dos vistas. Los pasos no cambian. No hace falta ningún campo: qué se aprieta lo deciden los cruces del último paso y el tipo de nudo, y las medidas están en el código.
+
+- **Cómo sale.** La cuerda se acorta dentro del nudo, como si se tirara de sus cabos, y después de cada poco se deshacen los choques, así que ningún tramo atraviesa a otro y ningún cruce cambia. Se acorta lo que está a menos de 6 diámetros, sobre la mesa, de algún cruce del último paso. El chicote después de su último cruce no se acorta: el nudo lo arrastra. El resto, como el firme o la gaza grande del as de guía, se queda donde está, como si lo sostuvieras con las manos. Con cuerdas de distinto grosor solo se acorta la más delgada: la gruesa, que es más rígida, conserva su forma y la delgada se ajusta alrededor.
+- **Mientras se aprieta, los tramos chocan a 1,12 veces la suma de sus radios.** Una cuerda que abraza a otra del mismo grosor se dobla con radio 1, así que un nudo apretado del todo quedaría al borde del límite de curvatura. Con esa holgura las vueltas quedan con radio de 0,9 o más; en una cuerda de 8 mm es 1 mm de luz.
+- **Se aprieta por rondas, 30 como máximo, y cada una se comprueba como un paso:** la secuencia del último paso y los mismos límites (sobre el poste, también la penetración). El apretado es la ronda más apretada que los cumple. Si ninguna los cumple, es el último paso tal cual, así que el apretado nunca agrega fallas.
+- **Por detrás** es el nudo por detrás de siempre, el último paso volteado y relajado, apretado igual y con la secuencia invertida. Sobre el poste no hay reverso: se mira el mismo nudo apretado desde el otro lado.
+- **Un nudo de plantilla no se aprieta,** porque su plantilla ya traza la cuerda tensa. El amarre terminado sigue siendo el último paso y su volteo rígido.
+
+`modelo.json` lleva los dos aparte, en `apretado` y `reverso_apretado` (`null` donde no hay). Las fichas todavía muestran el último paso: el apretado entra cuando Gabriel lo apruebe en papel (`TERMINADO_APRETADO` en `nudos/imprimir.py`). La página de prueba es `build/mejoras/apretado.pdf`, de `python -m nudos mejoras`. Si un nudo futuro no debiera apretarse, el campo se agrega con ese nudo.
+
 ## Filtros
 
 Cada vez que se prueba la ficha impresa se agrega una entrada, también si no pasa. El filtro 1 es Gabriel atando cada paso con cuerda real; el filtro 2 es alguien que nunca ha hecho el nudo y lo ata solo con la ficha.
@@ -231,6 +243,7 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 5. El error común y el nudo terminado por detrás se construyen como un paso más y cumplen los mismos límites. Además:
    - la secuencia del error, después de relajar, difiere de la del paso correcto exactamente en los cruces de `invierte`; en un nudo de plantilla, es la que la plantilla escribe para la variante;
    - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés. El amarre volteado con sus palos no se construye otra vez: es un giro rígido del último paso.
+6. El nudo terminado apretado, por delante y por detrás, tiene la secuencia del último paso (por detrás, invertida) y cumple los mismos límites. Lo garantiza cómo se elige: entre las rondas que los cumplen (ver «El nudo apretado»).
 
 **Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
 

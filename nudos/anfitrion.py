@@ -182,16 +182,41 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
     _, _, r0 = poste.cilindricas(X)
     Xr = relajar(X, h, anfitrion=poste, gravedad=r0 > poste.rb + DISTANCIA_SIN_GRAVEDAD,
                  pasadas_largo=PASADAS_LARGO)
+    return _resultado(paso.n, Xr, h, paso.secuencia, resaltado,
+                      buscar=lambda Y: _cruces(Y, h, sobre, poste), medir=_medir(paso.n, poste))
 
-    def medir(Xr):
-        pen = poste.penetracion(Xr)
+
+def _medir(n: int, poste: Poste):
+    """La comprobación propia del poste: cuánto entra la cuerda en él."""
+    def medir(X):
+        pen = poste.penetracion(X)
         fallas = [] if pen <= PENETRACION_MAX else [
-            f"Paso {paso.n}: la cuerda entra {pen:.2f} diámetros en el poste; el máximo es "
+            f"Paso {n}: la cuerda entra {pen:.2f} diámetros en el poste; el máximo es "
             f"{PENETRACION_MAX}."]
         return {"penetracion_poste": pen}, fallas
+    return medir
 
-    return _resultado(paso.n, Xr, h, paso.secuencia, resaltado,
-                      buscar=lambda Y: _cruces(Y, h, sobre, poste), medir=medir)
+
+def apretar_paso(paso: Paso, anfitrion: Anfitrion, final: Resultado, rondas: int,
+                 registro: list | None = None) -> Resultado:
+    """El último paso sobre el poste (`final`, ya construido), apretado con nudos/apretar.py.
+    Se le pasa lo mismo que a la relajación y a la comprobación del paso: cómo sacar la
+    cuerda del poste, dónde no cae (cerca de él no hay gravedad) y cómo buscar los cruces en
+    sus dos mapas. Qué puntos van sobre el poste se decide en el último paso: cada punto del
+    apretado lo toma de donde estaba ahí, por su coordenada material, aunque la cuerda se
+    acorte."""
+    from .apretar import apretar
+    poste = Poste(anfitrion)
+    X, h, _, sobre = _curva(paso, poste)
+    if len(X) != len(final.puntos) or h != final.h:
+        raise ValueError(f"Paso {paso.n}: el paso construido no es el de la especificación.")
+
+    def buscar(Y, hY, u):
+        return _cruces(Y, hY, sobre[np.clip(np.round(u / h).astype(int), 0, len(sobre) - 1)], poste)
+
+    return apretar(final, paso.secuencia, rondas=rondas, anfitrion=poste,
+                   gravedad=lambda Y: poste.cilindricas(Y)[2] > poste.rb + DISTANCIA_SIN_GRAVEDAD,
+                   buscar=buscar, medir=_medir(paso.n, poste), registro=registro)
 
 
 # --------------------------------------------------------------------------

@@ -6,8 +6,8 @@ from dataclasses import replace
 import pytest
 from PIL import Image, ImageChops
 
-from nudos.imprimir import CELDA_MM, MEJORAS, MEJORAS_ACTIVAS, dibujar, imagenes, px
-from nudos.mejoras import MUESTRAS, VARIANTES, lista
+from nudos.imprimir import CELDA_MM, MEJORAS, MEJORAS_ACTIVAS, dibujar, imagenes, px, terminado
+from nudos.mejoras import APRETADOS, GRADOS, MUESTRAS, VARIANTES, lista, lista_apretado
 
 
 def test_las_fichas_llevan_las_mejoras_elegidas(modelo_as_de_guia):
@@ -64,3 +64,31 @@ def test_con_mejoras_dibujar_dos_veces_da_lo_mismo(con_chrome, modelo_ballestrin
     segunda = dibujar([img], tmp_path / "b")[0]
     with Image.open(primera) as a, Image.open(segunda) as b:
         assert ImageChops.difference(a.convert("RGB"), b.convert("RGB")).getbbox() is None
+
+
+def test_la_pagina_del_apretado_compara_hoy_a_medias_y_apretado(
+        modelo_as_de_guia, modelo_ballestrinque, modelo_vuelta_de_escota):
+    """T7c: el terminado por delante y por detrás, hoy, a medias y apretado, con las mejoras de
+    las fichas. El amarre no va: su plantilla ya traza la cuerda tensa."""
+    modelos = {"as-de-guia": modelo_as_de_guia, "ballestrinque": modelo_ballestrinque,
+               "vuelta-de-escota": modelo_vuelta_de_escota}
+    assert [clave for clave, *_ in GRADOS] == ["hoy", "a-medias", "apretado"]
+    assert [rondas for _, _, rondas, _ in GRADOS] == [0, 15, 30]
+    nudos = lista_apretado(modelos)
+    assert [slug for slug, _ in nudos] == list(APRETADOS) == list(modelos)
+    for slug, grados in nudos:
+        m = modelos[slug]
+        for (cuanto, imgs), (clave, *_) in zip(grados, GRADOS):
+            assert [i.nombre for i in imgs] == [f"apretado/{slug}-{clave}-frente",
+                                                f"apretado/{slug}-{clave}-reverso"]
+            assert all(i.mejoras == MEJORAS_ACTIVAS for i in imgs)
+            assert len(cuanto) == 2
+        sin_nombre = lambda imgs: [replace(i, nombre="") for i in imgs]
+        # Hoy es el terminado de la ficha, y apretado es el del modelo.
+        assert sin_nombre(grados[0][1]) == sin_nombre(terminado(m, m.pasos[-1], m.reverso))
+        assert sin_nombre(grados[2][1]) == sin_nombre(terminado(m, m.apretado, m.reverso_apretado))
+        assert grados[0][0] == ("como en la ficha", "como en la ficha")
+    # El as de guía se aprieta más con todas las rondas que con la mitad.
+    (_, (_, medias, todas)), = [n for n in nudos if n[0] == "as-de-guia"]
+    menos = lambda texto: float(texto.split()[0].replace(",", "."))
+    assert menos(todas[0][0]) > menos(medias[0][0]) > 5

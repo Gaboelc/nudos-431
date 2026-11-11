@@ -14,7 +14,7 @@ from .hoja import hoja
 from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pagina_prueba,
                        px)
 from .libre import LIMITES
-from .mejoras import DESTINO as DESTINO_MEJORAS, construir_muestras, pagina_mejoras
+from .mejoras import DESTINO as DESTINO_MEJORAS, construir_muestras, pagina_apretado, pagina_mejoras
 from .spec import SpecError, cargar
 
 
@@ -34,8 +34,9 @@ def main(argv=None) -> int:
     i.add_argument("slug")
     f = ordenes.add_parser("ficha", help="ficha impresa en PDF: pliego de dos páginas con QR")
     f.add_argument("slug")
-    ordenes.add_parser("mejoras", help="página de prueba de las mejoras del render: hoy y con "
-                                      "cada mejora, en color y en gris")
+    ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
+                                      "cada mejora) y del nudo terminado apretado, en color y "
+                                      "en gris")
     args = p.parse_args(argv)
     try:
         if args.orden == "construir":
@@ -69,11 +70,14 @@ def _ficha(slug: str) -> int:
 
 def _mejoras() -> int:
     try:
-        destino = pagina_mejoras(construir_muestras(), DESTINO_MEJORAS)
+        modelos = construir_muestras()
+        mejoras = pagina_mejoras(modelos, DESTINO_MEJORAS)
+        apretado = pagina_apretado(modelos, DESTINO_MEJORAS)
     except ImpresionError as e:
         print(e, file=sys.stderr)
         return 1
-    print(f"Página de prueba de las mejoras en {destino.relative_to(RAIZ)}")
+    print(f"Página de prueba de las mejoras en {mejoras.relative_to(RAIZ)}")
+    print(f"Página de prueba del nudo terminado apretado en {apretado.relative_to(RAIZ)}")
     return 0
 
 

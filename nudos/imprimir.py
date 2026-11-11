@@ -57,6 +57,10 @@ MEJORAS = ("contacto", "supermuestreo", "sombras-suaves")
 # de T7b.
 MEJORAS_ACTIVAS: tuple[str, ...] = MEJORAS
 SUPERMUESTREO = 2   # con «supermuestreo», cada imagen se dibuja a esta escala y se reduce
+# El nudo terminado apretado (T7c, nudos/apretar.py): si es verdadero, las dos vistas del
+# terminado salen del nudo apretado. Queda en falso mientras Gabriel compara en papel el de
+# hoy con el apretado («python -m nudos mejoras», build/mejoras/apretado.pdf).
+TERMINADO_APRETADO = False
 
 
 class ImpresionError(Exception):
@@ -116,33 +120,40 @@ def imagenes(modelo: Modelo) -> list[Imagen]:
                           firmes, ESQUINA_SELLO))
         out.append(Imagen("error", f"Error: {e.titulo}", par, 2, VISTA_PASOS, True,
                           firmes, ESQUINA_SELLO))
+    if TERMINADO_APRETADO and modelo.apretado is not None:
+        return out + terminado(modelo, modelo.apretado, modelo.reverso_apretado)
+    return out + terminado(modelo, modelo.pasos[-1], modelo.reverso)
+
+
+def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> list[Imagen]:
+    """Las dos vistas del nudo terminado: `final` por delante y `reverso` por detrás. Sobre un
+    poste no hay reverso (se mira `final` desde el otro lado) y sobre la cruz se voltea
+    `final` con los palos. Se llaman <prefijo>-frente y <prefijo>-reverso."""
+    s = modelo.spec
+    todos = nombres(modelo)
     enc = s.terminado.encuadre or s.encuadre
+    frente, atras = f"{prefijo}-frente", f"{prefijo}-reverso"
     if s.anfitrion is not None and s.anfitrion.tipo == "cruz":
         # El amarre se voltea entero, palos y cuerda, como un marco sobre la mesa, y por
         # delante y por detrás se mira desde donde se ata.
-        final = modelo.pasos[-1]
         volteado, cruz = Cruz(s.anfitrion).voltear(final)
-        out.append(Imagen("terminado-frente", "Terminado, por delante",
-                          datos_escena(modelo, enc, [final]), 1, VISTA_PASOS, False, todos,
-                          reservado_mm=ESQUINA_SELLO))
-        out.append(Imagen("terminado-reverso", "Terminado, por detrás",
-                          datos_escena(modelo, espejo(enc), [volteado], anfitrion=cruz), 1,
-                          VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO))
-        return out
+        return [Imagen(frente, "Terminado, por delante", datos_escena(modelo, enc, [final]), 1,
+                       VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO),
+                Imagen(atras, "Terminado, por detrás",
+                       datos_escena(modelo, espejo(enc), [volteado], anfitrion=cruz), 1,
+                       VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO)]
     if s.anfitrion is not None:
-        final = datos_escena(modelo, enc, [modelo.pasos[-1]])
+        escena = datos_escena(modelo, enc, [final])
         delante, detras = VISTAS_TERMINADO_ANFITRION
-        out.append(Imagen("terminado-frente", "Terminado, por delante", final, 1, delante, False,
-                          todos, reservado_mm=ESQUINA_SELLO))
-        out.append(Imagen("terminado-reverso", "Terminado, por detrás", final, 1, detras, False,
-                          todos, reservado_mm=ESQUINA_SELLO))
-        return out
-    out.append(Imagen("terminado-frente", "Terminado, por delante",
-                      datos_escena(modelo, enc, [modelo.pasos[-1]]), 1, VISTA_TERMINADO, False,
-                      todos, reservado_mm=ESQUINA_SELLO))
-    if modelo.reverso is not None:
-        out.append(Imagen("terminado-reverso", "Terminado, por detrás",
-                          datos_escena(modelo, espejo(enc), [modelo.reverso]), 1, VISTA_TERMINADO,
+        return [Imagen(frente, "Terminado, por delante", escena, 1, delante, False, todos,
+                       reservado_mm=ESQUINA_SELLO),
+                Imagen(atras, "Terminado, por detrás", escena, 1, detras, False, todos,
+                       reservado_mm=ESQUINA_SELLO)]
+    out = [Imagen(frente, "Terminado, por delante", datos_escena(modelo, enc, [final]), 1,
+                  VISTA_TERMINADO, False, todos, reservado_mm=ESQUINA_SELLO)]
+    if reverso is not None:
+        out.append(Imagen(atras, "Terminado, por detrás",
+                          datos_escena(modelo, espejo(enc), [reverso]), 1, VISTA_TERMINADO,
                           False, todos, reservado_mm=ESQUINA_SELLO))
     return out
 

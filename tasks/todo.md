@@ -101,10 +101,10 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 - [ ] T7c Nudo terminado apretado, con la misma secuencia de cruces que el último paso (M, separada de T7b el 10 nov; antes del Punto de control B)
   - [x] Diseño escrito en el plan (método, dónde vive, pruebas, formato y cada nudo publicado), probado en un experimento fuera del repositorio (10 nov: el as de guía se aprieta dentro de los límites, el ballestrinque casi no cambia, la vuelta de escota es el riesgo y el amarre queda como está)
   - [x] Gabriel aprueba el diseño (11 nov)
-  - [ ] Referencia: los cuatro nudos publicados construidos e impresos desde `main` antes de tocar el código
-  - [ ] `nudos/apretar.py`, `Modelo.apretado` y `Modelo.reverso_apretado`, con sus pruebas; pasos y error idénticos byte a byte
-  - [ ] Página de prueba `build/mejoras/apretado.pdf`: hoy, a medias y apretado, en color y en gris
-  - [ ] Gabriel compara en papel y decide si entra (y cuál de las tres)
+  - [x] Referencia: los cuatro nudos publicados construidos e impresos desde `main` antes de tocar el código (11 nov, desde 52cb117, fuera del repositorio)
+  - [x] `nudos/apretar.py`, `Modelo.apretado` y `Modelo.reverso_apretado`, con sus pruebas; pasos y error idénticos byte a byte (11 nov: los 4 `modelo.json` sin las claves nuevas, byte a byte, y las 67 imágenes, píxel por píxel, con Edge; `TERMINADO_APRETADO = False`. As de guía 110,0 → 94,7, ballestrinque casi igual, vuelta de escota 118,5 → 112,4 con la gruesa que conserva su forma, amarre sin apretar. Tres cambios al diseño: al soltar no hay corrección de largo, la gruesa queda sujeta y el reverso apretado es el reverso de hoy apretado; ver «Cómo se hizo» de T7c en el plan)
+  - [x] Página de prueba `build/mejoras/apretado.pdf`: hoy, a medias y apretado, en color y en gris (11 nov: seis hojas, as de guía, ballestrinque y vuelta de escota)
+  - [ ] Gabriel compara en papel y decide si entra (y cuál de las tres). Si entra: `TERMINADO_APRETADO = True`, nueva referencia de las imágenes del terminado y fichas rearmadas; sin publicar el sitio ni repetir filtros 1
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
 - [ ] Punto de control B:
   - [ ] Los 5 nudos del piloto están publicados
