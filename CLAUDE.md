@@ -14,6 +14,7 @@ Desde la raíz del repositorio, con Python 3.11 o más reciente:
 - `python -m nudos construir <slug>`: construye y comprueba todos los pasos y escribe `build/<slug>/modelo.json`.
 - `python -m nudos hoja <slug> [--vista arriba|55]`: genera la hoja de revisión en `build/<slug>/`.
 - `python -m nudos imprimir <slug>`: genera en `build/<slug>/impresion/` las imágenes de impresión a 300 ppp (pasos, error común junto al paso correcto y nudo terminado por delante y por detrás) y `prueba.pdf`, la página de prueba en color y en gris. Necesita Google Chrome.
+- `python -m nudos mejoras`: construye los nudos de muestra y arma en `build/mejoras/prueba.pdf` la página de prueba de las mejoras del render (T7b): unas imágenes como salen hoy y con cada mejora, en color y en gris. Necesita Google Chrome.
 - `python -m nudos ficha <slug>`: genera las imágenes y arma `build/<slug>/ficha.pdf`, el pliego de dos páginas tamaño carta con QR al visor. No la genera si falta texto de la ficha en la especificación, si aparece un término de sección o si algo no cabe.
 - `python -m nudos sitio`: construye todos los nudos y el sitio en `build/sitio/`. Falla si algún nudo tiene fallas o si falta la página de un nudo de `publicados.txt`.
 - `scripts/publicar.sh -m "Co-Authored-By: …"`: publica el sitio en la rama `gh-pages`, que es la que sirve GitHub Pages. Solo corre desde un `main` limpio y ya subido. Esa rama no se toca de otra forma.

@@ -92,12 +92,12 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Registrar el filtro 1 en la especificación
   - [x] Publicar el sitio con el amarre cuadrado (10 nov, construido desde 7bcb14c, con el amarre en `publicados.txt`; revisado en línea)
 - [ ] T7b Mejoras del render (M, pedido de Gabriel el 10 nov; después de T7 y antes de T8)
-  - [ ] Página de prueba en color y en gris: hoy contra cada mejora por separado (contorno, sombra de contacto, supermuestreo, sombras suaves, nudo terminado apretado)
-  - [ ] Gabriel imprime la página de prueba y elige qué mejoras entran
+  - [x] Página de prueba en color y en gris: hoy contra cada mejora por separado y las cuatro juntas (10 nov: `python -m nudos mejoras`, `build/mejoras/prueba.pdf`, diez hojas; contorno, sombra de contacto, supermuestreo y sombras suaves, detrás de `Imagen.mejoras` y de la opción `mejoras` de la escena, apagadas; nudos publicados idénticos a 563bed6: 4 modelos byte a byte y 67 imágenes píxel por píxel, con Edge; 244 pruebas pasan; ver «Cómo se hizo la página de prueba» en el plan. El nudo terminado apretado pasó a T7c)
+  - [ ] Gabriel imprime la página de prueba en la Epson, por las dos caras y a tamaño real, y elige qué mejoras entran
   - [ ] Implementar las elegidas en el visor y la impresión, sin cambiar la geometría ni los cruces de los pasos
-  - [ ] Nudo terminado apretado, con la misma secuencia de cruces que el último paso (si se elige; puede ir en su propia tarea)
   - [ ] Nueva referencia de imágenes de los nudos ya aprobados, anotada aquí
   - [ ] El visor sigue fluido en un celular de gama baja
+- [ ] T7c Nudo terminado apretado, con la misma secuencia de cruces que el último paso (M, separada de T7b el 10 nov; antes del Punto de control B)
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
 - [ ] Punto de control B:
   - [ ] Los 5 nudos del piloto están publicados

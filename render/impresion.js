@@ -1,10 +1,23 @@
 /* Dibuja una imagen de impresión con la misma escena del visor. nudos/imprimir.py llama a
    window.dibujar(trabajo) y toma la captura cuando la promesa se cumple.
-   trabajo: { modelo, paso, vista, resaltar, nombres: ["firme", "chicote"], reservado: [ancho, alto] }
+   trabajo: { modelo, paso, vista, resaltar, nombres: ["firme", "chicote"], reservado: [ancho, alto], mejoras: [] }
    «nombres» son claves de nombresDe (escena.js). «reservado» es la esquina superior
    izquierda, en px, que la ficha tapa con el número del paso o un sello: ahí no se ponen
-   los nombres. */
+   los nombres. «mejoras» son las de T7b (nudos/imprimir.py, MEJORAS); el supermuestreo no
+   llega aquí: lo hace nudos/imprimir.py dibujando al doble y reduciendo. */
 import { crearEscena, nombresDe } from "./recursos/escena.js";
+
+const PT = 300 / 72;          // px por punto de impresión (impresion.html)
+const CONTORNO_PT = 0.7;      // el borde de tinta mide 0,7 pt, 0,25 mm
+
+/* Las mejoras de la lista, como las recibe crearEscena. Sin ninguna, la escena de siempre. */
+function opcionesMejoras(lista) {
+  const m = {};
+  if (lista.includes("contorno")) m.contorno = CONTORNO_PT * PT;
+  if (lista.includes("contacto")) m.contacto = true;
+  if (lista.includes("sombras-suaves")) m.sombrasSuaves = true;
+  return m;
+}
 
 const stage = document.getElementById("stage");
 const tags = {
@@ -63,6 +76,7 @@ window.dibujar = async function (trabajo) {
     interactiva: false,
     movimientoReducido: true,
     reservado: rw && rh ? [{ x0: 0, y0: 0, x1: rw, y1: rh }] : [],
+    mejoras: opcionesMejoras(trabajo.mejoras || []),
     alRenderizar: () => escena && colocar(escena, usar),
     medidasNombres: () => Object.fromEntries(
       Object.entries(tags).map(([k, [el]]) => [k, usar.includes(k) ? medir(el) : { w: 0, h: 0 }])),

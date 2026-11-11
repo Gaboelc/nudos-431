@@ -494,7 +494,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 5. **Nudo terminado apretado:** una geometría aparte, solo para las dos vistas del nudo terminado, con la cuerda ajustada como queda de verdad. Los pasos no cambian. El nudo apretado tiene que tener la misma secuencia de cruces que el último paso y cumplir los mismos límites, y las pruebas lo comprueban.
 
 **Criterios de aceptación:**
-- [ ] Hay una página de prueba en color y en gris, con las imágenes a su tamaño impreso. Muestra el paso 7 del as de guía, el par del error del ballestrinque, un paso de la vuelta de escota y uno del amarre cuadrado, como están hoy y con cada mejora por separado.
+- [x] Hay una página de prueba en color y en gris, con las imágenes a su tamaño impreso. Muestra el paso 7 del as de guía, el par del error del ballestrinque, un paso de la vuelta de escota y uno del amarre cuadrado, como están hoy y con cada mejora por separado (`python -m nudos mejoras`; el nudo apretado pasó a T7c).
 - [ ] Gabriel imprime la página de prueba y elige qué mejoras entran.
 - [ ] La geometría y los cruces de los pasos no cambian, y las pruebas lo comprueban. Así, los filtros 1 ya hechos siguen valiendo.
 - [ ] Construir dos veces sigue dando las mismas imágenes. Las imágenes nuevas de los nudos ya aprobados quedan como la nueva referencia, y eso queda escrito en `tasks/todo.md`.
@@ -510,9 +510,41 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 **Archivos:** `render/escena.js`, `render/impresion.js`, `nudos/imprimir.py`, `nudos/libre.py` o un módulo nuevo para apretar el nudo, `docs/formato-spec.md` si hace falta, y las pruebas correspondientes.
 
-**Tamaño:** M. La mejora 5 es la más cara, porque toca la relajación. Si se complica, se separa en su propia tarea y las otras cuatro siguen.
+**Tamaño:** M. La mejora 5 es la más cara, porque toca la relajación. Si se complica, se separa en su propia tarea y las otras cuatro siguen. Se separó: es T7c.
 
 **Riesgo:** pulir sin evidencia de un problema de lectura, porque el único filtro 2 hecho pasó con los renders actuales. Por eso la página de prueba decide qué entra.
+
+**Cómo se hizo la página de prueba (10 de noviembre de 2026):** `python -m nudos mejoras` (`nudos/mejoras.py`) construye los cuatro nudos y deja en `build/mejoras/` las imágenes de cada variante y `prueba.pdf`. Son diez hojas carta, una en color y otra en gris por cada imagen, para imprimirlas por las dos caras. Cada hoja pone la misma imagen, a 58 × 64 mm, como sale hoy, con cada mejora sola y con las cuatro juntas. Las imágenes son el paso 7 del as de guía, el par del error del ballestrinque (el paso 5 bien y mal), el paso 4 de la vuelta de escota, donde la delgada pasa bajo sí misma, y el paso 5 del amarre, donde los ahorcados pasan sobre las vueltas.
+
+- **La opción.** Cada imagen lleva sus mejoras en `Imagen.mejoras` (`nudos/imprimir.py`, con los nombres de `MEJORAS`), y la escena las recibe en la opción `mejoras` de `crearEscena` (`render/escena.js`). Las fichas usan `MEJORAS_ACTIVAS`, que hoy está vacía, y el visor no pasa ninguna. Con las mejoras apagadas, los cuatro nudos de `publicados.txt` salen idénticos a `main` (563bed6): los 4 modelos byte a byte y las 67 imágenes de impresión píxel por píxel, con Edge.
+- **Contorno.** Cada malla (cuerdas, tapas y palos) se dibuja otra vez por dentro, engordada a lo largo de sus normales lo justo para que asome un borde de tinta de 0,7 pt (0,25 mm). El borde se adelanta 0,3 diámetros hacia la cámara, para que no lo tape el poste que está justo detrás de la cuerda. Al principio se corría el borde en la pantalla, pero así salía más fino de un lado de la cuerda.
+- **Sombra de contacto.** Va como color por vértice. Cada vértice se oscurece hasta un 60 % según lo cerca que tenga el eje de otra cuerda, de un tramo lejano de la misma o de un palo, y según cuánto lo mire. Llega hasta un diámetro. Se calcula en el navegador al armar cada paso, con una rejilla para no comparar todo con todo.
+- **Supermuestreo.** El navegador dibuja la página al doble (factor de escala 2) y Pillow la reduce a 300 ppp con Lanczos. Lo hace `nudos/imprimir.py`; la escena no cambia.
+- **Sombras suaves.** La mesa se oscurece 0,17 en vez de 0,26 y el sol usa un mapa de sombras de varianza, difuminado, con un borde de 0,45 diámetros en cualquier nudo. Al principio se repartió el sol en 8 luces, pero las sombras salían en copias escalonadas.
+- **Para el visor, si se eligen.** El contorno dobla las mallas que hay que dibujar. Las sombras suaves difuminan el mapa de sombras cada vez que se dibuja, así que en el visor habría que actualizarlo solo al cambiar de paso (`shadowMap.autoUpdate = false`): mientras se gira, la escena no cambia. La sombra de contacto solo cuesta al armar cada paso.
+- **El nudo terminado apretado se separó en su propia tarea, T7c,** como permitía el tamaño de esta. La relajación de hoy conserva el largo de cada tramo, y apretar el nudo pide tirar de los extremos sin que cambie ningún cruce, con su propia prueba de secuencia y de límites. No está en la página de prueba.
+
+#### T7c: Nudo terminado apretado
+
+**Descripción:** la mejora 5 de T7b, separada el 10 de noviembre de 2026 porque es la más cara. Una geometría aparte, solo para las dos vistas del nudo terminado, con la cuerda ajustada como queda de verdad. Los pasos no cambian. Hoy la relajación conserva el largo de cada tramo, así que hace falta una que tire de los extremos (o acorte la cuerda dentro del nudo) sin que ningún cruce cambie.
+
+**Criterios de aceptación:**
+- [ ] El nudo apretado tiene la misma secuencia de cruces que el último paso y cumple los mismos límites, y las pruebas lo comprueban, también sobre el poste y en el amarre.
+- [ ] Las dos vistas del nudo terminado salen del nudo apretado; los pasos y sus imágenes no cambian.
+- [ ] Construir dos veces da el mismo nudo apretado.
+- [ ] Si necesita un campo en la especificación, queda documentado en `docs/formato-spec.md` antes del Punto de control B.
+- [ ] Gabriel compara en papel el terminado de hoy con el apretado y decide si entra.
+
+**Verificación:**
+- [ ] `python -m pytest`
+- [ ] `python -m nudos imprimir` de cada nudo ya aprobado
+- [ ] Manual: imprimir el terminado de hoy junto al apretado.
+
+**Dependencias:** T7b, porque toca las mismas imágenes del nudo terminado. Va antes del Punto de control B, porque puede cambiar el formato.
+
+**Archivos:** `nudos/libre.py` o un módulo nuevo para apretar el nudo, `nudos/construir.py`, `nudos/imprimir.py`, `docs/formato-spec.md` si hace falta, y las pruebas correspondientes.
+
+**Tamaño:** M.
 
 #### T8: Plantilla de la cabeza de turco
 

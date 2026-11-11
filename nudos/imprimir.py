@@ -49,6 +49,14 @@ PAGINA = RAIZ / "render" / "impresion.html"
 GUION = RAIZ / "render" / "impresion.js"
 ARGUMENTOS_CHROME = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader",
                      "--ignore-gpu-blocklist", "--font-render-hinting=none"]
+# Mejoras del render (T7b), cada una por separado: el borde de tinta de cada cuerda, la
+# sombra de contacto, dibujar al doble y reducir, y sombras más claras y de borde blando.
+# Se eligen con la página de prueba impresa («python -m nudos mejoras»).
+MEJORAS = ("contorno", "contacto", "supermuestreo", "sombras-suaves")
+# Las que llevan las imágenes de la ficha. Hoy, ninguna: sin mejoras, las imágenes salen
+# idénticas a las de los nudos ya aprobados.
+MEJORAS_ACTIVAS: tuple[str, ...] = ()
+SUPERMUESTREO = 2   # con «supermuestreo», cada imagen se dibuja a esta escala y se reduce
 
 
 class ImpresionError(Exception):
@@ -67,6 +75,12 @@ class Imagen:
     # Esquina superior izquierda (ancho, alto en mm) que la ficha tapa con el número del
     # paso o con un sello. Ahí no se ponen los nombres.
     reservado_mm: tuple[float, float] = (0.0, 0.0)
+    mejoras: tuple[str, ...] = MEJORAS_ACTIVAS   # de MEJORAS
+
+    def __post_init__(self):
+        if set(self.mejoras) - set(MEJORAS):
+            raise ValueError(f"{self.nombre}: mejoras desconocidas: "
+                             f"{', '.join(sorted(set(self.mejoras) - set(MEJORAS)))}")
 
 
 def px(mm: float) -> int:
@@ -151,7 +165,10 @@ def dibujar(lista: list[Imagen], destino: Path) -> list[Path]:
         for img in lista:
             png = _dibujar(navegador, base, img, ancho, alto)
             ruta = destino / f"{img.nombre}.png"
-            _guardar(Image.open(io.BytesIO(png)), ruta)
+            im = Image.open(io.BytesIO(png))
+            if im.size != (ancho, alto):   # supermuestreo: de vuelta a PPP
+                im = im.convert("RGB").resize((ancho, alto), Image.Resampling.LANCZOS)
+            _guardar(im, ruta)
             rutas.append(ruta)
     return rutas
 
@@ -221,8 +238,11 @@ def chrome():
 
 
 def _dibujar(navegador, base: str, img: Imagen, ancho: int, alto: int) -> bytes:
+    """La captura de la imagen. Con supermuestreo mide SUPERMUESTREO veces más por lado: la
+    página es la misma, pero el navegador la dibuja con más px por px de CSS."""
+    escala = SUPERMUESTREO if "supermuestreo" in img.mejoras else 1
     contexto = navegador.new_context(viewport={"width": ancho, "height": alto},
-                                     device_scale_factor=1, color_scheme="light")
+                                     device_scale_factor=escala, color_scheme="light")
     try:
         pagina = contexto.new_page()
         problemas: list[str] = []
@@ -237,6 +257,7 @@ def _dibujar(navegador, base: str, img: Imagen, ancho: int, alto: int) -> bytes:
             "modelo": img.escena, "paso": img.indice, "vista": img.vista,
             "resaltar": img.resaltar, "nombres": list(img.nombres),
             "reservado": [px(img.reservado_mm[0]), px(img.reservado_mm[1])],
+            "mejoras": list(img.mejoras),
         })
         if problemas:
             raise ImpresionError(f"{img.nombre}: el navegador dio errores:\n  " + "\n  ".join(problemas))

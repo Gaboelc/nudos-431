@@ -14,6 +14,7 @@ from .hoja import hoja
 from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pagina_prueba,
                        px)
 from .libre import LIMITES
+from .mejoras import DESTINO as DESTINO_MEJORAS, construir_muestras, pagina_mejoras
 from .spec import SpecError, cargar
 
 
@@ -33,6 +34,8 @@ def main(argv=None) -> int:
     i.add_argument("slug")
     f = ordenes.add_parser("ficha", help="ficha impresa en PDF: pliego de dos páginas con QR")
     f.add_argument("slug")
+    ordenes.add_parser("mejoras", help="página de prueba de las mejoras del render: hoy y con "
+                                      "cada mejora, en color y en gris")
     args = p.parse_args(argv)
     try:
         if args.orden == "construir":
@@ -43,6 +46,8 @@ def main(argv=None) -> int:
             return _imprimir(args.slug)
         if args.orden == "ficha":
             return _ficha(args.slug)
+        if args.orden == "mejoras":
+            return _mejoras()
         return _hoja(args.slug, args.vista)
     except SpecError as e:
         print(f"Error en la especificación: {e}", file=sys.stderr)
@@ -59,6 +64,16 @@ def _ficha(slug: str) -> int:
         print(e, file=sys.stderr)
         return 1
     print(f"Ficha en {destino.relative_to(RAIZ)} · QR a {url_visor(slug)}")
+    return 0
+
+
+def _mejoras() -> int:
+    try:
+        destino = pagina_mejoras(construir_muestras(), DESTINO_MEJORAS)
+    except ImpresionError as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Página de prueba de las mejoras en {destino.relative_to(RAIZ)}")
     return 0
 
 
