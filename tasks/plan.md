@@ -495,16 +495,16 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 **Criterios de aceptación:**
 - [x] Hay una página de prueba en color y en gris, con las imágenes a su tamaño impreso. Muestra el paso 7 del as de guía, el par del error del ballestrinque, un paso de la vuelta de escota y uno del amarre cuadrado, como están hoy y con cada mejora por separado (`python -m nudos mejoras`; el nudo apretado pasó a T7c).
-- [ ] Gabriel imprime la página de prueba y elige qué mejoras entran.
-- [ ] La geometría y los cruces de los pasos no cambian, y las pruebas lo comprueban. Así, los filtros 1 ya hechos siguen valiendo.
-- [ ] Construir dos veces sigue dando las mismas imágenes. Las imágenes nuevas de los nudos ya aprobados quedan como la nueva referencia, y eso queda escrito en `tasks/todo.md`.
-- [ ] El visor sigue cargando y girando con fluidez en un celular de gama baja; el contorno agrega geometría que dibujar.
-- [ ] Si el nudo apretado necesita un campo en la especificación, queda documentado en `docs/formato-spec.md` antes del Punto de control B.
+- [x] Gabriel imprime la página de prueba y elige qué mejoras entran (10 de noviembre: todas menos el contorno).
+- [x] La geometría y los cruces de los pasos no cambian, y las pruebas lo comprueban. Así, los filtros 1 ya hechos siguen valiendo (los modelos, byte a byte contra 563bed6).
+- [x] Construir dos veces sigue dando las mismas imágenes. Las imágenes nuevas de los nudos ya aprobados quedan como la nueva referencia, y eso queda escrito en `tasks/todo.md`.
+- [ ] El visor sigue cargando y girando con fluidez en un celular de gama baja. Medido en la computadora (ver «Cómo se implementaron»); falta abrirlo en el celular.
+- [x] Si el nudo apretado necesita un campo en la especificación, queda documentado en `docs/formato-spec.md` antes del Punto de control B (pasó a T7c).
 
 **Verificación:**
-- [ ] `python -m pytest`
-- [ ] `python -m nudos imprimir` y `python -m nudos ficha` de cada nudo ya aprobado
-- [ ] Manual: imprimir la página de prueba en la Epson y abrir el visor en el celular.
+- [x] `python -m pytest`
+- [x] `python -m nudos imprimir` y `python -m nudos ficha` de cada nudo ya aprobado
+- [ ] Manual: imprimir la página de prueba en la Epson y abrir el visor en el celular (la página de prueba, revisada; falta el celular).
 
 **Dependencias:** T7 terminada, porque las dos tocan `render/escena.js`. Va antes de T8 y del Punto de control B: cuantos menos nudos estén aprobados, menos imágenes cambian, y el formato se congela en B.
 
@@ -517,11 +517,21 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 **Cómo se hizo la página de prueba (10 de noviembre de 2026):** `python -m nudos mejoras` (`nudos/mejoras.py`) construye los cuatro nudos y deja en `build/mejoras/` las imágenes de cada variante y `prueba.pdf`. Son diez hojas carta, una en color y otra en gris por cada imagen, para imprimirlas por las dos caras. Cada hoja pone la misma imagen, a 58 × 64 mm, como sale hoy, con cada mejora sola y con las cuatro juntas. Las imágenes son el paso 7 del as de guía, el par del error del ballestrinque (el paso 5 bien y mal), el paso 4 de la vuelta de escota, donde la delgada pasa bajo sí misma, y el paso 5 del amarre, donde los ahorcados pasan sobre las vueltas.
 
 - **La opción.** Cada imagen lleva sus mejoras en `Imagen.mejoras` (`nudos/imprimir.py`, con los nombres de `MEJORAS`), y la escena las recibe en la opción `mejoras` de `crearEscena` (`render/escena.js`). Las fichas usan `MEJORAS_ACTIVAS`, que hoy está vacía, y el visor no pasa ninguna. Con las mejoras apagadas, los cuatro nudos de `publicados.txt` salen idénticos a `main` (563bed6): los 4 modelos byte a byte y las 67 imágenes de impresión píxel por píxel, con Edge.
-- **Contorno.** Cada malla (cuerdas, tapas y palos) se dibuja otra vez por dentro, engordada a lo largo de sus normales lo justo para que asome un borde de tinta de 0,7 pt (0,25 mm). El borde se adelanta 0,3 diámetros hacia la cámara, para que no lo tape el poste que está justo detrás de la cuerda. Al principio se corría el borde en la pantalla, pero así salía más fino de un lado de la cuerda.
+- **Contorno (no entró; se quitó del código y queda en da891eb).** Cada malla (cuerdas, tapas y palos) se dibuja otra vez por dentro, engordada a lo largo de sus normales lo justo para que asome un borde de tinta de 0,7 pt (0,25 mm). El borde se adelanta 0,3 diámetros hacia la cámara, para que no lo tape el poste que está justo detrás de la cuerda. Al principio se corría el borde en la pantalla, pero así salía más fino de un lado de la cuerda.
 - **Sombra de contacto.** Va como color por vértice. Cada vértice se oscurece hasta un 60 % según lo cerca que tenga el eje de otra cuerda, de un tramo lejano de la misma o de un palo, y según cuánto lo mire. Llega hasta un diámetro. Se calcula en el navegador al armar cada paso, con una rejilla para no comparar todo con todo.
 - **Supermuestreo.** El navegador dibuja la página al doble (factor de escala 2) y Pillow la reduce a 300 ppp con Lanczos. Lo hace `nudos/imprimir.py`; la escena no cambia.
 - **Sombras suaves.** La mesa se oscurece 0,17 en vez de 0,26 y el sol usa un mapa de sombras de varianza, difuminado, con un borde de 0,45 diámetros en cualquier nudo. Al principio se repartió el sol en 8 luces, pero las sombras salían en copias escalonadas.
 - **Para el visor, si se eligen.** El contorno dobla las mallas que hay que dibujar. Las sombras suaves difuminan el mapa de sombras cada vez que se dibuja, así que en el visor habría que actualizarlo solo al cambiar de paso (`shadowMap.autoUpdate = false`): mientras se gira, la escena no cambia. La sombra de contacto solo cuesta al armar cada paso.
+
+**Elección (10 de noviembre de 2026):** Gabriel revisó la página de prueba y eligió la sombra de contacto, el supermuestreo y las sombras suaves. El contorno no entró («me gustaron todos los cambios menos el contorno negro»), así que se quitó del código.
+
+**Cómo se implementaron:**
+- **En la impresión.** `MEJORAS` son ahora las tres y `MEJORAS_ACTIVAS` las lleva todas (`nudos/imprimir.py`), así que las imágenes de las fichas salen con ellas. `python -m nudos mejoras` se queda, para volver a mirarlas o probar una nueva: compara las imágenes sin mejoras con cada una y con las tres juntas, que son las de las fichas.
+- **En el visor.** `sitio/visor.js` pasa la sombra de contacto y las sombras suaves; el supermuestreo es solo de la impresión, porque en pantalla el lienzo ya sigue la densidad de px. La sombra de la mesa del visor baja como la de la impresión: 0,17 con el tema claro y 0,33 con el oscuro (`sitio/visor.css`).
+- **El mapa de sombras se dibuja solo al cambiar de paso** (`shadowMap.autoUpdate = false`), con o sin mejoras: la luz y la cuerda no se mueven al girar la cámara. En el visor, el mapa de las sombras suaves mide 1024 en vez de 2048, para que un celular lo difumine rápido; difuminado, se ve igual.
+- **La sombra de contacto se aceleró para el celular.** El eje que oscurece se toma cada 0,25 diámetros (`CONTACTO_MUESTREO`), y cada anillo del tubo junta primero los tramos y los palos que pueden alcanzarlo. En el paso 7 del amarre, el más largo, armar el paso pasó de 335 ms a 37 ms en la computadora de Gabriel; sin la sombra de contacto son 20 ms. Al cambiar de paso, el primer cuadro, que difumina la sombra, sube de unos 6 a unos 15 ms (con el mapa de 2048 de la impresión). Al girar, cada cuadro sigue costando alrededor de 1 ms, con o sin mejoras, porque ya no se redibuja el mapa de sombras.
+- **Revisado en el visor** con el navegador de la app, en la computadora y como celular, con los temas claro y oscuro: gira, cambia de paso con las sombras al día y no da errores. Falta abrirlo en un celular de gama baja de verdad, después de publicar.
+- **Nueva referencia.** Los modelos de los cuatro nudos aprobados no cambian (byte a byte contra 563bed6), así que los filtros 1 siguen valiendo. Sus imágenes sí cambian, y las que salen desde el commit «T7b: las mejoras elegidas en las fichas y el visor» son la nueva referencia: construir dos veces da las mismas 67 imágenes, píxel por píxel, con Edge. Las cuatro fichas se arman y caben.
 - **El nudo terminado apretado se separó en su propia tarea, T7c,** como permitía el tamaño de esta. La relajación de hoy conserva el largo de cada tramo, y apretar el nudo pide tirar de los extremos sin que cambie ningún cruce, con su propia prueba de secuencia y de límites. No está en la página de prueba.
 
 #### T7c: Nudo terminado apretado

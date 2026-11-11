@@ -49,13 +49,13 @@ PAGINA = RAIZ / "render" / "impresion.html"
 GUION = RAIZ / "render" / "impresion.js"
 ARGUMENTOS_CHROME = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader",
                      "--ignore-gpu-blocklist", "--font-render-hinting=none"]
-# Mejoras del render (T7b), cada una por separado: el borde de tinta de cada cuerda, la
-# sombra de contacto, dibujar al doble y reducir, y sombras más claras y de borde blando.
-# Se eligen con la página de prueba impresa («python -m nudos mejoras»).
-MEJORAS = ("contorno", "contacto", "supermuestreo", "sombras-suaves")
-# Las que llevan las imágenes de la ficha. Hoy, ninguna: sin mejoras, las imágenes salen
-# idénticas a las de los nudos ya aprobados.
-MEJORAS_ACTIVAS: tuple[str, ...] = ()
+# Mejoras del render (T7b): la sombra de contacto, dibujar al doble y reducir, y sombras más
+# claras y de borde blando. Gabriel las eligió con la página de prueba impresa («python -m
+# nudos mejoras»); el contorno de tinta no entró.
+MEJORAS = ("contacto", "supermuestreo", "sombras-suaves")
+# Las que llevan las imágenes de la ficha: todas. Sin ninguna, las imágenes salen como antes
+# de T7b.
+MEJORAS_ACTIVAS: tuple[str, ...] = MEJORAS
 SUPERMUESTREO = 2   # con «supermuestreo», cada imagen se dibuja a esta escala y se reduce
 
 

@@ -93,10 +93,11 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Publicar el sitio con el amarre cuadrado (10 nov, construido desde 7bcb14c, con el amarre en `publicados.txt`; revisado en línea)
 - [ ] T7b Mejoras del render (M, pedido de Gabriel el 10 nov; después de T7 y antes de T8)
   - [x] Página de prueba en color y en gris: hoy contra cada mejora por separado y las cuatro juntas (10 nov: `python -m nudos mejoras`, `build/mejoras/prueba.pdf`, diez hojas; contorno, sombra de contacto, supermuestreo y sombras suaves, detrás de `Imagen.mejoras` y de la opción `mejoras` de la escena, apagadas; nudos publicados idénticos a 563bed6: 4 modelos byte a byte y 67 imágenes píxel por píxel, con Edge; 244 pruebas pasan; ver «Cómo se hizo la página de prueba» en el plan. El nudo terminado apretado pasó a T7c)
-  - [ ] Gabriel imprime la página de prueba en la Epson, por las dos caras y a tamaño real, y elige qué mejoras entran
-  - [ ] Implementar las elegidas en el visor y la impresión, sin cambiar la geometría ni los cruces de los pasos
-  - [ ] Nueva referencia de imágenes de los nudos ya aprobados, anotada aquí
-  - [ ] El visor sigue fluido en un celular de gama baja
+  - [x] Gabriel revisa la página de prueba y elige qué mejoras entran (10 nov: la sombra de contacto, el supermuestreo y las sombras suaves; el contorno no, y se quitó del código)
+  - [x] Implementar las elegidas en el visor y la impresión, sin cambiar la geometría ni los cruces de los pasos (10 nov: `MEJORAS_ACTIVAS` en las fichas; el visor pasa la sombra de contacto y las sombras suaves; el mapa de sombras se dibuja solo al cambiar de paso; la sombra de contacto, 10 veces más rápida; ver «Cómo se implementaron» en el plan)
+  - [x] Nueva referencia de imágenes de los nudos ya aprobados, anotada aquí: desde el commit «T7b: las mejoras elegidas en las fichas y el visor», las imágenes de impresión del as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado son las nuevas; sus modelos no cambian (byte a byte contra 563bed6), así que los filtros 1 siguen valiendo. Construir dos veces da las mismas 67 imágenes, con Edge; las cuatro fichas se arman y caben; 244 pruebas pasan. Las comparaciones de «nudos publicados idénticos» se hacen desde ese commit
+  - [ ] Publicar el sitio: el visor cambió (sombra de contacto y sombras suaves)
+  - [ ] El visor sigue fluido en un celular de gama baja (en la computadora, armar el paso más largo del amarre tarda 37 ms en vez de 20 y girar cuesta lo mismo; falta abrirlo en el celular después de publicar)
 - [ ] T7c Nudo terminado apretado, con la misma secuencia de cruces que el último paso (M, separada de T7b el 10 nov; antes del Punto de control B)
 - [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
 - [ ] Punto de control B:

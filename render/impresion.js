@@ -7,13 +7,9 @@
    llega aquí: lo hace nudos/imprimir.py dibujando al doble y reduciendo. */
 import { crearEscena, nombresDe } from "./recursos/escena.js";
 
-const PT = 300 / 72;          // px por punto de impresión (impresion.html)
-const CONTORNO_PT = 0.7;      // el borde de tinta mide 0,7 pt, 0,25 mm
-
-/* Las mejoras de la lista, como las recibe crearEscena. Sin ninguna, la escena de siempre. */
+/* Las mejoras de la lista, como las recibe crearEscena. Sin ninguna, la escena de antes de T7b. */
 function opcionesMejoras(lista) {
   const m = {};
-  if (lista.includes("contorno")) m.contorno = CONTORNO_PT * PT;
   if (lista.includes("contacto")) m.contacto = true;
   if (lista.includes("sombras-suaves")) m.sombrasSuaves = true;
   return m;

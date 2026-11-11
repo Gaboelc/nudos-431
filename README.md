@@ -22,7 +22,7 @@ python -m nudos sitio
 python -m pytest
 ```
 
-`imprimir` necesita Google Chrome instalado (o la ruta de otro Chrome en la variable `NUDOS_CHROME`). Deja en `build/<slug>/impresion/` las imágenes a 300 ppp y `prueba.pdf`, una página de prueba en color y en escala de grises. `ficha` genera esas imágenes y arma con ellas `build/<slug>/ficha.pdf`, el pliego de dos páginas con QR al visor. `mejoras` arma `build/mejoras/prueba.pdf`, la página de prueba de las mejoras del render: algunas imágenes como salen hoy y con cada mejora, para elegir en papel cuáles entran.
+`imprimir` necesita Google Chrome instalado (o la ruta de otro Chrome en la variable `NUDOS_CHROME`). Deja en `build/<slug>/impresion/` las imágenes a 300 ppp y `prueba.pdf`, una página de prueba en color y en escala de grises. `ficha` genera esas imágenes y arma con ellas `build/<slug>/ficha.pdf`, el pliego de dos páginas con QR al visor. `mejoras` arma `build/mejoras/prueba.pdf`, la página de prueba de las mejoras del render: algunas imágenes sin mejoras, con cada una y con todas, que son las de las fichas, para mirarlas en papel.
 
 Para publicar el sitio, desde `main` ya subido: `scripts/publicar.sh`. Sube el sitio a la rama `gh-pages`, que es la que sirve GitHub Pages.
 

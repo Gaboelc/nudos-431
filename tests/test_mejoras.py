@@ -1,5 +1,6 @@
-"""Mejoras del render (T7b): apagadas en las fichas y comparadas en la página de prueba.
-Las pruebas que dibujan necesitan Chrome; sin él se saltan."""
+"""Mejoras del render (T7b): las que eligió Gabriel van en las fichas, y la página de prueba
+las compara con las imágenes sin mejoras. Las pruebas que dibujan necesitan Chrome; sin él
+se saltan."""
 from dataclasses import replace
 
 import pytest
@@ -9,17 +10,18 @@ from nudos.imprimir import CELDA_MM, MEJORAS, MEJORAS_ACTIVAS, dibujar, imagenes
 from nudos.mejoras import MUESTRAS, VARIANTES, lista
 
 
-def test_las_fichas_no_llevan_mejoras(modelo_as_de_guia):
-    # Hasta que Gabriel elija con la página de prueba impresa, las imágenes de las fichas
-    # salen como las de los nudos ya aprobados.
-    assert MEJORAS_ACTIVAS == ()
-    assert all(i.mejoras == () for i in imagenes(modelo_as_de_guia))
+def test_las_fichas_llevan_las_mejoras_elegidas(modelo_as_de_guia):
+    # Las que eligió Gabriel con la página de prueba impresa; el contorno no entró.
+    assert MEJORAS_ACTIVAS == MEJORAS == ("contacto", "supermuestreo", "sombras-suaves")
+    assert all(i.mejoras == MEJORAS_ACTIVAS for i in imagenes(modelo_as_de_guia))
 
 
 def test_una_mejora_desconocida_no_se_acepta(modelo_as_de_guia):
     img = imagenes(modelo_as_de_guia)[0]
     with pytest.raises(ValueError, match="brillo"):
-        replace(img, mejoras=("contorno", "brillo"))
+        replace(img, mejoras=("contacto", "brillo"))
+    with pytest.raises(ValueError, match="contorno"):
+        replace(img, mejoras=("contorno",))
 
 
 def test_cada_mejora_va_sola_y_tambien_todas_juntas():
@@ -44,16 +46,16 @@ def test_la_pagina_de_prueba_tiene_cada_muestra_en_cada_variante(
             assert replace(v, nombre=base.nombre, mejoras=base.mejoras) == base
 
 
-def test_cada_mejora_cambia_la_imagen_y_sin_ellas_no(con_chrome, modelo_as_de_guia, tmp_path):
+def test_cada_mejora_cambia_la_imagen(con_chrome, modelo_as_de_guia, tmp_path):
     ficha = {i.nombre: i for i in imagenes(modelo_as_de_guia)}["paso-7"]
     variantes = [replace(ficha, nombre=clave, mejoras=m) for clave, _, m, _ in VARIANTES]
     rutas = dibujar([ficha] + variantes, tmp_path)
     ims = [Image.open(r).convert("RGB") for r in rutas]
     assert all(im.size == (px(CELDA_MM[0]), px(CELDA_MM[1])) for im in ims)
-    sola, hoy, *con = ims
-    assert ImageChops.difference(sola, hoy).getbbox() is None
-    for (clave, _, _, _), im in zip(VARIANTES[1:], con):
-        assert ImageChops.difference(hoy, im).getbbox() is not None, clave
+    la_de_la_ficha, sin_mejoras, *con, todas = ims
+    assert ImageChops.difference(la_de_la_ficha, todas).getbbox() is None
+    for (clave, _, _, _), im in zip(VARIANTES[1:], con + [todas]):
+        assert ImageChops.difference(sin_mejoras, im).getbbox() is not None, clave
 
 
 def test_con_mejoras_dibujar_dos_veces_da_lo_mismo(con_chrome, modelo_ballestrinque, tmp_path):

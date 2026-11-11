@@ -1,8 +1,10 @@
 """Página de prueba de las mejoras del render (T7b).
 
 Las mejoras se deciden en papel, no en la pantalla: esta página pone, a su tamaño impreso,
-algunas imágenes de los nudos ya aprobados como salen hoy y con cada mejora por separado
-(y con las cuatro juntas), en color y en gris. Gabriel la imprime y elige cuáles entran.
+algunas imágenes de los nudos ya aprobados sin mejoras, con cada mejora por separado y con
+todas juntas, en color y en gris. Con ella Gabriel eligió las que entraron (el 10 de
+noviembre de 2026: todas menos el contorno de tinta, que se quitó). Sirve para volver a
+mirarlas o para probar una nueva.
 
 Todo queda en build/mejoras/: las imágenes de cada variante en <variante>/, sus versiones
 en gris en gris/<variante>/ y la página en prueba.pdf, con una hoja en color y otra en gris
@@ -37,18 +39,15 @@ MUESTRAS = (
 
 # (carpeta, título, mejoras, qué mirar)
 VARIANTES = (
-    ("hoy", "Hoy", (), "Como salen hoy las imágenes de las fichas."),
-    ("contorno", "1. Contorno", ("contorno",),
-     "Un borde de tinta de 0,25 mm en cada cuerda y en los palos. En cada cruce, el borde de "
-     "la de encima corta a la de abajo."),
-    ("contacto", "2. Sombra de contacto", ("contacto",),
+    ("sin-mejoras", "Sin mejoras", (), "Como salían las imágenes de las fichas antes de T7b."),
+    ("contacto", "1. Sombra de contacto", ("contacto",),
      "La cuerda se oscurece justo donde otra la toca o la cruza, y donde toca un palo."),
-    ("supermuestreo", "3. Supermuestreo", ("supermuestreo",),
+    ("supermuestreo", "2. Supermuestreo", ("supermuestreo",),
      "Cada imagen se dibuja al doble y se reduce: bordes y letras más limpios."),
-    ("sombras-suaves", "4. Sombras suaves", ("sombras-suaves",),
+    ("sombras-suaves", "3. Sombras suaves", ("sombras-suaves",),
      "La sombra sobre la mesa es más clara y de borde blando, sobre todo la del poste y la "
      "de los palos."),
-    ("todas", "Las cuatro juntas", MEJORAS, "Las cuatro mejoras a la vez."),
+    ("todas", "Todas juntas", MEJORAS, "Como salen ahora las imágenes de las fichas."),
 )
 
 
@@ -98,7 +97,7 @@ def pagina_mejoras(modelos: dict[str, Modelo], carpeta: Path = DESTINO) -> Path:
                 f'{html.escape(base.titulo.lower())} · {modo}</h1>'
                 f'<p>Imprime a tamaño real (100 %, sin «ajustar a la página»). Cada imagen mide '
                 f'{CELDA_MM[0]:g} × {CELDA_MM[1]:g} mm, como en la ficha, y la línea mide 50 mm. '
-                f'Compara cada mejora con «Hoy»: ¿se ve mejor qué tramo va encima en cada cruce?'
+                f'Compara cada mejora con «Sin mejoras»: ¿se ve mejor qué tramo va encima en cada cruce?'
                 f'</p><div class="regla"></div></header>'
                 f'<div class="rejilla">{celdas}</div><ul class="leyenda">{leyenda}</ul></section>')
 
