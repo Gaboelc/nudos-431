@@ -100,7 +100,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [ ] Gabriel abre el visor en un celular de gama baja y revisa que cargue y gire con fluidez (en la computadora, armar el paso más largo del amarre tarda 37 ms en vez de 20 y girar cuesta lo mismo)
 - [ ] T7c Nudo terminado apretado, con la misma secuencia de cruces que el último paso (M, separada de T7b el 10 nov; antes del Punto de control B)
   - [x] Diseño escrito en el plan (método, dónde vive, pruebas, formato y cada nudo publicado), probado en un experimento fuera del repositorio (10 nov: el as de guía se aprieta dentro de los límites, el ballestrinque casi no cambia, la vuelta de escota es el riesgo y el amarre queda como está)
-  - [ ] Gabriel aprueba el diseño
+  - [x] Gabriel aprueba el diseño (11 nov)
   - [ ] Referencia: los cuatro nudos publicados construidos e impresos desde `main` antes de tocar el código
   - [ ] `nudos/apretar.py`, `Modelo.apretado` y `Modelo.reverso_apretado`, con sus pruebas; pasos y error idénticos byte a byte
   - [ ] Página de prueba `build/mejoras/apretado.pdf`: hoy, a medias y apretado, en color y en gris

@@ -556,7 +556,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
 
 **Tamaño:** M.
 
-**Diseño (10 de noviembre de 2026, antes de implementar; falta que Gabriel lo apruebe).** Se probó en un experimento fuera del repositorio con los tres nudos publicados que no son de plantilla. Los números de abajo salen de ahí.
+**Diseño (10 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el 11 de noviembre).** Se probó en un experimento fuera del repositorio con los tres nudos publicados que no son de plantilla. Los números de abajo salen de ahí.
 
 - **Método: acortar la cuerda dentro del nudo, como si se tirara de sus cabos.** Es el método con que se calculan los nudos apretados (SONO, *shrink on no overlaps*): la cuerda se acorta poco a poco donde está el nudo y, después de cada poco, se deshacen los choques. Así ningún tramo atraviesa a otro y ningún cruce cambia. Se parte del último paso ya relajado.
   - Cada punto de la cuerda pertenece a una de tres partes, según dónde estaba en el último paso:
