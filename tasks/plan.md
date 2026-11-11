@@ -743,6 +743,14 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
   3. El error con imagen es empezar a tejer la tercera vuelta por encima (`empieza-por-encima`). Van también los dos errores sin imagen: que la segunda pasada cambie de lado o se monte sobre la primera, y apretar de una vez tirando de un chicote.
   4. El terminado va sobre el tubo: por delante, y por detrás girado media vuelta. No se muestra el anillo solo, sin el tubo.
 
+**Cómo se hizo el formato (11 de noviembre de 2026):** como en el diseño, con estos detalles.
+- **El tubo** (`anfitrion: {tipo: tubo, radio, largo}`) solo va con una plantilla, como la cruz: sin ella es un error al cargar. Su largo tiene que ser mayor que su grosor.
+- **La plantilla** es `CabezaDeTurco`, en `nudos/plantillas/cabeza_turco.py`. Lee `cabos`, `senos` y `pasadas` con los límites del diseño. Si cabos y senos tienen un divisor común, el mensaje dice cuántas cuerdas cerradas saldrían. En el texto, `{pasadas}` con una sola pasada es «una».
+- **La variante depende de las medidas.** `VARIANTES` es una propiedad: `empieza-por-encima` existe con tres cabos, y con otro número no hay ninguna, porque la segunda vuelta ya alterna. Si una especificación pide un error con esas medidas, el mensaje dice que la plantilla no sabe construir ningún error común.
+- **La combinatoria del camino del centro** también está ahí (`cruces_del_centro`, `encima_del_centro` y `por_vuelta`), porque la variante la necesita. No depende del radio ni de la forma de la onda. Confirma lo del experimento: con 3 cabos y 2, 4, 5 o 7 senos, la segunda vuelta va toda por encima y la tercera empieza por debajo; con 4 cabos y 5 senos, la segunda va por encima y después por debajo.
+- **Hay cruces justo al completar una vuelta**, donde la cuerda vuelve al lugar donde empezó: pasa cuando cabos divide a 2k + m, con k la vuelta y m las vueltas entre las dos pasadas. Con 3 × 4, el cruce de la segunda vuelta con la primera que está justo ahí es de la vuelta que termina. Por eso cada vuelta se cuenta hasta volver al comienzo, incluido, y el fin de una vuelta como hito no puede caer justo ahí (lo decide la geometría). Con la cuenta al revés, la segunda vuelta de 3 × 4 daba «OO» y la tercera «OUOUOU».
+- **Nudos publicados:** iguales que en 80e3619, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge. En la primera impresión, `error-correcto.png` de la vuelta de escota salió con 15 píxeles distintos en 1 nivel, mientras la suite dibujaba a la vez; impresa otra vez, salió igual. Es la variación rara del navegador de T7c.
+
 #### Punto de control B: después de T7 y T8
 
 - [ ] Los 5 nudos del piloto están publicados.

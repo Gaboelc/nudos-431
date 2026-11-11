@@ -56,11 +56,11 @@ Los índices se cuentan sobre el segmento tal como está definido. Dos puntos se
 
 ## Anfitrión
 
-Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste y la cruz de los amarres; los demás (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
+Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres y el tubo de la cabeza de turco; los demás (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
 
 | Campo | Qué es |
 |---|---|
-| `tipo` | `poste` o `cruz`. |
+| `tipo` | `poste`, `cruz` o `tubo`. |
 | `radio` | Radio del poste, en diámetros de cuerda. Un palo de escoba con una cuerda de 8 mm da alrededor de 1,5. |
 | `desde`, `hasta` | Dónde empieza y termina el poste a lo largo de x. |
 
@@ -75,6 +75,16 @@ La cruz son dos palos del mismo grosor, cruzados en ángulo recto sobre la mesa,
 Los palos se cruzan en x = y = 0. El de abajo va a lo largo de y, hacia el fondo de la mesa, y se apoya en la cuerda que pasa por debajo: su eje queda a la altura `radio + 1`, como el del poste. El de arriba va a lo largo de x y se apoya sobre el de abajo.
 
 El poste es horizontal y va a lo largo de x, con el eje en y = 0. Se apoya sobre la cuerda que pasa por debajo, así que su eje queda a la altura `radio + 1`.
+
+El tubo es un cilindro alrededor del que se teje la cabeza de turco. Solo se usa con una `plantilla`.
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `tubo`. |
+| `radio` | Radio del tubo, en diámetros de cuerda. Con un cordón de 4 mm, un radio de 4 es un tubo de 3,2 cm. |
+| `largo` | Largo del tubo. Está centrado en x = 0. |
+
+Es horizontal y va a lo largo de x, con el eje en y = 0, como el poste, pero el nudo lo rodea entero y se apoya sobre él: debajo de cada cruce hay dos capas de cuerda, así que su eje queda a la altura `radio + 2`. Se gira en la mano: en cada paso, el nudo se gira alrededor del eje para que lo que agrega el paso quede de frente.
 
 Un segmento sobre el poste se escribe `{poste: [[x, ángulo], ...]}`. `x` es la posición a lo largo del eje y `ángulo`, en grados, el giro alrededor del eje: 0 arriba, 90 hacia quien ata, 180 abajo y 270 atrás. El ángulo no vuelve a 0: una vuelta por encima del poste que empieza al frente va, por ejemplo, de 90 a -270, y la siguiente sigue bajando. Así el sentido de cada vuelta queda escrito en los números. No hay capas: qué tramo queda encima en cada cruce lo dice la secuencia, igual que sobre la mesa.
 
@@ -118,7 +128,9 @@ secuencia:
 
 Algunos nudos no se dibujan punto por punto: se generan a partir de unas pocas medidas, como los amarres. Un nudo así lleva `plantilla` y no lleva `segmentos`; sus pasos no llevan `trazado`, `secuencia` ni `resaltar`, sino `hasta`, que dice hasta dónde llega cada uno. La plantilla calcula la cuerda entera y cada paso es su comienzo hasta ese punto, así que cambiar una medida, por ejemplo de 3 a 4 vueltas, regenera todos los pasos.
 
-Por ahora la única es el amarre cuadrado, sobre una `cruz`:
+Hay dos: el amarre cuadrado, sobre una `cruz`, y la cabeza de turco, sobre un `tubo`.
+
+### Amarre cuadrado
 
 ```yaml
 anfitrion: {tipo: cruz, radio: 2.5, largo: 40}
@@ -149,6 +161,39 @@ Por ahora el inicio va en el palo de abajo y el cierre en el de arriba, que es e
 En todo el texto del nudo, `{vueltas}` y `{ahorcados}` se reemplazan por el número en letras («tres»). Otra palabra entre llaves es un error. En los nudos sin plantilla las llaves se dejan como están.
 
 En las imágenes se ven los dos extremos de la cuerda, y los dos llevan remate. El paso del ballestrinque de inicio (`inicio-1` o `inicio`) lleva «Firme» en la parte larga y «Chicote» en el extremo corto, como el ballestrinque. Desde la primera vuelta se mueve la parte larga, y los pasos solo llevan «Chicote», en su punta.
+
+### Cabeza de turco
+
+```yaml
+anfitrion: {tipo: tubo, radio: 4, largo: 24}
+plantilla:
+  tipo: cabeza-de-turco
+  cabos: 3
+  senos: 4
+  pasadas: 2
+pasos:
+  - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+  - {titulo: Cruza por encima, texto: …, hasta: vuelta-2}
+  - {titulo: Empieza a tejer, texto: …, hasta: vuelta-3-mitad}
+  - {titulo: Termina de tejer, texto: …, hasta: vueltas}
+  - {titulo: Sigue el mismo camino, texto: …, hasta: pasadas}
+  - {titulo: Esconde los chicotes, texto: …, hasta: remate}
+```
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `cabeza-de-turco`. |
+| `cabos` | Vueltas que da la cuerda al tubo, de 2 a 5. |
+| `senos` | Senos que hace en cada borde del nudo, de 2 a 7. No puede tener un divisor común con `cabos` aparte del 1: si lo tiene, salen dos o más cuerdas cerradas y no un nudo de una sola cuerda. Con 3 cabos no se puede hacer con 3 ni con 6 senos. |
+| `pasadas` | Veces que la cuerda recorre el mismo camino, de 1 a 3. Cada pasada más va junto a la primera, siempre del mismo lado. |
+
+El método es tejer vuelta por vuelta: cada vuelta pasa por encima o por debajo de lo que ya está, como queda en el nudo terminado, así que entre un paso y otro ningún cruce cambia. Con 3 cabos, la primera vuelta no cruza nada, la segunda cruza la primera siempre por encima y la tercera teje por debajo, por encima, por debajo… hasta llegar junto al comienzo. Cada pasada más sigue el mismo camino, y al final los dos extremos se esconden bajo la banda de al lado. Con otro número de cabos se teje igual, pero la segunda vuelta ya no va toda por encima. Se cruza `senos × (cabos − 1) × pasadas²` veces, más los cruces del remate.
+
+`hasta` puede ser, en este orden: `vuelta-1-mitad`, `vuelta-1`, … `vuelta-<cabos>-mitad`, `vuelta-<cabos>` (la primera pasada, por medias vueltas), `pasada-2-mitad`, `pasada-2`, … `pasada-<pasadas>` y `remate` (los dos extremos escondidos). `vueltas` es lo mismo que la última vuelta y `pasadas` que la última pasada; con una sola pasada, `pasadas` es lo mismo que `vueltas`. Cada paso llega más lejos que el anterior y el último llega a `remate`.
+
+En todo el texto del nudo, `{cabos}`, `{senos}` y `{pasadas}` se reemplazan por el número en letras («tres», y «una» pasada). Cambiar una medida regenera la cuerda, los cruces, los pasos y las imágenes, pero el texto puede tener que cambiar: «cruza por encima tres veces» depende de los senos.
+
+Ningún paso tiene firme: el extremo corto se sujeta contra el tubo y se trabaja con la parte larga, que lleva «Chicote» en su punta en todos los pasos. Los dos extremos llevan remate.
 
 ## Pasos
 
@@ -186,7 +231,7 @@ En un nudo de plantilla, el error no son cruces al revés sino una variante del 
 | `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
 | `titulo` | Nombre corto del error. |
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
-| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado tiene `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. |
+| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado tiene `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
 | `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. En la ficha van debajo del error con imagen, como «Otro error común». |
 

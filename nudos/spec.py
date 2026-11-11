@@ -34,8 +34,13 @@ _CAMPOS_OTRO_ERROR = {"titulo", "texto"}
 _CAMPOS_TERMINADO = {"encuadre"}
 _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 # Campos de cada tipo de anfitrión, además de «tipo»; todos son medidas en diámetros.
-_MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "largo")}
+_MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "largo"),
+                      "tubo": ("radio", "largo")}
 TIPOS_ANFITRION = tuple(_MEDIDAS_ANFITRION)
+# Los anfitriones que solo se usan con una plantilla, con la plantilla de ejemplo.
+_SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco"}
+# Cómo se nombra el anfitrión en los mensajes.
+_DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo"}
 # Una medida de la plantilla dentro del texto, como {vueltas}.
 _MEDIDA = re.compile(r"\{([^{}]*)\}")
 _CAMPOS_CUERDA = {"nombre", "grosor", "color"}
@@ -90,12 +95,16 @@ class Anfitrion:
     Cruz: dos palos del mismo radio, cruzados en ángulo recto en x = y = 0, para los
     amarres. El de abajo va a lo largo de y y se apoya en la cuerda que pasa por debajo,
     con el eje a la altura radio + 1, como el poste. El de arriba va a lo largo de x y se
-    apoya sobre el de abajo. Cada palo mide `largo` y está centrado en el cruce."""
+    apoya sobre el de abajo. Cada palo mide `largo` y está centrado en el cruce.
+
+    Tubo: un cilindro horizontal a lo largo de x, centrado en x = 0 y con el eje en y = 0,
+    para la cabeza de turco. El nudo lo rodea entero y se apoya sobre él: debajo de cada
+    cruce hay dos capas de cuerda, así que el eje queda a la altura radio + 2. Mide `largo`."""
     tipo: str
     radio: float
     desde: float | None = None   # poste: extremos a lo largo de x
     hasta: float | None = None
-    largo: float | None = None   # cruz: largo de cada palo
+    largo: float | None = None   # cruz: largo de cada palo; tubo: su largo
 
 
 @dataclass(frozen=True)
@@ -221,8 +230,9 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
     if not isinstance(pasos, list) or not pasos:
         raise falla("falta la lista de pasos")
     if plantilla is None:
-        if anfitrion is not None and anfitrion.tipo == "cruz":
-            raise falla("el anfitrión cruz va con una plantilla, como amarre-cuadrado")
+        if anfitrion is not None and anfitrion.tipo in _SOLO_CON_PLANTILLA:
+            raise falla(f"el anfitrión {anfitrion.tipo} va con una plantilla, como "
+                        f"{_SOLO_CON_PLANTILLA[anfitrion.tipo]}")
         segmentos = _segmentos(datos.get("segmentos"), anfitrion, falla)
         duenos: dict[str, tuple[int, int]] = {}
         pasos = tuple(_paso(i + 1, p, segmentos, cuerdas, duenos, falla) for i, p in enumerate(pasos))
@@ -439,6 +449,9 @@ def _error(datos, pasos: tuple[Paso, ...], plantilla, falla) -> Error | None:
             raise ef("en un nudo de plantilla, el error es una «variante» del método, no "
                      "cruces al revés")
         variante = datos.get("variante")
+        if not plantilla.VARIANTES:
+            raise ef(f"con estas medidas, la plantilla {plantilla.tipo} no sabe construir "
+                     "ningún error común")
         if not isinstance(variante, str) or variante not in plantilla.VARIANTES:
             raise ef(f"«variante» es una de: {', '.join(plantilla.VARIANTES)}")
         desde, hitos = plantilla.VARIANTES[variante], plantilla.hitos()
@@ -513,13 +526,14 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         if not isinstance(v, (int, float)) or isinstance(v, bool):
             raise af(f"falta «{clave}», en diámetros de cuerda")
         numeros[clave] = float(v)
-    que = "del poste" if tipo == "poste" else "de los palos"
     if numeros["radio"] < 0.5:
-        raise af(f"el radio {que} es de al menos medio diámetro de cuerda")
+        raise af(f"el radio {_DEL_ANFITRION[tipo]} es de al menos medio diámetro de cuerda")
     if tipo == "poste" and numeros["desde"] >= numeros["hasta"]:
         raise af("«desde» va antes que «hasta»")
     if tipo == "cruz" and numeros["largo"] <= 2 * numeros["radio"]:
         raise af("«largo» es el largo de cada palo; tiene que ser mayor que su grosor")
+    if tipo == "tubo" and numeros["largo"] <= 2 * numeros["radio"]:
+        raise af("«largo» es el largo del tubo; tiene que ser mayor que su grosor")
     return Anfitrion(tipo, **numeros)
 
 
