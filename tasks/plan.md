@@ -642,9 +642,106 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
 
 **Dependencias:** T5
 
-**Archivos:** `nudos/plantillas/cabeza_turco.py`, `specs/cabeza-de-turco.yaml`, `tests/test_cabeza_de_turco.py`
+**Archivos:** `nudos/plantillas/cabeza_turco.py`, `specs/cabeza-de-turco.yaml`, `tests/test_cabeza_de_turco.py`. Con el diseño de abajo, además: `nudos/plantillas/pasos.py`, `nudos/anfitrion.py`, `nudos/spec.py`, `nudos/imprimir.py`, `nudos/hoja.py`, `render/escena.js` y `docs/formato-spec.md`.
 
-**Tamaño:** S
+**Tamaño:** M, no S. Son una plantilla y un anfitrión nuevos, como en T7.
+
+**Diseño (11 de noviembre de 2026, antes de implementar).** Las referencias son `entradas/cabeza-de-turco/` (27 imágenes: una de tres cabos tejida alrededor de una tabla, que se gira mientras se teje, y triplicada) y la página 26 del manual de la Tropa (una de tres cabos y cinco senos atada plana sobre la mesa, doblada y pasada después a un objeto cilíndrico). Los números salen de un experimento fuera del repositorio con la cuerda ideal sobre el tubo, sin relajar y sin los extremos.
+
+- **El nudo, sobre el tubo desenrollado.** Si se mira la superficie del tubo desenrollada (a lo largo del eje y alrededor), la cuerda va de un borde al otro y vuelve, como una onda.
+  - Da tantas vueltas al tubo como cabos, hace tantos senos en cada borde como senos y se cruza senos × (cabos − 1) veces. Con 3 cabos y 4 senos son 3 vueltas, 4 senos de cada lado y 8 cruces.
+  - Los cruces alternan encima y debajo a lo largo de toda la cuerda.
+  - Cabos y senos no pueden tener un divisor común aparte del 1. Si lo tienen, salen dos o más cuerdas cerradas y no un nudo de una sola cuerda: con 3 cabos no se puede hacer con 3 ni con 6 senos.
+  - Con más pasadas, cada cabo lleva varias cuerdas paralelas que hacen lo mismo, y cada cruce de cabos pasa a ser pasadas × pasadas cruces: 32 con 3 × 4 y dos pasadas.
+- **Método: cada vuelta va en su lugar definitivo.** La plantilla teje la cuerda vuelta por vuelta, y cada vuelta pasa por encima o por debajo de lo que ya está, como queda en el nudo terminado. Con 3 cabos, sean cuantos sean los senos, salen los pasos del método clásico de tres cabos:
+  1. La primera vuelta no cruza nada.
+  2. La segunda cruza la primera siempre por encima: 3 veces con 4 senos.
+  3. La tercera teje por debajo, por encima, por debajo… (5 cruces con 4 senos) hasta llegar junto al comienzo.
+  4. Cada pasada más sigue el mismo camino junto a la primera, siempre del mismo lado: por encima donde ella va por encima y por debajo donde va por debajo.
+  5. Se esconden los chicotes.
+
+  Así cada paso es el comienzo de la cuerda entera, como en el amarre, y un cruce conserva su etiqueta en todos los pasos.
+  - En las fotos de `entradas/` se dan dos vueltas casi paralelas y después se cruzan entre sí al trenzar. El manual la ata plana y al final la pasa al tubo. En los dos casos, entre un paso y otro cambian cruces que ya estaban, o la forma entera, y aquí cada cambio sería un cruce nuevo con otra etiqueta. Tejiendo vuelta por vuelta sale el mismo nudo sin mover lo que ya está atado.
+  - Con otro número de cabos se teje igual, alternando con lo que ya está, pero la segunda vuelta ya no va toda por encima: con 4 cabos y 5 senos, por ejemplo, pasa por encima y después por debajo. La plantilla lo construye igual. El texto de los pasos se escribe para las medidas de la especificación.
+- **El tubo:** un anfitrión nuevo, `tipo: tubo`, con `radio` y `largo`. Es un cilindro horizontal a lo largo de x, centrado en x = 0 y con el eje en y = 0. Se parece al poste, con dos diferencias:
+  - Se apoya sobre el nudo, que lo rodea entero. Debajo de cada cruce hay dos capas de cuerda, así que su eje queda a la altura radio + 2 (el del poste está a radio + 1).
+  - Se gira en la mano: en cada paso, la plantilla gira el nudo alrededor del eje para que lo que agrega el paso quede de frente (ver «Escena»).
+  - El poste y la cruz no cambian.
+  - El radio mínimo depende de las medidas (ver «Geometría»). Propuesta: radio 4. Con un cordón de 4 mm es un tubo de 3,2 cm, y con uno de 3 mm, de 2,4 cm, el grosor de un anillo de pañoleta.
+- **Formato:**
+
+  ```yaml
+  anfitrion: {tipo: tubo, radio: 4, largo: 24}
+  plantilla:
+    tipo: cabeza-de-turco
+    cabos: 3
+    senos: 4
+    pasadas: 2
+  pasos:
+    - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+    - {titulo: Cruza por encima, texto: …, hasta: vuelta-2}
+    - {titulo: Empieza a tejer, texto: …, hasta: vuelta-3-mitad}
+    - {titulo: Termina de tejer, texto: …, hasta: vueltas}
+    - {titulo: Sigue el mismo camino, texto: …, hasta: pasadas}
+    - {titulo: Esconde los chicotes, texto: …, hasta: remate}
+  ```
+
+  - `cabos` va de 2 a 5, `senos` de 2 a 7, sin divisor común con `cabos` aparte del 1, y `pasadas` de 1 a 3. Otra cosa es un error al cargar.
+  - `hasta` puede ser, en este orden: `vuelta-1-mitad`, `vuelta-1`, … `vuelta-<cabos>-mitad`, `vuelta-<cabos>` (la primera pasada, por medias vueltas), `pasada-2-mitad`, `pasada-2`, … `pasada-<pasadas>` y `remate`. `vueltas` es lo mismo que la última vuelta y `pasadas` que la última pasada, como `vueltas` y `ahorcados` en el amarre. Cada paso llega más lejos que el anterior y el último llega a `remate`.
+  - En el texto, `{cabos}`, `{senos}` y `{pasadas}` salen en letras.
+  - Ningún paso tiene firme: el extremo corto se sujeta contra el tubo y se trabaja con la parte larga, que lleva «Chicote» en su punta en todos los pasos. Los dos extremos llevan remate, como en el amarre.
+  - Cambiar cabos, senos o pasadas es cambiar un número: la cuerda, los cruces, los pasos y las imágenes se regeneran. El texto sí puede tener que cambiar, porque «cruza por encima tres veces» depende de los senos.
+- **Geometría:** la plantilla calcula una sola vez la parte de la cuerda que va sobre el tubo, desde donde entra el extremo corto hasta el chicote, en coordenadas del tubo: posición a lo largo, ángulo y distancia al eje.
+  - **El camino** del centro de cada cabo es una onda hecha de arcos de circunferencia. Redondea los senos más que una sinusoide del mismo ancho: en el experimento, con un radio casi del doble. Las pasadas van paralelas, a 1,1 diámetros, del mismo lado de la primera.
+  - **La altura.** En cada cruce, la cuerda de encima va 1 diámetro más lejos del eje que la de debajo, que va apoyada en el tubo. Sobre una banda de varias pasadas sigue arriba todo lo que dura la banda, más 0,6, y entre un cruce y el siguiente sube o baja con una curva suave.
+  - **El ancho de la onda** lo elige la plantilla según el radio del tubo. A media altura entre los bordes, las cuerdas forman un ángulo con la dirección en que se rodea el tubo. Es el menor entre 45° y 70°, de 5 en 5, con el que la cuerda ideal queda a 1 diámetro de las demás y con un radio de curvatura de al menos 1,2. Con más ángulo, la onda es más ancha y hay más cuerda entre un cruce y el siguiente, así que cabe en un tubo más delgado, pero las cuerdas se cruzan más cerradas. Si no cabe ni con 70°, la falla dice el radio mínimo para esas medidas.
+
+    | Cabos × senos y pasadas | Radio mínimo | Con radio | Ángulo | Ancho del nudo | Cuerda en el nudo | Cruces |
+    |---|---|---|---|---|---|---|
+    | 3 × 4, una | 2 | 4 | 45° | 5,4 | 105 | 8 |
+    | 3 × 4, dos | 2,75 | 4 | 60° | 8,2 | 227 | 32 |
+    | 3 × 4, tres | 4 | 5,5 | 60° | 11,4 | 443 | 72 |
+    | 3 × 5, dos | 3,5 | 5 | 60° | 8,1 | 275 | 40 |
+    | 3 × 5, tres | 5,25 | 6,5 | 65° | 11,6 | 531 | 90 |
+
+    El ancho y la cuerda están en diámetros; la cuerda no incluye los extremos. Con el radio de la tercera columna, la curvatura mínima de la cuerda ideal es de 1,3 a 1,8. Con 4 cabos y 5 senos, con una pasada y radio 4, no cabe con ningún ángulo: con más cabos hay cruces cerca de los senos, más juntos a lo largo de la cuerda, y hace falta un tubo más grueso.
+  - **Los extremos** salen del nudo por un mismo seno de un borde. El extremo corto llega desde fuera del nudo, a lo largo del tubo, y entra por la cuerda de más afuera de ese seno. Al final de cada pasada, antes de llegar a donde empezó la anterior, la cuerda se corre a la siguiente por dentro de ese seno, así que no cruza el extremo corto. Ahí es donde hay menos lugar: entre el último cruce y el seno tienen que caber el paso de una pasada a la siguiente y el final del chicote. Es lo que en el amarre fueron las esquinas.
+  - **El remate:** cada extremo se mete por debajo de la banda de al lado, entre el nudo y el tubo, y queda escondido. La plantilla escribe esos cruces. Es el único paso en que cambia el extremo corto, que en los demás cuelga hasta la mesa.
+  - **Cada paso** es el comienzo de esa cuerda hasta su `hasta`, girado para que quede de frente, más el extremo corto y el resto, que salen del nudo y caen a la mesa. Los dos se trazan en cada paso, porque por dónde caen depende del giro.
+  - Después se pasa la curva suave, se muestrea cada 0,2 diámetros y se relaja como el amarre: sin gravedad, con choques entre tramos y sin entrar en el tubo más de 0,05 ni estirarse.
+  - Un nudo de plantilla no se aprieta (T7c): la plantilla ya traza la cuerda tensa.
+  - `nudos/plantillas/pasos.py` hoy sirve solo al amarre, porque usa la cruz y sus mapas. Pasa a pedirle a cada plantilla su sólido, su cuerda y sus mapas, sin que cambie lo que da el amarre.
+- **Cruces sobre el tubo:** como sobre el poste, en la superficie desenrollada del tubo, comparando cada par en la vuelta más cercana; encima es lo más lejos del eje.
+  - Hay dos zonas: el tubo, con la parte tejida, y la mesa, con el extremo corto y el resto hasta que llegan al nudo. Los cruces entre zonas no se buscan; ahí solo se comprueba la separación, como entre el poste y la mesa.
+  - La plantilla escribe la secuencia del método. Alterna por cabos a lo largo de la cuerda, y cada pasada hace lo mismo que la primera. Las etiquetas se numeran en el orden en que se forma cada cruce, así que un cruce conserva la suya en todos los pasos.
+  - Esa secuencia se compara con la que se mide en la cuerda relajada, como en los nudos libres. Es la prueba de que el tejido alterna bien sobre el tubo, el primer criterio de aceptación. Las pruebas comprueban además, para varias medidas, que la secuencia de la plantilla alterna por cabos y tiene senos × (cabos − 1) × pasadas² cruces, más los del remate.
+  - Cada cruce guarda su lugar en el mapa del tubo, a lo largo y alrededor, y no en la mesa. Como el nudo se gira entre pasos, en la mesa un mismo cruce se movería, y la heurística del cruce que salta lo tomaría por otro.
+- **Error común:** una variante del método, como en el amarre. Propuesta: `empieza-por-encima`.
+  - En la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando. Es el error más fácil de cometer, porque la segunda vuelta fue toda por encima. Todos los cruces de la tercera vuelta quedan al revés y el nudo no se traba.
+  - Se ve desde `vuelta-3-mitad`. Se construye y se comprueba como un paso más, con el mismo giro y el mismo encuadre que el paso bien hecho.
+  - Sin imagen (`error.otros`) irían dos más: que la segunda pasada cambie de lado o se monte sobre la primera, y apretar de una vez tirando de un chicote, que deforma el nudo. Se aprieta de a poco, siguiendo la cuerda.
+- **Nudo terminado:** por delante, el último paso. Por detrás, el tubo y el nudo girados media vuelta alrededor del eje. Es un giro rígido, como el volteo del amarre: la secuencia no cambia y no se relaja de nuevo. Entre las dos vistas se ve el nudo entero, también la parte que en la vista de los pasos queda contra la mesa.
+- **Escena:**
+  - El tubo es un cilindro de madera, como el poste.
+  - **El giro de cada paso.** Lo que agrega el paso, o su última media vuelta si es más largo, queda centrado en la cara del tubo que mira la cámara. La cámara de los pasos mira desde arriba y algo por delante, a unos 40° de la vertical. Como el tubo se ve igual girado, en la imagen solo gira la cuerda. El texto dice cuándo girar el tubo: hacia ti, porque la cuerda pasa por encima del tubo hacia el fondo.
+  - Nombres: solo «Chicote», en la punta de la parte larga.
+- **Hoja de revisión:** sobre el tubo, la vista desde arriba no sirve para revisar 32 cruces. La hoja dibuja además el tubo desenrollado con cada cruce y su etiqueta, que es donde se ve si el tejido alterna.
+- **Ficha** (con 3 cabos, 4 senos y dos pasadas):
+  - 6 pasos, todos en la página 1. Con tres pasadas son 7, como en el amarre.
+  - El error, junto al paso 3 bien hecho, y el terminado, por delante y girado.
+  - Materiales, por confirmar al atarlo: un cordón de 3 o 4 mm y unos 1,5 m, y un tubo o un palo redondo de unos 3 cm de grosor. Cuanto más grueso el cordón, más grueso tiene que ser el tubo.
+  - Familia nueva: Decorativos. Usos: anillo para sujetar la pañoleta, y adorno o agarre en un bastón o un mango.
+  - No lleva sección de seguridad, porque no sostiene nada. En las precauciones: si sellas los chicotes con fuego, el nylon derretido quema.
+- **Lo que no cambia:** el generador libre, el poste, la cruz y la plantilla del amarre. Los cuatro nudos de `publicados.txt` tienen que dar los mismos `modelo.json`, byte a byte, y las mismas imágenes, comparadas en RGB, que en 80e3619. Esa referencia ya está construida, fuera del repositorio.
+- **Riesgos:**
+  1. Los extremos, por lo apretado que queda el seno por donde salen. Si no caben, el extremo corto entra a media diagonal, lejos de los cruces, o se agranda el tubo, mirando las imágenes. Los límites no se aflojan.
+  2. Sobre un tubo liso, los senos de las primeras vueltas pueden correrse hasta que la tercera vuelta los traba. El texto pide sujetarlos con el pulgar. El filtro 1 dirá si alcanza o si conviene un tubo que agarre más, como uno de cartón.
+  3. Que se lean 32 cruces en una imagen de 58 × 64 mm. Por eso cada paso pone de frente lo que agrega. Con tres pasadas serían 72.
+- **Lo que tiene que decidir Gabriel:**
+  1. El método: tejer vuelta por vuelta, como se propone, o trenzar como en las fotos, o atarla plana como en el manual. Las dos últimas cambian cruces entre pasos.
+  2. Las medidas: 3 cabos y 4 senos, como se propone, o 3 y 5, como en el manual. Y dos pasadas, como se propone (un tubo de 3 cm y 6 pasos), o tres, como en las fotos (con un cordón de 4 mm, un tubo de unos 4,5 cm, y 7 pasos).
+  3. El error con imagen: empezar a tejer por encima, como se propone. Y si van los dos errores sin imagen.
+  4. El terminado: sobre el tubo, por delante y girado media vuelta, como se propone, o el anillo solo, sin el tubo, acostado en la mesa.
 
 #### Punto de control B: después de T7 y T8
 

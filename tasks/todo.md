@@ -106,7 +106,10 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Página de prueba `build/mejoras/apretado.pdf`: hoy, a medias y apretado, en color y en gris (11 nov: seis hojas, as de guía, ballestrinque y vuelta de escota)
   - [x] Gabriel compara en papel y decide si entra (y cuál de las tres) (11 nov: «Apretado», con las 30 rondas)
   - [x] `TERMINADO_APRETADO = True` y nueva referencia, anotada aquí: desde el commit «T7c: las fichas llevan el nudo apretado», las imágenes del terminado del as de guía, el ballestrinque y la vuelta de escota son las nuevas; las demás imágenes y los modelos no cambian (55 imágenes píxel por píxel y los modelos byte a byte contra 52cb117), así que los filtros 1 siguen valiendo y no hubo que publicar el sitio. Construir dos veces da lo mismo; las cuatro fichas se arman y caben. Las comparaciones de «nudos publicados idénticos» se hacen desde ese commit, y las imágenes se comparan en RGB: el script de T7b no veía diferencias (ver «Cómo entró» de T7c en el plan)
-- [ ] T8 Plantilla de la cabeza de turco (S, depende de T5)
+- [ ] T8 Plantilla de la cabeza de turco (M, no S: plantilla y anfitrión nuevos, como T7; depende de T5)
+  - [x] Diseño escrito en el plan (método, tubo, formato, geometría, cruces sobre el tubo, error, terminado, escena, hoja y ficha), con los números de un experimento fuera del repositorio (11 nov: se teje vuelta por vuelta sobre un tubo que se gira; con 3 cabos y 4 senos, la segunda vuelta va toda por encima y la tercera teje; dos pasadas en un tubo de radio 4 dan 32 cruces)
+  - [x] Referencia de los cuatro nudos publicados construida e impresa desde 80e3619, fuera del repositorio
+  - [ ] Gabriel aprueba el diseño y responde las cuatro preguntas del final (método, medidas, error y terminado)
 - [ ] Punto de control B:
   - [ ] Los 5 nudos del piloto están publicados
   - [ ] El formato de especificación v1 está congelado
