@@ -15,10 +15,9 @@ abok: 1053
 # Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
 usos: >-
   Forma una gaza fija en medio de la cuerda, sin usar los extremos. Sirve para enganchar
-  algo a lo largo de una cuerda tendida, como un mosquetón, o para tener de dónde tirar al
-  tensar una cuerda. También sirve para dejar fuera un tramo dañado: ese tramo queda en la
-  gaza y no recibe carga. Aguanta que tires desde la gaza hacia cualquiera de los dos
-  lados, o de un lado al otro, y aunque haya aguantado mucho se desata con facilidad.
+  algo a una cuerda tendida, como un mosquetón, o para dejar fuera un tramo dañado, que
+  queda en la gaza y no recibe carga. Aguanta tirones hacia cualquier lado y, aunque haya
+  aguantado mucho, se desata con facilidad.
 materiales: >-
   Una cuerda de unos 2 m: el nudo va en el medio. Para aprender, usa una de 6 a 10 mm de
   grosor que no sea rígida.
@@ -45,7 +44,7 @@ alternativas:
     cuando: Cuando necesitas la gaza en el extremo y tiene que aguantar mucho.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 encuadre:
   x: [-12.60, 12.60]
@@ -99,9 +98,9 @@ segmentos:
 pasos:
   - titulo: Prepara la cuerda
     texto: >-
-      El nudo va en el medio de la cuerda, así que los dos extremos son firmes. Pon la
-      cuerda en diagonal: el firme de la derecha se queda quieto, y con el otro lado, el
-      chicote, trabajas. Deja de ese lado por lo menos 1,5 m.
+      El nudo va en medio de la cuerda: los dos extremos son firmes. Pon la cuerda en
+      diagonal. El de la derecha queda quieto; con el otro lado, el chicote, trabajas.
+      Deja de ese lado 1,5 m.
     trazado: [firme, recto]
     secuencia: ""
 

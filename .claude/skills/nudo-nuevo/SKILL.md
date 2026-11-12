@@ -117,6 +117,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 
 - `python -m nudos revision <slug>` arma `revision/<slug>/index.html`, con las imágenes de la fuente junto a cada paso y la secuencia declarada al lado de la medida. Mírala tú primero, paso por paso contra la fuente.
 - La hoja muestra también la separación, la curvatura y el estiramiento de cada paso. Lo que queda cerca del límite, aunque pase, conviene abrirlo. Al final está el nudo terminado apretado, que es el de la ficha, con cuánto se acortó la cuerda: si casi no cambió, el nudo está dibujado suelto.
+- **Arma la ficha** con `python -m nudos ficha <slug>` (con Edge en `NUDOS_CHROME`) y comprueba que cabe. Si no cabe, acorta el texto sin cambiar lo que dice: la página 1 lleva para qué sirve, los materiales y los pasos 1 a 6, y la página 2, el resto. Pasó con el ocho doble y la mariposa alpina. Un ítem de una lista que tiene «: » en medio va entre comillas, o YAML lo lee como un mapa.
 - Después informa: qué generador elegiste, qué imágenes van en cada paso, de qué cruces dudas, qué fallas corregiste y dónde está la hoja. Gabriel la revisa y decide si el nudo pasa a `modelado`. Sus correcciones se anotan en T9 del plan, y las que se repiten pasan a «Lo que aprendimos», abajo.
 
 ## Corrida dorada

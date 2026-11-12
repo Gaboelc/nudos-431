@@ -984,6 +984,10 @@ Después de cada tanda hay un punto de control:
   - **El ocho, redibujado:** el cuerpo del nudo, al 90 % alrededor de su centro, con el firme y el chicote igual de largos. Construye sin fallas, con un estiramiento de hasta 1,3 %; al 80 % la cuerda se estiraba más de 2 % en el lazo de abajo. Apretado, la cuerda del nudo baja ahora de 58,9 a 42,9 diámetros; antes bajaba de 67,9 a 48,6. Su terminado apretado ya se veía tallado antes, así que el cambio está sobre todo en los pasos.
 - **Lo que dijeron las sesiones de la skill,** que ya está en ella: qué hacer si las imágenes son de otro nudo, con un nudo que la fuente ata en la mano, con uno sin chicote y con uno de cuerda doble; cómo unir los segmentos entre pasos, y una duda `general` en `pasos.yaml`.
 - **Queda como tarea de código:** que un nudo sin chicote, como la mariposa, no lleve «Chicote» en su segundo firme. Hoy el formato recorre la cuerda desde un firme hasta un chicote.
+- **Los borradores redibujados** (12 nov): el simple, el ocho doble y la mariposa alpina, tallados, y Gabriel aprobó sus hojas. Entraron a `main` con `cherry-pick` y están en `modelado`, como el ocho.
+  - **La mariposa lleva un paso 7, «Saca la gaza».** En R9 la gaza queda encerrada bajo el cruce de los dos tramos de arriba, y el apretado se la comía. En R10 sus dos patas pasan por encima de esos tramos: son los cruces 11 a 14. Con ese paso, la gaza sale larga también en el terminado apretado.
+  - **Las fichas no cabían** en el ocho doble y la mariposa. Se acortó el texto sin cambiar lo que dice, y la skill pide ahora armar la ficha antes del informe.
+  - Pasan 388 pruebas.
 
 ### Fase 5: libro y primera edición
 

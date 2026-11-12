@@ -22,31 +22,29 @@ materiales: >-
   Una cuerda de unos 2 m. Para aprender, usa una de 6 a 10 mm de grosor que no sea
   rígida.
 verificacion:
-  - Todo el nudo va doble. Las dos cuerdas corren juntas, una al lado de la otra, sin cruzarse entre ellas.
+  - Todo el nudo va doble, con las dos cuerdas juntas y sin cruzarse.
   - Se ve un 8 hecho con la cuerda doble, como el ocho pero con dos cuerdas.
   - El firme y el chicote salen juntos por un lado del nudo, y la gaza por el otro.
-  - Si tiras de la gaza y del firme a la vez, el nudo no se corre y la gaza no cambia de tamaño.
+  - Al tirar de la gaza y del firme, el nudo no se corre.
   - Te sobra chicote, por lo menos el ancho de tu mano.
 seguridad: >-
   En escalada y en rescate, este nudo se usa para asegurar a personas. En este libro eso
   es solo conocimiento: en las actividades del grupo no lo uses para sostener, subir ni
   bajar a nadie. Esa práctica se hace únicamente con instructor y equipo certificados.
 precauciones:
-  - Apriétalo bien antes de cargarlo, tirando por separado del firme, del chicote y de los dos lados de la gaza. Flojo, se deforma.
+  - Apriétalo bien antes de cargarlo, tirando de cada una de sus cuatro puntas. Flojo, se deforma.
   - Después de aguantar mucha carga cuesta desatarlo. Para aflojarlo, dobla el nudo hacia un lado y hacia el otro.
   - La gaza no se ajusta. Si te quedó grande o chica, deshaz el nudo y vuelve a empezar.
 alternativas:
   - nudo: As de guía
-    cuando: >-
-      Cuando la gaza tiene que rodear algo, como un poste o un árbol, o cuando la vas a
-      desatar después de cargarla.
+    cuando: Cuando la gaza tiene que rodear algo, como un poste, o la vas a desatar después de cargarla.
   - nudo: Mariposa alpina
     cuando: Cuando necesitas la gaza en el medio de la cuerda y no en el extremo.
   - nudo: Ocho
     cuando: Cuando solo necesitas un tope en el extremo de la cuerda, sin gaza.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 encuadre:
   x: [-18.5, 12.0]
@@ -145,9 +143,8 @@ segmentos:
 pasos:
   - titulo: Dobla la cuerda
     texto: >-
-      Dobla el extremo de la cuerda para formar un seno largo, con los dos tramos juntos,
-      uno al lado del otro. El tramo largo es el firme y el corto, el chicote. Deja
-      doblados unos 90 cm: alcanzan para el nudo y una gaza de un palmo.
+      Dobla el extremo de la cuerda en un seno largo, con los dos tramos juntos. El
+      tramo largo es el firme y el corto, el chicote. Deja doblados unos 90 cm.
     trazado: [firme, doble-ida, baja-ida, seno-1, baja-regreso, doble-regreso]
     secuencia: ""
 
@@ -170,8 +167,7 @@ pasos:
   - titulo: Pasa el seno por la vuelta
     texto: >-
       Baja con el seno y pásalo por la vuelta del paso 2: entra por debajo y sale por
-      encima. El seno que sale es la gaza. Acomoda las cuerdas para que vayan juntas en
-      todo el nudo y aprieta tirando del firme, del chicote y de la gaza.
+      encima. El seno que sale es la gaza. Acomoda las cuerdas juntas y aprieta.
     trazado: [firme, doble-ida, vuelta-ida, rodeo-ida, pasa-ida, gaza, pasa-regreso, rodeo-regreso, vuelta-regreso, doble-regreso]
     secuencia: "5U 6U 1O 2O 9U 10U 11O 12O 3U 1U 6O 7O 12U 13U 14O 9O 10O 15O 16U 11U 8O 5O 2U 4U 13O 16O 15U 14U 4O 3O 7U 8U"
     # Empieza antes de la vuelta: el seno llega resaltado y la vuelta, azul. Es lo que
@@ -192,14 +188,10 @@ error:
     x: [-10.0, 5.0]
     y: [-10.0, 6.0]
   otros:
-    - titulo: Las cuerdas cruzadas dentro del nudo
+    - titulo: Las cuerdas cruzadas
       texto: >-
-        Si en algún lugar las dos cuerdas se cruzan entre ellas, el nudo aguanta menos y
-        cuesta revisarlo. Antes de apretar, acomódalas para que vayan juntas en todo el 8.
-    - titulo: El chicote muy corto
-      texto: >-
-        Si al apretar el chicote queda más corto que el ancho de tu mano, se puede salir
-        del nudo. Deshazlo y vuelve a empezar con más cuerda doblada.
+        Si las dos cuerdas se cruzan entre ellas, el nudo aguanta menos y cuesta revisarlo.
+        Acomódalas antes de apretar.
 
 # El nudo terminado se muestra por delante y por detrás, con el comienzo de la gaza.
 terminado:
