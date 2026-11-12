@@ -50,7 +50,7 @@ Un solo libro de nudos para la Wak y la Tropa del Grupo 431, impreso por edicion
    - Desde el 11 de noviembre de 2026, el sitio lleva solo los nudos de `publicados.txt`: publicar un nudo es agregarlo a esa lista, así que ninguna dirección queda en línea sin estar protegida.
 8. **El flujo se opera desde la app de Claude,** en conversaciones del proyecto Scouts y con la computadora de Gabriel vinculada.
    - GitHub es la fuente de verdad. Desde el 10 de noviembre de 2026, la carpeta del libro en `A:\` es un clon de git y tiene todo, también el venv (`.venv/`): cada sesión empieza con `git pull` ahí y termina subiendo los cambios (detalles en `CLAUDE.md`). Antes cada sesión clonaba el repositorio, armaba su venv y al final copiaba los cambios a `A:\`, y eso le costaba varios minutos.
-   - Una skill de Claude, `nudo-nuevo`, contiene el procedimiento, y su fuente vive en el repositorio.
+   - Una skill de Claude, `nudo-nuevo`, contiene el procedimiento. Vive en el repositorio, en `.claude/skills/nudo-nuevo/`, y Claude Code la carga en cada sesión que trabaja en él.
    - Se trabaja desde la pestaña Code de la app de Claude.
    - Los subagentes en paralelo entran solo en la fase 4.
 9. **Cada nudo tiene estado y registro de pruebas, sin nombres.** El estado avanza así: `borrador → modelado → cuerda-ok → novato-ok → publicado`. Cada filtro se registra con fecha, rol del probador y un código anónimo, nunca con su nombre.
@@ -71,7 +71,7 @@ nudos-431/
   config/           vocabulario controlado y términos propios de cada sección
   tests/            pruebas por nudo y del sistema
   docs/             formato de especificación y decisiones
-  skills/           fuente de la skill nudo-nuevo (se guarda en la cuenta de Claude)
+  .claude/skills/   la skill nudo-nuevo (Claude Code la carga sola)
   publicados.txt    slugs con QR impreso (no cambian nunca)
 ```
 
@@ -822,7 +822,7 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
 
 **Tamaño:** M
 
-**Diseño (11 de noviembre de 2026, antes de implementar; falta que Gabriel lo apruebe y responda las cuatro preguntas del final).**
+**Diseño (12 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las cuatro propuestas del final).**
 
 - **Dónde vive la skill:** en `.claude/skills/nudo-nuevo/SKILL.md`, dentro del repositorio. El plan decía `skills/nudo-nuevo/`, con una copia guardada en la cuenta de Claude. Claude Code carga solas las skills de `.claude/skills/` en cada sesión que trabaja en el repositorio, también en un worktree. Así no hay que subirla ni mantener dos copias, y cada cambio de la skill queda en git junto al código que usa.
 - **Qué hace** `/nudo-nuevo <slug>`, en este orden:
@@ -844,6 +844,14 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
   2. ¿La corrida dorada la hace una sesión nueva en un worktree sin las dos especificaciones validadas? Es la manera que veo de que sea a ciegas.
   3. ¿Los borradores dorados se guardan en git, en `tests/dorados/`?
   4. ¿Tus correcciones del ocho se anotan en el plan, y las que se repitan pasan a la skill como reglas?
+- **Lo que decidió Gabriel (12 de noviembre): las cuatro propuestas.** La skill va en `.claude/skills/nudo-nuevo/`; la corrida dorada la hace una sesión nueva en un worktree sin las dos especificaciones validadas; los borradores dorados van en git, en `tests/dorados/`, y sus correcciones del ocho se anotan aquí, y las que se repitan pasan a la skill.
+
+**Cómo se hizo la hoja, la comparación y la skill (12 de noviembre de 2026):** con el diseño, más estos detalles. Faltan la corrida dorada y el ocho.
+- **La hoja de revisión** (`python -m nudos revision <slug>`, `nudos/revision.py`) construye el nudo, guarda su `modelo.json` y arma `revision/<slug>/index.html`. Necesita el modelo en memoria y no solo `modelo.json`, porque ahí está la secuencia declarada además de la medida. Cada paso se dibuja con `nudos/hoja.py`, desde arriba y a 55°, y una secuencia distinta sale en rojo, como las fallas, arriba. Las imágenes de la fuente se enlazan con una ruta relativa, o con su dirección completa si están en otra unidad. En un worktree las entradas no están, y `NUDOS_ENTRADAS` dice dónde buscarlas. Sin `pasos.yaml`, la página muestra arriba todas las imágenes de la fuente. Probada con el as de guía y sus 8 imágenes de `entradas/`.
+- **`datos_json`** (`nudos/construir.py`) es el contenido de `modelo.json`, aparte de `guardar`, que lo escribe. La hoja lo usa para dibujar cada paso como la hoja de siempre.
+- **La comparación** de las pruebas doradas está en `nudos/dorados.py`: `renumerar` numera los cruces en el orden en que aparecen, y `diferencias` dice en qué difiere un borrador de la especificación validada: el número de pasos, las cuerdas, la secuencia de cada paso, cómo se reparten los cruces entre las cuerdas y el error común. `tests/test_dorados.py` la prueba con el as de guía y la vuelta de escota con otras etiquetas, un cruce al revés, un paso menos y otro error. Las pruebas de los borradores dorados se agregan con ellos.
+- **La skill** (`.claude/skills/nudo-nuevo/SKILL.md`) sigue los pasos del diseño: leer la fuente, elegir el generador, decidir los pasos, leer los cruces, trazar, el error y el texto, construir y corregir, y la hoja con su informe. Tiene una sección para la corrida dorada y otra, vacía todavía, para las reglas que salgan de las correcciones de Gabriel.
+- **Nudos publicados:** iguales a 378e9d4, los 4 modelos byte a byte (con `datos_json`) y las 67 imágenes en RGB, con Edge, y el sitio igual. Pasan las 371 pruebas.
 
 #### T10: Estado de producción y registro de pruebas
 

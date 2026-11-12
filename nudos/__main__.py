@@ -19,6 +19,7 @@ from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pa
                        px)
 from .libre import LIMITES
 from .mejoras import DESTINO as DESTINO_MEJORAS, construir_muestras, pagina_apretado, pagina_mejoras
+from .revision import RevisionError, revision
 from .spec import SpecError, cargar
 
 
@@ -41,6 +42,9 @@ def main(argv=None) -> int:
     i.add_argument("slug")
     f = ordenes.add_parser("ficha", help="ficha impresa en PDF: pliego de dos páginas con QR")
     f.add_argument("slug")
+    r = ordenes.add_parser("revision", help="hoja de revisión privada de un borrador, con la "
+                                            "fuente junto a cada paso (en revision/<slug>/)")
+    r.add_argument("slug")
     ordenes.add_parser("estado", help="estado de producción de los 35 nudos de la edición 1 "
                                      "y qué le falta a cada uno para el siguiente")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
@@ -60,6 +64,8 @@ def main(argv=None) -> int:
             return _mejoras()
         if args.orden == "estado":
             return _estado()
+        if args.orden == "revision":
+            return _revision(args.slug)
         return _hoja(args.slug, args.vista)
     except SpecError as e:
         print(f"Error en la especificación: {e}", file=sys.stderr)
@@ -117,6 +123,20 @@ def _sitio(salida: Path, con: list[str]) -> int:
         print(e, file=sys.stderr)
         return 1
     print(f"Sitio con {len(slugs)} nudo(s) en {salida}: {', '.join(slugs)}")
+    return 0
+
+
+def _revision(slug: str) -> int:
+    modelo = construir(cargar(slug))
+    guardar(modelo)
+    try:
+        pagina = revision(modelo)
+    except RevisionError as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Hoja de revisión en {pagina}")
+    if modelo.fallas:
+        print(f"El nudo tiene {len(modelo.fallas)} falla(s); la hoja las muestra arriba.")
     return 0
 
 

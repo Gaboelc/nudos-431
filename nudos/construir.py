@@ -98,6 +98,15 @@ def cruces_que_saltan(resultados: list[Resultado]) -> list[str]:
 
 def guardar(modelo: Modelo) -> Path:
     """Escribe build/<slug>/modelo.json y devuelve su ruta."""
+    destino = BUILD / modelo.spec.slug / "modelo.json"
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    with open(destino, "w", encoding="utf-8") as f:
+        json.dump(datos_json(modelo), f, ensure_ascii=False, separators=(",", ":"))
+    return destino
+
+
+def datos_json(modelo: Modelo) -> dict:
+    """El contenido de modelo.json."""
     spec = modelo.spec
     titulos = {p.n: (p.titulo, p.texto) for p in spec.pasos}
     datos = {
@@ -120,11 +129,7 @@ def guardar(modelo: Modelo) -> Path:
         # Con varias cuerdas, cada resultado lleva además el primer y el último punto de cada una.
         datos["cuerdas"] = [{"nombre": c.nombre, "grosor": c.grosor, "color": c.color}
                             for c in spec.cuerdas]
-    destino = BUILD / spec.slug / "modelo.json"
-    destino.parent.mkdir(parents=True, exist_ok=True)
-    with open(destino, "w", encoding="utf-8") as f:
-        json.dump(datos, f, ensure_ascii=False, separators=(",", ":"))
-    return destino
+    return datos
 
 
 def _resultado_json(r: Resultado) -> dict:
