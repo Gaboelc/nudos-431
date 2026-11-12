@@ -818,9 +818,32 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
 
 **Dependencias:** Punto de control B
 
-**Archivos:** `skills/nudo-nuevo/SKILL.md`, `docs/formato-spec.md`, `nudos/revision.py`, `tests/test_dorados.py`
+**Archivos:** `skills/nudo-nuevo/SKILL.md`, `docs/formato-spec.md`, `nudos/revision.py`, `tests/test_dorados.py`. Con el diseño de abajo, la skill va en `.claude/skills/nudo-nuevo/SKILL.md`, y además: `nudos/__main__.py` y `tests/dorados/`.
 
 **Tamaño:** M
+
+**Diseño (11 de noviembre de 2026, antes de implementar; falta que Gabriel lo apruebe y responda las cuatro preguntas del final).**
+
+- **Dónde vive la skill:** en `.claude/skills/nudo-nuevo/SKILL.md`, dentro del repositorio. El plan decía `skills/nudo-nuevo/`, con una copia guardada en la cuenta de Claude. Claude Code carga solas las skills de `.claude/skills/` en cada sesión que trabaja en el repositorio, también en un worktree. Así no hay que subirla ni mantener dos copias, y cada cambio de la skill queda en git junto al código que usa.
+- **Qué hace** `/nudo-nuevo <slug>`, en este orden:
+  1. Lee `entradas/<slug>/`: las imágenes y `info.txt` o `fuente.md`. Son entrada: no copia su texto ni sus imágenes a ninguna parte del repositorio.
+  2. Elige el generador: libre, con una cuerda o varias; sobre un anfitrión que ya existe (hoy, el poste), o con una plantilla que ya existe (hoy, la del amarre cuadrado). Si el nudo necesita un anfitrión o una plantilla que no existe, se detiene y lo dice, porque eso es una tarea de código, como T5 o T7, y no un borrador.
+  3. Lee las imágenes paso a paso y escribe `specs/<slug>.yaml` con `estado: borrador`: los segmentos, los pasos con su secuencia, el error común, el terminado y el texto de la ficha, en tuteo, propio y sin términos de ninguna sección. Sigue `docs/formato-spec.md` y usa los nudos publicados como ejemplo.
+  4. Construye con `python -m nudos construir <slug>` y corrige la geometría hasta que no queden fallas. Si la secuencia medida no coincide con la declarada, vuelve primero a la imagen y no ajusta la secuencia para que coincida: un cruce mal leído es el error que las pruebas no ven.
+  5. Arma la hoja de revisión con `python -m nudos revision <slug>` y se detiene para que Gabriel la revise. El nudo sigue en `borrador`: pasa a `modelado` cuando Gabriel lo aprueba.
+- **La hoja de revisión** (`nudos/revision.py`) es una página HTML en `revision/<slug>/`, que ya está fuera de git. Por cada paso pone, lado a lado, las imágenes de la fuente que le corresponden, el paso dibujado desde arriba y a 55°, y la secuencia declarada junto a la medida. La skill anota en `revision/<slug>/pasos.yaml` qué imágenes de la fuente usó en cada paso. La página enlaza las imágenes de `entradas/`, sin copiarlas.
+- **Las pruebas doradas** (`tests/test_dorados.py`): la skill corre sobre las entradas del as de guía y de la vuelta de escota, y sus borradores se guardan en `tests/dorados/`. La prueba los carga, los construye sin fallas y compara la secuencia de cada paso con la de la especificación validada. No importa cómo se llaman los cruces: los dos se renumeran en el orden en que aparecen. También compara los cruces del error común.
+  - La prueba no corre la skill, porque la skill es Claude leyendo imágenes. Comprueba lo que la skill produjo la última vez: cuando la skill cambia, se corre otra vez y se guardan los borradores nuevos.
+  - Para que la corrida sea a ciegas, la hace una sesión nueva en un worktree sin `specs/as-de-guia.yaml` ni `specs/vuelta-de-escota.yaml`. Si no, la skill podría copiarlos.
+  - Si la skill divide los pasos de otra manera que la especificación validada, la prueba falla, y Gabriel decide si la división nueva es mejor.
+  - Los borradores dorados llevan el texto que escribió la skill, que es propio, como el de cualquier especificación.
+- **El ocho** es el primer nudo nuevo. La skill escribe su borrador y Gabriel revisa la hoja. Sus correcciones se anotan aquí, en T9: qué cruce o qué texto cambió y por qué. Lo que se repita pasa a la skill como regla, para que el borrador siguiente no lo repita. El ocho sigue después con la tanda 1: su filtro 1 y su publicación son de esa tanda.
+- **Lo que no cambia:** el formato, porque la skill escribe v1.1; los nudos publicados, y la cabeza de turco.
+- **Preguntas para Gabriel:**
+  1. ¿La skill va en `.claude/skills/nudo-nuevo/`, en vez de en `skills/` y subida a tu cuenta?
+  2. ¿La corrida dorada la hace una sesión nueva en un worktree sin las dos especificaciones validadas? Es la manera que veo de que sea a ciegas.
+  3. ¿Los borradores dorados se guardan en git, en `tests/dorados/`?
+  4. ¿Tus correcciones del ocho se anotan en el plan, y las que se repitan pasan a la skill como reglas?
 
 #### T10: Estado de producción y registro de pruebas
 

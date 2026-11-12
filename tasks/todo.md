@@ -130,6 +130,8 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 ## Fase 3: el paso de IA y la operación
 
 - [ ] T9 Skill nudo-nuevo, con pruebas doradas sobre el as de guía y la escota (M, depende del Punto de control B)
+  - [x] Diseño escrito en el plan (dónde vive la skill, qué hace, la hoja de revisión, las pruebas doradas a ciegas y el ocho) (12 nov)
+  - [ ] Gabriel aprueba el diseño y responde las cuatro preguntas del final
 - [x] T10 Estado de producción y registro de pruebas sin nombres (S, depende de T4) (11 nov: campo `estado` en el formato v1.1, `python -m nudos estado` con los 35 nudos de `config/edicion-1.yaml` y `tests/test_estado.py`; el as de guía en `publicado`, los otros tres publicados en `cuerda-ok` y la cabeza de turco en `borrador`; ver «Cómo se hizo» de T10 en el plan)
 - [ ] Punto de control C:
   - [ ] Un nudo nuevo salió de la skill con correcciones menores
