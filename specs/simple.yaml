@@ -28,7 +28,7 @@ alternativas:
     cuando: Cuando quieres que la punta de la cuerda no se deshilache nunca, sin un nudo que estorbe.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 encuadre:
   x: [-8.5, 8.5]
