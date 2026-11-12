@@ -149,9 +149,9 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 Cada nudo cumple la definición de terminado: pruebas automáticas, error común, imágenes, visor, ficha, filtro 1, filtro 2 y estado `publicado`. El filtro 2 está en pausa desde el 9 de noviembre (ver la definición de terminado en el plan).
 
 ### Tanda 1: libres, una cuerda
-- [ ] Simple
+- [ ] Simple (12 nov: borrador en la rama `claude/tanda1-simple-327c2b`, b5ee9f6, sin fallas; falta que Gabriel revise su hoja)
 - [ ] Ocho (12 nov: en `modelado`, salió de la skill en T9; faltan el filtro 1 y la publicación)
-- [ ] Ocho doble
+- [ ] Ocho doble (12 nov: Gabriel dice que es la gaza en ocho, de una sola gaza; las imágenes R1 a R5 de `entradas/ocho-doble` la atan, y desde la R6 siguen con el de dos gazas, que no va)
 - [ ] As de guía español
 - [ ] Mariposa alpina
 - [ ] Margarita
