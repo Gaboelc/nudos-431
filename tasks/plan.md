@@ -773,9 +773,11 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
 - **Visto en las imágenes:** en el remate se resalta solo lo que agrega el chicote. El extremo corto metido, que es lo que más cambia, va azul, porque cada paso resalta un solo tramo de la cuerda. Se arregla según lo que decida Gabriel del remate.
 - **Nudos publicados:** iguales que en 80e3619, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge. Una vez, `paso-1.png` del amarre salió con 20 píxeles distintos en 1 nivel mientras se construía otro nudo a la vez; impresa sola, salió igual. Construir la cabeza de turco dos veces da el mismo `modelo.json`, byte a byte.
 
+**Lo que dijo Gabriel al revisar (11 de noviembre de 2026):** no entendió el nudo tejido de esta manera, y duda que un tubo más grueso, con los dos extremos en el seno A, lo arregle. Ya presentó el avance en la junta del grupo. Decidió dejar la cabeza de turco para el final: se sigue con el resto del plan y se vuelve a ella cuando todo lo demás esté terminado. Al volver, conviene empezar por ver con él qué parte no se entiende en las imágenes, antes de tocar la geometría. Lo hecho queda en `main` (formato, geometría, escena, impresión y hoja, con sus pruebas), y la nota de traspaso está fuera del repositorio, con las demás notas de las sesiones. Mientras tanto, `specs/cabeza-de-turco.yaml` sigue en `specs/` con texto provisional, y `construir_sitio` construye todas las especificaciones de esa carpeta: antes de la próxima publicación del sitio hay que dejarla fuera.
+
 #### Punto de control B: después de T7 y T8
 
-- [ ] Los 5 nudos del piloto están publicados.
+- [ ] Los 5 nudos del piloto están publicados. (11 nov: sin la cabeza de turco, que Gabriel dejó para el final; los otros cuatro ya están publicados.)
 - [ ] El formato de especificación queda congelado como v1 en `docs/formato-spec.md`. A partir de aquí, cualquier cambio necesita un script de migración.
 - [ ] Revisión contigo antes de automatizar.
 
