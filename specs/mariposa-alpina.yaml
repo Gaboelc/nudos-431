@@ -49,7 +49,7 @@ estado: borrador
 
 encuadre:
   x: [-12.60, 12.60]
-  y: [-8.40, 10.80]
+  y: [-8.40, 17.80]
 
 # Tallado, como el nudo armado de la foto antes de apretarlo: las vueltas del cuerpo van
 # cerradas y solo la gaza y los firmes quedan grandes.
@@ -62,17 +62,17 @@ segmentos:
   # El chicote suelto antes de empezar.
   recto: [[-7.68, 4.84], [-9.36, 5.88], [-11.04, 6.92]]
   # El lazo de la izquierda: sube, da la vuelta y baja hacia el centro.
-  lazo-izq: [[-7.38, 4.86], [-7.86, 6.00], [-7.74, 7.26], [-7.02, 8.34], [-5.88, 9.00],
-             [-4.50, 9.12], [-3.18, 8.64], [-1.86, 7.86]]
+  lazo-izq: [[-7.25, 4.8], [-7.55, 5.75], [-7.3, 6.75], [-6.55, 7.5], [-5.5, 7.95],
+             [-4.3, 8.05], [-3.1, 7.8], [-1.9, 7.65]]
   # Pasa por el cruce 1 y baja en diagonal hacia la derecha.
   t1: [[0.00, 6.90], [1.80, 5.82]]
   # El ojo pequeño, debajo del cruce 1 (pasos 3 y 4).
   ojo: [[2.5, 4.7], [2.6, 3.6], [1.9, 2.95], [0.95, 2.6], [0.0, 2.5], [-0.95, 2.6], [-1.9, 2.95], [-2.6, 3.6], [-2.5, 4.7]]
   # Sube hacia la derecha por encima del cruce 1.
-  t2: [[-1.80, 5.76], [1.80, 7.92]]
+  t2: [[-1.80, 5.76], [1.9, 7.65]]
   # El lazo de la derecha: da la vuelta y baja hacia el firme.
-  lazo-der: [[3.18, 8.64], [4.50, 9.12], [5.88, 9.00], [7.02, 8.34], [7.74, 7.26], [7.86, 6.00],
-             [7.38, 4.86], [6.48, 4.08]]
+  lazo-der: [[3.1, 7.8], [4.3, 8.05], [5.5, 7.95], [6.55, 7.5], [7.3, 6.75], [7.55, 5.75],
+             [7.25, 4.8], [6.48, 4.08]]
   # Cruza el firme en el cruce 2 y sigue hacia ti, a la izquierda.
   d2: [[5.34, 3.32], [3.84, 2.39], [-3.84, -2.39], [-5.28, -3.29], [-7.44, -4.63],
        [-9.60, -5.98], [-11.52, -7.16]]
@@ -91,6 +91,10 @@ segmentos:
   gaza: [[2.11, 3.54], [1.19, 4.38], [0.0, 4.68], [-1.19, 4.38], [-2.11, 3.54]]
   rizo-izq: [[-2.44, 2.28], [-2.5, 0.0], [-2.5, -1.9], [-2.5, -2.9], [-2.6, -3.95],
              [-3.05, -4.75], [-4.0, -5.05], [-5.1, -4.75]]
+  # La gaza sacada hacia el fondo (paso 7): sus dos patas pasan por encima de los dos
+  # tramos que se cruzan en el cruce 1, en los cruces 11 a 14.
+  gaza-larga: [[2.3, 4.0], [2.2, 5.5], [2.05, 7.0], [1.55, 14.6], [1.1, 15.7], [0.0, 16.2],
+               [-1.1, 15.7], [-1.55, 14.6], [-2.1, 7.0], [-2.3, 5.5], [-2.35, 4.0]]
 
 pasos:
   - titulo: Prepara la cuerda
@@ -133,17 +137,26 @@ pasos:
     secuencia: "4U 2U 6U 1U 3O 4O 5O 6O 1O 3U 2O 5U"
     resaltar: {desde: "t1-baja[0]", hasta: "t2[0]"}
 
-  - titulo: Súbelo por debajo y ajusta
+  - titulo: Súbelo por debajo
     texto: >-
       Mete la punta del ojo por debajo del cruce de abajo y súbela por el centro: esa
-      punta es la gaza. Sostenla y tira de los dos firmes a la vez, de a poco, hasta que
-      el nudo quede firme.
+      punta es la gaza.
     trazado: [firme, lazo-izq, t1, t1-baja, pata-der, rizo-der, gaza, rizo-izq, pata-izq,
               t2, lazo-der, d2]
     secuencia: "4U 7O 2U 9O 6U 1U 3O 4O 7U 8U 9U 10U 5O 6O 1O 3U 8O 2O 10O 5U"
     # Empieza y termina fuera de los cruces 7 a 10: el firme y el chicote llegan azules y
     # se ve que la punta pasa por debajo. Es lo que compara la imagen del error.
     resaltar: {desde: "rizo-der[0]", hasta: "rizo-izq[-1]"}
+
+  - titulo: Saca la gaza
+    texto: >-
+      Tira de la gaza hacia el fondo, por encima del cruce de arriba, hasta que salga del
+      nudo. Después sostenla y tira de los dos firmes a la vez, de a poco, hasta que el
+      nudo quede firme.
+    trazado: [firme, lazo-izq, t1, t1-baja, pata-der, rizo-der, gaza-larga, rizo-izq,
+              pata-izq, t2, lazo-der, d2]
+    secuencia: "4U 7O 2U 9O 6U 11U 1U 12U 3O 4O 7U 8U 12O 13O 11O 14O 9U 10U 5O 6O 14U 1O 13U 3U 8O 2O 10O 5U"
+    resaltar: {desde: "gaza-larga[0]", hasta: "gaza-larga[-1]"}
 
 # El error más común: subir la punta por encima del cruce y no por debajo. Es el paso 6
 # con los cruces 7 a 10 invertidos, y no queda nudo.
