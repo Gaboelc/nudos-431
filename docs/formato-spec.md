@@ -1,8 +1,8 @@
-# Formato de especificación de nudo (v0)
+# Formato de especificación de nudo (v1)
 
-Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. El formato puede cambiar hasta el Punto de control B del plan; ahí se congela como v1, y desde entonces cualquier cambio lleva un script de migración.
+Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
-El ejemplo completo es `specs/as-de-guia.yaml`; el de un nudo de dos cuerdas, `specs/vuelta-de-escota.yaml`.
+Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo, con una cuerda sobre la mesa; `specs/ballestrinque.yaml`, sobre un poste; `specs/vuelta-de-escota.yaml`, con dos cuerdas, y `specs/amarre-cuadrado.yaml`, con una plantilla.
 
 ## Unidades y ejes
 
@@ -76,7 +76,7 @@ Los palos se cruzan en x = y = 0. El de abajo va a lo largo de y, hacia el fondo
 
 El poste es horizontal y va a lo largo de x, con el eje en y = 0. Se apoya sobre la cuerda que pasa por debajo, así que su eje queda a la altura `radio + 1`.
 
-El tubo es un cilindro alrededor del que se teje la cabeza de turco. Solo se usa con una `plantilla`.
+El tubo es un cilindro alrededor del que se teje la cabeza de turco. Solo se usa con una `plantilla`. Es provisional, como la plantilla de la cabeza de turco (ver «Versiones»).
 
 | Campo | Qué es |
 |---|---|
@@ -162,7 +162,9 @@ En todo el texto del nudo, `{vueltas}` y `{ahorcados}` se reemplazan por el núm
 
 En las imágenes se ven los dos extremos de la cuerda, y los dos llevan remate. El paso del ballestrinque de inicio (`inicio-1` o `inicio`) lleva «Firme» en la parte larga y «Chicote» en el extremo corto, como el ballestrinque. Desde la primera vuelta se mueve la parte larga, y los pasos solo llevan «Chicote», en su punta.
 
-### Cabeza de turco
+### Cabeza de turco (provisional)
+
+Esta plantilla y su anfitrión, el tubo, no entran todavía en v1 y pueden cambiar cuando se retome el nudo (ver «Versiones»).
 
 ```yaml
 anfitrion: {tipo: tubo, radio: 4, largo: 24}
@@ -306,10 +308,34 @@ Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la par
 
 **Lo que no se comprueba es si la secuencia corresponde al nudo correcto.** Un cruce mal leído que se repite igual en todos los pasos pasa todas las pruebas. Para eso está el filtro 1: atar cada paso con cuerda real antes de publicar.
 
-## Pendiente para versiones siguientes
+## Versiones
 
-- Varias cuerdas sobre un anfitrión.
+Este es el formato v1. Se congela en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+
+- **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
+- **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
+
+Las especificaciones no llevan número de versión: todas viven en este repositorio y se migran juntas.
+
+El formato es lo que se escribe en la especificación. Cómo se construye el nudo a partir de ella puede mejorar sin cambiar la versión, como las mejoras del render (T7b) o el nudo apretado (T7c). Pero si cambian los pasos de un nudo publicado, es decir, su cuerda o sus cruces, su filtro 1 ya no vale y hay que repetirlo.
+
+### Lo provisional
+
+La cabeza de turco no entra en v1: el anfitrión `tubo`, la plantilla `cabeza-de-turco` con su variante `empieza-por-encima`, y lo que dicen del tubo «Nudo terminado» y «Dónde se buscan los cruces». Gabriel la dejó para el final del plan el 11 de noviembre de 2026, y puede cambiar cuando se retome. Hasta que se publique, cambia sin migración, porque solo la usa su especificación. Al publicarla entra al formato como un cambio compatible.
+
+### Lo que se agregará
+
+Son cambios compatibles que ya se conocen:
+
+- `estado`, el estado de producción de cada nudo (T10 del plan).
+- `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
 - Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
-- Cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
-- Dibujar el anfitrión en la hoja de revisión (`python -m nudos hoja`): hoy solo dibuja la cuerda.
+- Las plantillas de la tanda 4: los amarres redondo, diagonal y trípode, el refuerzo de cabo, el adujado y el puño de mono.
+- Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
+
+Fuera del formato, la hoja de revisión (`python -m nudos hoja`) todavía no dibuja el anfitrión en la vista de la mesa: solo dibuja la cuerda, y el tubo desenrollado de la cabeza de turco.
+
+### Registro
+
+- **v1** (propuesta el 11 de noviembre de 2026; se congela cuando Gabriel la aprueba en el Punto de control B): el formato de los cuatro nudos del piloto. Desde v0, que era el del as de guía en T1, se agregaron el error común y el nudo terminado (T3), el texto de la ficha y `filtros` (T4), el anfitrión y el poste (T5), las varias cuerdas (T6), `alternativas` y `precauciones` (T6b), y la cruz, las plantillas, `hasta` y el error con `variante` y `otros` (T7).

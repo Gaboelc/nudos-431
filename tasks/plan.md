@@ -781,6 +781,18 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
 - [ ] El formato de especificación queda congelado como v1 en `docs/formato-spec.md`. A partir de aquí, cualquier cambio necesita un script de migración.
 - [ ] Revisión contigo antes de automatizar.
 
+**Cómo se preparó (11 de noviembre de 2026, por revisar con Gabriel):** el punto de control se cierra con los cuatro nudos publicados, sin la cabeza de turco.
+- **El formato v1** está en `docs/formato-spec.md`, en «Versiones». La propuesta precisa qué cambio necesita migración.
+  - Un cambio compatible agrega algo que ninguna especificación usa todavía, como un anfitrión, una plantilla o un campo opcional. Las especificaciones anteriores dan el mismo `modelo.json`, byte a byte, así que no hay nada que migrar: la versión sube a 1.1, 1.2…
+  - Un cambio incompatible cambia algo que ya existe. Lleva un script de migración que reescribe todas las especificaciones en el mismo commit, y la versión sube a 2.
+  - Lo que traen T10 (`estado`), T12 (`secciones`) y las tandas 3 a 5 (anfitriones y plantillas nuevos) son cambios compatibles. Sin esta distinción, cada anfitrión nuevo de la fase 4 llevaría un script de migración sin nada que migrar.
+- **La cabeza de turco queda provisional** en la propuesta: el tubo, la plantilla y su variante pueden cambiar sin migración hasta que se publique, porque solo los usa su especificación. Falta que Gabriel lo confirme.
+- **Para dejarla fuera del sitio**, la propuesta es que el sitio lleve solo los nudos de `publicados.txt`. `construir_sitio` construiría esas especificaciones, y no todas las de `specs/`.
+  - Publicar un nudo ya es agregarlo a `publicados.txt`: es el último paso de cada nudo. Hoy, en cambio, un nudo nuevo de `specs/` sale en línea con la siguiente publicación del sitio, y su dirección no está protegida hasta que alguien lo agrega a la lista.
+  - No espera a T10 ni cambia el formato. El estado de T10 no alcanza solo: el ballestrinque, la vuelta de escota y el amarre están en línea sin el filtro 2, así que no llegan a `publicado`, y el sitio tendría que llevar también estados anteriores, como el de la cabeza de turco.
+  - Para ver un nudo nuevo en el sitio antes de publicarlo, `python -m nudos sitio --con <slug>` lo agrega al sitio local. `scripts/publicar.sh` no usa esa opción.
+  - Cambian `nudos/exportar.py`, `nudos/__main__.py`, `tests/test_sitio.py`, `CLAUDE.md` y el comentario de `publicados.txt`. La geometría y las pruebas de la cabeza de turco no se tocan.
+
 ### Fase 3: el paso de IA y la operación
 
 #### T9: Skill nudo-nuevo

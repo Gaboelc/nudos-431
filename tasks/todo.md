@@ -114,7 +114,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Geometría: la cuerda entera sobre el tubo, los pasos como prefijos girados, los extremos y el remate, la relajación y los cruces en el mapa del tubo (`nudos/plantillas/cabeza_turco.py`, `pasos.py` generalizado); sin fallas con 3 × 4 y dos pasadas, y con otras medidas; nudos publicados idénticos (11 nov: el extremo corto entra a media diagonal, la salida del riesgo 1, porque en el seno no cabían el paso de pasada y el chicote; en el remate se mete bajo la banda del seno vecino; 55° y no 60°; 6 pasos y el error sin fallas, 34 cruces; también 3 × 4 con una y tres pasadas, 2 × 3, 3 × 2, 2 × 5, 4 × 5 y 3 × 7; 3 × 5 con dos pasadas no sale todavía; ver «Cómo se hizo la geometría» de T8 en el plan)
   - [x] Escena, impresión (el terminado girado media vuelta) y hoja con el tubo desenrollado; nudos publicados idénticos (11 nov: el tubo en `render/escena.js`, `Tubo.voltear` para el terminado por detrás, `mapa` en `nudos/hoja.py`, encuadre y texto provisional en `specs/cabeza-de-turco.yaml`; en el remate el extremo corto metido todavía no se resalta; ver «Cómo se hizo la escena, la impresión y la hoja» de T8 en el plan)
   - [x] Gabriel revisa en las imágenes el extremo corto a media diagonal y su remate bajo la banda del seno vecino (con la escena) (11 nov: no entendió el nudo de esta manera y duda que un tubo más grueso lo arregle; la deja para el final)
-  - [ ] Mientras tanto, la cabeza de turco no sale en el sitio: `construir_sitio` construye todas las especificaciones de `specs/`, y la suya tiene texto provisional. Hay que dejarla fuera antes de la próxima publicación
+  - [ ] Mientras tanto, la cabeza de turco no sale en el sitio: `construir_sitio` construye todas las especificaciones de `specs/`, y la suya tiene texto provisional. Hay que dejarla fuera antes de la próxima publicación (11 nov: propuesta en el Punto de control B del plan, que el sitio lleve solo los nudos de `publicados.txt`; falta que Gabriel la apruebe)
   - [ ] Al volver: ver con Gabriel qué no se entiende en las imágenes, antes de tocar la geometría
   - [ ] Error construido y `specs/cabeza-de-turco.yaml` con el texto de la ficha; la ficha cabe
   - [ ] Gabriel revisa el texto de la ficha
@@ -123,6 +123,8 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 - [ ] Punto de control B:
   - [ ] Los 5 nudos del piloto están publicados (11 nov: sin la cabeza de turco, que Gabriel dejó para el final; los otros cuatro ya están publicados)
   - [ ] El formato de especificación v1 está congelado
+    - [x] Propuesta en `docs/formato-spec.md`, en «Versiones»: los cambios compatibles no llevan migración y los incompatibles sí; la cabeza de turco queda provisional (11 nov; ver «Cómo se preparó» en el plan)
+    - [ ] Gabriel aprueba la propuesta y decide si la cabeza de turco entra en v1 o queda provisional
   - [ ] Revisión contigo
 
 ## Fase 3: el paso de IA y la operación
