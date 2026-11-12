@@ -827,19 +827,27 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
 **Descripción:** agregar a la especificación el campo de estado y el registro de los dos filtros. Cada prueba guarda la fecha, el rol del probador y un código anónimo, para no repetir probador en un nudo que ya conoce. Generar una tabla con el estado de los 35 nudos.
 
 **Criterios de aceptación:**
-- [ ] `python -m nudos estado` muestra los 35 nudos con su estado y qué los bloquea.
-- [ ] Una prueba impide marcar un nudo como `publicado` si no tiene los dos filtros registrados.
-- [ ] El registro solo acepta roles y códigos, no nombres.
+- [x] `python -m nudos estado` muestra los 35 nudos con su estado y qué los bloquea.
+- [x] Una prueba impide marcar un nudo como `publicado` si no tiene los dos filtros registrados.
+- [x] El registro solo acepta roles y códigos, no nombres.
 
 **Verificación:**
-- [ ] `pytest tests/test_estado.py`
-- [ ] `python -m nudos estado`
+- [x] `pytest tests/test_estado.py`
+- [x] `python -m nudos estado`
 
 **Dependencias:** T4
 
-**Archivos:** `nudos/spec.py`, `nudos/estado.py`, `tests/test_estado.py`
+**Archivos:** `nudos/spec.py`, `nudos/estado.py`, `tests/test_estado.py`. Además, `config/edicion-1.yaml`, `nudos/ficha.py`, `nudos/__main__.py`, las cuatro especificaciones publicadas y `docs/formato-spec.md`.
 
 **Tamaño:** S
+
+**Cómo se hizo (11 de noviembre de 2026):**
+- **El campo `estado`** es opcional, y sin él una especificación está en `borrador`. Así es un cambio compatible del formato, que pasa a v1.1 sin migración. El as de guía está en `publicado`; el ballestrinque, la vuelta de escota y el amarre, en `cuerda-ok`; la cabeza de turco no lo lleva, así que es un borrador, porque su texto es provisional.
+- **Qué pide cada estado** está en `docs/formato-spec.md`, en «Estado». `modelado` pide lo que la ficha necesita de la especificación (`faltan_textos`, que ahora usa también `nudos/ficha.py`), y que construya sin fallas. `cuerda-ok` y `novato-ok` piden que el último registro de su filtro esté aprobado. `publicado` pide además estar en `publicados.txt`. Estar en el sitio no basta para estar en `publicado`: los tres nudos sin filtro 2 están en línea y siguen en `cuerda-ok`.
+- **Lo comprueban `nudos/estado.py` y `tests/test_estado.py`,** no la carga de la especificación. Si una prueba no pasa, el nudo sigue construyendo y se puede corregir; lo que falla es la suite, y `python -m nudos estado` dice qué falta. Las pruebas construyen sin fallas los nudos de `modelado` o más, con los modelos de `conftest.py` cuando los hay. La orden no los construye, porque con 35 nudos tardaría minutos; hoy tarda menos de un segundo.
+- **Los 35 nudos** están en `config/edicion-1.yaml`, por tanda, con el slug de su carpeta en `entradas/`. Una prueba comprueba que son 35, sin repetir, y que cada especificación y cada nudo publicado están en la lista.
+- **Los probadores.** El registro ya aceptaba solo el rol y un código desde T4: no hay campo `nombre`, y el código es como P01. El rol es texto libre que describe a la persona sin nombrarla. La orden lista cada código con los nudos que ya probó, y el estado marca como problema que un mismo código repita el filtro 2 de un nudo: si no pasa, se repite con otra persona.
+- **Nudos publicados:** iguales a 378e9d4, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge; el sitio, igual que sin T10. En la suite, 361 pruebas: falló una vez `test_dibujar_dos_veces_da_las_mismas_imagenes` y pasó al correr sola. Es la variación rara del navegador, que hoy salió en las dos corridas de la suite, cada vez en una prueba distinta de las que dibujan dos veces lo mismo.
 
 #### Punto de control C: después de T9 y T10
 

@@ -1,6 +1,6 @@
-# Formato de especificación de nudo (v1)
+# Formato de especificación de nudo (v1.1)
 
-Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
+Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.1 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
 Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo, con una cuerda sobre la mesa; `specs/ballestrinque.yaml`, sobre un poste; `specs/vuelta-de-escota.yaml`, con dos cuerdas, y `specs/amarre-cuadrado.yaml`, con una plantilla.
 
@@ -34,6 +34,7 @@ Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo
 | `error` | no | El error más común (ver abajo). La ficha lo necesita, así que todo nudo publicado lo lleva. |
 | `terminado` | no | Cómo se muestra el nudo terminado (ver abajo). |
 | `filtros` | no | Registro de los dos filtros humanos (ver abajo). |
+| `estado` | no | Estado de producción: `borrador`, `modelado`, `cuerda-ok`, `novato-ok` o `publicado` (ver abajo). Sin él, `borrador`. |
 
 Los campos desconocidos producen un error, así que un error de tipeo se detecta al cargar.
 
@@ -284,7 +285,26 @@ Cada vez que se prueba la ficha impresa se agrega una entrada, también si no pa
 | `codigo` | En el filtro 2, un código anónimo como `P01`. Es obligatorio. La tabla que une códigos con personas vive fuera del repositorio. |
 | `ficha` | Opcional. El commit de la ficha que se probó, para saber si un cambio posterior obliga a repetir la prueba. |
 
-Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocido, y el código solo acepta letras mayúsculas seguidas de números.
+Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocido, y el código solo acepta letras mayúsculas seguidas de números. El rol describe a la persona sin nombrarla, como «joven de la Wak» o «dirigente».
+
+## Estado
+
+Cada nudo avanza así: `borrador → modelado → cuerda-ok → novato-ok → publicado`. El estado lo escribe quien trabaja el nudo, y `python -m nudos estado` y las pruebas comprueban que no diga más de lo que muestran los hechos. Cada estado pide lo del anterior y algo más:
+
+| Estado | Qué tiene el nudo |
+|---|---|
+| `borrador` | La especificación. Es el estado de un borrador recién escrito y el de una especificación sin `estado`. |
+| `modelado` | Construye todos sus pasos sin fallas y tiene lo que la ficha necesita de la especificación: `usos`, `materiales`, `verificacion`, `precauciones`, `alternativas` y `error`. |
+| `cuerda-ok` | El último filtro 1 registrado está aprobado. |
+| `novato-ok` | El último filtro 2 registrado está aprobado. |
+| `publicado` | Está en `publicados.txt`, así que su visor está en el sitio. |
+
+- Vale el último registro de cada filtro: si una prueba no pasa, se corrige la ficha y se repite.
+- Un mismo código hace una sola vez el filtro 2 de un nudo: si no pasa, se repite con otra persona.
+- Estar en `publicados.txt` no basta para estar en `publicado`. El ballestrinque, la vuelta de escota y el amarre cuadrado tienen su visor en el sitio y siguen en `cuerda-ok`, porque el filtro 2 está en pausa desde el 9 de noviembre de 2026.
+- Los 35 nudos de la edición 1 están en `config/edicion-1.yaml`, por tanda, con el slug que tiene o tendrá su especificación. Cada especificación de `specs/` tiene que estar en esa lista.
+
+`python -m nudos estado` muestra los 35 nudos con su estado y lo que les falta para el siguiente, y los códigos del filtro 2 con los nudos que ya probó cada uno, para no repetir un probador en un nudo que ya conoce. Falla si algún nudo dice un estado que no tiene. Que el nudo construya sin fallas no lo comprueba esa orden, porque construir todos tarda minutos: lo comprueban las pruebas (`tests/test_estado.py`).
 
 ## Qué se comprueba al construir
 
@@ -310,7 +330,7 @@ Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la par
 
 ## Versiones
 
-Este es el formato v1. Se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.1. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -327,7 +347,6 @@ La cabeza de turco no entra en v1: el anfitrión `tubo`, la plantilla `cabeza-de
 
 Son cambios compatibles que ya se conocen:
 
-- `estado`, el estado de producción de cada nudo (T10 del plan).
 - `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
 - Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
 - Las plantillas de la tanda 4: los amarres redondo, diagonal y trípode, el refuerzo de cabo, el adujado y el puño de mono.
@@ -339,3 +358,4 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja`) todavía no dib
 ### Registro
 
 - **v1** (11 de noviembre de 2026; Gabriel lo aprobó en el Punto de control B, con la cabeza de turco provisional): el formato de los cuatro nudos del piloto. Desde v0, que era el del as de guía en T1, se agregaron el error común y el nudo terminado (T3), el texto de la ficha y `filtros` (T4), el anfitrión y el poste (T5), las varias cuerdas (T6), `alternativas` y `precauciones` (T6b), y la cruz, las plantillas, `hasta` y el error con `variante` y `otros` (T7).
+- **v1.1** (11 de noviembre de 2026): el campo `estado` (T10). Es un cambio compatible: sin él, una especificación está en `borrador`.

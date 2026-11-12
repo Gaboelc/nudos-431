@@ -39,6 +39,9 @@ alternativas:
   - nudo: Rizo
     cuando: Para atar apretado alrededor de algo, como un paquete o una venda.
 
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: cuerda-ok
+
 # Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
 filtros:
   - filtro: 1

@@ -1,0 +1,44 @@
+# Los 35 nudos de la edición 1, por tanda (ver la fase 4 del plan).
+# Cada uno va con el slug que tiene o tendrá su especificación, que es el nombre de su
+# carpeta en entradas/. «python -m nudos estado» muestra el estado de cada uno.
+Piloto:
+  - as-de-guia
+  - ballestrinque
+  - vuelta-de-escota
+  - amarre-cuadrado
+  - cabeza-de-turco
+"Tanda 1: libres, una cuerda":
+  - simple
+  - ocho
+  - ocho-doble
+  - as-de-guia-espanol
+  - mariposa-alpina
+  - margarita
+  - arnes-de-hombre
+  - silla-de-bombero
+"Tanda 2: libres, dos cuerdas o dos extremos":
+  - rizo
+  - pescador
+  - nudo-aguja
+"Tanda 3: sobre anfitrión":
+  - ballestrinque-doble
+  - vuelta-de-braza
+  - media-llave-y-dos-cotes
+  - fugitivo
+  - tensor
+  - tensor-ajustable
+  - constrictor
+  - nudo-de-liberacion-rapida
+  - presilla-de-alondra
+  - prusik
+"Tanda 4: plantillas":
+  - amarre-redondo
+  - amarre-diagonal
+  - amarre-tripode
+  - refuerzo-de-cabo
+  - adujado
+  - puno-de-mono
+"Tanda 5: anfitriones especiales":
+  - eslinga-de-barril
+  - eslinga-de-andamio
+  - vuelta-de-cornamusa

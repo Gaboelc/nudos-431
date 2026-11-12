@@ -22,10 +22,13 @@ DISTANCIA_MIN = 0.05   # entre puntos de control seguidos, en diámetros
 # Código anónimo de un probador: letras y números, como P01. Así no cabe un nombre.
 _CODIGO = re.compile(r"^[A-Z]{1,3}[0-9]{2,3}$")
 RESULTADOS = ("aprobado", "no aprobado")
+# Estado de producción, en el orden en que avanza (nudos/estado.py).
+ESTADOS = ("borrador", "modelado", "cuerda-ok", "novato-ok", "publicado")
 
 _CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materiales",
            "verificacion", "precauciones", "alternativas", "seguridad", "encuadre", "anfitrion",
-           "cuerdas", "segmentos", "plantilla", "pasos", "error", "terminado", "filtros"}
+           "cuerdas", "segmentos", "plantilla", "pasos", "error", "terminado", "filtros",
+           "estado"}
 _CAMPOS_ALTERNATIVA = {"nudo", "cuando"}
 _CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
 _CAMPOS_PASO_PLANTILLA = {"titulo", "texto", "hasta"}
@@ -188,6 +191,7 @@ class Spec:
     alternativas: tuple[Alternativa, ...] = ()
     seguridad: str | None = None         # solo cuando aplica
     filtros: tuple[Filtro, ...] = ()
+    estado: str = "borrador"             # uno de ESTADOS; sin «estado», borrador
 
 
 def cargar(slug_o_ruta: str | Path) -> Spec:
@@ -260,6 +264,7 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         alternativas=_alternativas(datos.get("alternativas"), falla),
         seguridad=_texto_opcional(datos, "seguridad", falla),
         filtros=_filtros(datos.get("filtros"), falla),
+        estado=_estado(datos.get("estado"), falla),
     )
     return spec if plantilla is None else _con_medidas(spec, plantilla.medidas(), falla)
 
@@ -395,6 +400,14 @@ def _filtros(datos, falla) -> tuple[Filtro, ...]:
             raise ff("«ficha» es el commit de la ficha que se probó, por ejemplo e1dbffd")
         out.append(Filtro(n, fecha, f["resultado"], rol, codigo, ficha))
     return tuple(out)
+
+
+def _estado(datos, falla) -> str:
+    if datos is None:
+        return "borrador"
+    if datos not in ESTADOS:
+        raise falla(f"«estado» es {', '.join(ESTADOS[:-1])} o {ESTADOS[-1]}")
+    return datos
 
 
 def _texto_opcional(datos: dict, clave: str, falla) -> str | None:

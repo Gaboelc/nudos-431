@@ -11,6 +11,7 @@ from PIL import Image
 from . import BUILD, RAIZ
 from .anfitrion import Tubo
 from .construir import construir, guardar
+from .estado import nudos, probadores, tabla
 from .exportar import SitioError, construir_sitio
 from .ficha import FichaError, ficha, url_visor
 from .hoja import hoja, mapa
@@ -40,6 +41,8 @@ def main(argv=None) -> int:
     i.add_argument("slug")
     f = ordenes.add_parser("ficha", help="ficha impresa en PDF: pliego de dos páginas con QR")
     f.add_argument("slug")
+    ordenes.add_parser("estado", help="estado de producción de los 35 nudos de la edición 1 "
+                                     "y qué le falta a cada uno para el siguiente")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -55,6 +58,8 @@ def main(argv=None) -> int:
             return _ficha(args.slug)
         if args.orden == "mejoras":
             return _mejoras()
+        if args.orden == "estado":
+            return _estado()
         return _hoja(args.slug, args.vista)
     except SpecError as e:
         print(f"Error en la especificación: {e}", file=sys.stderr)
@@ -112,6 +117,21 @@ def _sitio(salida: Path, con: list[str]) -> int:
         print(e, file=sys.stderr)
         return 1
     print(f"Sitio con {len(slugs)} nudo(s) en {salida}: {', '.join(slugs)}")
+    return 0
+
+
+def _estado() -> int:
+    lista = nudos()
+    print(tabla(lista))
+    codigos = probadores()
+    if codigos:
+        print("\nProbadores del filtro 2, con los nudos que ya conocen")
+        for codigo, (rol, slugs) in codigos.items():
+            print(f"  {codigo} ({rol}): {', '.join(slugs)}")
+    malos = [n.slug for n in lista if n.problemas]
+    if malos:
+        print(f"\nEstos nudos dicen un estado que no tienen (!!): {', '.join(malos)}", file=sys.stderr)
+        return 1
     return 0
 
 

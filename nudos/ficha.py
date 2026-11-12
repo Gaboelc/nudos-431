@@ -19,6 +19,7 @@ from . import RAIZ, URL_BASE
 from .construir import Modelo
 from .exportar import SITIO, lista_o, rellenar
 from .imprimir import chrome
+from .spec import Spec
 
 LIBRO = RAIZ / "libro"
 TERMINOS = RAIZ / "config" / "terminos_seccion.txt"
@@ -33,15 +34,19 @@ def url_visor(slug: str) -> str:
     return f"{URL_BASE}{slug}/"
 
 
+def faltan_textos(s: Spec) -> list[str]:
+    """Los campos que la ficha necesita y la especificación todavía no tiene."""
+    return [campo for campo, valor in (("usos", s.usos), ("materiales", s.materiales),
+                                       ("verificacion", s.verificacion),
+                                       ("precauciones", s.precauciones),
+                                       ("alternativas", s.alternativas), ("error", s.error))
+            if not valor]
+
+
 def faltantes(modelo: Modelo) -> list[str]:
     """Lo que la especificación todavía no tiene y la ficha necesita."""
-    s = modelo.spec
-    faltan = [campo for campo, valor in (("usos", s.usos), ("materiales", s.materiales),
-                                         ("verificacion", s.verificacion),
-                                         ("precauciones", s.precauciones),
-                                         ("alternativas", s.alternativas), ("error", s.error))
-              if not valor]
-    if modelo.reverso is None and s.anfitrion is None:
+    faltan = faltan_textos(modelo.spec)
+    if modelo.reverso is None and modelo.spec.anfitrion is None:
         faltan.append("el nudo terminado por detrás (no se pudo construir el último paso)")
     return faltan
 

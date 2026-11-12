@@ -43,6 +43,9 @@ alternativas:
   - nudo: As de guía español
     cuando: Cuando necesitas dos gazas en vez de una.
 
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: publicado
+
 # Los dos filtros humanos (ver la definición de terminado del plan). Del probador del
 # filtro 2 se registran solo el rol y un código; la tabla de códigos vive fuera del repositorio.
 filtros:
