@@ -33,6 +33,9 @@ def main(argv=None) -> int:
     s = ordenes.add_parser("sitio", help="construye el sitio con el visor de cada nudo")
     s.add_argument("--salida", type=Path, default=BUILD / "sitio",
                    help="carpeta donde queda el sitio (por omisión build/sitio)")
+    s.add_argument("--con", action="append", default=[], metavar="SLUG",
+                   help="agrega al sitio local un nudo que no está en publicados.txt, para "
+                        "verlo antes de publicarlo; scripts/publicar.sh no lo usa")
     i = ordenes.add_parser("imprimir", help="imágenes de impresión a 300 ppp y página de prueba")
     i.add_argument("slug")
     f = ordenes.add_parser("ficha", help="ficha impresa en PDF: pliego de dos páginas con QR")
@@ -45,7 +48,7 @@ def main(argv=None) -> int:
         if args.orden == "construir":
             return _construir(args.slug)
         if args.orden == "sitio":
-            return _sitio(args.salida)
+            return _sitio(args.salida, args.con)
         if args.orden == "imprimir":
             return _imprimir(args.slug)
         if args.orden == "ficha":
@@ -102,9 +105,9 @@ def _imprimir(slug: str) -> int:
     return 0
 
 
-def _sitio(salida: Path) -> int:
+def _sitio(salida: Path, con: list[str]) -> int:
     try:
-        slugs = construir_sitio(salida.resolve())
+        slugs = construir_sitio(salida.resolve(), con=con)
     except SitioError as e:
         print(e, file=sys.stderr)
         return 1

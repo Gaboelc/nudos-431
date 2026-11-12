@@ -310,7 +310,7 @@ Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la par
 
 ## Versiones
 
-Este es el formato v1. Se congela en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1. Se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -338,4 +338,4 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja`) todavía no dib
 
 ### Registro
 
-- **v1** (propuesta el 11 de noviembre de 2026; se congela cuando Gabriel la aprueba en el Punto de control B): el formato de los cuatro nudos del piloto. Desde v0, que era el del as de guía en T1, se agregaron el error común y el nudo terminado (T3), el texto de la ficha y `filtros` (T4), el anfitrión y el poste (T5), las varias cuerdas (T6), `alternativas` y `precauciones` (T6b), y la cruz, las plantillas, `hasta` y el error con `variante` y `otros` (T7).
+- **v1** (11 de noviembre de 2026; Gabriel lo aprobó en el Punto de control B, con la cabeza de turco provisional): el formato de los cuatro nudos del piloto. Desde v0, que era el del as de guía en T1, se agregaron el error común y el nudo terminado (T3), el texto de la ficha y `filtros` (T4), el anfitrión y el poste (T5), las varias cuerdas (T6), `alternativas` y `precauciones` (T6b), y la cruz, las plantillas, `hasta` y el error con `variante` y `otros` (T7).

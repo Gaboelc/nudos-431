@@ -24,6 +24,8 @@ python -m pytest
 
 `imprimir` necesita Google Chrome instalado (o la ruta de otro Chrome en la variable `NUDOS_CHROME`). Deja en `build/<slug>/impresion/` las imágenes a 300 ppp y `prueba.pdf`, una página de prueba en color y en escala de grises. `ficha` genera esas imágenes y arma con ellas `build/<slug>/ficha.pdf`, el pliego de dos páginas con QR al visor. `mejoras` arma `build/mejoras/prueba.pdf`, la página de prueba de las mejoras del render: algunas imágenes sin mejoras, con cada una y con todas, que son las de las fichas, para mirarlas en papel.
 
+`sitio` arma en `build/sitio/` el visor de cada nudo de `publicados.txt`, y solo de esos. Con `--con <slug>` agrega otro, para verlo en el sitio local antes de publicarlo.
+
 Para publicar el sitio, desde `main` ya subido: `scripts/publicar.sh`. Sube el sitio a la rama `gh-pages`, que es la que sirve GitHub Pages.
 
 ## Carpetas
@@ -37,7 +39,7 @@ Para publicar el sitio, desde `main` ya subido: `scripts/publicar.sh`. Sube el s
 | `config/` | Términos propios de cada sección, que las fichas no usan |
 | `sitio/` | Plantillas y página del visor; en `sitio/vendor/`, three.js y las fuentes |
 | `scripts/` | `publicar.sh` |
-| `publicados.txt` | Nudos con QR impreso: su dirección no cambia nunca |
+| `publicados.txt` | Nudos del sitio, con QR impreso: su dirección no cambia nunca |
 | `tests/` | Pruebas |
 | `docs/` | Documentación del formato |
 | `tasks/` | Plan y lista de tareas |

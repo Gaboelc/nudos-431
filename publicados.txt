@@ -1,6 +1,7 @@
-# Nudos con QR impreso o por imprimir, uno por línea.
+# Nudos del sitio, con QR impreso o por imprimir, uno por línea.
+# El sitio lleva solo estos nudos: publicar uno es agregarlo aquí.
 # Un slug de esta lista no se cambia ni se borra nunca: su dirección tiene que seguir
-# funcionando en el sitio, y «python -m nudos sitio» falla si falta su página.
+# funcionando en el sitio, y «python -m nudos sitio» falla si falta su especificación.
 as-de-guia
 ballestrinque
 vuelta-de-escota

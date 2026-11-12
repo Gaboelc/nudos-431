@@ -8,7 +8,7 @@ import pytest
 
 from nudos import URL_BASE
 from nudos.exportar import (EXTENSIONES, SitioError, archivos_no_permitidos, construir_sitio,
-                            datos_visor, leer_publicados)
+                            datos_visor, leer_publicados, nudos_del_sitio)
 
 
 @pytest.fixture(scope="module")
@@ -31,6 +31,22 @@ def test_falta_un_nudo_publicado(tmp_path, modelo_as_de_guia):
     with pytest.raises(SitioError, match="ballestrinque"):
         construir_sitio(tmp_path / "s", modelos=[modelo_as_de_guia],
                         publicados=["as-de-guia", "ballestrinque"])
+
+
+def test_el_sitio_lleva_solo_los_nudos_publicados():
+    # specs/ tiene más especificaciones: las que no están en la lista no salen en línea.
+    assert nudos_del_sitio(["as-de-guia"]) == ["as-de-guia"]
+    assert nudos_del_sitio() == sorted(leer_publicados())
+
+
+def test_con_agrega_un_nudo_al_sitio_local():
+    assert nudos_del_sitio(["as-de-guia"], con=["ballestrinque", "as-de-guia"]) == [
+        "as-de-guia", "ballestrinque"]
+
+
+def test_falta_la_especificacion_de_un_nudo_publicado():
+    with pytest.raises(SitioError, match="no-existe"):
+        nudos_del_sitio(["as-de-guia", "no-existe"])
 
 
 def test_un_nudo_con_fallas_no_se_publica(tmp_path, modelo_as_de_guia):

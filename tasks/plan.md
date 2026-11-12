@@ -47,6 +47,7 @@ Un solo libro de nudos para la Wak y la Tropa del Grupo 431, impreso por edicion
    - El sitio se construye en la sesión y `scripts/publicar.sh` lo sube a la rama `gh-pages`, siempre desde un `main` ya subido. Así lo publicado es exactamente lo que se revisó, y no hace falta GitHub Actions.
    - three.js y las fuentes van dentro del sitio, con versión fija. El visor no depende de ningún servicio externo mientras existan los QR impresos.
    - El sitio no acepta imágenes ni archivos fuera de una lista corta de tipos, y no se publica si algún nudo tiene fallas.
+   - Desde el 11 de noviembre de 2026, el sitio lleva solo los nudos de `publicados.txt`: publicar un nudo es agregarlo a esa lista, así que ninguna dirección queda en línea sin estar protegida.
 8. **El flujo se opera desde la app de Claude,** en conversaciones del proyecto Scouts y con la computadora de Gabriel vinculada.
    - GitHub es la fuente de verdad. Desde el 10 de noviembre de 2026, la carpeta del libro en `A:\` es un clon de git y tiene todo, también el venv (`.venv/`): cada sesión empieza con `git pull` ahí y termina subiendo los cambios (detalles en `CLAUDE.md`). Antes cada sesión clonaba el repositorio, armaba su venv y al final copiaba los cambios a `A:\`, y eso le costaba varios minutos.
    - Una skill de Claude, `nudo-nuevo`, contiene el procedimiento, y su fuente vive en el repositorio.
@@ -777,21 +778,22 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
 
 #### Punto de control B: después de T7 y T8
 
-- [ ] Los 5 nudos del piloto están publicados. (11 nov: sin la cabeza de turco, que Gabriel dejó para el final; los otros cuatro ya están publicados.)
-- [ ] El formato de especificación queda congelado como v1 en `docs/formato-spec.md`. A partir de aquí, cualquier cambio necesita un script de migración.
-- [ ] Revisión contigo antes de automatizar.
+- [x] Los nudos del piloto están publicados, sin la cabeza de turco. (11 nov: Gabriel la dejó para el final; los otros cuatro ya están publicados.)
+- [x] El formato de especificación queda congelado como v1 en `docs/formato-spec.md`. A partir de aquí, un cambio incompatible necesita un script de migración (ver abajo).
+- [x] Revisión contigo antes de automatizar. (11 nov: Gabriel aprobó las tres propuestas de abajo.)
 
-**Cómo se preparó (11 de noviembre de 2026, por revisar con Gabriel):** el punto de control se cierra con los cuatro nudos publicados, sin la cabeza de turco.
-- **El formato v1** está en `docs/formato-spec.md`, en «Versiones». La propuesta precisa qué cambio necesita migración.
+**Cómo se preparó (11 de noviembre de 2026; Gabriel aprobó las tres propuestas el mismo día):** el punto de control se cierra con los cuatro nudos publicados, sin la cabeza de turco.
+- **El formato v1** está en `docs/formato-spec.md`, en «Versiones». Precisa qué cambio necesita migración.
   - Un cambio compatible agrega algo que ninguna especificación usa todavía, como un anfitrión, una plantilla o un campo opcional. Las especificaciones anteriores dan el mismo `modelo.json`, byte a byte, así que no hay nada que migrar: la versión sube a 1.1, 1.2…
   - Un cambio incompatible cambia algo que ya existe. Lleva un script de migración que reescribe todas las especificaciones en el mismo commit, y la versión sube a 2.
   - Lo que traen T10 (`estado`), T12 (`secciones`) y las tandas 3 a 5 (anfitriones y plantillas nuevos) son cambios compatibles. Sin esta distinción, cada anfitrión nuevo de la fase 4 llevaría un script de migración sin nada que migrar.
-- **La cabeza de turco queda provisional** en la propuesta: el tubo, la plantilla y su variante pueden cambiar sin migración hasta que se publique, porque solo los usa su especificación. Falta que Gabriel lo confirme.
-- **Para dejarla fuera del sitio**, la propuesta es que el sitio lleve solo los nudos de `publicados.txt`. `construir_sitio` construiría esas especificaciones, y no todas las de `specs/`.
+- **La cabeza de turco queda provisional:** el tubo, la plantilla y su variante pueden cambiar sin migración hasta que se publique, porque solo los usa su especificación.
+- **Para dejarla fuera del sitio**, el sitio lleva solo los nudos de `publicados.txt`. `construir_sitio` construye esas especificaciones, y no todas las de `specs/`.
   - Publicar un nudo ya es agregarlo a `publicados.txt`: es el último paso de cada nudo. Hoy, en cambio, un nudo nuevo de `specs/` sale en línea con la siguiente publicación del sitio, y su dirección no está protegida hasta que alguien lo agrega a la lista.
   - No espera a T10 ni cambia el formato. El estado de T10 no alcanza solo: el ballestrinque, la vuelta de escota y el amarre están en línea sin el filtro 2, así que no llegan a `publicado`, y el sitio tendría que llevar también estados anteriores, como el de la cabeza de turco.
   - Para ver un nudo nuevo en el sitio antes de publicarlo, `python -m nudos sitio --con <slug>` lo agrega al sitio local. `scripts/publicar.sh` no usa esa opción.
-  - Cambian `nudos/exportar.py`, `nudos/__main__.py`, `tests/test_sitio.py`, `CLAUDE.md` y el comentario de `publicados.txt`. La geometría y las pruebas de la cabeza de turco no se tocan.
+  - Cambian `nudos/exportar.py`, `nudos/__main__.py`, `tests/test_sitio.py`, `CLAUDE.md`, `README.md` y el comentario de `publicados.txt`. La geometría y las pruebas de la cabeza de turco no se tocan.
+  - **Cómo se hizo (11 nov):** `nudos_del_sitio`, en `nudos/exportar.py`, dice qué nudos lleva el sitio. Falla si falta la especificación de un nudo de `publicados.txt`. Con `--con cabeza-de-turco`, el sitio sale idéntico al de 378e9d4, archivo por archivo. Sin la opción, solo falta la cabeza de turco: su carpeta y su línea en `index.html` y `404.html`. Los nudos publicados quedan iguales a 378e9d4: los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge. En la primera impresión salieron unos píxeles distintos en 1 nivel en `error.png` de la vuelta de escota, y salieron iguales al imprimirla otra vez. En la referencia, `prueba/paso-7-arriba.png` del amarre tenía 2 píxeles distintos en 1 nivel: impresa otra vez desde 378e9d4, salió igual que ahora. Es la variación rara del navegador de T7c. En la suite, 341 pruebas: falló una vez `test_con_mejoras_dibujar_dos_veces_da_lo_mismo`, que dibuja la misma imagen dos veces, por esa misma variación, y pasó al correr sola.
 
 ### Fase 3: el paso de IA y la operación
 

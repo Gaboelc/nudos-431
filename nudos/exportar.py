@@ -5,6 +5,7 @@ import html
 import json
 import re
 import shutil
+from collections.abc import Iterable
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -229,16 +230,29 @@ def archivos_no_permitidos(destino: Path) -> list[Path]:
             if p.is_file() and p.name != MARCA and p.suffix.lower() not in EXTENSIONES]
 
 
-def construir_sitio(destino: Path, modelos: list[Modelo] | None = None,
-                    publicados: list[str] | None = None) -> list[str]:
-    """Construye el sitio en «destino» y devuelve los slugs que contiene.
-
-    Sin «modelos», construye todos los nudos de specs/. No publica nada si algún nudo
-    tiene fallas o si falta la página de un nudo con QR impreso."""
-    if modelos is None:
-        modelos = [construir(cargar(p)) for p in sorted(SPECS.glob("*.yaml"))]
+def nudos_del_sitio(publicados: list[str] | None = None, con: Iterable[str] = ()) -> list[str]:
+    """Los slugs que lleva el sitio: los de publicados.txt y, para verlos en el sitio local
+    antes de publicarlos, los de «con». Las demás especificaciones de specs/ no salen en
+    línea, así que ninguna dirección queda en el sitio sin estar en la lista."""
     if publicados is None:
         publicados = leer_publicados()
+    faltan = [s for s in publicados if not (SPECS / f"{s}.yaml").is_file()]
+    if faltan:
+        raise SitioError("Faltan las especificaciones de nudos que ya tienen QR impreso: "
+                         + ", ".join(faltan) + ". Su dirección no puede dejar de funcionar.")
+    return sorted({*publicados, *con})
+
+
+def construir_sitio(destino: Path, modelos: list[Modelo] | None = None,
+                    publicados: list[str] | None = None, con: Iterable[str] = ()) -> list[str]:
+    """Construye el sitio en «destino» y devuelve los slugs que contiene.
+
+    Sin «modelos», construye los nudos de nudos_del_sitio. No publica nada si algún nudo
+    tiene fallas o si falta la página de un nudo con QR impreso."""
+    if publicados is None:
+        publicados = leer_publicados()
+    if modelos is None:
+        modelos = [construir(cargar(s)) for s in nudos_del_sitio(publicados, con)]
 
     problemas = [f"{m.spec.slug}: {f}" for m in modelos for f in m.fallas]
     if problemas:
