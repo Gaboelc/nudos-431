@@ -808,13 +808,13 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
 La skill no copia texto de la fuente ni publica imágenes de la fuente.
 
 **Criterios de aceptación:**
-- [ ] Pruebas doradas: a partir de las entradas originales del as de guía y de la vuelta de escota, la skill produce especificaciones con las mismas secuencias de cruces ya validadas.
-- [ ] Con un nudo nuevo, el ocho, el borrador construye y pasa la validación automática, y tus correcciones quedan registradas.
-- [ ] La hoja de revisión queda en `revision/`, fuera de git.
+- [x] Pruebas doradas: a partir de las entradas originales del as de guía y de la vuelta de escota, la skill produce especificaciones con las mismas secuencias de cruces ya validadas. (12 nov: con el criterio que decidió Gabriel; la vuelta de escota, con la lectura que Gabriel aceptó como el mismo nudo.)
+- [x] Con un nudo nuevo, el ocho, el borrador construye y pasa la validación automática, y tus correcciones quedan registradas. (12 nov: sin correcciones.)
+- [x] La hoja de revisión queda en `revision/`, fuera de git.
 
 **Verificación:**
-- [ ] `pytest tests/test_dorados.py`
-- [ ] Manual: ejecutar la skill con las entradas del ocho y revisar la hoja.
+- [x] `pytest tests/test_dorados.py`
+- [x] Manual: ejecutar la skill con las entradas del ocho y revisar la hoja.
 
 **Dependencias:** Punto de control B
 
@@ -865,10 +865,14 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
 - **Vuelta de escota:** 5 pasos en vez de 4, porque el borrador tiene dos pasos sin cruces al comienzo. La gruesa cruza igual, pero la delgada cruza las dos piernas del seno en el orden contrario. Es el lugar donde la sesión anotó su duda: ahí se tapan las tres cuerdas. Falta saber si es el mismo nudo dibujado de otra manera o uno equivocado. La comparación de los dos nudos terminados está en `revision/dorados/vuelta-de-escota-comparada.png`, fuera de git.
 - **Una fuga:** un script de diagnóstico de esa sesión, corrido desde fuera de su worktree, importó el `nudos` de A: y cargó la vuelta de escota validada. Vio que tiene 4 pasos y el error en el 4, pero no sus secuencias. Su borrador ya tenía 5 pasos y el error en el 5, y después solo cambió la geometría.
 - **Lo que le faltó a la skill,** según esa sesión: cómo separar una cuerda que pasa justo sobre un cruce (dos lecturas dan la misma cuerda real y secuencias distintas); que en un worktree un script que no corre con `-m` desde su raíz usa el `nudos` de A:; que las fallas digan dónde ocurren y que la hoja dibuje el reverso; de dónde sacar el error común si la fuente no lo trae, y si va un paso de preparar la cuerda, sin cruces.
-- **Lo que decidió Gabriel (12 de noviembre):** las pruebas doradas no exigen la misma división de los pasos, porque esa es una decisión de cómo enseñar el nudo y no de cómo leer los cruces. Exigen que cada paso del borrador sea un paso validado, en el mismo orden; que cada cruce sea siempre el mismo cruce validado; el mismo nudo terminado y el mismo error común. Falta que diga si la vuelta de escota del borrador es el mismo nudo, y si los dos borradores vienen a `main`.
+- **Lo que decidió Gabriel (12 de noviembre):** las pruebas doradas no exigen la misma división de los pasos, porque esa es una decisión de cómo enseñar el nudo y no de cómo leer los cruces. Exigen que cada paso del borrador sea un paso validado, en el mismo orden; que cada cruce sea siempre el mismo cruce validado; el mismo nudo terminado y el mismo error común. Después dijo que la vuelta de escota del borrador es el mismo nudo que la validada y que los dos borradores vienen a `main`.
 - **Cómo se hizo:** `diferencias` (`nudos/dorados.py`) compara así, con pruebas para otra división de los pasos, un paso de más sin cruces, pasos en otro orden, un cruce que cambia de nombre entre pasos y otro error. Con ese criterio, el borrador del as de guía no tiene diferencias. El de la vuelta de escota difiere en el último paso, y por eso también en el error común.
 - **Lo que le faltó a la skill, corregido:** en `nudos/libre.py`, las fallas de separación y de estiramiento dicen cerca de qué punto ocurren, como ya lo decía la de curvatura. La hoja de revisión dibuja el nudo terminado por detrás. La skill avisa del `nudos` de A: en los scripts de un worktree, dice qué hacer con una cuerda que pasa justo sobre un cruce y de dónde sacar el error común cuando la fuente no lo trae. Queda para Gabriel si va un paso de preparar la cuerda, sin cruces.
 - **Nudos publicados:** iguales a 378e9d4, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge, y el sitio igual. Pasan las 377 pruebas.
+- **Los borradores en `main`** (12 nov, con permiso de Gabriel): el commit de la corrida, solo con `tests/dorados/`, entró con `cherry-pick` (8cdee59). `tests/test_dorados.py` comprueba que los dos construyen sin fallas y los compara con las especificaciones validadas. El as de guía no tiene diferencias. La vuelta de escota tiene las tres que Gabriel aceptó, porque es el mismo nudo, y se exigen tal cual (`ACEPTADAS`): cualquier otra, o que una de ellas desaparezca, hace fallar la prueba.
+- **El paso de preparar la cuerda** (Gabriel, 12 nov): sí va. El primer paso prepara la cuerda, sin cruces. Está en la skill, en «Decide los pasos».
+- **El ocho** (Gabriel, 12 nov): «todo bien», sin correcciones. Pasa a `modelado`. Su filtro 1 y su publicación son de la tanda 1.
+- **La suite:** pasan 383 pruebas; se salta la de construir la cabeza de turco, que es un borrador. Desde la última comparación no cambió el código que construye e imprime los nudos publicados.
 
 #### T10: Estado de producción y registro de pruebas
 
@@ -899,7 +903,7 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
 
 #### Punto de control C: después de T9 y T10
 
-- [ ] Las pruebas doradas pasan, y un nudo nuevo salió de la skill con correcciones menores.
+- [x] Las pruebas doradas pasan, y un nudo nuevo salió de la skill con correcciones menores. (12 nov: el ocho, sin correcciones.)
 - [ ] Decidir si se usan subagentes en paralelo para los borradores de la tanda 1.
 
 ### Fase 4: producción de los 30 nudos restantes

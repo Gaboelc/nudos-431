@@ -45,6 +45,7 @@ Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una e
 ## 3. Decide los pasos
 
 - Un paso por cada cosa nueva que tiene que hacer quien ata. Casi siempre es una imagen de la fuente por paso, pero dos imágenes pueden ser un solo paso, y una imagen que solo aprieta no es un paso.
+- **El primer paso prepara la cuerda, sin cruces** (Gabriel, 12 de noviembre de 2026): dónde va el firme, cuál es el chicote y cuánto chicote dejar.
 - La ficha lleva bien hasta 7 pasos: seis en la página izquierda y el resto en la derecha.
 - Anota en `revision/<slug>/pasos.yaml` qué imágenes usaste en cada paso y tus dudas. La hoja de revisión las pone junto a cada paso:
 
@@ -108,4 +109,4 @@ Las pruebas doradas de T9 (`tests/test_dorados.py`) comparan lo que escribe esta
 
 ## Lo que aprendimos
 
-Las correcciones de Gabriel que se repiten, como reglas para el borrador siguiente. Todavía no hay ninguna.
+Las correcciones de Gabriel que se repiten, como reglas para el borrador siguiente. Todavía no hay ninguna: en el primer borrador, el del ocho, no corrigió nada (12 de noviembre de 2026). El paso de preparar la cuerda es una decisión suya, y está en «Decide los pasos».

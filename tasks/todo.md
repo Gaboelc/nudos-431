@@ -129,19 +129,19 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 
 ## Fase 3: el paso de IA y la operación
 
-- [ ] T9 Skill nudo-nuevo, con pruebas doradas sobre el as de guía y la escota (M, depende del Punto de control B)
+- [x] T9 Skill nudo-nuevo, con pruebas doradas sobre el as de guía y la escota (M, depende del Punto de control B) (12 nov: ver T9 en el plan)
   - [x] Diseño escrito en el plan (dónde vive la skill, qué hace, la hoja de revisión, las pruebas doradas a ciegas y el ocho) (12 nov)
   - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (12 nov: las cuatro propuestas)
   - [x] Hoja de revisión (`python -m nudos revision`), comparación de las pruebas doradas (`nudos/dorados.py`) y la skill en `.claude/skills/nudo-nuevo/` (12 nov; ver «Cómo se hizo la hoja, la comparación y la skill» en el plan)
   - [x] Corrida dorada a ciegas, en una sesión nueva con un worktree sin las especificaciones del as de guía y de la vuelta de escota (12 nov: borradores en la rama `claude/competent-aryabhata-2dc24a`, 4aa97d2; el as de guía da el mismo nudo y el mismo error con otra división de pasos; en la vuelta de escota la delgada cruza el seno en otro orden; ver «La corrida dorada» en T9 del plan)
   - [x] Gabriel decide qué exigen las pruebas doradas (12 nov: el mismo nudo terminado, el mismo error y que cada paso sea un paso validado, sin la misma división; `nudos/dorados.py`)
-  - [ ] Gabriel mira si la vuelta de escota del borrador es el mismo nudo (`revision/dorados/vuelta-de-escota-comparada.png`)
-  - [ ] Borradores en `main`, en `tests/dorados/`, y sus pruebas en `tests/test_dorados.py`; la skill corregida con lo que le faltó
+  - [x] Gabriel mira si la vuelta de escota del borrador es el mismo nudo (12 nov: sí; se acepta con sus tres diferencias exactas)
+  - [x] Borradores en `main`, en `tests/dorados/`, y sus pruebas en `tests/test_dorados.py`; la skill corregida con lo que le faltó (12 nov: 8cdee59 y a2148a3; el paso de preparar la cuerda, sin cruces, sí va)
   - [x] Borrador del ocho con la skill y su hoja de revisión (12 nov: `specs/ocho.yaml` en `borrador`, 3 pasos y 4 cruces, sin fallas; la ficha cabe; hoja en `revision/ocho/index.html`; ver «El ocho» en T9 del plan)
-  - [ ] Gabriel revisa la hoja del ocho; sus correcciones, anotadas en T9 del plan
+  - [x] Gabriel revisa la hoja del ocho; sus correcciones, anotadas en T9 del plan (12 nov: «todo bien», sin correcciones; el ocho pasa a `modelado`)
 - [x] T10 Estado de producción y registro de pruebas sin nombres (S, depende de T4) (11 nov: campo `estado` en el formato v1.1, `python -m nudos estado` con los 35 nudos de `config/edicion-1.yaml` y `tests/test_estado.py`; el as de guía en `publicado`, los otros tres publicados en `cuerda-ok` y la cabeza de turco en `borrador`; ver «Cómo se hizo» de T10 en el plan)
 - [ ] Punto de control C:
-  - [ ] Un nudo nuevo salió de la skill con correcciones menores
+  - [x] Un nudo nuevo salió de la skill con correcciones menores (12 nov: el ocho, sin correcciones; las pruebas doradas pasan)
   - [ ] Decisión sobre usar subagentes
 
 ## Fase 4: producción de los 30 nudos restantes

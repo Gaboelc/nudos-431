@@ -27,7 +27,7 @@ alternativas:
     cuando: Cuando, en vez de un tope, necesitas una gaza fija en el extremo.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 encuadre:
   x: [-9.0, 12.5]

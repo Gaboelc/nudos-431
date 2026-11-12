@@ -2,9 +2,29 @@
 
 La comparación no depende de cómo se llama cada cruce (nudos/dorados.py)."""
 import dataclasses
+from pathlib import Path
 
+import pytest
+
+from nudos.construir import construir
 from nudos.dorados import diferencias, renumerar
 from nudos.spec import cargar
+
+DORADOS = Path(__file__).parent / "dorados"
+# Diferencias que Gabriel aceptó porque el borrador es el mismo nudo leído de otra manera
+# (T9 del plan, «La corrida dorada»). En la vuelta de escota, donde se tapan las tres
+# cuerdas, la delgada cruza las piernas del seno en el otro orden (12 nov). Se exigen tal
+# cual: cualquier otra diferencia, o que una de estas desaparezca, hace fallar la prueba.
+ACEPTADAS = {
+    "vuelta-de-escota": [
+        "paso 5: 1O 2U 3O 4U 5U 6O 3U 7O 5O 6U 1U 2O 7U 4O no es ningún paso de la "
+        "especificación validada desde su paso 3",
+        "el nudo terminado es 1O 2U 3O 4U 5U 6O 3U 7O 5O 6U 1U 2O 7U 4O en vez de "
+        "1O 2U 3O 4U 5U 6O 3U 4O 7O 6U 1U 2O 5O 7U",
+        "el error común es 1O 2U 3O 4U 5U 6O 3U 7U 5O 6U 1U 2O 7O 4O en vez de "
+        "1O 2U 3O 4U 5U 6O 3U 4O 7U 6U 1U 2O 5O 7O",
+    ],
+}
 
 
 def con_secuencias(spec, cambiar):
@@ -87,3 +107,19 @@ def test_el_error_comun_se_compara():
     assert diferencias(otro, spec)[0].startswith("el error común es")
     sin_error = dataclasses.replace(spec, error=None)
     assert diferencias(sin_error, spec) == ["el error común está en una sola de las dos"]
+
+
+# --- Los borradores dorados ---------------------------------------------------
+
+def test_estan_los_dos_borradores_dorados():
+    assert sorted(p.stem for p in DORADOS.glob("*.yaml")) == ["as-de-guia", "vuelta-de-escota"]
+
+
+@pytest.mark.parametrize("slug", sorted(p.stem for p in DORADOS.glob("*.yaml")))
+def test_el_borrador_dorado_construye_sin_fallas(slug):
+    assert construir(cargar(DORADOS / f"{slug}.yaml")).fallas == []
+
+
+@pytest.mark.parametrize("slug", sorted(p.stem for p in DORADOS.glob("*.yaml")))
+def test_el_borrador_dorado_tiene_los_cruces_validados(slug):
+    assert diferencias(cargar(DORADOS / f"{slug}.yaml"), cargar(slug)) == ACEPTADAS.get(slug, [])
