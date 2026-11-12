@@ -151,9 +151,9 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 ### Tanda 1: libres, una cuerda
 - [ ] Simple (12 nov: Gabriel aprobó su hoja; en `main` y en `modelado`, 3 pasos sin fallas, la ficha cabe; faltan el filtro 1 y la publicación. Por revisar en el texto: si ABOK 46 es su único número)
 - [ ] Ocho (12 nov: en `modelado`, salió de la skill en T9; faltan el filtro 1 y la publicación)
-- [ ] Ocho doble (12 nov: Gabriel dice que es la gaza en ocho, de una sola gaza; las imágenes R1 a R5 de `entradas/ocho-doble` la atan, y desde la R6 siguen con el de dos gazas, que no va)
+- [ ] Ocho doble (12 nov: Gabriel dice que es la gaza en ocho, de una sola gaza; las imágenes R1 a R5 de `entradas/ocho-doble` la atan, y desde la R6 siguen con el de dos gazas, que no va. Borrador en la rama `claude/tanda1-ocho-doble-ac4c81`, 8fe248a: 4 pasos sin fallas; los cruces 9 a 16, del seno por la vuelta, no se ven en las fotos. Falta que Gabriel revise su hoja)
 - [ ] As de guía español
-- [ ] Mariposa alpina
+- [ ] Mariposa alpina (12 nov: borrador en la rama `claude/tanda1-mariposa-ed24c1`, a3b237e: 6 pasos y 10 cruces sin fallas, atada sobre la mesa. Falta que Gabriel revise su hoja)
 - [ ] Margarita
 - [ ] Arnés de hombre
 - [ ] Silla de bombero (requiere D1)
