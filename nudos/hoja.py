@@ -3,8 +3,13 @@
 Render rápido con numpy: la cuerda como un tubo de esferas, con sombra y
 oscurecimiento de contacto sobre la mesa. Sirve para revisar el modelo, no para
 imprimir.
+
+Sobre el tubo de la cabeza de turco, la vista desde arriba no sirve para revisar decenas de
+cruces: la hoja dibuja además el tubo desenrollado (mapa()), con cada cruce y su etiqueta.
 """
 from __future__ import annotations
+
+import math
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -190,3 +195,66 @@ def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0)):
     img[cuerda] = rimg[cuerda]
     img = np.clip(img, 0, 1) ** (1 / 2.2)
     return (img * 255).astype(np.uint8)
+
+
+# --------------------------------------------------------------------------
+# El tubo desenrollado
+# --------------------------------------------------------------------------
+PPD_MAPA = 22          # píxeles por diámetro en el mapa del tubo
+COLUMNAS_MAPA = 2
+
+
+def mapa(datos: dict, tubo, senos: int) -> Image.Image:
+    """Un cuadro por paso con el tubo desenrollado: alrededor del tubo hacia la derecha, desde
+    el seno A, y a lo largo del eje hacia arriba. Se ve el nudo entero aunque en el paso esté
+    girado. Lo que va más lejos del eje se dibuja encima, más oscuro; lo que agrega el paso,
+    en ámbar; cada cruce lleva su etiqueta. `tubo` es el sólido (nudos/anfitrion.py, Tubo) y
+    `senos`, los del nudo: el mapa da la vuelta donde la da el lugar de los cruces."""
+    C = 2 * math.pi * tubo.rb
+    corte = C / (4 * senos)
+    todos = []
+    for p in datos["pasos"]:
+        X = np.asarray(p["puntos"], float)
+        x, th, r = tubo.cilindricas(X)
+        en_tubo = (r < tubo.rb + 1.8) & (np.abs(x) < tubo.largo / 2)
+        todos.append(x[en_tubo])
+    xs = np.concatenate(todos)
+    x0, x1 = float(xs.min()) - 1.5, float(xs.max()) + 1.5
+    W, H = int((C + 2) * PPD_MAPA), int((x1 - x0) * PPD_MAPA)
+    cuadros = []
+    for p in datos["pasos"]:
+        im = Image.new("RGB", (W, H), (246, 246, 243))
+        d = ImageDraw.Draw(im)
+        X = np.asarray(p["puntos"], float)
+        x, th, r = tubo.cilindricas(X)
+        u = ((math.radians(p.get("giro") or 0.0) - np.unwrap(th)) * tubo.rb - corte) % C + corte
+        s = np.arange(len(X)) * p["h"]
+        hl = p["resaltado"] or [-1, -1]
+        en_tubo = (r < tubo.rb + 1.8) & (np.abs(x) < tubo.largo / 2)
+
+        def px(ui, xi):
+            return ((ui - corte + 1) * PPD_MAPA, (x1 - xi) * PPD_MAPA)
+        for borde in (corte, corte + C):
+            d.line([px(borde, x0), px(borde, x1)], fill=(205, 205, 200), width=1)
+        tramos = []
+        for i in range(len(X) - 1):
+            if en_tubo[i] and en_tubo[i + 1] and abs(u[i + 1] - u[i]) < C / 2:
+                tramos.append(((r[i] + r[i + 1]) / 2, i))
+        for alto, i in sorted(tramos):
+            k = float(np.clip(alto - tubo.rb, 0, 1))
+            base = AMBAR if hl[0] <= s[i] <= hl[1] else AZUL
+            color = base * (0.55 + 0.45 * (1 - k)) + (1 - k) * 0.35 * (1 - base)
+            c = tuple(int(255 * v) for v in np.clip(color, 0, 1))
+            d.line([px(u[i], x[i]), px(u[i + 1], x[i + 1])], fill=(40, 40, 40), width=int(PPD_MAPA * 0.95))
+            d.line([px(u[i], x[i]), px(u[i + 1], x[i + 1])], fill=c, width=int(PPD_MAPA * 0.75))
+        for et, (cx, cu) in p.get("cruces", {}).items():
+            a, b = px(cu, cx)
+            d.rectangle([a - 9, b - 7, a + 9, b + 7], fill=(255, 255, 255), outline=(60, 60, 60))
+            d.text((a - 6 if len(et) > 1 else a - 3, b - 6), et, fill=(150, 20, 20))
+        d.text((10, 8), f"Paso {p['n']} · tubo desenrollado, desde el seno A", fill=(30, 30, 30))
+        cuadros.append(im)
+    filas = (len(cuadros) + COLUMNAS_MAPA - 1) // COLUMNAS_MAPA
+    out = Image.new("RGB", (COLUMNAS_MAPA * W, filas * H), (255, 255, 255))
+    for k, c in enumerate(cuadros):
+        out.paste(c, ((k % COLUMNAS_MAPA) * W, (k // COLUMNAS_MAPA) * H))
+    return out

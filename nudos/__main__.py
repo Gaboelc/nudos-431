@@ -6,11 +6,14 @@ import json
 import sys
 from pathlib import Path
 
+from PIL import Image
+
 from . import BUILD, RAIZ
+from .anfitrion import Tubo
 from .construir import construir, guardar
 from .exportar import SitioError, construir_sitio
 from .ficha import FichaError, ficha, url_visor
-from .hoja import hoja
+from .hoja import hoja, mapa
 from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pagina_prueba,
                        px)
 from .libre import LIMITES
@@ -150,7 +153,16 @@ def _hoja(slug: str, vista: str) -> int:
     with open(origen, encoding="utf-8") as f:
         datos = json.load(f)
     destino = origen.parent / f"hoja-{vista}.png"
-    hoja(datos, vista).save(destino)
+    imagen = hoja(datos, vista)
+    spec = cargar(slug)
+    if spec.anfitrion is not None and spec.anfitrion.tipo == "tubo":
+        # Sobre el tubo, la hoja lleva además el tubo desenrollado, con cada cruce.
+        abajo = mapa(datos, Tubo(spec.anfitrion), spec.plantilla.senos)
+        junta = Image.new("RGB", (max(imagen.width, abajo.width), imagen.height + abajo.height), "white")
+        junta.paste(imagen, (0, 0))
+        junta.paste(abajo, (0, imagen.height))
+        imagen = junta
+    imagen.save(destino)
     print(f"Hoja en {destino.relative_to(RAIZ)}")
     return 0
 

@@ -763,6 +763,16 @@ En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y l
 - **Resultado** con 3 cabos, 4 senos y dos pasadas en radio 4 (55°): los 6 pasos sin fallas, con separación de al menos 1,00, curvatura de al menos 1,15, estiramiento de hasta 0,8 % y nada dentro del tubo. El error, igual (curvatura 1,15). Construir el nudo tarda unos 30 segundos. Sin fallas también con 3 × 4 con una pasada (45°) y con tres (radio 5,5), 2 × 3 y 3 × 2 con dos pasadas, y 2 × 5, 4 × 5 (radio 6) y 3 × 7 (radio 6) con una.
 - **Pendiente: 3 × 5 con dos pasadas no sale**, ni con radio 5, 5,5 ni 6. Su último cruce antes de A es por encima, así que la banda del seno vecino pasa por debajo de él y no le queda lugar para levantarse sobre el extremo corto. Habría que meterlo más lejos, al otro lado del ápice del seno vecino. Se deja para después de que Gabriel revise el remate en las imágenes, porque puede cambiar.
 
+**Cómo se hizo la escena, la impresión y la hoja (11 de noviembre de 2026):** con el diseño, más estos detalles. Falta que Gabriel lo revise en las imágenes.
+- **El tubo.** La escena lo dibuja con los datos de `Tubo.datos()`, de madera como el poste, a lo largo de x y centrado en x = 0, y el alto del encuadre lo incluye. El visor y la impresión usan la misma escena.
+- **Las vistas.** Los pasos, el error y el terminado van en la vista de los pasos. Por delante, el terminado es el remate, girado como ese paso; por detrás, `Tubo.voltear` gira el tubo y el nudo media vuelta alrededor del eje: un giro rígido, que no se relaja ni se comprueba otra vez y suma 180° al giro. La ficha dice «Por detrás es como lo ves si giras el tubo media vuelta».
+- **Los nombres.** Solo «Chicote», en la punta de la parte larga, y los dos extremos con remate, como desde el paso 2 del amarre.
+- **El encuadre** va en la especificación: x de −7 a 11 e y de −9 a 9, el nudo con el tubo y el comienzo de lo que cae a la mesa. Lo que cae detrás del tubo sigue 3 diámetros por la mesa, y su punta queda fuera del encuadre en casi todos los pasos. El terminado, sin nada que cuelgue, se ve más grande.
+- **La hoja de revisión** (`python -m nudos hoja cabeza-de-turco`) lleva, debajo de la de siempre, el tubo desenrollado de cada paso (`mapa` en `nudos/hoja.py`), desde el seno A, con cada cruce y su etiqueta. Lo que va más lejos del eje se dibuja encima y más oscuro, y lo que agrega el paso, en ámbar.
+- **La especificación** (`specs/cabeza-de-turco.yaml`) tiene los 6 pasos, el error y los dos errores sin imagen, con texto provisional: falta el de la ficha.
+- **Visto en las imágenes:** en el remate se resalta solo lo que agrega el chicote. El extremo corto metido, que es lo que más cambia, va azul, porque cada paso resalta un solo tramo de la cuerda. Se arregla según lo que decida Gabriel del remate.
+- **Nudos publicados:** iguales que en 80e3619, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge. Una vez, `paso-1.png` del amarre salió con 20 píxeles distintos en 1 nivel mientras se construía otro nudo a la vez; impresa sola, salió igual. Construir la cabeza de turco dos veces da el mismo `modelo.json`, byte a byte.
+
 #### Punto de control B: después de T7 y T8
 
 - [ ] Los 5 nudos del piloto están publicados.

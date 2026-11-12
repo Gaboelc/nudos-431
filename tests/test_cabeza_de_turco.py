@@ -5,7 +5,10 @@ import numpy as np
 import pytest
 
 from nudos.anfitrion import PENETRACION_MAX, Tubo
-from nudos.construir import DESPLAZAMIENTO_MAX, construir
+from nudos.construir import DESPLAZAMIENTO_MAX, construir, guardar
+from nudos.exportar import datos_visor
+from nudos.hoja import mapa
+from nudos.imprimir import imagenes
 from nudos.cruces import numerada
 from nudos.libre import LIMITES, Resultado, TrazadoError
 from nudos.plantillas.cabeza_turco import (MESA, TUBO as TUBO_ZONA, CabezaDeTurco, Cuerda,
@@ -440,3 +443,53 @@ def test_otras_medidas_se_regeneran_sin_fallas(cabos, senos, pasadas, radio):
     assert m.fallas == []
     assert len(m.pasos[-1].secuencia) // 2 == senos * (cabos - 1) * pasadas ** 2 + pasadas
 
+
+# --- Escena, impresión y hoja -------------------------------------------------
+def test_la_escena_dibuja_el_tubo(modelo):
+    d = datos_visor(modelo)
+    assert d["anfitrion"] == Tubo(TUBO).datos() == {"tipo": "tubo", "radio": 4.0, "largo": 24.0, "z": 6.0}
+    assert d["dos_remates"] is True
+    # Ningún paso tiene firme: la cuerda va desde el extremo corto y solo lleva «Chicote».
+    for paso, r in zip(d["pasos"], modelo.pasos):
+        p = np.reshape(paso["p"], (-1, 3))
+        assert np.allclose(p[0], r.puntos[0], atol=1e-3) and paso["nombres"] == ["chicote"], r.n
+
+
+def test_cada_paso_guarda_su_giro(modelo, tmp_path, monkeypatch):
+    import json
+
+    import nudos.construir as c
+    monkeypatch.setattr(c, "BUILD", tmp_path)
+    datos = json.loads(guardar(modelo).read_text(encoding="utf-8"))
+    assert [p["giro"] for p in datos["pasos"]] == [round(r.giro, 4) for r in modelo.pasos]
+    assert "giro" in datos["error"]
+
+
+def test_las_imagenes_de_la_cabeza_de_turco(modelo):
+    imgs = imagenes(modelo)
+    assert [i.nombre for i in imgs] == [f"paso-{n}" for n in range(1, 7)] + [
+        "error-correcto", "error", "terminado-frente", "terminado-reverso"]
+    assert {i.vista for i in imgs} == {"3d"}   # todo como los pasos, también el terminado
+    por_nombre = {i.nombre: i for i in imgs}
+    bien, mal = por_nombre["error-correcto"], por_nombre["error"]
+    assert bien.escena is mal.escena and [p["n"] for p in bien.escena["pasos"]] == [3, 3]
+    # Por delante, el remate; por detrás, el mismo nudo girado media vuelta con el tubo.
+    frente, reverso = por_nombre["terminado-frente"], por_nombre["terminado-reverso"]
+    X = np.reshape(frente.escena["pasos"][0]["p"], (-1, 3))
+    Y = np.reshape(reverso.escena["pasos"][0]["p"], (-1, 3))
+    assert np.allclose(Y[:, 0], X[:, 0]) and np.allclose(Y[:, 1], -X[:, 1], atol=2e-3)
+    assert np.allclose(Y[:, 2] + X[:, 2], 2 * Tubo(TUBO).zc, atol=2e-3)
+    assert frente.escena["anfitrion"] == reverso.escena["anfitrion"] == Tubo(TUBO).datos()
+
+
+def test_la_hoja_desenrolla_el_tubo(modelo, tmp_path, monkeypatch):
+    import json
+
+    import nudos.construir as c
+    monkeypatch.setattr(c, "BUILD", tmp_path)
+    datos = json.loads(guardar(modelo).read_text(encoding="utf-8"))
+    im = mapa(datos, Tubo(TUBO), 4)
+    assert im.width > im.height > 0
+    a = np.asarray(im.convert("RGB")).astype(int)
+    rojo = (a[..., 0] > 120) & (a[..., 1] < 60) & (a[..., 2] < 60)   # las etiquetas de los cruces
+    assert rojo.any()

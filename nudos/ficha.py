@@ -112,7 +112,8 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
     detras = {None: "Por detrás es como lo ves si lo volteas como la página de un libro.",
               "poste": "Por detrás es como lo ves desde el otro lado del poste.",
               "cruz": "Por detrás es como lo ves si volteas los dos palos juntos como la página "
-                      "de un libro."}[s.anfitrion and s.anfitrion.tipo]
+                      "de un libro.",
+              "tubo": "Por detrás es como lo ves si giras el tubo media vuelta."}[s.anfitrion and s.anfitrion.tipo]
     terminado = (f'    <figure class="panel terminado"><div class="imgs">'
                  f'<div class="img"><img src="{img("terminado-frente")}" alt=""><span class="sello">Por delante</span></div>'
                  f'<div class="img"><img src="{img("terminado-reverso")}" alt=""><span class="sello">Por detrás</span></div>'

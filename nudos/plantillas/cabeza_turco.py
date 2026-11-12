@@ -175,6 +175,7 @@ FUERA = 0.9           # el extremo corto llega desde esto por fuera del borde de
 ANCHO_EXTRA = 0.8     # cuánto más lejos del cruce va cada uno por cada pasada más de dos
 RESTO_LARGO = 3.0     # el resto se aleja del tubo a lo largo de esto, siguiendo la cuerda
 RESTO_SUBE = 2.2      # y se aleja esto del tubo antes de rodearlo y caer a la mesa
+MESA_LARGO = 6        # puntos (cada 0,5) de lo que sigue por la mesa después de caer
 
 
 def _suave(x):
@@ -610,7 +611,7 @@ class Cuerda:
         out = [c - radio * math.cos(a) * afuera - np.array([0.0, 0.0, radio * math.sin(a)])
                for a in np.linspace(0, math.pi / 2, pasos)[1:]]
         fin = out[-1]
-        return out + [fin + 0.5 * k * afuera for k in range(1, 15)]
+        return out + [fin + 0.5 * k * afuera for k in range(1, MESA_LARGO + 1)]
 
     def _resto(self, P, llega) -> np.ndarray:
         """Lo que sigue de la cuerda después del hito, que sale del nudo y cae a la mesa: sigue
@@ -659,7 +660,7 @@ class Cuerda:
             largo = max(2.5, 1.2 * baja)
             for f in np.linspace(0, 1, max(4, int(largo / PASO_CONTROL) + 1))[1:]:
                 out.append(P + np.array([largo * f, 0.0, -baja * float(_suave(f))]))
-            out += [out[-1] + np.array([0.5 * k, 0.0, 0.0]) for k in range(1, 13)]
+            out += [out[-1] + np.array([0.5 * k, 0.0, 0.0]) for k in range(1, MESA_LARGO + 1)]
         return np.array(out[::-1])
 
     def buscar(self, X, h: float, zonas, giro: float):

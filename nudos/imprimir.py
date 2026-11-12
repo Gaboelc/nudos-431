@@ -30,7 +30,7 @@ from pathlib import Path
 from PIL import Image, ImageOps
 
 from . import RAIZ
-from .anfitrion import Cruz
+from .anfitrion import Cruz, Tubo
 from .construir import Modelo
 from .exportar import ESCENA, SITIO, datos_escena
 from .spec import Encuadre
@@ -98,6 +98,11 @@ def espejo(e: Encuadre | None) -> Encuadre | None:
     return None if e is None else Encuadre((-e.x[1], -e.x[0]), e.y)
 
 
+def girado_y(e: Encuadre | None) -> Encuadre | None:
+    """El encuadre del nudo girado media vuelta alrededor del eje del tubo, a lo largo de x."""
+    return None if e is None else Encuadre(e.x, (-e.y[1], -e.y[0]))
+
+
 def nombres(modelo: Modelo, chicote: bool = True) -> tuple[str, ...]:
     """Los nombres que llevan las imágenes, como claves de render/escena.js: «Firme» y
     «Chicote» con una cuerda; con varias, el de cada cuerda junto a su firme y «Chicote»."""
@@ -129,12 +134,21 @@ def imagenes(modelo: Modelo) -> list[Imagen]:
 
 def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> list[Imagen]:
     """Las dos vistas del nudo terminado: `final` por delante y `reverso` por detrás. Sobre un
-    poste no hay reverso (se mira `final` desde el otro lado) y sobre la cruz se voltea
-    `final` con los palos. Se llaman <prefijo>-frente y <prefijo>-reverso."""
+    poste no hay reverso (se mira `final` desde el otro lado), sobre la cruz se voltea
+    `final` con los palos y sobre el tubo se gira `final` media vuelta con el tubo. Se llaman
+    <prefijo>-frente y <prefijo>-reverso."""
     s = modelo.spec
     todos = nombres(modelo)
     enc = s.terminado.encuadre or s.encuadre
     frente, atras = f"{prefijo}-frente", f"{prefijo}-reverso"
+    if s.anfitrion is not None and s.anfitrion.tipo == "tubo":
+        # La cabeza de turco se mira como los pasos: por delante, el remate; por detrás, el tubo
+        # y el nudo girados media vuelta alrededor del eje, como se gira el tubo en la mano.
+        girado = Tubo(s.anfitrion).voltear(final)
+        return [Imagen(frente, "Terminado, por delante", datos_escena(modelo, enc, [final]), 1,
+                       VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO),
+                Imagen(atras, "Terminado, por detrás", datos_escena(modelo, girado_y(enc), [girado]),
+                       1, VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO)]
     if s.anfitrion is not None and s.anfitrion.tipo == "cruz":
         # El amarre se voltea entero, palos y cuerda, como un marco sobre la mesa, y por
         # delante y por detrás se mira desde donde se ata.

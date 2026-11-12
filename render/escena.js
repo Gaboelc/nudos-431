@@ -266,7 +266,7 @@ function altoDeEncuadre(modelo, B) {
       }
     }
   }
-  if (a && a.tipo === "poste") alto = Math.max(alto, a.z + a.radio);
+  if (a && (a.tipo === "poste" || a.tipo === "tubo")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   return alto;
 }
@@ -338,8 +338,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   mesa.receiveShadow = true;
   scene.add(mesa);
 
-  // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x o la
-  // cruz de los amarres. El cilindro de three.js va a lo largo de y.
+  // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x, la
+  // cruz de los amarres o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
+  // three.js va a lo largo de y.
   const a = modelo.anfitrion;
   const palo = (largo, x, y, z, aLoLargoDeX) => {
     const geo = new THREE.CylinderGeometry(a.radio, a.radio, largo, 64, 1, false);
@@ -356,6 +357,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   };
   const ejesPalos = [];
   if (a && a.tipo === "poste") palo(a.hasta - a.desde, (a.desde + a.hasta) / 2, a.y, a.z, true);
+  if (a && a.tipo === "tubo") palo(a.largo, 0, 0, a.z, true);
   // La cruz: el palo de abajo va a lo largo de y y el de arriba a lo largo de x, cruzados en
   // x = y = 0, con los ejes a las alturas «z_abajo» y «z_arriba». En el amarre volteado
   // (el nudo terminado por detrás), el de abajo queda encima.

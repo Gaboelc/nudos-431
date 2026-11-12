@@ -1,0 +1,70 @@
+# Cabeza de turco: un nudo decorativo tejido alrededor de un tubo. Es la segunda plantilla:
+# la plantilla calcula la cuerda entera a partir de las medidas (nudos/plantillas/cabeza_turco.py),
+# y cada paso dice con «hasta» hasta dónde llega. El método es el del diseño de T8 en
+# tasks/plan.md: se teje vuelta por vuelta, sobre un tubo que se gira en la mano.
+# Unidades: diámetros de cuerda. El tubo va a lo largo de x, con el eje en y = 0.
+#
+# El texto de los pasos y del error es provisional: falta escribir el de la ficha y que Gabriel
+# lo revise (T8 en tasks/todo.md).
+slug: cabeza-de-turco
+nombre: Cabeza de turco
+familia: Decorativos
+
+# La zona de la mesa que se muestra en los pasos y el terminado: el nudo, con el tubo, y el
+# comienzo de lo que cae a la mesa.
+encuadre: {x: [-7, 11], y: [-9, 9]}
+
+anfitrion: {tipo: tubo, radio: 4, largo: 24}
+plantilla:
+  tipo: cabeza-de-turco
+  cabos: 3
+  senos: 4
+  pasadas: 2
+
+pasos:
+  - titulo: Da la primera vuelta
+    texto: >-
+      Sujeta el extremo corto contra el tubo con el pulgar y da una vuelta al tubo, por
+      encima y hacia el fondo, cruzando en diagonal.
+    hasta: vuelta-1
+  - titulo: Cruza por encima
+    texto: >-
+      Da la segunda vuelta junto a la primera y crúzala {senos} menos una veces, siempre por
+      encima. Gira el tubo hacia ti para tener de frente lo que vas tejiendo.
+    hasta: vuelta-2
+  - titulo: Empieza a tejer
+    texto: >-
+      En la tercera vuelta, pasa por debajo del primer cruce, por encima del siguiente y por
+      debajo del otro.
+    hasta: vuelta-3-mitad
+  - titulo: Termina de tejer
+    texto: >-
+      Sigue alternando, por encima y por debajo, hasta llegar junto al comienzo.
+    hasta: vueltas
+  - titulo: Sigue el mismo camino
+    texto: >-
+      Pasa la cuerda junto a la primera pasada, siempre del mismo lado: por encima donde ella
+      va por encima y por debajo donde va por debajo. Da {pasadas} pasadas en total.
+    hasta: pasadas
+  - titulo: Esconde los chicotes
+    texto: >-
+      Pasa el chicote por debajo del último cruce. Mete el extremo corto por debajo de la
+      banda que baja del seno de al lado.
+    hasta: remate
+
+error:
+  paso: 3
+  variante: empieza-por-encima
+  titulo: Empezar a tejer por encima
+  texto: >-
+    Si la tercera vuelta empieza por encima, todos sus cruces quedan al revés y el nudo no se
+    traba. Desármala y empieza por debajo.
+  otros:
+    - titulo: La segunda pasada cambia de lado
+      texto: >-
+        Cada pasada va siempre del mismo lado de la primera. Si cambia de lado o se monta
+        encima, el nudo queda desparejo.
+    - titulo: Apretar de una vez
+      texto: >-
+        Si tiras de un chicote para apretarlo todo de una vez, el nudo se deforma. Apriétalo
+        de a poco, siguiendo la cuerda.
