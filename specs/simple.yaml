@@ -31,26 +31,31 @@ alternativas:
 estado: modelado
 
 encuadre:
-  x: [-8.5, 8.5]
-  y: [-12.5, 3.5]
+  x: [-6.6, 6.6]
+  y: [-9.5, 5.0]
 
+# Tallado, como en la foto del nudo armado: la vuelta cerrada y los tramos que se tocan a
+# unos 1,2 diámetros.
 segmentos:
   # El firme baja desde el fondo de la mesa hasta el cruce 1.
-  firme: [[0.0, 22.0], [0.0, 16.0], [0.0, 10.0], [0.0, 6.0], [0.0, 3.5], [0.0, 1.5]]
+  firme: [[0.0, 20.0], [0.0, 14.0], [0.0, 9.0], [0.0, 5.5], [0.0, 3.6]]
   # Antes de atar: el resto de la cuerda, suelto sobre la mesa.
-  cuerda-suelta: [[0.0, -1.0], [0.1, -3.5], [0.6, -6.0], [1.8, -8.4], [3.6, -10.0],
-                  [5.6, -10.6], [7.4, -10.4]]
-  # La vuelta: sale del cruce 1 hacia abajo, gira hacia la izquierda y vuelve a él.
-  vuelta: [[0.0, -1.0], [-0.05, -3.0], [-0.3, -4.8], [-1.0, -6.2], [-2.5, -7.2],
-           [-4.2, -7.3], [-5.7, -6.3], [-6.5, -4.6], [-6.6, -2.6], [-6.0, -0.9],
-           [-4.8, 0.2], [-3.2, 0.5], [-1.6, 0.25]]
+  cuerda-suelta: [[0.0, 1.5], [0.1, -1.0], [0.5, -3.5], [1.3, -5.7], [2.6, -7.4],
+                  [4.2, -8.3], [5.8, -8.5]]
+  # La vuelta: baja del cruce 1 y dobla a la derecha junto al chicote, pasa por encima de
+  # él (cruce 2), da una curva cerrada a la derecha, pasa por debajo de él (cruce 3) y
+  # vuelve por abajo y por la izquierda hasta el cruce 1.
+  vuelta: [[0.02, 1.9], [0.19, 1.47], [0.72, 0.94], [1.45, 0.75], [2.3, 0.75],
+           [3.85, 0.54], [4.44, -0.05], [4.65, -0.85], [4.44, -1.65], [3.85, -2.24],
+           [3.05, -2.45], [2.0, -2.62], [0.8, -2.72], [-0.4, -2.45], [-1.4, -1.7],
+           [-1.85, -0.55], [-1.78, 0.65], [-1.27, 1.63], [-0.5, 2.2]]
   # El chicote suelto, después de cruzar por encima del firme.
-  chicote-cae: [[1.5, -0.2], [3.2, -0.6], [4.6, -1.6], [5.4, -3.2], [5.6, -5.0], [5.4, -7.0]]
-  # El chicote da la vuelta por la derecha, pasa por debajo del firme (cruce 2), cruza la
-  # vuelta por dentro y sale por encima de su lado de abajo (cruce 3).
-  chicote-pasa: [[1.5, -0.2], [2.8, -0.9], [3.5, -2.2], [3.3, -3.5], [2.4, -4.2],
-                 [1.2, -4.4], [-1.2, -4.3], [-2.4, -4.6], [-3.3, -5.4], [-3.7, -6.5],
-                 [-3.8, -7.4], [-3.8, -8.6], [-3.6, -10.0], [-3.2, -11.4]]
+  chicote-cae: [[0.6, 2.35], [1.8, 2.4], [3.0, 2.35], [4.2, 2.05], [5.15, 1.3], [5.7, 0.2],
+                [5.85, -1.1], [5.7, -2.5]]
+  # El chicote dobla hacia abajo, pasa por debajo del firme (cruce 2), cruza la vuelta
+  # por dentro y sale por encima de su lado de abajo (cruce 3).
+  chicote-pasa: [[0.6, 2.35], [1.6, 2.35], [2.63, 1.93], [3.05, 0.9], [3.05, -0.3],
+                 [3.05, -1.6], [3.07, -3.2], [3.3, -4.2], [3.75, -5.3], [4.3, -6.4]]
 
 pasos:
   - titulo: Prepara la cuerda
@@ -91,3 +96,9 @@ error:
       texto: >-
         Si dejas muy poco chicote, el nudo se corre hasta la punta y se suelta al
         apretarlo. Deja por lo menos el ancho de tu mano después del nudo.
+
+# El nudo terminado, apretado, se muestra por delante y por detrás.
+terminado:
+  encuadre:
+    x: [-1.5, 6.0]
+    y: [-7.2, 3.5]
