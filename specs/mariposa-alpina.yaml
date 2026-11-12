@@ -1,0 +1,164 @@
+# Mariposa alpina. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de referencia
+# solo se usaron para leer la topología (qué tramo pasa por encima en cada cruce).
+#
+# El nudo va en medio de la cuerda, así que tiene dos firmes. La cuerda se recorre desde el
+# que queda a la derecha y quieto («Firme» en las imágenes) y termina en el otro, que es el
+# lado con que se trabaja: en las imágenes lleva «Chicote».
+#
+# La fuente lo ata enrollando la cuerda en la mano. Aquí se ata sobre la mesa, armando
+# tramo por tramo la forma del nudo flojo, en el mismo orden que las vueltas a la mano.
+slug: mariposa-alpina
+nombre: Mariposa alpina
+familia: Gazas
+abok: 1053
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Forma una gaza fija en medio de la cuerda, sin usar los extremos. Sirve para enganchar
+  algo a lo largo de una cuerda tendida, como un mosquetón, o para tener de dónde tirar al
+  tensar una cuerda. También sirve para dejar fuera un tramo dañado: ese tramo queda en la
+  gaza y no recibe carga. Aguanta que tires desde la gaza hacia cualquiera de los dos
+  lados, o de un lado al otro, y aunque haya aguantado mucho se desata con facilidad.
+materiales: >-
+  Una cuerda de unos 2 m: el nudo va en el medio. Para aprender, usa una de 6 a 10 mm de
+  grosor que no sea rígida.
+verificacion:
+  - Los dos firmes salen del nudo hacia lados opuestos y la gaza sale entre ellos.
+  - Si tiras de los dos firmes a la vez, la gaza no se cierra ni se corre.
+  - La gaza aguanta un tirón hacia cualquiera de los dos firmes sin correrse.
+  - La gaza quedó del tamaño que necesitas.
+seguridad: >-
+  En escalada y en rescate, este nudo se usa para que una persona se enganche en medio de
+  una cuerda. En este libro eso es solo conocimiento: en las actividades del grupo no lo
+  uses para sostener, subir ni bajar a nadie. Esa práctica se hace únicamente con
+  instructor y equipo certificados.
+# Texto propio: los cuidados que ya dice «seguridad» no se repiten aquí.
+precauciones:
+  - Apriétalo bien antes de cargarlo. Flojo, se deforma y se puede soltar.
+  - El tamaño de la gaza se arregla antes de apretar. Si ya está apretado, aflójalo primero.
+  - Si lo usas para dejar fuera un tramo dañado, ese tramo tiene que quedar en la gaza. Aun
+    así, revisa la cuerda o cámbiala antes de volver a confiar en ella.
+alternativas:
+  - nudo: As de guía
+    cuando: Cuando necesitas la gaza en el extremo de la cuerda y no en el medio.
+  - nudo: Ocho doble
+    cuando: Cuando necesitas la gaza en el extremo y tiene que aguantar mucho.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+encuadre:
+  x: [-13.5, 13.5]
+  y: [-9.5, 14.0]
+
+segmentos:
+  # El firme llega desde la derecha, cerca de ti, y sube en diagonal hacia la izquierda.
+  # Pasa por los cruces 4, 7, 2, 9 y 6.
+  firme: [[30.0, -17.9], [25.0, -14.8], [20.0, -11.65], [17.0, -9.9], [14.5, -8.6], [12.3, -7.2], [10.3, -5.6],
+          [8.2, -4.0], [6.2, -2.95], [4.2, -1.98], [2.1, -0.99], [0.0, 0.0], [-2.0, 0.97],
+          [-3.9, 2.05], [-5.7, 3.2], [-7.4, 4.5]]
+  # El chicote suelto antes de empezar.
+  recto: [[-9.3, 5.85], [-11.2, 7.2], [-12.6, 8.2]]
+  # La primera gaza grande, a la izquierda: sube, da la vuelta y baja hacia el centro.
+  lazo-izq: [[-9.1, 5.9], [-10.2, 7.5], [-10.5, 9.4], [-9.8, 11.3], [-8.1, 12.6],
+             [-5.8, 12.7], [-3.6, 11.4], [-1.7, 9.4]]
+  # Pasa por el cruce 1 y baja en diagonal hacia la derecha.
+  t1: [[0.0, 7.85], [1.5, 6.75], [2.9, 5.85]]
+  # El ojo pequeño, debajo del cruce 1 (pasos 3 y 4).
+  ojo: [[3.85, 5.05], [4.2, 3.95], [3.6, 3.0], [2.2, 2.55], [0.6, 2.4], [-1.0, 2.45],
+        [-2.5, 2.85], [-3.55, 3.75], [-3.7, 4.9], [-3.25, 5.75]]
+  # Sube hacia la derecha por encima del cruce 1.
+  t2: [[-2.4, 6.4], [1.5, 8.9], [3.3, 10.3]]
+  # La segunda gaza grande, a la derecha: da la vuelta y baja hacia el firme.
+  lazo-der: [[5.8, 11.55], [8.3, 11.85], [9.95, 10.7], [10.45, 8.5], [9.85, 6.45],
+             [8.5, 5.15], [7.0, 4.35]]
+  # Cruza el firme en el cruce 2 y sigue hacia ti, a la izquierda.
+  d2: [[4.3, 2.5], [2.6, 1.3], [-2.4, -1.07], [-5.0, -1.95], [-7.0, -2.95], [-8.6, -4.1],
+       [-9.9, -5.05], [-11.2, -6.0], [-12.5, -6.95]]
+  # El ojo bajado por encima de los dos tramos (pasos 5 y 6): el lado derecho pasa por los
+  # cruces 3 y 4, y el izquierdo por el 5 y el 6.
+  t1-baja: [[4.4, 4.8], [5.75, 3.65], [7.1, 2.55]]
+  pata-der: [[8.3, 1.15], [9.15, -0.55], [9.35, -2.4], [8.9, -3.95], [8.0, -5.35]]
+  fondo: [[6.3, -6.55], [3.3, -7.25], [0.0, -7.4], [-3.3, -7.25], [-6.2, -6.5],
+          [-7.6, -5.1]]
+  pata-izq: [[-8.5, -3.2], [-8.75, -1.7], [-8.5, 0.1], [-7.6, 1.8], [-5.9, 3.1],
+             [-4.2, 4.6]]
+  # La punta del ojo subida por debajo del cruce 2 (paso 6): las vueltas de abajo, los
+  # cruces 7, 8, 9 y 10, y la gaza.
+  rizo-der: [[6.5, -6.2], [5.0, -6.0], [3.85, -5.0], [3.2, -3.4], [2.95, -1.5],
+             [2.85, 0.0], [2.7, 1.5]]
+  gaza: [[2.45, 3.0], [1.4, 3.95], [0.0, 4.3], [-1.4, 3.95], [-2.45, 3.0]]
+  rizo-izq: [[-2.65, 1.5], [-2.65, 0.0], [-2.7, -1.5], [-2.85, -3.0], [-3.4, -4.5],
+             [-4.8, -5.6], [-6.5, -5.6], [-7.75, -4.65]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      El nudo va en el medio de la cuerda, así que los dos extremos son firmes. Pon la
+      cuerda en diagonal: el firme de la derecha se queda quieto, y con el otro lado, el
+      chicote, trabajas. Deja de ese lado por lo menos 1,5 m.
+    trazado: [firme, recto]
+    secuencia: ""
+
+  - titulo: Haz una gaza grande
+    texto: >-
+      Lleva el chicote hacia el fondo, dale la vuelta hacia la derecha y bájalo en
+      diagonal hacia el centro. Todavía no cruza nada.
+    trazado: [firme, lazo-izq, t1, "t1-baja[:2]"]
+    secuencia: ""
+    resaltar: {desde: "lazo-izq[0]", hasta: fin}
+
+  - titulo: Haz un ojo pequeño
+    texto: >-
+      Gira el chicote hacia la izquierda y súbelo cruzando por encima del tramo que
+      bajaba. Debajo del cruce queda un ojo pequeño.
+    trazado: [firme, lazo-izq, t1, ojo, t2, "lazo-der[:2]"]
+    secuencia: "1U 1O"
+    resaltar: {desde: "ojo[0]", hasta: fin}
+
+  - titulo: Cruza por encima del firme
+    texto: >-
+      Haz otra gaza grande, ahora a la derecha, y baja el chicote en diagonal hacia tu
+      izquierda, por encima del firme.
+    trazado: [firme, lazo-izq, t1, ojo, t2, lazo-der, d2]
+    secuencia: "2U 1U 1O 2O"
+    resaltar: {desde: "lazo-der[1]", hasta: fin}
+
+  - titulo: Baja el ojo
+    texto: >-
+      Toma el ojo pequeño y bájalo hacia ti, por encima del cruce de abajo, hasta que
+      quede debajo de él. Sus dos lados pasan por encima del firme y del chicote.
+    trazado: [firme, lazo-izq, t1, t1-baja, pata-der, fondo, pata-izq, t2, lazo-der, d2]
+    secuencia: "4U 2U 6U 1U 3O 4O 5O 6O 1O 3U 2O 5U"
+    resaltar: {desde: "t1-baja[0]", hasta: "t2[0]"}
+
+  - titulo: Súbelo por debajo y ajusta
+    texto: >-
+      Mete la punta del ojo por debajo del cruce de abajo y súbela por el centro: esa
+      punta es la gaza. Sostenla y tira de los dos firmes a la vez, de a poco, hasta que
+      el nudo quede firme.
+    trazado: [firme, lazo-izq, t1, t1-baja, pata-der, rizo-der, gaza, rizo-izq, pata-izq,
+              t2, lazo-der, d2]
+    secuencia: "4U 7O 2U 9O 6U 1U 3O 4O 7U 8U 9U 10U 5O 6O 1O 3U 8O 2O 10O 5U"
+    # Empieza y termina fuera de los cruces 7 a 10: el firme y el chicote llegan azules y
+    # se ve que la punta pasa por debajo. Es lo que compara la imagen del error.
+    resaltar: {desde: "rizo-der[0]", hasta: "rizo-izq[-1]"}
+
+# El error más común: subir la punta por encima del cruce y no por debajo. Es el paso 6
+# con los cruces 7 a 10 invertidos, y no queda nudo.
+error:
+  paso: 6
+  invierte: [7, 8, 9, 10]
+  titulo: La punta pasó por encima
+  texto: >-
+    Subiste la punta del ojo por encima del cruce de abajo, y no por debajo. Así no hay
+    nudo: cuando tiras de los firmes, la cuerda se suelta. Saca la punta y vuelve a
+    pasarla, ahora por debajo.
+  encuadre:
+    x: [-8.0, 8.0]
+    y: [-8.0, 6.0]
+  otros:
+    - titulo: Apretarlo de un solo lado
+      texto: >-
+        Si tiras de un solo firme, el nudo se deforma y la gaza se corre. Sostén la gaza
+        y tira de los dos firmes a la vez.
