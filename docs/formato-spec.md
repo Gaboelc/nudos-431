@@ -111,12 +111,14 @@ En cada paso, `trazado` y `secuencia` pasan a ser mapas con todas las cuerdas:
 
 ```yaml
 trazado:
-  gruesa: [seno]
-  delgada: [delgada-firme, delgada-sube]
+  gruesa: [gruesa-firme]
+  delgada: [delgada-firme, delgada-cruza]
 secuencia:
-  gruesa: "1O 2U"
-  delgada: "1U 2O"
+  gruesa: "1U"
+  delgada: "1O"
 ```
+
+Aquí la delgada cruza una vez por encima de la gruesa. El ejemplo no es de ningún nudo del libro.
 
 - Cada paso lleva todas las cuerdas. Una cuerda que no pasa por cruces se escribe `""`.
 - Los segmentos son de todo el nudo, pero cada uno pertenece a una sola cuerda: si un paso lo pone en otra cuerda, es un error.
@@ -219,7 +221,7 @@ Lo que hace la plantilla con esas medidas (`nudos/plantillas/cabeza_turco.py`; v
 
 ## Secuencia de cruces
 
-Para escribirla, recorre la cuerda desde el firme y anota cada vez que pasa por un cruce: la etiqueta del cruce más `O` si pasa por encima o `U` si pasa por debajo. Por ejemplo, en el paso 4 del as de guía la secuencia es `1U 2O 3U 1O 2U 3O`.
+Para escribirla, recorre la cuerda desde el firme y anota cada vez que pasa por un cruce: la etiqueta del cruce más `O` si pasa por encima o `U` si pasa por debajo. Por ejemplo, `1U 2O 1O 2U` dice que, desde el firme, la cuerda pasa por debajo en el cruce 1, por encima en el 2, por encima en el 1 y por debajo en el 2. El ejemplo no es de ningún nudo del libro: así sirve también para las pruebas doradas de la skill `nudo-nuevo`, que no tienen que ver las secuencias de los nudos validados.
 
 Con varias cuerdas, cada secuencia recorre su cuerda desde su firme. Un cruce entre las dos cuerdas tiene una pasada en cada secuencia, y un cruce de una cuerda consigo misma tiene las dos en la suya.
 
