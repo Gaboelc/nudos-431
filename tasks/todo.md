@@ -153,7 +153,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [ ] Ocho (12 nov: en `modelado`, salió de la skill en T9; faltan el filtro 1 y la publicación)
 - [ ] Ocho doble (12 nov: Gabriel dice que es la gaza en ocho, de una sola gaza; las imágenes R1 a R5 de `entradas/ocho-doble` la atan, y desde la R6 siguen con el de dos gazas, que no va. Borrador en la rama `claude/tanda1-ocho-doble-ac4c81`, 8fe248a: 4 pasos sin fallas; los cruces 9 a 16, del seno por la vuelta, no se ven en las fotos. Redibujado tallado, ef01328: apretado, baja de 160,6 a 145,0 diámetros. Falta que Gabriel revise su hoja)
 - [ ] As de guía español
-- [ ] Mariposa alpina (12 nov: borrador en la rama `claude/tanda1-mariposa-ed24c1`, a3b237e: 6 pasos y 10 cruces sin fallas, atada sobre la mesa. Falta que Gabriel revise su hoja)
+- [ ] Mariposa alpina (12 nov: borrador en la rama `claude/tanda1-mariposa-ed24c1`, atada sobre la mesa. Redibujada tallada y con un paso 7, «Saca la gaza», con los cruces 11 a 14 que se leen en R10: sin él, la gaza quedaba encerrada bajo el cruce 1 y el apretado se la comía. 7 pasos y 14 cruces sin fallas, 7333d26; apretado, la cuerda del nudo baja de 167,0 a 142,5 diámetros y la gaza queda larga. Falta que Gabriel revise su hoja)
 - [ ] Margarita
 - [ ] Arnés de hombre
 - [ ] Silla de bombero (requiere D1)
