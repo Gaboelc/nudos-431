@@ -1,11 +1,17 @@
 """La cabeza de turco: la segunda plantilla, tejida sobre un tubo (anfitrión «tubo»)."""
 import copy
 
+import numpy as np
 import pytest
 
-from nudos.plantillas.cabeza_turco import (CabezaDeTurco, cruces_del_centro, encima_del_centro,
-                                           por_vuelta)
-from nudos.spec import SpecError, desde_datos
+from nudos.anfitrion import PENETRACION_MAX, Tubo
+from nudos.construir import DESPLAZAMIENTO_MAX, construir
+from nudos.cruces import numerada
+from nudos.libre import LIMITES, Resultado, TrazadoError
+from nudos.plantillas.cabeza_turco import (MESA, TUBO as TUBO_ZONA, CabezaDeTurco, Cuerda,
+                                           buscar_en_el_tubo, cruces_del_centro, elegir_angulo,
+                                           encima_del_centro, por_vuelta)
+from nudos.spec import Anfitrion, SpecError, desde_datos
 
 PASOS = [
     ("Da la primera vuelta", "vuelta-1"),
@@ -238,3 +244,199 @@ def test_con_cuatro_cabos_la_segunda_vuelta_ya_alterna():
 
 def test_ningun_paso_tiene_firme():
     assert CabezaDeTurco.CON_FIRME == ()
+
+
+# --- El tubo ------------------------------------------------------------------
+TUBO = Anfitrion("tubo", radio=4.0, largo=24.0)
+
+
+def test_el_tubo_se_apoya_sobre_dos_capas_de_cuerda():
+    t = Tubo(TUBO)
+    assert t.zc == pytest.approx(6.0) and t.rb == pytest.approx(4.5)
+    x, a, r = t.cilindricas(np.array([t.punto(2.0, 90.0), t.punto(-3.0, 0.0, r=5.5)]))
+    assert np.allclose(x, [2, -3]) and np.allclose(np.degrees(a), [90, 0]) and np.allclose(r, [4.5, 5.5])
+    assert t.punto(0.0, 90.0)[1] < 0   # 90° es hacia quien ata
+
+
+def test_empujar_saca_lo_que_entro_al_tubo():
+    t = Tubo(TUBO)
+    X = np.array([[1.0, 0.0, t.zc + 2.0], [13.0, 0.0, t.zc], [0.0, 0.0, t.zc + 6.0]])
+    assert t.penetracion(X) == pytest.approx(t.rb - 2.0)
+    t.empujar(X, np.ones(3, bool))
+    assert t.penetracion(X) == pytest.approx(0, abs=1e-9)
+    assert np.allclose(X[1], [13, 0, t.zc])   # fuera del largo del tubo no se toca
+    assert np.allclose(X[2], [0, 0, t.zc + 6])
+
+
+def test_girar_media_vuelta_es_rigido():
+    t = Tubo(TUBO)
+    X = np.array([t.punto(1.0, 30.0), t.punto(-2.0, 200.0, r=5.5)])
+    r = Resultado(n=6, puntos=X, h=0.2, resaltado=(0, 1), cruces={"1": (1.0, 2.0)},
+                  secuencia=["1O", "1U"], esperada=["1O", "1U"], medidas={"altura_max": 0.0},
+                  giro=10.0)
+    v = t.voltear(r)
+    _, a, rr = t.cilindricas(v.puntos)
+    assert np.allclose(np.degrees(a) % 360, [210, 20]) and np.allclose(rr, [4.5, 5.5])
+    assert v.cruces == r.cruces and v.secuencia == r.secuencia and v.resaltado is None
+    assert v.giro == 190.0
+
+
+# --- La cuerda entera -------------------------------------------------------------
+def la_cuerda(cabos=3, senos=4, pasadas=2, radio=4.0, variante=None):
+    p = CabezaDeTurco(cabos, senos, pasadas)
+    tubo = Tubo(Anfitrion("tubo", radio=radio, largo=24.0))
+    return Cuerda(p, tubo, elegir_angulo(p, radio), variante)
+
+
+def test_el_angulo_es_el_menor_con_el_que_cabe():
+    """Con 3 cabos, 4 senos y dos pasadas, en un tubo de radio 4: 55°. Con una pasada cabe con
+    45°, y en un tubo de radio 2 con dos pasadas no cabe con ninguno: la falla dice el mínimo."""
+    assert elegir_angulo(CabezaDeTurco(3, 4, 2), 4.0) == 55.0
+    assert elegir_angulo(CabezaDeTurco(3, 4, 1), 4.0) == 45.0
+    with pytest.raises(TrazadoError, match="no cabe en un tubo de radio 2: .* El radio mínimo es [0-9]"):
+        elegir_angulo(CabezaDeTurco(3, 4, 2), 2.0)
+
+
+@pytest.mark.parametrize("cabos, senos, pasadas, radio", [
+    (3, 4, 2, 4.0), (3, 4, 1, 4.0), (3, 4, 3, 5.5), (2, 3, 2, 4.0), (4, 5, 1, 6.0), (3, 7, 1, 6.0)])
+def test_la_secuencia_del_metodo(cabos, senos, pasadas, radio):
+    """Senos × (cabos − 1) × pasadas² cruces, más uno por pasada del extremo corto metido, que
+    va por debajo. A lo largo de la cuerda alterna por cabos: cada cabo pasa por todas las
+    pasadas del otro en un cruce del centro del mismo lado, y en el siguiente, del otro."""
+    c = la_cuerda(cabos, senos, pasadas, radio)
+    sec = c.secuencias["remate"]
+    assert len(sec) // 2 == senos * (cabos - 1) * pasadas ** 2 + pasadas
+    corto = [x for x in c.cruces if x.T[0] is None]
+    assert len(corto) == pasadas and all(not x.encima for x in corto)
+    o = c.onda
+    centro = np.array(sorted(t for par in cruces_del_centro(cabos, senos, o.P) for t in par))
+    pasadas_cuerpo = sorted((T, (x.encima if i == 0 else not x.encima))
+                            for x in c.cruces if x not in corto for i, T in enumerate(x.T))
+    grupos = []
+    for T, arriba in pasadas_cuerpo:
+        k = int(np.abs(((T % o.LC) - centro + o.LC / 2) % o.LC - o.LC / 2).argmin())
+        clave = (k, T // o.LC)
+        if grupos and grupos[-1][0] == clave:
+            grupos[-1][1].append(arriba)
+        else:
+            grupos.append((clave, [arriba]))
+    assert all(len(set(v)) == 1 for _, v in grupos)
+    lados = [v[0] for _, v in grupos]
+    assert all(a != b for a, b in zip(lados, lados[1:]))
+
+
+def test_los_hitos_avanzan_por_la_cuerda():
+    c = la_cuerda()
+    orden = [h for h in c.p.hitos() if h not in c.alias]
+    T = [c.hitos_T[h] for h in orden]
+    assert c.t0 < T[0] and all(a < b for a, b in zip(T, T[1:]))
+    assert c.T_de("vueltas") == c.hitos_T["vuelta-3"] and c.T_de("pasadas") == c.hitos_T["pasada-2"]
+    # Con tres cabos, la segunda vuelta va toda por encima: los tres cruces que forma.
+    assert [t for t in c.secuencias["vuelta-2"] if t[-1] == "O"] == ["1O", "2O", "3O"]
+    assert len(c.secuencias["vuelta-1"]) == 0 and len(c.secuencias["vuelta-2"]) == 6
+    assert len(c.secuencias["vueltas"]) // 2 == 8 and len(c.secuencias["pasadas"]) // 2 == 30
+
+
+def test_el_extremo_corto_es_lo_unico_que_cambia_en_el_remate():
+    """El cuerpo, con sus alturas, es el mismo con el extremo corto que cuelga y con el metido:
+    la banda que lo tapa va por encima desde el principio."""
+    c = la_cuerda()
+    h_cuelga, _ = c.alturas(False)
+    h_metido, _ = c.alturas(True)
+    n = len(c._M)
+    assert np.allclose(h_cuelga[-n:], h_metido[-n:])
+
+
+def test_el_error_empieza_a_tejer_por_encima():
+    """La tercera vuelta del error forma los mismos cruces que la bien hecha, todos al revés; lo
+    de antes no cambia."""
+    bien = la_cuerda().secuencias
+    mal = la_cuerda(variante="empieza-por-encima").secuencias
+    assert mal["vuelta-2"] == bien["vuelta-2"]
+    distintos = {t[:-1] for t, u in zip(bien["vuelta-3-mitad"], mal["vuelta-3-mitad"]) if t != u}
+    assert distintos == {"4", "5", "6"}
+    assert [t[:-1] for t in bien["vueltas"]] == [t[:-1] for t in mal["vueltas"]]
+    with pytest.raises(ValueError, match="no tiene la variante"):
+        la_cuerda(cabos=4, senos=5, pasadas=1, radio=6.0, variante="empieza-por-encima")
+
+
+def test_los_cruces_del_tubo_se_buscan_en_su_superficie():
+    """Dos tramos que se cruzan alrededor del tubo: encima, el más lejos del eje. Si uno va en
+    la zona de la mesa, no se busca."""
+    t = Tubo(TUBO)
+    a = np.array([t.punto(x, 30.0 + 10 * x) for x in np.linspace(-1, 1, 11)])
+    b = np.array([t.punto(x, 30.0 - 10 * x, r=5.5) for x in np.linspace(1, -1, 11)])
+    X = np.vstack([a, b])
+    zonas = np.full(len(X), TUBO_ZONA)
+    zonas[10] = -1   # el salto entre los dos tramos no es cuerda
+    cruces, alturas = buscar_en_el_tubo(X, 1.0, zonas, t, 0.0, 4)
+    assert len(cruces) == 1 and alturas[0][1] > alturas[0][0]
+    zonas[11:] = MESA
+    assert buscar_en_el_tubo(X, 1.0, zonas, t, 0.0, 4)[0] == []
+
+
+# --- El nudo ------------------------------------------------------------------
+@pytest.fixture(scope="module")
+def modelo():
+    """La cabeza de turco de datos(): 3 cabos, 4 senos y dos pasadas en un tubo de radio 4."""
+    return construir(desde_datos(datos()))
+
+
+def test_todos_los_pasos_se_construyen_sin_fallas(modelo):
+    assert modelo.fallas == []
+    assert [r.n for r in modelo.pasos] == list(range(1, 7))
+    assert modelo.error is not None and modelo.error.n == 3
+    assert modelo.apretado is None   # un nudo de plantilla no se aprieta
+
+
+def test_la_cuerda_no_atraviesa_el_tubo_ni_otras_vueltas(modelo):
+    for r in [*modelo.pasos, modelo.error]:
+        m = r.medidas
+        assert m["penetracion_tubo"] <= PENETRACION_MAX, r.n
+        assert m["separacion_min"] >= LIMITES["separacion_min"], r.n
+        assert m["curvatura_min"] >= LIMITES["curvatura_min"], r.n
+        assert m["estiramiento_max"] <= LIMITES["estiramiento_max"], r.n
+
+
+def test_el_tejido_alterna_sobre_el_tubo(modelo):
+    """El primer criterio de aceptación: la secuencia de cada paso, medida en la cuerda
+    relajada sobre el tubo, es la del método, que alterna por cabos."""
+    c = la_cuerda()
+    for r, (_, hasta) in zip(modelo.pasos, PASOS):
+        assert r.secuencia == r.esperada == numerada(c.secuencias[hasta]), r.n
+    assert len(modelo.pasos[-1].secuencia) // 2 == 34   # 32 y los 2 del extremo corto metido
+    e = modelo.error
+    variante = la_cuerda(variante="empieza-por-encima").secuencias["vuelta-3-mitad"]
+    assert e.secuencia == e.esperada == numerada(variante)
+
+
+def test_cada_paso_resalta_lo_que_agrega_y_lo_pone_de_frente(modelo):
+    for r in modelo.pasos:
+        desde, hasta = r.resaltado
+        assert hasta > desde, r.n
+    assert len({round(r.giro) for r in modelo.pasos}) == len(modelo.pasos)
+
+
+def test_un_cruce_conserva_su_etiqueta_y_su_lugar_en_el_mapa(modelo):
+    final = modelo.pasos[-1].cruces
+    for r in modelo.pasos[:-1]:
+        assert set(r.cruces) <= set(final), r.n
+        for et, (x, u) in r.cruces.items():
+            assert np.hypot(x - final[et][0], u - final[et][1]) <= DESPLAZAMIENTO_MAX, (r.n, et)
+
+
+@pytest.mark.parametrize("cabos, senos, pasadas, radio", [(3, 4, 1, 4.0), (2, 3, 2, 4.0), (3, 4, 3, 5.5)])
+def test_otras_medidas_se_regeneran_sin_fallas(cabos, senos, pasadas, radio):
+    d = datos(anfitrion={"tipo": "tubo", "radio": radio, "largo": 24})
+    d["plantilla"].update(cabos=cabos, senos=senos, pasadas=pasadas)
+    pasos = ["vuelta-1", f"vuelta-{cabos}-mitad", "vueltas"]
+    pasos += (["pasadas"] if pasadas > 1 else []) + ["remate"]
+    d["pasos"] = [{"titulo": "T", "texto": "T.", "hasta": h} for h in pasos]
+    if cabos != 3:
+        del d["error"]
+    else:
+        d["error"]["paso"] = 2   # el error se ve desde la mitad de la tercera vuelta
+    m = construir(desde_datos(d))
+    assert m.fallas == []
+    assert len(m.pasos[-1].secuencia) // 2 == senos * (cabos - 1) * pasadas ** 2 + pasadas
+

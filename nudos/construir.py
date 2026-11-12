@@ -139,4 +139,6 @@ def _resultado_json(r: Resultado) -> dict:
     }
     if r.reparto is not None:
         datos["tramos"] = [list(t) for t in r.reparto.tramos]
+    if r.giro is not None:
+        datos["giro"] = round(r.giro, 4)   # la cabeza de turco: cuánto está girado el nudo
     return datos

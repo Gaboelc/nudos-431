@@ -1,6 +1,6 @@
-"""Nudos sobre un anfitrión rígido: el poste, un cilindro horizontal, y la cruz, los dos
-palos de los amarres. Los pasos sobre la cruz los construye su plantilla
-(nudos/plantillas/pasos.py); aquí está solo la cruz como sólido.
+"""Nudos sobre un anfitrión rígido: el poste, un cilindro horizontal, la cruz, los dos
+palos de los amarres, y el tubo de la cabeza de turco. Los pasos sobre la cruz y el tubo los
+construye su plantilla (nudos/plantillas/pasos.py); aquí están solo como sólidos.
 
 Sobre el poste, cada paso se construye como en el generador libre (nudos/libre.py), con tres
 diferencias:
@@ -148,9 +148,65 @@ class Cruz:
         return volteado, {**self.datos(), "z_abajo": alto - self.zb, "z_arriba": alto - self.zt}
 
 
-def solido(a: Anfitrion) -> Poste | Cruz:
+class Tubo:
+    """El tubo de la cabeza de turco: un cilindro horizontal a lo largo de x, centrado en x = 0
+    y con el eje en y = 0. El nudo lo rodea entero y se apoya sobre él: debajo de cada cruce
+    hay dos capas de cuerda, así que su eje queda a la altura radio + 2.
+
+    Alrededor del eje, un ángulo se mide como sobre el poste: 0 arriba, 90 hacia quien ata,
+    180 abajo y 270 (o −90) atrás."""
+
+    def __init__(self, a: Anfitrion):
+        self.radio, self.largo = a.radio, a.largo
+        self.zc = a.radio + 4 * R    # altura del eje: dos diámetros de cuerda sobre la mesa
+        self.rb = a.radio + R        # distancia al eje del eje de una cuerda que toca el tubo
+
+    def punto(self, x, grados, r=None) -> np.ndarray:
+        """De [x, ángulo] alrededor del tubo a [x, y, z]."""
+        th = np.radians(grados)
+        r = self.rb if r is None else r
+        return np.stack([np.asarray(x, float) + 0 * th, -r * np.sin(th), self.zc + r * np.cos(th)], axis=-1)
+
+    def cilindricas(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """x, ángulo en radianes (entre -π y π) y distancia al eje."""
+        dy, dz = X[:, 1], X[:, 2] - self.zc
+        return X[:, 0], np.arctan2(-dy, dz), np.hypot(dy, dz)
+
+    def empujar(self, X, libre) -> None:
+        """Saca del tubo los puntos que entraron, en dirección radial."""
+        dy, dz = X[:, 1], X[:, 2] - self.zc
+        d = np.hypot(dy, dz)
+        m = libre & (d < self.rb) & (np.abs(X[:, 0]) < self.largo / 2)
+        if m.any():
+            k = self.rb / np.maximum(d[m], 1e-9)
+            X[m, 1] = dy[m] * k
+            X[m, 2] = self.zc + dz[m] * k
+
+    def penetracion(self, X) -> float:
+        """Cuánto entra la cuerda en el tubo (0 si no entra)."""
+        x, _, r = self.cilindricas(X)
+        m = np.abs(x) < self.largo / 2
+        return float(max(0.0, (self.rb - r[m]).max())) if m.any() else 0.0
+
+    def datos(self) -> dict:
+        """Lo que necesita render/escena.js para dibujarlo."""
+        return {"tipo": "tubo", "radio": self.radio, "largo": self.largo, "z": self.zc}
+
+    def voltear(self, r: Resultado) -> Resultado:
+        """El nudo terminado, visto por detrás: el tubo y el nudo girados media vuelta
+        alrededor del eje, como se gira el tubo en la mano. Es un giro rígido: la cuerda no se
+        relaja otra vez, y como los cruces se miden respecto al tubo, la secuencia no cambia.
+        Cada cruce guarda su lugar en el mapa del nudo, que no cambia al girarlo."""
+        X = r.puntos
+        Y = np.column_stack([X[:, 0], -X[:, 1], 2 * self.zc - X[:, 2]])
+        giro = None if r.giro is None else r.giro + 180.0
+        return replace(r, puntos=Y, resaltado=None, giro=giro,
+                       medidas={**r.medidas, "altura_max": float(Y[:, 2].max())})
+
+
+def solido(a: Anfitrion) -> Poste | Cruz | Tubo:
     """El anfitrión de la especificación como sólido."""
-    return Cruz(a) if a.tipo == "cruz" else Poste(a)
+    return {"cruz": Cruz, "tubo": Tubo}.get(a.tipo, Poste)(a)
 
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:

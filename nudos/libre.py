@@ -115,6 +115,9 @@ class Resultado:
     medidas: dict[str, float]
     fallas: list[str] = field(default_factory=list)
     reparto: Reparto | None = None          # con varias cuerdas, de cuál es cada punto
+    # Sobre el tubo de la cabeza de turco, cuánto está girado el nudo en este paso, en grados
+    # (nudos/plantillas/cabeza_turco.py). Ahí los cruces van en el mapa del nudo, no en la mesa.
+    giro: float | None = None
 
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None,

@@ -195,6 +195,14 @@ En todo el texto del nudo, `{cabos}`, `{senos}` y `{pasadas}` se reemplazan por 
 
 Ningún paso tiene firme: el extremo corto se sujeta contra el tubo y se trabaja con la parte larga, que lleva «Chicote» en su punta en todos los pasos. Los dos extremos llevan remate.
 
+Lo que hace la plantilla con esas medidas (`nudos/plantillas/cabeza_turco.py`; ver «Cómo se hizo la geometría» de T8 en el plan):
+
+- **La onda.** El ancho de la onda depende del ángulo con que las cuerdas cruzan la dirección en que se rodea el tubo. La plantilla elige el menor entre 45° y 70°, de 5 en 5, con el que la cuerda ideal (las pasadas cerradas, sin los extremos) queda a 1 diámetro de las demás y con un radio de curvatura de al menos 1,2. Si no cabe con ninguno, ningún paso se construye y la falla dice el radio mínimo del tubo para esas medidas.
+- **Los extremos** salen por un mismo seno de un borde, el seno A. El extremo corto llega desde fuera del nudo, a lo largo del tubo, y entra a la primera pasada a media diagonal del brazo que sale de A, lejos de los cruces. Al volver a A, después de su último cruce, cada pasada se corre a la siguiente por dentro del seno, sobre el ápice, antes de llegar a donde entra el extremo corto, así que no lo cruza. La última pasada termina, en el paso de `pasadas`, a media diagonal antes de su último cruce.
+- **El remate** agrega dos cosas: el chicote pasa por su último cruce, por donde le toca, y termina justo después; y el extremo corto, en vez de colgar, vuelve por encima del ápice de A y se mete por debajo de la banda que baja del seno vecino, antes del último cruce. Esa banda va levantada desde el principio, así que el extremo corto es lo único que cambia en el remate. Son las pasadas por cruces del chicote y uno más por cada pasada de esa banda.
+- **Cada paso se gira** alrededor del eje para que lo que agrega, o su última media vuelta si es más largo, quede de frente a la cámara de los pasos (40° desde arriba hacia quien ata). En el remate queda de frente lo que se esconde. `modelo.json` guarda el giro de cada paso (`giro`, en grados).
+- **Lo que cae a la mesa.** En cada paso antes del remate, el extremo corto cuelga desde fuera del nudo: si sale por la mitad de arriba del tubo, lo rodea por un costado y cae a la mesa; si sale por la de abajo, sigue a lo largo del tubo mientras baja. El resto de la cuerda se aleja del tubo siguiendo la cuerda, lo rodea por fuera hacia atrás, en el sentido en que se teje, y cae detrás del tubo.
+
 ## Pasos
 
 | Campo | Qué es |
@@ -242,6 +250,8 @@ Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el r
 El último paso se muestra por delante y por detrás, apretado (ver «El nudo apretado», abajo). Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Sobre un poste el nudo no se voltea: se mira desde el otro lado de la mesa.
 
 Sobre la cruz se voltea el amarre entero, palos y cuerda, como un marco sobre la mesa: media vuelta alrededor del eje y, como una página, hasta apoyarse en lo que queda más abajo. El palo de abajo queda encima y se ven las vueltas que pasaban por debajo de él. Es un giro rígido: la cuerda no se relaja otra vez y, como los cruces se miden respecto a los palos, la secuencia no cambia. Por delante y por detrás se mira como los pasos.
+
+Sobre el tubo, por delante es el remate, girado como ese paso, y por detrás el tubo y el nudo girados media vuelta alrededor del eje, como se gira el tubo en la mano. Es un giro rígido: la secuencia no cambia y no se relaja otra vez. Entre las dos vistas se ve el nudo entero, también la parte que en la vista de los pasos queda contra la mesa. Por delante y por detrás se mira como los pasos.
 
 | Campo | Qué es |
 |---|---|
@@ -291,6 +301,8 @@ Del probador nunca se guarda el nombre: un campo `nombre` es un campo desconocid
 6. El nudo terminado apretado, por delante y por detrás, tiene la secuencia del último paso (por detrás, invertida) y cumple los mismos límites. Lo garantiza cómo se elige: entre las rondas que los cumplen (ver «El nudo apretado»).
 
 **Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
+
+Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la parte tejida, y la mesa, con el extremo corto que cuelga y el resto hasta que llegan al nudo. Los cruces del tubo se buscan en su superficie desenrollada, y cada uno guarda su lugar en el mapa del nudo (a lo largo del tubo y alrededor, desde el seno A) y no en la mesa: como el nudo se gira entre pasos, en la mesa un mismo cruce se movería. Alrededor del tubo, ese lugar da la vuelta a mitad de camino entre dos cruces, donde no hay ninguno. Dos pasadas de una misma cuerda a menos de 3 diámetros a lo largo de ella no cuentan como cruce: ahí la cuerda no puede volver sobre sí misma, y vista desde arriba, donde cae casi vertical al costado del tubo, se pliega sobre sí misma al relajar.
 
 **Lo que no se comprueba es si la secuencia corresponde al nudo correcto.** Un cruce mal leído que se repite igual en todos los pasos pasa todas las pruebas. Para eso está el filtro 1: atar cada paso con cuerda real antes de publicar.
 
