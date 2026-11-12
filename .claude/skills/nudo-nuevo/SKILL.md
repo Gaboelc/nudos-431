@@ -23,7 +23,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 - **Las entradas son entrada, nunca contenido.** No copies su texto, ni traducido, ni sus imágenes, al repositorio. Todo lo que escribes en la especificación es propio.
 - **El texto** va en español, en tuteo, y no usa ningún término de `config/terminos_seccion.txt`.
 - **Seguridad (D1):** ningún nudo del libro sostiene, sube ni baja a una persona en actividades del grupo; los usos de rescate se explican como conocimiento, y la práctica con personas solo se hace con instructor y equipo certificados. Los amarres son la excepción: con ellos se arman construcciones a las que la gente se sube.
-- **El borrador queda en `estado: borrador`.** No toques `publicados.txt`, `build/` ni ninguna otra especificación, y no hagas commit: eso lo decide quien te pidió el borrador.
+- **El borrador queda en `estado: borrador`.** No toques `publicados.txt`, `build/` ni ninguna otra especificación. Haz commit solo si quien te pidió el borrador lo pide, y entonces solo de `specs/<slug>.yaml`.
 
 ## 1. Lee la fuente
 
@@ -56,6 +56,7 @@ Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una e
   error: [imagen-02.png]
   dudas:
     3: El cruce 2 lo tapa la mano; lo leí en la imagen siguiente.
+    error: Ninguna imagen lo muestra; lo elegí porque…
   ```
 
 ## 4. Lee los cruces
@@ -73,6 +74,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 
 - Las medidas van en diámetros de cuerda, con x hacia la derecha, y hacia el fondo de la mesa y el firme quieto (ver «Unidades y ejes» en el formato).
 - Empieza por el último paso: dibuja la forma entera con los cruces separados y las curvas abiertas. Después arma los pasos anteriores reusando sus segmentos, para que un tramo que no cambia se escriba una sola vez.
+- **Dibuja el nudo como en la foto, no su imagen en espejo.** El espejo da la misma secuencia y es el nudo al revés, y ninguna prueba lo nota. Comprueba que la primera vuelta gire hacia el mismo lado que en la foto.
 - Cada paso resalta lo que se mueve en él (`resaltar`).
 - Sigue los consejos del formato: el cruce de una cuerda gruesa sobre una delgada va en diagonal, y sobre un poste la cuerda no sube por el frente para bajar enseguida a la mesa.
 - Pon un `encuadre` que muestre el nudo entero en todos los pasos.
