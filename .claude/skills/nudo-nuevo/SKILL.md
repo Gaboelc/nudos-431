@@ -26,7 +26,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 
 ## 1. Lee la fuente
 
-- Recorre las imágenes en orden. De cada una, anota qué cambió desde la anterior: qué tramo se movió y por dónde pasó.
+- Recorre las imágenes en orden. De cada una, anota qué cambió desde la anterior: qué tramo se movió y por dónde pasó. Ordénalas por lo que muestran y no por el nombre del archivo: a veces los números no siguen el orden en que se ata.
 - Distingue el firme, la parte larga que no se mueve, del chicote, el extremo que trabaja.
 - `info.txt` o `fuente.md` dicen para qué sirve, otros nombres y errores comunes. Úsalos para saber qué escribir, no para copiarlo.
 
@@ -63,7 +63,8 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 - En cada paso, busca todos los lugares donde la cuerda pasa sobre sí misma o sobre la otra cuerda, y mira cuál va encima.
 - Numera los cruces 1, 2, 3… en el orden en que se forman. Un cruce conserva su número en todos los pasos siguientes, y su encima/debajo no cambia. Si en una imagen posterior parece al revés, vuelve a mirar: o lo leíste mal, o es otro cruce y lleva otro número.
 - Escribe la secuencia recorriendo la cuerda desde el firme: el número del cruce y `O` si pasa por encima o `U` si pasa por debajo. Cada número aparece dos veces en el paso, una con `O` y otra con `U`.
-- Si una imagen no deja ver un cruce, por una mano o una sombra, léelo en otra y anota la duda en `pasos.yaml`.
+- Si una imagen no deja ver un cruce, por una mano o una sombra, léelo en otra y anota la duda en `pasos.yaml`. Si falta la imagen de un paso, lee sus cruces en el nudo terminado y dilo en las dudas.
+- Para mirar un cruce de cerca, amplía la imagen en una copia fuera del repositorio, nunca en `entradas/`.
 
 ## 5. Traza la cuerda
 

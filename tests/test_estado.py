@@ -67,7 +67,8 @@ def test_los_nudos_del_piloto_estan_donde_se_espera():
     for slug in ("ballestrinque", "vuelta-de-escota", "amarre-cuadrado"):
         assert estados[slug] == "cuerda-ok"   # el filtro 2 está en pausa desde el 9 nov
     assert estados["cabeza-de-turco"] == "borrador"   # su texto es provisional
-    assert estados["ocho"] == SIN_ESPECIFICACION
+    sin_spec = [s for s in estados if not (SPECS / f"{s}.yaml").is_file()]
+    assert sin_spec and all(estados[s] == SIN_ESPECIFICACION for s in sin_spec)
 
 
 def test_publicado_sin_los_dos_filtros_es_un_problema():
@@ -120,7 +121,14 @@ def test_lo_que_bloquea_es_lo_que_falta_para_el_estado_siguiente():
     assert por_slug["ballestrinque"].bloquea == ("falta el filtro 2",)
     assert por_slug["as-de-guia"].bloquea == ()
     assert por_slug["cabeza-de-turco"].bloquea[0].startswith("le falta a la ficha:")
-    assert por_slug["ocho"].bloquea == ()   # la tabla ya dice «sin especificación»
+    for n in por_slug.values():
+        if n.declarado == SIN_ESPECIFICACION:
+            assert n.bloquea == ()   # la tabla ya dice «sin especificación»
+
+
+def test_un_borrador_completo_espera_la_revision_de_gabriel(monkeypatch):
+    monkeypatch.setattr("nudos.estado.cargar", lambda slug: as_de_guia(estado=None))
+    assert nudo("as-de-guia", "Piloto", []).bloquea == ("falta que Gabriel revise el borrador",)
 
 
 def test_los_probadores_y_los_nudos_que_conocen():
@@ -147,7 +155,10 @@ def test_los_nudos_modelados_construyen_sin_fallas(slug, request):
 def test_la_orden_muestra_los_35_nudos(capsys):
     assert main(["estado"]) == 0
     salida = capsys.readouterr().out
-    assert salida.startswith("Edición 1: 35 nudos. 1 publicado, 3 cuerda-ok, 1 borrador, "
-                             "30 sin especificación.")
+    lista = nudos()
+    cuenta = {e: sum(n.declarado == e for n in lista) for e in (*reversed(ESTADOS), SIN_ESPECIFICACION)}
+    assert salida.startswith("Edición 1: 35 nudos. "
+                             + ", ".join(f"{c} {e}" for e, c in cuenta.items() if c) + ".")
+    assert cuenta["publicado"] == 1 and cuenta["cuerda-ok"] == 3
     assert "Tanda 5: anfitriones especiales" in salida
     assert "P01 (joven de la Wak): as-de-guia" in salida

@@ -77,9 +77,9 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
             return '<p class="nota">La skill no anotó imágenes de la fuente para este paso.</p>'
         return "".join(_imagen(fuente / i, destino, i) for i in imagenes)
 
-    def secuencias(r: Resultado) -> str:
-        declarada, medida = " ".join(r.esperada), " ".join(r.secuencia)
-        clase = "igual" if declarada == medida else "distinta"
+    def secuencias(r: Resultado, escrita: tuple[str, ...]) -> str:
+        declarada, medida = _con_etiquetas(r, escrita)
+        clase = "igual" if r.esperada == r.secuencia else "distinta"
         return (f'<table class="{clase}"><tr><th>Declarada</th><td>{html.escape(declarada) or "sin cruces"}</td></tr>'
                 f'<tr><th>Medida</th><td>{html.escape(medida) or "sin cruces"}</td></tr></table>')
 
@@ -92,14 +92,18 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
         bloques.append(
             f'<section><h2>Paso {p.n}: {html.escape(p.titulo)}</h2><p>{html.escape(p.texto)}</p>'
             f'{duda(str(p.n))}<div class="fila"><div class="fuente">{de_la_fuente(mapa["pasos"].get(p.n, []))}</div>'
-            f'<div class="render">{dibujos(dibujo, f"paso-{p.n}")}</div></div>{secuencias(r)}</section>')
+            f'<div class="render">{dibujos(dibujo, f"paso-{p.n}")}</div></div>{secuencias(r, p.secuencia)}</section>')
     if modelo.error is not None and modelo.spec.error is not None:
         e = modelo.spec.error
+        # La del error es la del paso, con los cruces de «invierte» al revés.
+        al_reves = {"O": "U", "U": "O"}
+        del_error = tuple(t[:-1] + al_reves[t[-1]] if t[:-1] in e.invierte else t
+                          for t in modelo.spec.pasos[e.paso - 1].secuencia)
         bloques.append(
             f'<section><h2>Error común, junto al paso {e.paso}: {html.escape(e.titulo)}</h2>'
             f'<p>{html.escape(e.texto)}</p>{duda("error")}<div class="fila"><div class="fuente">'
             f'{de_la_fuente(mapa["error"])}</div><div class="render">{dibujos(datos["error"], "error")}</div></div>'
-            f'{secuencias(modelo.error)}</section>')
+            f'{secuencias(modelo.error, del_error)}</section>')
 
     arriba = ""
     if not mapa["pasos"]:
@@ -116,6 +120,20 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
         arriba=arriba, bloques="\n".join(bloques))
     (destino / "index.html").write_text(pagina, encoding="utf-8")
     return destino / "index.html"
+
+
+def _con_etiquetas(r: Resultado, escrita: tuple[str, ...]) -> tuple[str, str]:
+    """La secuencia declarada y la medida, con las etiquetas de la especificación.
+
+    Al construir, las dos se numeran en el orden en que aparecen (cruces.numerada). Aquí la
+    k-ésima etiqueta que aparece vuelve a llamarse como en la especificación, que es como la
+    revisa Gabriel de un paso a otro. En un nudo de plantilla los pasos no traen secuencia
+    escrita, y quedan como las numera la construcción."""
+    if len(escrita) != len(r.esperada):
+        return " ".join(r.esperada), " ".join(r.secuencia)
+    nombres = {e[:-1]: s[:-1] for e, s in zip(r.esperada, escrita)}
+    medida = " ".join(nombres.get(t[:-1], t[:-1] + "?") + t[-1] for t in r.secuencia)
+    return " ".join(escrita), medida
 
 
 def _imagen(ruta: Path, destino: Path, nombre: str) -> str:

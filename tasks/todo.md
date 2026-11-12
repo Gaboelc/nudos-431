@@ -134,7 +134,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (12 nov: las cuatro propuestas)
   - [x] Hoja de revisión (`python -m nudos revision`), comparación de las pruebas doradas (`nudos/dorados.py`) y la skill en `.claude/skills/nudo-nuevo/` (12 nov; ver «Cómo se hizo la hoja, la comparación y la skill» en el plan)
   - [ ] Corrida dorada a ciegas, en una sesión nueva con un worktree sin las especificaciones del as de guía y de la vuelta de escota; sus borradores en `tests/dorados/` y sus pruebas en `tests/test_dorados.py`
-  - [ ] Borrador del ocho con la skill y su hoja de revisión
+  - [x] Borrador del ocho con la skill y su hoja de revisión (12 nov: `specs/ocho.yaml` en `borrador`, 3 pasos y 4 cruces, sin fallas; la ficha cabe; hoja en `revision/ocho/index.html`; ver «El ocho» en T9 del plan)
   - [ ] Gabriel revisa la hoja del ocho; sus correcciones, anotadas en T9 del plan
 - [x] T10 Estado de producción y registro de pruebas sin nombres (S, depende de T4) (11 nov: campo `estado` en el formato v1.1, `python -m nudos estado` con los 35 nudos de `config/edicion-1.yaml` y `tests/test_estado.py`; el as de guía en `publicado`, los otros tres publicados en `cuerda-ok` y la cabeza de turco en `borrador`; ver «Cómo se hizo» de T10 en el plan)
 - [ ] Punto de control C:

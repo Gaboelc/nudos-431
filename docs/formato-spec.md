@@ -295,7 +295,7 @@ Cada nudo avanza así: `borrador → modelado → cuerda-ok → novato-ok → pu
 
 | Estado | Qué tiene el nudo |
 |---|---|
-| `borrador` | La especificación. Es el estado de un borrador recién escrito y el de una especificación sin `estado`. |
+| `borrador` | La especificación. Es el estado de un borrador recién escrito y el de una especificación sin `estado`. Pasa a `modelado` cuando Gabriel revisa el borrador, y `python -m nudos estado` lo dice cuando ya tiene todo el texto. |
 | `modelado` | Construye todos sus pasos sin fallas y tiene lo que la ficha necesita de la especificación: `usos`, `materiales`, `verificacion`, `precauciones`, `alternativas` y `error`. |
 | `cuerda-ok` | El último filtro 1 registrado está aprobado. |
 | `novato-ok` | El último filtro 2 registrado está aprobado. |

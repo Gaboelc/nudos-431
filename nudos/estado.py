@@ -89,6 +89,9 @@ def nudo(slug: str, tanda: str, publicados: list[str]) -> Nudo:
     bloquea = () if siguiente == len(ESTADOS) or problemas else tuple(
         f for f in faltan_para(spec, ESTADOS[siguiente], publicados)
         if f not in faltan_para(spec, spec.estado, publicados))
+    if spec.estado == "borrador" and not bloquea and not problemas:
+        # Un borrador con todo el texto pasa a modelado cuando Gabriel lo revisa (skill nudo-nuevo).
+        bloquea = ("falta que Gabriel revise el borrador",)
     return Nudo(slug, tanda, spec.nombre, spec.estado, alcanzado, bloquea, tuple(problemas))
 
 

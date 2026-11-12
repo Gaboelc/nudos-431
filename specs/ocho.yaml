@@ -1,0 +1,96 @@
+# Ocho. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de referencia solo se
+# usaron para leer la topología (qué tramo pasa por encima en cada cruce).
+slug: ocho
+nombre: Ocho
+familia: De tope
+abok: 570
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Hace un tope en el extremo de la cuerda, para que no se escape por una argolla, una
+  polea o un ojal. Es más grueso que el nudo simple y, aunque haya quedado apretado, se
+  desata con facilidad. También es la base de otros nudos, como el ocho doble.
+materiales: >-
+  Una cuerda de 1 m. Para aprender, usa una de 6 a 10 mm de grosor que no sea rígida.
+verificacion:
+  - Se ven dos lazos, uno junto al otro, como el número 8.
+  - El firme y el chicote salen por lados opuestos del nudo.
+  - Si sigues la cuerda con el dedo, pasa una vez por encima y una por debajo, alternando.
+  - Te sobra chicote, por lo menos el ancho de tu mano.
+precauciones:
+  - Con una cuerda rígida o resbalosa, o cuando queda sin carga, se puede aflojar y soltar. Revísalo antes de confiar en él.
+  - Ajústalo bien antes de cargarlo. Flojo, se deforma y se suelta con más facilidad.
+alternativas:
+  - nudo: Simple
+    cuando: Cuando el tope tiene que ser lo más chico posible, aunque después cueste desatarlo.
+  - nudo: Ocho doble
+    cuando: Cuando, en vez de un tope, necesitas una gaza fija en el extremo.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+encuadre:
+  x: [-9.0, 12.5]
+  y: [-7.5, 7.0]
+
+segmentos:
+  # El firme llega desde la izquierda y pasa por los cruces 2 y 1.
+  firme: [[-16.0, 0.0], [-12.0, 0.0], [-8.0, 0.0], [-5.5, 0.0], [-2.0, 0.0], [0.9, -0.1]]
+  # La vuelta: sale del cruce 1 hacia la derecha, da la vuelta y vuelve a él.
+  vuelta: [[2.5, -0.3], [4.4, 0.4], [5.5, 2.2], [5.2, 4.2], [3.6, 5.4], [1.9, 5.1],
+           [0.9, 3.6], [0.3, 1.5], [-0.4, -1.4]]
+  # El chicote suelto sobre la mesa, después de la vuelta.
+  chicote-libre: [[-1.2, -3.0], [-2.4, -4.6], [-4.0, -6.0], [-5.6, -6.8]]
+  # Rodea el firme por debajo: baja, va hacia la izquierda y sube por el cruce 2.
+  rodeo: [[-1.0, -2.6], [-2.0, -3.8], [-3.3, -4.3], [-4.4, -3.6], [-4.8, -2.0],
+          [-4.4, -0.5], [-3.8, 1.2], [-3.2, 2.4]]
+  chicote-arriba: [[-2.8, 3.4], [-2.3, 4.6]]
+  # Entra a la vuelta por encima y sale por debajo, hacia la derecha.
+  chicote-entra: [[-2.3, 3.1], [-1.0, 3.2], [0.6, 2.9], [2.5, 2.3], [4.3, 2.0], [5.6, 1.9],
+                  [7.2, 1.7], [9.5, 1.5], [11.5, 1.5]]
+
+pasos:
+  - titulo: Haz una vuelta
+    texto: >-
+      Deja un chicote de unos 30 cm. Forma una vuelta llevando el chicote por encima
+      del firme.
+    trazado: [firme, vuelta, chicote-libre]
+    secuencia: "1U 1O"
+    # Empieza después del cruce: el firme llega azul y el tramo que vuelve, resaltado,
+    # pasa por encima. Es lo que compara la imagen del error.
+    resaltar: {desde: "vuelta[0]", hasta: fin}
+
+  - titulo: Pasa por debajo del firme
+    texto: >-
+      Rodea el firme por debajo con el chicote, desde tu lado hacia el fondo. Con la
+      cuerda en la mano, esto es pasar por detrás.
+    trazado: [firme, vuelta, rodeo, chicote-arriba]
+    secuencia: "2O 1U 1O 2U"
+    resaltar: {desde: "rodeo[0]", hasta: fin}
+
+  - titulo: Mete el chicote por la vuelta
+    texto: >-
+      Pásalo por la vuelta del paso 1: entra por encima y sale por debajo. Después
+      tira del firme y del chicote a la vez, hasta que se forme el 8.
+    trazado: [firme, vuelta, rodeo, chicote-entra]
+    secuencia: "2O 1U 4O 3U 1O 2U 3O 4U"
+    resaltar: {desde: "chicote-entra[0]", hasta: fin}
+
+# El error más común: meter el chicote por la vuelta de abajo hacia arriba. Es el paso 3
+# con los cruces 3 y 4 invertidos, y sale un nudo simple.
+error:
+  paso: 3
+  invierte: [3, 4]
+  titulo: El chicote entró por debajo
+  texto: >-
+    El chicote entró a la vuelta por debajo y salió por encima. Así no sale un ocho,
+    sino un nudo simple, que queda más chico y cuesta desatar. Sácalo y vuelve a
+    meterlo, ahora por encima.
+  encuadre:
+    x: [-6.0, 9.0]
+    y: [-5.5, 7.0]
+
+terminado:
+  encuadre:
+    x: [-8.0, 11.0]
+    y: [-6.0, 7.0]

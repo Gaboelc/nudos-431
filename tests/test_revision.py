@@ -32,11 +32,15 @@ def hoja_con_pasos(tmp_path, entradas, modelo_as_de_guia):
 
 def test_cada_paso_lleva_su_fuente_sus_dibujos_y_sus_secuencias(hoja_con_pasos, modelo_as_de_guia):
     pagina, texto = hoja_con_pasos
-    for p, r in zip(modelo_as_de_guia.spec.pasos, modelo_as_de_guia.pasos):
-        assert f"Paso {p.n}:" in texto
+    secciones = {s.split("</h2>")[0]: s for s in texto.split("<section><h2>")[1:]}
+    for p in modelo_as_de_guia.spec.pasos:
+        seccion = secciones[f"Paso {p.n}: {p.titulo}"]
         assert f'src="paso-{p.n}-arriba.png"' in texto and f'src="paso-{p.n}-55.png"' in texto
         assert (pagina.parent / f"paso-{p.n}-arriba.png").is_file()
-        assert " ".join(r.esperada) in texto
+        # Con las etiquetas de la especificación, no con las que numera la construcción:
+        # la declarada y la medida, que son iguales porque el as de guía no tiene fallas.
+        if p.secuencia:
+            assert seccion.count(f"<td>{' '.join(p.secuencia)}</td>") == 2
     assert "../../entradas/as-de-guia/fuente-01.png" in texto
     assert "Duda: El cruce 1 se ve tapado por la mano." in texto
     assert "Error común, junto al paso" in texto and "fuente-03.jpg" in texto
