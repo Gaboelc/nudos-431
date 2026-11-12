@@ -142,7 +142,7 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 - [x] T10 Estado de producción y registro de pruebas sin nombres (S, depende de T4) (11 nov: campo `estado` en el formato v1.1, `python -m nudos estado` con los 35 nudos de `config/edicion-1.yaml` y `tests/test_estado.py`; el as de guía en `publicado`, los otros tres publicados en `cuerda-ok` y la cabeza de turco en `borrador`; ver «Cómo se hizo» de T10 en el plan)
 - [ ] Punto de control C:
   - [x] Un nudo nuevo salió de la skill con correcciones menores (12 nov: el ocho, sin correcciones; las pruebas doradas pasan)
-  - [ ] Decisión sobre usar subagentes
+  - [ ] Decisión sobre usar subagentes (12 nov: propuesta en el Punto de control C del plan: sesiones aparte, una por nudo, de dos o tres a la vez)
 
 ## Fase 4: producción de los 30 nudos restantes
 
