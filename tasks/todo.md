@@ -133,7 +133,9 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Diseño escrito en el plan (dónde vive la skill, qué hace, la hoja de revisión, las pruebas doradas a ciegas y el ocho) (12 nov)
   - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (12 nov: las cuatro propuestas)
   - [x] Hoja de revisión (`python -m nudos revision`), comparación de las pruebas doradas (`nudos/dorados.py`) y la skill en `.claude/skills/nudo-nuevo/` (12 nov; ver «Cómo se hizo la hoja, la comparación y la skill» en el plan)
-  - [ ] Corrida dorada a ciegas, en una sesión nueva con un worktree sin las especificaciones del as de guía y de la vuelta de escota; sus borradores en `tests/dorados/` y sus pruebas en `tests/test_dorados.py`
+  - [x] Corrida dorada a ciegas, en una sesión nueva con un worktree sin las especificaciones del as de guía y de la vuelta de escota (12 nov: borradores en la rama `claude/competent-aryabhata-2dc24a`, 4aa97d2; el as de guía da el mismo nudo y el mismo error con otra división de pasos; en la vuelta de escota la delgada cruza el seno en otro orden; ver «La corrida dorada» en T9 del plan)
+  - [ ] Gabriel decide qué exigen las pruebas doradas y si la vuelta de escota del borrador es el mismo nudo
+  - [ ] Borradores en `main`, en `tests/dorados/`, y sus pruebas en `tests/test_dorados.py`; la skill corregida con lo que le faltó
   - [x] Borrador del ocho con la skill y su hoja de revisión (12 nov: `specs/ocho.yaml` en `borrador`, 3 pasos y 4 cruces, sin fallas; la ficha cabe; hoja en `revision/ocho/index.html`; ver «El ocho» en T9 del plan)
   - [ ] Gabriel revisa la hoja del ocho; sus correcciones, anotadas en T9 del plan
 - [x] T10 Estado de producción y registro de pruebas sin nombres (S, depende de T4) (11 nov: campo `estado` en el formato v1.1, `python -m nudos estado` con los 35 nudos de `config/edicion-1.yaml` y `tests/test_estado.py`; el as de guía en `publicado`, los otros tres publicados en `cuerda-ok` y la cabeza de turco en `borrador`; ver «Cómo se hizo» de T10 en el plan)
