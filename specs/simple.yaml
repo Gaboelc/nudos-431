@@ -1,0 +1,93 @@
+# Simple. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de referencia solo se
+# usaron para leer la topología (qué tramo pasa por encima en cada cruce).
+slug: simple
+nombre: Simple
+familia: De tope
+abok: 46
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Hace un tope en el extremo de la cuerda, para que no se salga por un agujero, una
+  argolla o un ojal. Es el nudo de tope más chico y se puede apretar justo contra un
+  objeto o contra otro nudo. También sirve para que la punta de la cuerda no se
+  deshilache mientras no tiene remate, y es el comienzo de muchos otros nudos.
+materiales: >-
+  Una cuerda de 1 m. Para aprender, usa una de 6 a 10 mm de grosor que no sea rígida.
+verificacion:
+  - Se ve una sola vuelta, con el chicote atravesándola.
+  - Si sigues la cuerda con el dedo, pasa una vez por encima y una por debajo, alternando.
+  - Si tiras del firme y del chicote a la vez, el nudo se aprieta y no se deshace.
+  - Te sobra chicote, por lo menos el ancho de tu mano.
+precauciones:
+  - Apretado, y más si estuvo cargado o se mojó, cuesta mucho desatarlo. Si lo vas a tener que desatar, usa otro tope.
+  - Es un tope chico. Por un agujero ancho se puede pasar; revisa que quede atascado antes de confiar en él.
+alternativas:
+  - nudo: Ocho
+    cuando: Cuando el tope tiene que ser más grueso o lo vas a desatar después de cargarlo.
+  - nudo: Refuerzo de cabo
+    cuando: Cuando quieres que la punta de la cuerda no se deshilache nunca, sin un nudo que estorbe.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+encuadre:
+  x: [-8.5, 8.5]
+  y: [-12.5, 3.5]
+
+segmentos:
+  # El firme baja desde el fondo de la mesa hasta el cruce 1.
+  firme: [[0.0, 22.0], [0.0, 16.0], [0.0, 10.0], [0.0, 6.0], [0.0, 3.5], [0.0, 1.5]]
+  # Antes de atar: el resto de la cuerda, suelto sobre la mesa.
+  cuerda-suelta: [[0.0, -1.0], [0.1, -3.5], [0.6, -6.0], [1.8, -8.4], [3.6, -10.0],
+                  [5.6, -10.6], [7.4, -10.4]]
+  # La vuelta: sale del cruce 1 hacia abajo, gira hacia la izquierda y vuelve a él.
+  vuelta: [[0.0, -1.0], [-0.05, -3.0], [-0.3, -4.8], [-1.0, -6.2], [-2.5, -7.2],
+           [-4.2, -7.3], [-5.7, -6.3], [-6.5, -4.6], [-6.6, -2.6], [-6.0, -0.9],
+           [-4.8, 0.2], [-3.2, 0.5], [-1.6, 0.25]]
+  # El chicote suelto, después de cruzar por encima del firme.
+  chicote-cae: [[1.5, -0.2], [3.2, -0.6], [4.6, -1.6], [5.4, -3.2], [5.6, -5.0], [5.4, -7.0]]
+  # El chicote da la vuelta por la derecha, pasa por debajo del firme (cruce 2), cruza la
+  # vuelta por dentro y sale por encima de su lado de abajo (cruce 3).
+  chicote-pasa: [[1.5, -0.2], [2.8, -0.9], [3.5, -2.2], [3.3, -3.5], [2.4, -4.2],
+                 [1.2, -4.4], [-1.2, -4.3], [-2.4, -4.6], [-3.3, -5.4], [-3.7, -6.5],
+                 [-3.8, -7.4], [-3.8, -8.6], [-3.6, -10.0], [-3.2, -11.4]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      El firme es la parte larga, que no se mueve; el extremo libre es el chicote.
+      Deja unos 30 cm de chicote para atar el nudo.
+    trazado: [firme, cuerda-suelta]
+    secuencia: ""
+
+  - titulo: Haz una vuelta
+    texto: Forma una vuelta llevando el chicote por encima del firme.
+    trazado: [firme, vuelta, chicote-cae]
+    secuencia: "1U 1O"
+    resaltar: {desde: "vuelta[1]", hasta: fin}
+
+  - titulo: Pasa el chicote por la vuelta
+    texto: >-
+      Pásalo por dentro de la vuelta: entra por debajo y sale por encima. Después
+      tira del firme y del chicote a la vez para apretar el nudo.
+    trazado: [firme, vuelta, chicote-pasa]
+    secuencia: "1U 2O 3U 1O 2U 3O"
+    # Empieza después del cruce 1: en los cruces 2 y 3 la vuelta llega azul y el chicote,
+    # resaltado, pasa por debajo y por encima. Es lo que compara la imagen del error.
+    resaltar: {desde: "chicote-pasa[0]", hasta: fin}
+
+# El error más común: meter el chicote por la vuelta desde arriba. Es el paso 3 con los
+# cruces 2 y 3 invertidos; así la cuerda no queda anudada.
+error:
+  paso: 3
+  invierte: [2, 3]
+  titulo: El chicote entró por encima
+  texto: >-
+    El chicote entró a la vuelta por encima y salió por debajo. Así no queda ningún
+    nudo: cuando tiras, la cuerda se desarma. Sácalo y vuelve a pasarlo, ahora
+    entrando por debajo.
+  otros:
+    - titulo: El chicote muy corto
+      texto: >-
+        Si dejas muy poco chicote, el nudo se corre hasta la punta y se suelta al
+        apretarlo. Deja por lo menos el ancho de tu mano después del nudo.
