@@ -1,0 +1,166 @@
+# Vuelta de escota: une dos cuerdas, la gruesa con un seno y la delgada alrededor de él.
+# Borrador de la skill nudo-nuevo. Unidades: diámetros de la delgada. x a la derecha, y hacia
+# el fondo de la mesa. La gruesa llega desde la izquierda y hace un seno con la curva a la
+# derecha y su chicote del lado del fondo; la delgada llega desde la derecha.
+# Los cruces entre las dos cuerdas van en diagonal (ver «Varias cuerdas» en el formato).
+slug: vuelta-de-escota
+nombre: Vuelta de escota
+familia: De unión
+abok: 1431
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Une dos cuerdas, sobre todo si son de distinto grosor o de distinto material. Se hace
+  rápido y, después de usarlo, se desata fácil.
+materiales: >-
+  Dos cuerdas de 1 a 2 m, una más gruesa que la otra; por ejemplo, una de 10 mm y otra de
+  6 mm.
+verificacion:
+  - La gruesa forma un seno, y la delgada lo rodea por detrás y vuelve a pasar por debajo de
+    sí misma.
+  - El chicote de la delgada queda apretado entre la delgada y el seno.
+  - Los dos chicotes salen del mismo lado del nudo.
+  - A cada chicote le quedan varios centímetros después del nudo.
+  - Al tirar de los dos firmes, el nudo se aprieta y el seno no se deshace.
+precauciones:
+  - Si las cuerdas se sacuden o se quedan sin carga, se puede aflojar. Deja los chicotes
+    largos y revísalo de vez en cuando.
+  - Con cuerdas resbalosas o de grosor muy distinto se suelta con más facilidad. Dale una
+    vuelta más a la delgada alrededor del seno.
+  - Átalo con las dos cuerdas sueltas en la mano. No sirve para amarrar algo apretado, como
+    un paquete.
+alternativas:
+  - nudo: Vuelta de escota doble
+    cuando: >-
+      Cuando una cuerda es mucho más gruesa que la otra o las dos resbalan: la delgada da
+      dos vueltas alrededor del seno y aguanta más.
+  - nudo: Pescador
+    cuando: >-
+      Cuando las dos cuerdas son delgadas o resbalosas, como un cordino o un hilo de pescar,
+      y el nudo no se tiene que desatar.
+  - nudo: Rizo
+    cuando: >-
+      Cuando quieres atar algo apretado, como un vendaje o un paquete, con las dos puntas de
+      una misma cuerda.
+
+cuerdas:
+  - {nombre: gruesa, grosor: 1.5, color: azul}
+  - {nombre: delgada, grosor: 1, color: crema}
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-13.5, 13.5]
+  y: [-5.0, 11.5]
+
+segmentos:
+  # La gruesa: el firme llega por la izquierda; el seno da la vuelta a la derecha y su
+  # chicote vuelve hacia la izquierda, del lado del fondo.
+  g-firme: [[-22, 0], [-17, 0], [-12, 0], [-7, 0], [-2, 0], [3, 0]]
+  g-recta: [[7.5, 0.3], [10.0, 1.8], [11.5, 4.0]]
+  g-seno: [[7.5, 0], [9.62, 0.88], [10.5, 3.0], [9.62, 5.12], [7.5, 6.0]]
+  g-chicote: [[3, 6], [-2, 6], [-7, 6], [-12.5, 6]]
+  # La delgada: el firme llega por la derecha, del lado de quien ata.
+  d-firme: [[21, -2.8], [16.5, -2.5], [13.0, -2.0]]
+  d-recta: [[9.5, -2.3], [3.0, -3.3], [-3.0, -3.8], [-8.0, -4.0]]
+  # Entra al seno por debajo de su curva y sale por encima del lado del chicote.
+  d-entra: [[10.2, -0.9]]
+  d-banda: [[6.1, 1.4], [3.0, 3.0], [-0.3, 4.85], [-4.3, 7.3]]
+  # Da la vuelta hacia la izquierda y baja por detrás de los dos lados del seno, en
+  # diagonal y un poco curva: volteada, pasa por encima de los dos y necesita cuerda.
+  d-collar: [[-6.1, 8.5], [-7.9, 9.5], [-9.8, 9.3], [-10.7, 8.1], [-10.2, 6.9]]
+  d-baja: [[-8.6, 4.6], [-6.7, 2.3], [-4.6, 0.5]]
+  d-vuelta: [[-1.8, -1.45], [-0.87, -1.8], [0.0, -1.3]]
+  # Sube por encima del lado del firme, por debajo de la propia delgada y por encima del
+  # lado del chicote.
+  d-sube: [[1.47, 0.6], [2.72, 2.2], [4.12, 4.0], [5.06, 5.2], [6.1, 7.3], [6.3, 8.8]]
+
+pasos:
+  - titulo: Prepara las dos cuerdas
+    texto: >-
+      Pon la cuerda gruesa con su parte larga, el firme, hacia tu izquierda, y la delgada
+      con su firme hacia tu derecha. Los chicotes son las puntas que vas a mover.
+    trazado:
+      gruesa: [g-firme, g-recta]
+      delgada: [d-firme, d-recta]
+    secuencia:
+      gruesa: ""
+      delgada: ""
+
+  - titulo: Haz un seno con la gruesa
+    texto: >-
+      Dobla el chicote de la gruesa hacia la izquierda, en forma de U, con el chicote del
+      lado del fondo. Ese doblez es el seno: sujétalo con una mano.
+    trazado:
+      gruesa: [g-firme, g-seno, g-chicote]
+      delgada: [d-firme, d-recta]
+    secuencia:
+      gruesa: ""
+      delgada: ""
+    resaltar: {desde: "g-seno[0]", hasta: fin}
+
+  - titulo: Pasa la delgada por el seno
+    texto: >-
+      Mete el chicote de la delgada en el seno desde abajo: pasa por debajo de la curva del
+      seno y sale por encima del lado del chicote de la gruesa.
+    trazado:
+      gruesa: [g-firme, g-seno, g-chicote]
+      delgada: [d-firme, d-entra, d-banda, "d-collar[:1]"]
+    secuencia:
+      gruesa: "1O 2U"
+      delgada: "1U 2O"
+    resaltar: {desde: "d-entra[0]", hasta: fin}
+
+  - titulo: Rodea el seno por detrás
+    texto: >-
+      Lleva el chicote de la delgada hacia la izquierda y bájalo por detrás de los dos lados
+      del seno: primero el del chicote de la gruesa y después el del firme.
+    trazado:
+      gruesa: [g-firme, g-seno, g-chicote]
+      delgada: [d-firme, d-entra, d-banda, d-collar, d-baja, "d-vuelta[:1]"]
+    secuencia:
+      gruesa: "4O 1O 2U 3O"
+      delgada: "1U 2O 3U 4U"
+    resaltar: {desde: "d-collar[0]", hasta: fin}
+
+  - titulo: Pásala por debajo de sí misma
+    texto: >-
+      Sube el chicote de la delgada por encima del seno y mételo por debajo de la propia
+      delgada, donde sale del seno. Sujeta los dos chicotes y tira de los dos firmes para
+      apretar.
+    trazado:
+      gruesa: [g-firme, g-seno, g-chicote]
+      delgada: [d-firme, d-entra, d-banda, d-collar, d-baja, d-vuelta, d-sube]
+    secuencia:
+      gruesa: "4O 5U 1O 7U 2U 3O"
+      delgada: "1U 6O 2O 3U 4U 5O 6U 7O"
+    resaltar: {desde: "d-vuelta[0]", hasta: fin}
+
+# El error más común: el chicote de la delgada pasa por encima de sí misma, no por debajo.
+error:
+  paso: 5
+  invierte: [6]
+  titulo: La delgada por encima de sí misma
+  texto: >-
+    Pasaste el chicote de la delgada por encima de sí misma. Así no queda atrapado y el nudo
+    se deshace al tirar. Sácalo y vuelve a pasarlo por debajo de la delgada.
+  encuadre:
+    x: [-3.5, 10.0]
+    y: [-3.5, 9.5]
+  otros:
+    - titulo: Los chicotes en lados opuestos
+      texto: >-
+        Si rodeas el seno hacia el otro lado, el chicote de la delgada sale del lado
+        contrario al de la gruesa. El nudo aguanta menos: deshazlo y rodea el seno como en
+        el paso 4.
+    - titulo: El seno con la delgada
+      texto: >-
+        El seno se hace siempre con la cuerda más gruesa. Si lo haces con la delgada, la
+        gruesa no se dobla bien y el nudo se suelta.
+
+terminado:
+  encuadre:
+    x: [-13.5, 12.0]
+    y: [-4.5, 11.0]
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
