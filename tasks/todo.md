@@ -149,9 +149,9 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 Cada nudo cumple la definición de terminado: pruebas automáticas, error común, imágenes, visor, ficha, filtro 1, filtro 2 y estado `publicado`. El filtro 2 está en pausa desde el 9 de noviembre (ver la definición de terminado en el plan).
 
 ### Tanda 1: libres, una cuerda
-- [ ] Simple (12 nov: Gabriel aprobó su hoja; en `main` y en `modelado`, 3 pasos sin fallas, la ficha cabe; faltan el filtro 1 y la publicación. Por revisar en el texto: si ABOK 46 es su único número)
+- [ ] Simple (12 nov: Gabriel aprobó su hoja; en `main` y en `modelado`, 3 pasos sin fallas, la ficha cabe; faltan el filtro 1 y la publicación. Por revisar en el texto: si ABOK 46 es su único número. Redibujado tallado en la rama `claude/tanda1-simple-327c2b`, b27513c: apretado, la cuerda del nudo baja de 47,9 a 38,9 diámetros; falta que Gabriel revise la hoja nueva)
 - [ ] Ocho (12 nov: en `modelado`, salió de la skill en T9; faltan el filtro 1 y la publicación)
-- [ ] Ocho doble (12 nov: Gabriel dice que es la gaza en ocho, de una sola gaza; las imágenes R1 a R5 de `entradas/ocho-doble` la atan, y desde la R6 siguen con el de dos gazas, que no va. Borrador en la rama `claude/tanda1-ocho-doble-ac4c81`, 8fe248a: 4 pasos sin fallas; los cruces 9 a 16, del seno por la vuelta, no se ven en las fotos. Falta que Gabriel revise su hoja)
+- [ ] Ocho doble (12 nov: Gabriel dice que es la gaza en ocho, de una sola gaza; las imágenes R1 a R5 de `entradas/ocho-doble` la atan, y desde la R6 siguen con el de dos gazas, que no va. Borrador en la rama `claude/tanda1-ocho-doble-ac4c81`, 8fe248a: 4 pasos sin fallas; los cruces 9 a 16, del seno por la vuelta, no se ven en las fotos. Redibujado tallado, ef01328: apretado, baja de 160,6 a 145,0 diámetros. Falta que Gabriel revise su hoja)
 - [ ] As de guía español
 - [ ] Mariposa alpina (12 nov: borrador en la rama `claude/tanda1-mariposa-ed24c1`, a3b237e: 6 pasos y 10 cruces sin fallas, atada sobre la mesa. Falta que Gabriel revise su hoja)
 - [ ] Margarita
