@@ -1,0 +1,231 @@
+# Ocho doble. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de referencia solo se
+# usaron para leer la topología (qué tramo pasa por encima en cada cruce).
+#
+# Es la gaza en ocho atada con la cuerda doblada en un seno: el ocho con dos cuerdas que van
+# juntas, a un diámetro entre sus ejes. Cada cruce del doble son cuatro cruces de la cuerda:
+# los de la vuelta son 1, 2, 3, 4; los del rodeo, 5, 6, 7, 8, y los de la pasada por la vuelta,
+# 11, 12, 13, 16 arriba y 9, 10, 14, 15 abajo.
+slug: ocho-doble
+nombre: Ocho doble
+familia: Gazas
+abok: 1047
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Forma una gaza fija, que no se corre, atada con la cuerda doblada en un seno. Aguanta
+  mucha carga, no se afloja sola y se revisa fácil a la vista. Sirve para enganchar un
+  mosquetón, colgar una carga o fijar la cuerda a un punto.
+materiales: >-
+  Una cuerda de unos 2 m. Para aprender, usa una de 6 a 10 mm de grosor que no sea
+  rígida.
+verificacion:
+  - Todo el nudo va doble. Las dos cuerdas corren juntas, una al lado de la otra, sin cruzarse entre ellas.
+  - Se ve un 8 hecho con la cuerda doble, como el ocho pero con dos cuerdas.
+  - El firme y el chicote salen juntos por un lado del nudo, y la gaza por el otro.
+  - Si tiras de la gaza y del firme a la vez, el nudo no se corre y la gaza no cambia de tamaño.
+  - Te sobra chicote, por lo menos el ancho de tu mano.
+seguridad: >-
+  En escalada y en rescate, este nudo se usa para asegurar a personas. En este libro eso
+  es solo conocimiento: en las actividades del grupo no lo uses para sostener, subir ni
+  bajar a nadie. Esa práctica se hace únicamente con instructor y equipo certificados.
+precauciones:
+  - Apriétalo bien antes de cargarlo, tirando por separado del firme, del chicote y de los dos lados de la gaza. Flojo, se deforma.
+  - Después de aguantar mucha carga cuesta desatarlo. Para aflojarlo, dobla el nudo hacia un lado y hacia el otro.
+  - La gaza no se ajusta. Si te quedó grande o chica, deshaz el nudo y vuelve a empezar.
+alternativas:
+  - nudo: As de guía
+    cuando: >-
+      Cuando la gaza tiene que rodear algo, como un poste o un árbol, o cuando la vas a
+      desatar después de cargarla.
+  - nudo: Mariposa alpina
+    cuando: Cuando necesitas la gaza en el medio de la cuerda y no en el extremo.
+  - nudo: Ocho
+    cuando: Cuando solo necesitas un tope en el extremo de la cuerda, sin gaza.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+encuadre:
+  x: [-20.0, 15.5]
+  y: [-31.0, 19.5]
+
+segmentos:
+  # El firme llega desde el fondo de la mesa. Desde aquí la cuerda va doblada.
+  firme: [[0.5, 30], [0.5, 27], [0.5, 24], [0.5, 21], [0.5, 18.6]]
+  # La cuerda doblada baja hacia quien ata. Cada tramo doble se escribe dos veces:
+  # la ida, del firme al seno, y el regreso, del seno al chicote, a un diámetro.
+  doble-ida: [[0.5, 17.6], [0.5, 16.6], [0.5, 15.6], [0.5, 14.6], [0.5, 13.6], [0.5, 12.6],
+              [0.5, 11.6], [0.5, 10.6], [0.49, 9.6], [0.49, 8.6], [0.48, 7.6], [0.48, 6.6],
+              [0.49, 5.6], [0.5, 4.61], [0.51, 3.61], [0.53, 2.61], [0.56, 1.61],
+              [0.58, 0.62], [0.62, -0.38], [0.68, -1.36]]
+  doble-regreso: [[-0.32, -1.43], [-0.38, -0.42], [-0.42, 0.58], [-0.44, 1.59],
+                  [-0.47, 2.59], [-0.49, 3.59], [-0.5, 4.59], [-0.51, 5.6], [-0.52, 6.6],
+                  [-0.52, 7.6], [-0.51, 8.6], [-0.51, 9.6], [-0.5, 10.6], [-0.5, 11.6],
+                  [-0.5, 12.6], [-0.5, 13.6], [-0.5, 14.6], [-0.5, 15.6], [-0.5, 16.6],
+                  [-0.5, 17.6]]
+  # Paso 1: la cuerda doblada sigue hacia abajo hasta el seno.
+  baja-ida: [[0.77, -2.54], [0.88, -3.52], [1.01, -4.52], [1.11, -5.53], [1.16, -6.57],
+             [1.16, -7.58], [1.12, -8.59], [1.06, -9.61], [0.96, -10.62], [0.81, -11.64],
+             [0.62, -12.64], [0.37, -13.63], [0.09, -14.62], [-0.26, -15.59],
+             [-0.67, -16.54], [-1.17, -17.47], [-1.77, -18.33], [-2.41, -19.12],
+             [-3.05, -19.89]]
+  baja-regreso: [[-3.82, -19.26], [-3.18, -18.49], [-2.57, -17.72], [-2.02, -16.94],
+                 [-1.57, -16.11], [-1.19, -15.22], [-0.87, -14.31], [-0.59, -13.38],
+                 [-0.36, -12.43], [-0.17, -11.47], [-0.03, -10.5], [0.06, -9.53],
+                 [0.12, -8.55], [0.16, -7.56], [0.16, -6.58], [0.11, -5.61], [0.01, -4.64],
+                 [-0.11, -3.65], [-0.23, -2.64]]
+  # La vuelta: baja, da la vuelta por la izquierda y regresa por debajo del firme.
+  vuelta-ida: [[0.79, -2.51], [0.98, -3.47], [1.15, -4.5], [1.15, -5.61], [0.98, -6.65],
+               [0.7, -7.66], [0.33, -8.65], [-0.19, -9.59], [-0.89, -10.44], [-1.7, -11.14],
+               [-2.58, -11.73], [-3.53, -12.21], [-4.55, -12.55], [-5.63, -12.7],
+               [-6.7, -12.69], [-7.75, -12.53], [-8.79, -12.22], [-9.77, -11.69],
+               [-10.6, -10.99], [-11.3, -10.18], [-11.87, -9.27], [-12.3, -8.26],
+               [-12.48, -7.15], [-12.42, -6.06], [-12.16, -5.01], [-11.7, -4],
+               [-10.95, -3.13], [-10.06, -2.5], [-9.15, -2], [-8.23, -1.57], [-7.26, -1.18],
+               [-6.27, -0.87], [-5.28, -0.63], [-4.31, -0.4], [-3.35, -0.16], [-2.36, 0.08],
+               [-1.38, 0.3], [-0.4, 0.5], [0.57, 0.71], [1.53, 0.94], [2.47, 1.2]]
+  vuelta-regreso: [[2.77, 0.25], [1.78, -0.03], [0.79, -0.26], [-0.19, -0.48],
+                   [-1.17, -0.68], [-2.14, -0.89], [-3.1, -1.12], [-4.08, -1.37],
+                   [-5.05, -1.6], [-6.01, -1.84], [-6.93, -2.12], [-7.81, -2.48],
+                   [-8.7, -2.9], [-9.55, -3.36], [-10.29, -3.88], [-10.84, -4.52],
+                   [-11.21, -5.33], [-11.43, -6.21], [-11.48, -7.12], [-11.35, -7.97],
+                   [-11, -8.8], [-10.49, -9.58], [-9.89, -10.28], [-9.2, -10.87],
+                   [-8.42, -11.29], [-7.54, -11.55], [-6.62, -11.69], [-5.69, -11.7],
+                   [-4.79, -11.58], [-3.92, -11.28], [-3.08, -10.86], [-2.3, -10.34],
+                   [-1.6, -9.73], [-1.03, -9.04], [-0.58, -8.23], [-0.25, -7.35],
+                   [-0, -6.43], [0.16, -5.49], [0.16, -4.61], [-0, -3.68], [-0.2, -2.67]]
+  # Paso 2: el seno sale hacia la derecha, sin cruzar nada.
+  sale-ida: [[3.55, 1.49], [4.54, 1.71], [5.62, 1.85], [6.72, 1.73], [7.75, 1.42],
+             [8.73, 0.96], [9.62, 0.33], [10.37, -0.45], [10.99, -1.32], [11.5, -2.23],
+             [11.93, -3.18], [12.27, -4.18], [12.5, -5.19], [12.67, -6.2], [12.78, -7.22],
+             [12.84, -8.25], [12.82, -9.29], [12.75, -10.3], [12.66, -11.29]]
+  sale-regreso: [[11.66, -11.21], [11.75, -10.21], [11.82, -9.23], [11.84, -8.27],
+                 [11.79, -7.31], [11.68, -6.34], [11.52, -5.38], [11.3, -4.44], [11, -3.55],
+                 [10.61, -2.68], [10.14, -1.85], [9.6, -1.08], [8.97, -0.43], [8.23, 0.09],
+                 [7.4, 0.49], [6.51, 0.75], [5.64, 0.85], [4.74, 0.74], [3.77, 0.52]]
+  # Sube por la derecha y cruza el firme por encima, hacia la izquierda.
+  rodeo-ida: [[3.46, 1.56], [4.33, 1.96], [5.16, 2.44], [5.98, 2.97], [6.77, 3.54],
+              [7.48, 4.15], [8.06, 4.84], [8.54, 5.65], [8.88, 6.48], [8.96, 7.27],
+              [8.69, 8.04], [8.18, 8.76], [7.54, 9.33], [6.75, 9.7], [5.85, 9.93],
+              [4.92, 10.05], [4.01, 10.03], [3.12, 9.84], [2.19, 9.53], [1.23, 9.2],
+              [0.28, 8.9], [-0.66, 8.58], [-1.58, 8.24], [-2.5, 7.88], [-3.42, 7.5],
+              [-4.28, 7.1]]
+  rodeo-regreso: [[-4.76, 7.98], [-3.81, 8.42], [-2.88, 8.8], [-1.94, 9.18], [-0.99, 9.52],
+                  [-0.03, 9.85], [0.93, 10.15], [1.86, 10.47], [2.83, 10.8], [3.89, 11.03],
+                  [4.98, 11.04], [6.03, 10.92], [7.07, 10.65], [8.08, 10.17], [8.93, 9.42],
+                  [9.57, 8.51], [9.95, 7.4], [9.84, 6.21], [9.43, 5.19], [8.89, 4.28],
+                  [8.19, 3.44], [7.38, 2.74], [6.54, 2.15], [5.69, 1.59], [4.79, 1.07],
+                  [3.84, 0.64]]
+  # Paso 3: el seno baja por la izquierda, por fuera de la vuelta.
+  lado-ida: [[-5.6, 6.33], [-6.51, 5.9], [-7.43, 5.48], [-8.39, 5.09], [-9.35, 4.76],
+             [-10.28, 4.45], [-11.16, 4.09], [-12.02, 3.64], [-12.86, 3.14], [-13.63, 2.6],
+             [-14.31, 1.98], [-14.85, 1.26], [-15.28, 0.43], [-15.63, -0.46],
+             [-15.91, -1.39], [-16.14, -2.34], [-16.33, -3.29], [-16.45, -4.25],
+             [-16.51, -5.21], [-16.51, -6.18], [-16.46, -7.16], [-16.37, -8.12],
+             [-16.21, -9.09], [-16.01, -10.04], [-15.76, -10.98], [-15.46, -11.91],
+             [-15.1, -12.79], [-14.66, -13.65], [-14.17, -14.5]]
+  lado-regreso: [[-15.03, -15.01], [-15.54, -14.13], [-16.01, -13.21], [-16.4, -12.24],
+                 [-16.72, -11.26], [-16.98, -10.27], [-17.19, -9.27], [-17.36, -8.26],
+                 [-17.46, -7.23], [-17.51, -6.21], [-17.51, -5.18], [-17.45, -4.15],
+                 [-17.32, -3.13], [-17.12, -2.12], [-16.87, -1.12], [-16.57, -0.14],
+                 [-16.19, 0.84], [-15.7, 1.78], [-15.05, 2.66], [-14.25, 3.39],
+                 [-13.39, 3.99], [-12.5, 4.51], [-11.59, 4.99], [-10.62, 5.39],
+                 [-9.66, 5.72], [-8.73, 6.03], [-7.83, 6.4], [-6.93, 6.8], [-6.04, 7.23]]
+  # Baja y pasa por la vuelta: entra por debajo y sale por encima.
+  pasa-ida: [[-5.37, 6.29], [-5.96, 5.6], [-6.37, 4.84], [-6.55, 3.98], [-6.58, 3.04],
+             [-6.53, 2.07], [-6.41, 1.12], [-6.22, 0.17], [-6, -0.79], [-5.75, -1.73],
+             [-5.44, -2.67], [-5.11, -3.61], [-4.8, -4.58], [-4.53, -5.58], [-4.32, -6.58],
+             [-4.15, -7.58], [-4.01, -8.58], [-3.88, -9.58], [-3.8, -10.6], [-3.74, -11.6],
+             [-3.65, -12.57], [-3.53, -13.55], [-3.4, -14.54], [-3.27, -15.54],
+             [-3.16, -16.55]]
+  pasa-regreso: [[-4.16, -16.65], [-4.26, -15.66], [-4.39, -14.68], [-4.52, -13.68],
+                 [-4.64, -12.68], [-4.74, -11.66], [-4.8, -10.66], [-4.88, -9.69],
+                 [-5, -8.71], [-5.14, -7.73], [-5.3, -6.76], [-5.5, -5.8], [-5.75, -4.87],
+                 [-6.06, -3.94], [-6.39, -2.99], [-6.7, -2.02], [-6.97, -1.03],
+                 [-7.2, -0.05], [-7.4, 0.96], [-7.53, 2], [-7.58, 3.02], [-7.54, 4.08],
+                 [-7.31, 5.18], [-6.78, 6.18], [-6.07, 7]]
+  # Las puntas del seno en cada paso; en el último, la gaza.
+  seno-1: [[-3.56, -20.54], [-3.96, -21.24], [-4.24, -22.03], [-4.47, -22.99],
+           [-4.75, -24.03], [-5.25, -25.03], [-5.99, -25.85], [-6.89, -26.29],
+           [-7.71, -26.3], [-8.32, -26.03], [-8.75, -25.52], [-8.97, -24.73],
+           [-8.79, -23.74], [-8.21, -22.8], [-7.38, -22.04], [-6.46, -21.48],
+           [-5.6, -21.01], [-4.92, -20.52], [-4.36, -19.94]]
+  seno-2: [[12.6, -12.13], [12.66, -12.93], [12.87, -13.74], [13.22, -14.66],
+           [13.57, -15.68], [13.71, -16.79], [13.55, -17.88], [13.06, -18.76],
+           [12.38, -19.22], [11.73, -19.34], [11.09, -19.16], [10.46, -18.62],
+           [10.06, -17.7], [10.02, -16.6], [10.27, -15.51], [10.72, -14.53],
+           [11.17, -13.65], [11.46, -12.87], [11.6, -12.07]]
+  seno-3: [[-13.42, -15.83], [-12.95, -16.48], [-12.36, -17.07], [-11.58, -17.68],
+           [-10.76, -18.38], [-10.07, -19.25], [-9.64, -20.27], [-9.61, -21.28],
+           [-9.95, -22.02], [-10.46, -22.46], [-11.1, -22.63], [-11.91, -22.5],
+           [-12.73, -21.91], [-13.33, -20.99], [-13.67, -19.92], [-13.79, -18.85],
+           [-13.86, -17.87], [-14.01, -17.05], [-14.3, -16.29]]
+  gaza: [[-3.02, -17.99], [-2.77, -18.97], [-2.11, -20.11], [-1.17, -21.42],
+         [-0.31, -23.05], [0.18, -24.91], [0.17, -26.82], [-0.48, -28.39], [-1.49, -29.29],
+         [-2.37, -29.58], [-3.29, -29.47], [-4.46, -28.79], [-5.4, -27.37], [-5.79, -25.5],
+         [-5.68, -23.58], [-5.15, -21.82], [-4.5, -20.35], [-4.07, -19.1], [-4.02, -18.09]]
+
+pasos:
+  - titulo: Dobla la cuerda
+    texto: >-
+      Dobla el extremo de la cuerda para formar un seno largo, con los dos tramos juntos,
+      uno al lado del otro. El tramo largo es el firme y el corto, el chicote. Deja
+      doblados unos 90 cm: alcanzan para el nudo y una gaza de un palmo.
+    trazado: [firme, doble-ida, baja-ida, seno-1, baja-regreso, doble-regreso]
+    secuencia: ""
+
+  - titulo: Haz una vuelta
+    texto: >-
+      Con la cuerda doble, forma una vuelta: lleva el seno hacia abajo y a la izquierda, y
+      regrésalo por debajo del firme. Las dos cuerdas van siempre juntas.
+    trazado: [firme, doble-ida, vuelta-ida, sale-ida, seno-2, sale-regreso, vuelta-regreso, doble-regreso]
+    secuencia: "1O 2O 3U 1U 2U 4U 4O 3O"
+    resaltar: {desde: "vuelta-ida[0]", hasta: "vuelta-regreso[-1]"}
+
+  - titulo: Rodea el firme
+    texto: >-
+      Sube con el seno por la derecha y cruza el firme por encima, hacia la izquierda,
+      arriba de la vuelta.
+    trazado: [firme, doble-ida, vuelta-ida, rodeo-ida, lado-ida, seno-3, lado-regreso, rodeo-regreso, vuelta-regreso, doble-regreso]
+    secuencia: "5U 6U 1O 2O 3U 1U 6O 7O 8O 5O 2U 4U 4O 3O 7U 8U"
+    resaltar: {desde: "rodeo-ida[0]", hasta: "rodeo-regreso[-1]"}
+
+  - titulo: Pasa el seno por la vuelta
+    texto: >-
+      Baja con el seno y pásalo por la vuelta del paso 2: entra por debajo y sale por
+      encima. El seno que sale es la gaza. Acomoda las cuerdas para que vayan juntas en
+      todo el nudo y aprieta tirando del firme, del chicote y de la gaza.
+    trazado: [firme, doble-ida, vuelta-ida, rodeo-ida, pasa-ida, gaza, pasa-regreso, rodeo-regreso, vuelta-regreso, doble-regreso]
+    secuencia: "5U 6U 1O 2O 9U 10U 11O 12O 3U 1U 6O 7O 12U 13U 14O 9O 10O 15O 16U 11U 8O 5O 2U 4U 13O 16O 15U 14U 4O 3O 7U 8U"
+    # Empieza antes de la vuelta: el seno llega resaltado y la vuelta, azul. Es lo que
+    # compara la imagen del error.
+    resaltar: {desde: "pasa-ida[0]", hasta: "pasa-regreso[-1]"}
+
+# El error más común: pasar el seno por la vuelta al revés. Es el paso 4 con los ocho
+# cruces de la pasada por la vuelta invertidos, y sale un nudo simple con la cuerda doble.
+error:
+  paso: 4
+  invierte: [9, 10, 11, 12, 13, 14, 15, 16]
+  titulo: El seno entró por encima
+  texto: >-
+    El seno entró a la vuelta por encima y salió por debajo. Así no sale un ocho, sino un
+    nudo simple con la cuerda doble, que queda más chico y cuesta mucho desatar. Sácalo y
+    vuelve a pasarlo: entra por debajo y sale por encima.
+  encuadre:
+    x: [-15.0, 5.0]
+    y: [-18.0, 9.0]
+  otros:
+    - titulo: Las cuerdas cruzadas dentro del nudo
+      texto: >-
+        Si en algún lugar las dos cuerdas se cruzan entre ellas, el nudo aguanta menos y
+        cuesta revisarlo. Antes de apretar, acomódalas para que vayan juntas en todo el 8.
+    - titulo: El chicote muy corto
+      texto: >-
+        Si al apretar el chicote queda más corto que el ancho de tu mano, se puede salir
+        del nudo. Deshazlo y vuelve a empezar con más cuerda doblada.
+
+# El nudo terminado se muestra por delante y por detrás, con el comienzo de la gaza.
+terminado:
+  encuadre:
+    x: [-15.0, 13.0]
+    y: [-26.0, 16.0]
