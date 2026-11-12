@@ -975,6 +975,15 @@ Después de cada tanda hay un punto de control:
 
 **Qué se puede paralelizar:** los borradores de especificación, con subagentes. Los filtros humanos no se pueden paralelizar y marcan el ritmo real.
 
+**Tanda 1 (12 de noviembre de 2026):** los borradores los hacen sesiones aparte con la skill, como se decidió en el Punto de control C. El ocho salió en T9, y el simple, el ocho doble y la mariposa alpina, de las tres primeras sesiones.
+- **El ocho doble es la gaza en ocho** (Gabriel): una sola gaza fija en el extremo. Las imágenes R1 a R5 de `entradas/ocho-doble` la atan; desde la R6 siguen con el ocho de dos gazas, que no va.
+- **Lo que pidió Gabriel al revisar el ocho doble y la mariposa: que el nudo quede más tallado.** Los borradores salen sueltos, con los lazos abiertos, y así confunden; la mariposa, sobre todo. El apretado de T7c no lo arregla, porque solo acorta la cuerda a menos de 6 diámetros de un cruce: en la mariposa, la cuerda del nudo bajó apenas de 172,6 a 155,7 diámetros, y los dos lazos grandes del cuerpo quedaron igual.
+  - La skill dice ahora cómo dibujar el nudo tallado: donde la cuerda real se toca, los tramos van a 1,1 o 1,3 diámetros; las vueltas del cuerpo, cerradas, con radio de 1 a 2; solo la gaza, el firme y el chicote van grandes, y el último paso se parece a la foto del nudo armado.
+  - La hoja de revisión muestra el terminado apretado, el de la ficha, con cuánto se acortó la cuerda, y las medidas de cada paso, para ver lo que se acerca al límite sin llegar a falla.
+  - Los cuatro borradores (el ocho, el simple, el ocho doble y la mariposa) se vuelven a dibujar tallados, y Gabriel revisa otra vez sus hojas. Los nudos publicados no cambian.
+- **Lo que dijeron las sesiones de la skill,** que ya está en ella: qué hacer si las imágenes son de otro nudo, con un nudo que la fuente ata en la mano, con uno sin chicote y con uno de cuerda doble; cómo unir los segmentos entre pasos, y una duda `general` en `pasos.yaml`.
+- **Queda como tarea de código:** que un nudo sin chicote, como la mariposa, no lleve «Chicote» en su segundo firme. Hoy el formato recorre la cuerda desde un firme hasta un chicote.
+
 ### Fase 5: libro y primera edición
 
 #### T11: Material inicial del libro

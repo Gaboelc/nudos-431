@@ -21,7 +21,7 @@ import yaml
 from . import RAIZ
 from .construir import Modelo, datos_json
 from .hoja import ANCHO, hoja
-from .libre import Resultado
+from .libre import LIMITES, Resultado
 
 DESTINO = RAIZ / "revision"   # fuera de git (.gitignore)
 # Las entradas viven en la carpeta de A:; en un worktree no están, y NUDOS_ENTRADAS dice dónde.
@@ -36,7 +36,8 @@ class RevisionError(Exception):
 
 def leer_pasos(ruta: Path) -> dict:
     """revision/<slug>/pasos.yaml: {"pasos": {n: [imagen, ...]}, "error": [...], "dudas": {n: texto}}.
-    Las imágenes van relativas a entradas/<slug>/. Si el archivo no existe, todo va vacío."""
+    Las imágenes van relativas a entradas/<slug>/. En «dudas», la clave es el número del paso,
+    «error» o «general», que va arriba de todo. Si el archivo no existe, todo va vacío."""
     if not ruta.is_file():
         return {"pasos": {}, "error": [], "dudas": {}}
     with open(ruta, encoding="utf-8") as f:
@@ -81,7 +82,8 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
         declarada, medida = _con_etiquetas(r, escrita)
         clase = "igual" if r.esperada == r.secuencia else "distinta"
         return (f'<table class="{clase}"><tr><th>Declarada</th><td>{html.escape(declarada) or "sin cruces"}</td></tr>'
-                f'<tr><th>Medida</th><td>{html.escape(medida) or "sin cruces"}</td></tr></table>')
+                f'<tr><th>Medida</th><td>{html.escape(medida) or "sin cruces"}</td></tr></table>'
+                + _medidas(r))
 
     def duda(clave: str) -> str:
         texto = mapa["dudas"].get(clave)
@@ -112,12 +114,26 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
             'otra vez, con todos los cruces al revés. Se construye y se comprueba como un paso más.</p>'
             f'<div class="fila"><div class="render">{dibujos(datos["reverso"], "reverso")}</div></div>'
             f'{secuencias(modelo.reverso, volteada)}</section>')
+    if modelo.apretado is not None:
+        # El terminado de la ficha: el último paso apretado (nudos/apretar.py), por delante y,
+        # sin anfitrión, por detrás. Se aprieta solo lo que está cerca de los cruces, así que
+        # un nudo dibujado suelto queda suelto también aquí.
+        antes = modelo.pasos[-1].medidas["largo"]
+        despues = modelo.apretado.medidas["largo"]
+        celdas = dibujos(datos["apretado"], "apretado")
+        if modelo.reverso_apretado is not None:
+            celdas += dibujos(datos["reverso_apretado"], "reverso-apretado")
+        bloques.append(
+            '<section><h2>Nudo terminado apretado</h2><p>Es el que va en la ficha, por delante y '
+            f'por detrás. Al apretarlo, la cuerda del nudo bajó de {antes:.1f} a {despues:.1f} '
+            f'diámetros ({1 - despues / antes:.0%}).</p><div class="fila"><div class="render">{celdas}'
+            f'</div></div>{_medidas(modelo.apretado)}</section>')
 
-    arriba = ""
+    arriba = duda("general")
     if not mapa["pasos"]:
         todas = sorted(str(p.relative_to(fuente)).replace(os.sep, "/") for p in fuente.rglob("*")
                        if p.suffix.lower() in IMAGENES) if fuente.is_dir() else []
-        arriba = ('<section><h2>La fuente</h2><div class="fuente">'
+        arriba += ('<section><h2>La fuente</h2><div class="fuente">'
                   + ("".join(_imagen(fuente / i, destino, i) for i in todas) if todas
                      else f'<p class="falla">No hay imágenes en {html.escape(str(fuente))}.</p>')
                   + "</div></section>")
@@ -128,6 +144,16 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
         arriba=arriba, bloques="\n".join(bloques))
     (destino / "index.html").write_text(pagina, encoding="utf-8")
     return destino / "index.html"
+
+
+def _medidas(r: Resultado) -> str:
+    """La separación, la curvatura y el estiramiento del paso, junto a sus límites, para ver
+    también lo que se acerca al límite sin llegar a falla."""
+    m = r.medidas
+    return (f'<p class="medidas">Separación {m["separacion_min"]:.2f} (al menos '
+            f'{LIMITES["separacion_min"]}) · curvatura {m["curvatura_min"]:.2f} (al menos '
+            f'{LIMITES["curvatura_min"]}) · estiramiento {m["estiramiento_max"]:.1%} (hasta '
+            f'{LIMITES["estiramiento_max"]:.0%})</p>')
 
 
 def _con_etiquetas(r: Resultado, escrita: tuple[str, ...]) -> tuple[str, str]:
@@ -170,6 +196,7 @@ th, td {{ border: 1px solid #ccc; padding: 4px 8px; text-align: left; }}
 table.distinta td {{ background: #fde2e2; }}
 .falla {{ color: #a00; }} .bien {{ color: #070; }} .nota {{ color: #666; font-style: italic; }}
 .duda {{ background: #fff6d6; padding: 6px 10px; border-left: 4px solid #e0a800; }}
+.medidas {{ font-size: 13px; color: #555; }}
 </style></head><body>
 <h1>{nombre}</h1>
 <p>Hoja de revisión privada de <code>specs/{slug}.yaml</code>, en estado <strong>{estado}</strong>. No se publica: enlaza las imágenes de la fuente sin copiarlas.</p>

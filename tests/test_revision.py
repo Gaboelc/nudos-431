@@ -25,7 +25,8 @@ def hoja_con_pasos(tmp_path, entradas, modelo_as_de_guia):
     (destino / "as-de-guia" / "pasos.yaml").write_text(
         "pasos:\n  1: [fuente-01.png]\n  2: [fuente-02.png, no-esta.png]\n"
         "error: [fuente-03.jpg]\n"
-        "dudas:\n  2: El cruce 1 se ve tapado por la mano.\n", encoding="utf-8")
+        "dudas:\n  2: El cruce 1 se ve tapado por la mano.\n  general: Lo até sobre la mesa.\n",
+        encoding="utf-8")
     pagina = revision(modelo_as_de_guia, destino, entradas)
     return pagina, pagina.read_text(encoding="utf-8")
 
@@ -46,6 +47,23 @@ def test_cada_paso_lleva_su_fuente_sus_dibujos_y_sus_secuencias(hoja_con_pasos, 
     assert "Error común, junto al paso" in texto and "fuente-03.jpg" in texto
     # El terminado por detrás, que es otro paso construido y comprobado.
     assert "Nudo terminado por detrás" in texto and (pagina.parent / "reverso-arriba.png").is_file()
+    # El terminado apretado, que es el de la ficha, con cuánto se acortó la cuerda.
+    assert "Nudo terminado apretado" in texto and "la cuerda del nudo bajó de" in texto
+    assert (pagina.parent / "apretado-arriba.png").is_file()
+    assert (pagina.parent / "reverso-apretado-arriba.png").is_file()
+
+
+def test_cada_paso_dice_sus_medidas(hoja_con_pasos, modelo_as_de_guia):
+    _, texto = hoja_con_pasos
+    m = modelo_as_de_guia.pasos[-1].medidas
+    assert f"estiramiento {m['estiramiento_max']:.1%} (hasta 2%)" in texto
+    # Los pasos, el error, el reverso y el apretado.
+    assert texto.count('<p class="medidas">') == len(modelo_as_de_guia.pasos) + 3
+
+
+def test_la_duda_general_va_arriba(hoja_con_pasos):
+    _, texto = hoja_con_pasos
+    assert texto.index("Duda: Lo até sobre la mesa.") < texto.index("Paso 1:")
 
 
 def test_una_imagen_que_no_existe_se_marca(hoja_con_pasos):
@@ -57,7 +75,8 @@ def test_no_copia_la_fuente(hoja_con_pasos):
     pagina, _ = hoja_con_pasos
     hechos = {p.name for p in pagina.parent.iterdir()}
     assert not hechos & {"fuente-01.png", "fuente-02.png", "fuente-03.jpg"}
-    assert all(n.startswith(("paso-", "error-", "reverso-")) for n in hechos - {"index.html", "pasos.yaml"})
+    assert all(n.startswith(("paso-", "error-", "reverso-", "apretado-"))
+               for n in hechos - {"index.html", "pasos.yaml"})
 
 
 def test_sin_pasos_yaml_muestra_toda_la_fuente(tmp_path, entradas, modelo_as_de_guia):

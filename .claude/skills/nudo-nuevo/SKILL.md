@@ -30,6 +30,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 - Recorre las imágenes en orden. De cada una, anota qué cambió desde la anterior: qué tramo se movió y por dónde pasó. Ordénalas por lo que muestran y no por el nombre del archivo: a veces los números no siguen el orden en que se ata.
 - Distingue el firme, la parte larga que no se mueve, del chicote, el extremo que trabaja.
 - `info.txt` o `fuente.md` dicen para qué sirve, otros nombres y errores comunes. Úsalos para saber qué escribir, no para copiarlo.
+- **Si las imágenes son de otro nudo,** o de otra versión del mismo, detente y pregunta cuál es antes de seguir. Pasó con el ocho doble: las imágenes seguían hasta el ocho de dos gazas, y el del libro es la gaza en ocho, que solo muestran las primeras.
 
 ## 2. Elige el generador
 
@@ -41,6 +42,12 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 | Amarre cuadrado: vueltas y ahorcados regulares sobre dos palos | `plantilla: {tipo: amarre-cuadrado}` | `amarre-cuadrado` |
 
 Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una estaca, una cornamusa, un barril u otra cuerda; otra plantilla, o varias cuerdas sobre un anfitrión), detente y no lo fuerces con lo que hay. Di en tu informe qué haría falta: es una tarea de código, como fueron T5 y T7.
+
+Tres casos que sí caben en lo que hay:
+
+- **Un nudo que la fuente ata en la mano,** como la mariposa alpina: la mano no es un anfitrión. Dibújalo sobre la mesa, con la forma que tiene armado en la foto y en el orden de las vueltas que da la fuente, y dilo en las dudas.
+- **Un nudo en medio de la cuerda, sin chicote libre,** como la mariposa: recórrelo desde uno de los dos firmes, que hace de firme, y el otro termina la cuerda. Mientras el formato no tenga nudos sin chicote, ese otro firme lleva «Chicote» en las imágenes. Dilo en las dudas.
+- **Un nudo atado con la cuerda doblada,** como el ocho doble: escribe cada tramo doble dos veces, la ida hacia el seno y el regreso, a medio diámetro a cada lado de la línea central. Cada cruce de la cuerda doble son cuatro cruces de la cuerda. El apretado casi no aprieta la cuerda doble: mira el terminado apretado en la hoja.
 
 ## 3. Decide los pasos
 
@@ -55,9 +62,12 @@ Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una e
     2: [imagen-02.png, imagen-03.png]
   error: [imagen-02.png]
   dudas:
+    general: Lo até sobre la mesa, aunque la fuente lo ata en la mano.
     3: El cruce 2 lo tapa la mano; lo leí en la imagen siguiente.
     error: Ninguna imagen lo muestra; lo elegí porque…
   ```
+
+  La duda `general` va arriba de todo en la hoja; las demás, junto a su paso o al error.
 
 ## 4. Lee los cruces
 
@@ -73,7 +83,13 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 ## 5. Traza la cuerda
 
 - Las medidas van en diámetros de cuerda, con x hacia la derecha, y hacia el fondo de la mesa y el firme quieto (ver «Unidades y ejes» en el formato).
-- Empieza por el último paso: dibuja la forma entera con los cruces separados y las curvas abiertas. Después arma los pasos anteriores reusando sus segmentos, para que un tramo que no cambia se escriba una sola vez.
+- Empieza por el último paso: dibuja la forma entera, tallada (ver abajo). Después arma los pasos anteriores reusando sus segmentos, para que un tramo que no cambia se escriba una sola vez.
+- **El nudo va tallado** (Gabriel, 12 de noviembre de 2026). Un nudo suelto, con los lazos abiertos y los tramos separados, confunde: parece un diagrama, no el nudo. Dibújalo como se ve en la foto del nudo armado, antes de apretarlo:
+  - Donde en la cuerda real dos tramos se tocan, van a 1,1 o 1,3 diámetros entre sus ejes, no más. La comprobación pide al menos 0,97.
+  - Las vueltas del cuerpo del nudo van cerradas, con un radio de 1 a 2 diámetros y sin espacio de sobra adentro. Solo la gaza, el firme y el chicote van grandes.
+  - Cada paso agrega lo suyo junto a lo que ya está, sin agrandar el resto. Lo que se mueve en un paso puede ir un poco más abierto, para que se vea por dónde pasa.
+  - Compara el último paso con la foto del nudo armado: tienen que parecerse. El apretado de la ficha solo acorta la cuerda cerca de los cruces, así que un nudo dibujado suelto también queda suelto en la ficha.
+- **Las uniones entre pasos:** cuando dos pasos comparten un segmento y terminan distinto, cada pieza propia termina en su propio último punto. Si el segmento compartido y la pieza de un paso se traslapan, la cuerda se estira justo en la unión.
 - **Dibuja el nudo como en la foto, no su imagen en espejo.** El espejo da la misma secuencia y es el nudo al revés, y ninguna prueba lo nota. Comprueba que la primera vuelta gire hacia el mismo lado que en la foto.
 - Cada paso resalta lo que se mueve en él (`resaltar`).
 - Sigue los consejos del formato: el cruce de una cuerda gruesa sobre una delgada va en diagonal, y sobre un poste la cuerda no sube por el frente para bajar enseguida a la mesa.
@@ -100,6 +116,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 ## 8. Hoja de revisión e informe
 
 - `python -m nudos revision <slug>` arma `revision/<slug>/index.html`, con las imágenes de la fuente junto a cada paso y la secuencia declarada al lado de la medida. Mírala tú primero, paso por paso contra la fuente.
+- La hoja muestra también la separación, la curvatura y el estiramiento de cada paso. Lo que queda cerca del límite, aunque pase, conviene abrirlo. Al final está el nudo terminado apretado, que es el de la ficha, con cuánto se acortó la cuerda: si casi no cambió, el nudo está dibujado suelto.
 - Después informa: qué generador elegiste, qué imágenes van en cada paso, de qué cruces dudas, qué fallas corregiste y dónde está la hoja. Gabriel la revisa y decide si el nudo pasa a `modelado`. Sus correcciones se anotan en T9 del plan, y las que se repiten pasan a «Lo que aprendimos», abajo.
 
 ## Corrida dorada
@@ -111,4 +128,7 @@ Las pruebas doradas de T9 (`tests/test_dorados.py`) comparan lo que escribe esta
 
 ## Lo que aprendimos
 
-Las correcciones de Gabriel que se repiten, como reglas para el borrador siguiente. Todavía no hay ninguna: en el primer borrador, el del ocho, no corrigió nada (12 de noviembre de 2026). El paso de preparar la cuerda es una decisión suya, y está en «Decide los pasos».
+Las correcciones de Gabriel que se repiten, como reglas para el borrador siguiente.
+
+- **El nudo va tallado** (12 de noviembre de 2026, con los borradores del ocho doble y la mariposa alpina): los dibujó sueltos, y así confunden. La regla está en «Traza la cuerda».
+- El paso de preparar la cuerda es una decisión suya, y está en «Decide los pasos».
