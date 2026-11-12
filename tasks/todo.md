@@ -140,9 +140,9 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Borrador del ocho con la skill y su hoja de revisión (12 nov: `specs/ocho.yaml` en `borrador`, 3 pasos y 4 cruces, sin fallas; la ficha cabe; hoja en `revision/ocho/index.html`; ver «El ocho» en T9 del plan)
   - [x] Gabriel revisa la hoja del ocho; sus correcciones, anotadas en T9 del plan (12 nov: «todo bien», sin correcciones; el ocho pasa a `modelado`)
 - [x] T10 Estado de producción y registro de pruebas sin nombres (S, depende de T4) (11 nov: campo `estado` en el formato v1.1, `python -m nudos estado` con los 35 nudos de `config/edicion-1.yaml` y `tests/test_estado.py`; el as de guía en `publicado`, los otros tres publicados en `cuerda-ok` y la cabeza de turco en `borrador`; ver «Cómo se hizo» de T10 en el plan)
-- [ ] Punto de control C:
+- [x] Punto de control C (12 nov):
   - [x] Un nudo nuevo salió de la skill con correcciones menores (12 nov: el ocho, sin correcciones; las pruebas doradas pasan)
-  - [ ] Decisión sobre usar subagentes (12 nov: propuesta en el Punto de control C del plan: sesiones aparte, una por nudo, de dos o tres a la vez)
+  - [x] Decisión sobre usar subagentes (12 nov: Gabriel aprobó sesiones aparte, una por nudo y cada una en su worktree, de dos o tres a la vez; el borrador entra a `main` cuando Gabriel aprueba su hoja)
 
 ## Fase 4: producción de los 30 nudos restantes
 
@@ -150,7 +150,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 
 ### Tanda 1: libres, una cuerda
 - [ ] Simple
-- [ ] Ocho
+- [ ] Ocho (12 nov: en `modelado`, salió de la skill en T9; faltan el filtro 1 y la publicación)
 - [ ] Ocho doble
 - [ ] As de guía español
 - [ ] Mariposa alpina

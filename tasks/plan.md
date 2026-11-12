@@ -904,13 +904,13 @@ La skill no copia texto de la fuente ni publica imágenes de la fuente.
 #### Punto de control C: después de T9 y T10
 
 - [x] Las pruebas doradas pasan, y un nudo nuevo salió de la skill con correcciones menores. (12 nov: el ocho, sin correcciones.)
-- [ ] Decidir si se usan subagentes en paralelo para los borradores de la tanda 1.
+- [x] Decidir si se usan subagentes en paralelo para los borradores de la tanda 1. (12 nov: Gabriel aprobó la propuesta de abajo.)
 
-**Propuesta (12 de noviembre de 2026, por decidir con Gabriel):** sí en paralelo, pero en sesiones aparte y no en subagentes, de dos o tres a la vez.
+**Propuesta (12 de noviembre de 2026; Gabriel la aprobó el mismo día):** sí en paralelo, pero en sesiones aparte y no en subagentes, de dos o tres a la vez.
 - **Una sesión por nudo,** cada una en su worktree, como la corrida dorada. Corre `/nudo-nuevo <slug>`, deja el borrador en su rama y la hoja de revisión en su worktree. A diferencia de un subagente, Gabriel puede abrirla, ver lo que hizo y corregirla ahí mismo.
 - **De dos o tres a la vez:** los filtros humanos marcan el ritmo. No conviene tener más borradores esperando revisión que los que Gabriel alcanza a revisar y atar.
 - **Cuando Gabriel aprueba la hoja,** el borrador entra a `main` y pasa a `modelado`. Después vienen el filtro 1 y la publicación, en la carpeta de A:, de a un nudo.
-- **La tanda 1** son el simple, el ocho doble, el as de guía español, la mariposa alpina, la margarita, el arnés de hombre y la silla de bombero; el ocho ya está en `modelado`. La silla de bombero va con D1.
+- **La tanda 1** son el simple, el ocho doble, el as de guía español, la mariposa alpina, la margarita, el arnés de hombre y la silla de bombero; el ocho ya está en `modelado`. La silla de bombero va con D1. El ocho, que Gabriel aprobó antes de la regla del paso de preparar la cuerda, sigue con sus 3 pasos.
 
 ### Fase 4: producción de los 30 nudos restantes
 
