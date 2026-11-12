@@ -104,6 +104,14 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
             f'<p>{html.escape(e.texto)}</p>{duda("error")}<div class="fila"><div class="fuente">'
             f'{de_la_fuente(mapa["error"])}</div><div class="render">{dibujos(datos["error"], "error")}</div></div>'
             f'{secuencias(modelo.error, del_error)}</section>')
+    if modelo.reverso is not None:
+        # Por detrás: el último paso volteado, con todos los cruces al revés.
+        volteada = tuple(t[:-1] + {"O": "U", "U": "O"}[t[-1]] for t in modelo.spec.pasos[-1].secuencia)
+        bloques.append(
+            '<section><h2>Nudo terminado por detrás</h2><p>El último paso volteado y relajado '
+            'otra vez, con todos los cruces al revés. Se construye y se comprueba como un paso más.</p>'
+            f'<div class="fila"><div class="render">{dibujos(datos["reverso"], "reverso")}</div></div>'
+            f'{secuencias(modelo.reverso, volteada)}</section>')
 
     arriba = ""
     if not mapa["pasos"]:

@@ -220,11 +220,15 @@ def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=No
         rk /= float(rep.grosor[en_k][0])   # en diámetros de esa cuerda
         if rk < radio:
             radio, donde = rk, dk
+    separacion, donde_sep = _separacion(Xr, h, rep)
+    estiramiento = np.abs(largos / h - 1)
+    i = int(np.nonzero(rep.seguido)[0][int(estiramiento.argmax())])
+    donde_est = (Xr[i] + Xr[i + 1]) / 2
     medidas = {
         "largo": float(largos.sum()),
-        "separacion_min": separacion_min(Xr, h, rep),
+        "separacion_min": separacion,
         "curvatura_min": radio,
-        "estiramiento_max": float(np.abs(largos / h - 1).max()),
+        "estiramiento_max": float(estiramiento.max()),
         "altura_max": float(Xr[:, 2].max()),
     }
     otras = []
@@ -240,7 +244,7 @@ def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=No
         secuencia=obtenida,
         esperada=esperada,
         medidas=medidas,
-        fallas=_fallas(n, textos, medidas, donde) + otras,
+        fallas=_fallas(n, textos, medidas, donde, donde_sep, donde_est) + otras,
         reparto=reparto,
     )
 
@@ -262,23 +266,29 @@ def _texto(secuencia, nombres=(), pasadas=()) -> str:
     return ", ".join(partes)
 
 
-def _fallas(n, textos, medidas, donde) -> list[str]:
+def _fallas(n, textos, medidas, donde, donde_sep=None, donde_est=None) -> list[str]:
     """`textos` son la secuencia obtenida y la esperada, escritas con _texto; son iguales
-    si coinciden."""
+    si coinciden. `donde`, `donde_sep` y `donde_est` son dónde ocurren la curvatura, la
+    separación y el estiramiento, para que el mensaje diga cerca de qué punto de la mesa."""
+    def cerca(p) -> str:
+        return "" if p is None else f" cerca de ({p[0]:.1f}, {p[1]:.1f})"
+
     out = []
     obtenida, esperada = textos
     if obtenida != esperada:
         out.append(f"Paso {n}: después de relajar, la secuencia es {obtenida} "
                    f"y debía ser {esperada}.")
     if medidas["separacion_min"] < LIMITES["separacion_min"]:
-        out.append(f"Paso {n}: dos tramos quedan a {medidas['separacion_min']:.2f} diámetros; "
+        out.append(f"Paso {n}: dos tramos quedan a {medidas['separacion_min']:.2f} diámetros"
+                   f"{cerca(donde_sep)}; "
                    f"el mínimo es {LIMITES['separacion_min']}.")
     if medidas["curvatura_min"] < LIMITES["curvatura_min"]:
         out.append(f"Paso {n}: la cuerda se dobla con radio {medidas['curvatura_min']:.2f} "
                    f"cerca de ({donde[0]:.1f}, {donde[1]:.1f}); el mínimo es "
                    f"{LIMITES['curvatura_min']}.")
     if medidas["estiramiento_max"] > LIMITES["estiramiento_max"]:
-        out.append(f"Paso {n}: la cuerda se estira {medidas['estiramiento_max']:.1%}; "
+        out.append(f"Paso {n}: la cuerda se estira {medidas['estiramiento_max']:.1%}"
+                   f"{cerca(donde_est)}; "
                    f"el máximo es {LIMITES['estiramiento_max']:.0%}.")
     return out
 
@@ -484,6 +494,11 @@ def separacion_min(X, h, reparto: Reparto | None = None) -> float:
     """Distancia mínima entre ejes de tramos que no son vecinos en la cuerda, en
     diámetros. Con varias cuerdas, cada distancia se divide por la suma de los radios de
     sus dos tramos, que es la distancia a la que se tocan."""
+    return _separacion(X, h, reparto)[0]
+
+
+def _separacion(X, h, reparto: Reparto | None = None) -> tuple[float, np.ndarray | None]:
+    """separacion_min y dónde ocurre: el punto medio entre los dos tramos más cercanos."""
     rep = reparto or Reparto.una(len(X))
     radio = rep.radio
     arbol = cKDTree(X)
@@ -491,9 +506,11 @@ def separacion_min(X, h, reparto: Reparto | None = None) -> float:
     if len(pares):
         pares = pares[rep.lejos(pares, rep.salto(h))]
     if not len(pares):
-        return SEPARACION * 1.05
+        return SEPARACION * 1.05, None
     dist = np.linalg.norm(X[pares[:, 1]] - X[pares[:, 0]], axis=1)
-    return float((dist / (radio[pares[:, 0]] + radio[pares[:, 1]])).min())
+    relativa = dist / (radio[pares[:, 0]] + radio[pares[:, 1]])
+    k = int(relativa.argmin())
+    return float(relativa[k]), (X[pares[k, 0]] + X[pares[k, 1]]) / 2
 
 
 def curvatura_min(X, h, ventana=3) -> tuple[float, np.ndarray]:

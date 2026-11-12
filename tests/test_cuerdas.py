@@ -13,7 +13,8 @@ from nudos.cruces import encontrar_cruces
 from nudos.exportar import datos_escena
 from nudos.ficha import html_ficha
 from nudos.imprimir import ImpresionError, chrome, dibujar, imagenes, nombres, terminado
-from nudos.libre import (LIMITES, R, Reparto, TrazadoError, _texto, construir_paso, curvatura_min,
+from nudos.libre import (LIMITES, R, Reparto, TrazadoError, _fallas, _separacion, _texto,
+                         construir_paso, curvatura_min,
                          separacion_min)
 from nudos.spec import desde_datos
 
@@ -109,6 +110,27 @@ def test_la_separacion_usa_la_suma_de_los_radios():
     assert separacion_min(X, 0.2, rep) == pytest.approx(1.0)
     # Con una sola cuerda de grosor 1, esos tramos no se tocan.
     assert separacion_min(X, 0.2) > 1.0
+
+
+def test_la_separacion_dice_donde_ocurre():
+    # Dos tramos de una cuerda: uno recto y otro en V, que se acerca más en x = 5.
+    x = np.arange(0, 10.01, 0.2)
+    recto = np.column_stack([x, np.zeros_like(x), np.full_like(x, 0.5)])
+    v = np.column_stack([x[::-1], 0.9 + 0.2 * np.abs(x[::-1] - 5), np.full_like(x, 0.5)])
+    X = np.vstack([recto, [[12.0, 3.0, 0.5]], v])
+    separacion, donde = _separacion(X, 0.2, Reparto(np.zeros(len(X), int), np.ones(len(X))))
+    assert separacion == pytest.approx(0.9)
+    assert donde[:2] == pytest.approx([5.0, 0.45])
+
+
+def test_las_fallas_dicen_donde_ocurren():
+    medidas = {"separacion_min": 0.5, "curvatura_min": 0.5, "estiramiento_max": 0.05}
+    fallas = _fallas(2, ("«1O»", "«1O»"), medidas, np.array([1.0, 2.0, 0]),
+                     np.array([3.0, 4.0, 0]), np.array([5.0, 6.0, 0]))
+    assert fallas == [
+        "Paso 2: dos tramos quedan a 0.50 diámetros cerca de (3.0, 4.0); el mínimo es 0.97.",
+        "Paso 2: la cuerda se dobla con radio 0.50 cerca de (1.0, 2.0); el mínimo es 0.9.",
+        "Paso 2: la cuerda se estira 5.0% cerca de (5.0, 6.0); el máximo es 2%."]
 
 
 def test_la_curvatura_se_mide_en_diametros_de_cada_cuerda():

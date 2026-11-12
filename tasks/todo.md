@@ -134,7 +134,8 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
   - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (12 nov: las cuatro propuestas)
   - [x] Hoja de revisión (`python -m nudos revision`), comparación de las pruebas doradas (`nudos/dorados.py`) y la skill en `.claude/skills/nudo-nuevo/` (12 nov; ver «Cómo se hizo la hoja, la comparación y la skill» en el plan)
   - [x] Corrida dorada a ciegas, en una sesión nueva con un worktree sin las especificaciones del as de guía y de la vuelta de escota (12 nov: borradores en la rama `claude/competent-aryabhata-2dc24a`, 4aa97d2; el as de guía da el mismo nudo y el mismo error con otra división de pasos; en la vuelta de escota la delgada cruza el seno en otro orden; ver «La corrida dorada» en T9 del plan)
-  - [ ] Gabriel decide qué exigen las pruebas doradas y si la vuelta de escota del borrador es el mismo nudo
+  - [x] Gabriel decide qué exigen las pruebas doradas (12 nov: el mismo nudo terminado, el mismo error y que cada paso sea un paso validado, sin la misma división; `nudos/dorados.py`)
+  - [ ] Gabriel mira si la vuelta de escota del borrador es el mismo nudo (`revision/dorados/vuelta-de-escota-comparada.png`)
   - [ ] Borradores en `main`, en `tests/dorados/`, y sus pruebas en `tests/test_dorados.py`; la skill corregida con lo que le faltó
   - [x] Borrador del ocho con la skill y su hoja de revisión (12 nov: `specs/ocho.yaml` en `borrador`, 3 pasos y 4 cruces, sin fallas; la ficha cabe; hoja en `revision/ocho/index.html`; ver «El ocho» en T9 del plan)
   - [ ] Gabriel revisa la hoja del ocho; sus correcciones, anotadas en T9 del plan

@@ -16,6 +16,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 - Las entradas están en `entradas/<slug>/` de la carpeta de A: (`A:\Scouts\06 Identidad\Diseños Propios\Libro Nudos\entradas`). En un worktree no existen: léelas desde esa ruta y corre `python -m nudos revision` con `NUDOS_ENTRADAS` apuntando a esa carpeta.
 - Si `specs/<slug>.yaml` ya existe, detente y pregunta: la skill no sobrescribe un nudo.
 - Los comandos van con el venv de A: (`.venv/Scripts/python -m nudos …`) y `PYTHONUTF8=1`, desde la raíz del repositorio o del worktree.
+- **En un worktree, cuidado con los scripts propios.** El venv de A: tiene instalado el `nudos` de A:. `python -m nudos` desde la raíz del worktree usa la copia del worktree, pero un script que corres desde otra carpeta importa el de A:, con sus especificaciones. Corre tus scripts con `PYTHONPATH` en la raíz del worktree. En una corrida dorada, ese error deja ver las especificaciones que no tienes que ver.
 
 ## Reglas que no cambian
 
@@ -63,7 +64,8 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 - En cada paso, busca todos los lugares donde la cuerda pasa sobre sí misma o sobre la otra cuerda, y mira cuál va encima.
 - Numera los cruces 1, 2, 3… en el orden en que se forman. Un cruce conserva su número en todos los pasos siguientes, y su encima/debajo no cambia. Si en una imagen posterior parece al revés, vuelve a mirar: o lo leíste mal, o es otro cruce y lleva otro número.
 - Escribe la secuencia recorriendo la cuerda desde el firme: el número del cruce y `O` si pasa por encima o `U` si pasa por debajo. Cada número aparece dos veces en el paso, una con `O` y otra con `U`.
-- Si una imagen no deja ver un cruce, por una mano o una sombra, léelo en otra y anota la duda en `pasos.yaml`. Si falta la imagen de un paso, lee sus cruces en el nudo terminado y dilo en las dudas.
+- Si una imagen no deja ver un cruce, por una mano o una sombra, léelo en otra y anota la duda en `pasos.yaml`.
+- **Una cuerda que pasa justo sobre un cruce,** como cuando tres cuerdas se tapan en un punto, no se dibuja ahí: córrela hacia el lado por donde la ves pasar en la foto. Las dos maneras de correrla pueden ser la misma cuerda real y dar secuencias distintas, así que la que vale es la de la foto. Anota cuál elegiste y por qué en las dudas. Si falta la imagen de un paso, lee sus cruces en el nudo terminado y dilo en las dudas.
 - Para mirar un cruce de cerca, amplía la imagen en una copia fuera del repositorio, nunca en `entradas/`.
 
 ## 5. Traza la cuerda
@@ -76,7 +78,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 
 ## 6. Error común y texto de la ficha
 
-- **El error común** es el más frecuente al atarlo, con los cruces que quedan al revés (`invierte`). Su resaltado empieza o termina fuera del cruce invertido, para que se vea cuál va encima. Los errores que no se ven en una imagen van en `otros`.
+- **El error común** es el más frecuente al atarlo, con los cruces que quedan al revés (`invierte`). Si la fuente lo dice, es ese. Si no lo dice, elige el que más probablemente comete quien lo ata por primera vez, casi siempre un cruce al revés en el paso que define el nudo, y dilo en las dudas. Su resaltado empieza o termina fuera del cruce invertido, para que se vea cuál va encima. Los errores que no se ven en una imagen van en `otros`.
 - **El texto:** `usos`, `materiales`, `verificacion` (criterios que se comprueban mirando o tirando del nudo), `precauciones`, `alternativas` (con el nombre de su ficha si el otro nudo está en el libro), `seguridad` cuando aplica y `otros_nombres` cuando una sección lo llama distinto. La familia es una de las que ya usan los demás nudos, salvo que no encaje en ninguna.
 
 ## 7. Construye y corrige
@@ -87,6 +89,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 - **Separación:** dos tramos quedan muy cerca; sepáralos en ese punto.
 - **Curvatura:** una curva es muy cerrada; ábrela o agrégale puntos.
 - **Estiramiento:** al relajar, la cuerda se estiró o se encogió más de 2 % en algún punto, casi siempre porque tuvo que separar tramos muy apretados. Abre esa zona o dale más cuerda.
+- La separación, la curvatura y el estiramiento dicen cerca de qué punto de la mesa ocurren. El nudo terminado por detrás se construye y se comprueba como un paso más, y sus fallas también cuentan: la hoja de revisión lo dibuja al final.
 - **Un cruce que salta:** la misma etiqueta quedó en otro lugar en el paso siguiente; probablemente es otro cruce.
 
 `python -m nudos hoja <slug>` y `--vista 55` dibujan todos los pasos en una imagen, para mirar rápido. Si después de varios intentos queda una falla, detente y di cuál es y qué probaste.

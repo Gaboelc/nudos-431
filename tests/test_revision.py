@@ -44,6 +44,8 @@ def test_cada_paso_lleva_su_fuente_sus_dibujos_y_sus_secuencias(hoja_con_pasos, 
     assert "../../entradas/as-de-guia/fuente-01.png" in texto
     assert "Duda: El cruce 1 se ve tapado por la mano." in texto
     assert "Error común, junto al paso" in texto and "fuente-03.jpg" in texto
+    # El terminado por detrás, que es otro paso construido y comprobado.
+    assert "Nudo terminado por detrás" in texto and (pagina.parent / "reverso-arriba.png").is_file()
 
 
 def test_una_imagen_que_no_existe_se_marca(hoja_con_pasos):
@@ -55,7 +57,7 @@ def test_no_copia_la_fuente(hoja_con_pasos):
     pagina, _ = hoja_con_pasos
     hechos = {p.name for p in pagina.parent.iterdir()}
     assert not hechos & {"fuente-01.png", "fuente-02.png", "fuente-03.jpg"}
-    assert all(n.startswith(("paso-", "error-")) for n in hechos - {"index.html", "pasos.yaml"})
+    assert all(n.startswith(("paso-", "error-", "reverso-")) for n in hechos - {"index.html", "pasos.yaml"})
 
 
 def test_sin_pasos_yaml_muestra_toda_la_fuente(tmp_path, entradas, modelo_as_de_guia):
