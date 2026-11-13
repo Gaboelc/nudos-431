@@ -1,0 +1,234 @@
+# As de guía español. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de referencia
+# solo se usaron para leer la topología (qué tramo pasa por encima en cada cruce).
+#
+# El nudo va en un seno, en medio de la cuerda, así que tiene dos firmes y ningún chicote
+# (`dos_firmes`). Los dos salen juntos hacia ti. La cuerda se recorre desde el de la izquierda
+# hasta el de la derecha.
+#
+# Se ata con el método de la fuente: se cruzan los firmes, el lazo baja por detrás de ellos, se
+# doblan las dos mitades sobre el centro y cada lado del lazo de abajo sube por el lazo de su
+# costado. Ese lado es la gaza, y el lazo del costado la abraza como un collar. Cruces:
+#  1 los firmes (el de la derecha encima); desaparece al doblar la primera mitad.
+#  2, 3 el seno de abajo pasa bajo los dos firmes.
+#  4, 5 la primera mitad doblada pasa sobre los firmes; 6, 8 la segunda, también, y 7 es
+#    donde la segunda pasa sobre la primera.
+#  9 a 12 el lado izquierdo del lazo de abajo sube por el lazo de la izquierda: pasa sobre el
+#    borde de abajo (9, 12) y bajo el de arriba (10, 11). 13 a 16, lo mismo a la derecha.
+slug: as-de-guia-espanol
+nombre: As de guía español
+familia: Gazas
+abok: 1087
+dos_firmes: true
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Forma dos gazas fijas en medio de la cuerda, sin usar los extremos. Las dos quedan juntas,
+  una a cada lado, y no se cierran cuando tiras de los firmes. Sirve para colgar o levantar
+  un objeto largo, como una tabla o un tronco, con una gaza en cada extremo.
+materiales: >-
+  Una cuerda de unos 3 m: el nudo va en el medio. Para aprender, usa una de 6 a 10 mm de
+  grosor que no sea rígida.
+verificacion:
+  - Las dos gazas salen hacia arriba, una a cada lado, y los dos firmes salen juntos hacia abajo.
+  - Junto al nudo, cada gaza pasa por un lazo pequeño que la abraza.
+  - Las dos gazas quedaron del tamaño que necesitas.
+  - Si sostienes las gazas y tiras de los dos firmes, las gazas no se cierran ni se corren.
+seguridad: >-
+  En rescate, este nudo se usa para sostener a una persona, con una gaza en cada pierna. En
+  este libro eso es solo conocimiento: en las actividades del grupo no lo uses para sostener,
+  subir ni bajar a nadie. Esa práctica se hace únicamente con instructor y equipo certificados.
+# Texto propio: los cuidados que ya dice «seguridad» no se repiten aquí.
+precauciones:
+  - Carga las dos gazas por igual. Si cargas una sola, la cuerda de la otra se puede correr
+    hacia ella, y una gaza crece mientras la otra se achica.
+  - Apriétalo bien antes de cargarlo. Flojo, se deforma.
+  - El tamaño de las gazas se arregla antes de apretar. Si ya está apretado, aflójalo primero.
+alternativas:
+  - nudo: Mariposa alpina
+    cuando: Cuando necesitas una sola gaza en medio de la cuerda.
+  - nudo: As de guía
+    cuando: Cuando te basta una gaza en el extremo de la cuerda.
+  - nudo: Silla de bombero
+    cuando: Cuando necesitas ajustar el tamaño de cada gaza antes de fijarla.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+encuadre:
+  x: [-14.5, 14.5]
+  y: [-7.5, 17.0]
+
+# Va tallado: donde dos tramos se tocan, quedan a 1,2 o 1,3 diámetros. Las gazas son lo único
+# grande.
+segmentos:
+  # Los dos firmes llegan juntos desde ti. Este es el de la izquierda; el otro es el último segmento.
+  firme-a: [[-0.6, -26], [-0.6, -20], [-0.6, -14], [-0.6, -10], [-0.66, -8], [-0.85, -6.2]]
+  firme-b: [[0.85, -6.2], [0.66, -8], [0.6, -10], [0.6, -14], [0.6, -20], [0.6, -26]]
+  # Paso 1: el seno, sin cruces.
+  sube-1: [[-0.6, -3], [-0.6, 0], [-0.6, 3], [-0.6, 6], [-0.75, 8.5], [-1.3, 10.6]]
+  punta-1: [[-2, 12.4], [-1.9, 14], [-1, 15], [0, 15.3], [1, 15], [1.9, 14], [2, 12.4]]
+  baja-1: [[1.3, 10.6], [0.75, 8.5], [0.6, 6], [0.6, 3], [0.6, 0], [0.6, -3]]
+  # Paso 2: los firmes se cruzan y arriba queda un lazo.
+  a-2: [[-0.6, -3], [-0.62, -1.2], [-0.45, 0.1]]
+  lazo-2: [[0.45, 1.9], [1, 3.2], [2.2, 4.6], [3.6, 6.2], [4.7, 8], [5.2, 10], [4.9, 12],
+           [3.8, 13.6], [2, 14.5], [0, 14.8], [-2, 14.5], [-3.8, 13.6], [-4.9, 12], [-5.2, 10],
+           [-4.7, 8], [-3.6, 6.2], [-2.2, 4.6], [-1, 3.2], [-0.45, 1.9]]
+  b-2: [[0.45, 0.1], [0.62, -1.2], [0.6, -3]]
+  # Paso 3: el lazo baja por detrás de los firmes; queda un lazo a cada lado.
+  a-3: [[-1.05, -5], [-1.1, -3.6], [-1.1, -2.2], [-1.1, -1], [-0.85, 0], [-0.45, 0.5]]
+  lob-der-3: [[0.5, 1.5], [1, 2.6], [2, 3.7], [3.4, 4.5], [4.9, 4.5], [6, 3.6], [6.6, 2],
+              [6.6, 0.3], [6.1, -1.3], [5.1, -2.6], [3.7, -3.4], [2.4, -3.5]]
+  # El seno de abajo, que pasa bajo los dos firmes (cruces 2 y 3) desde el paso 3.
+  h: [[1.6, -3.5], [0.8, -3.5], [0, -3.5], [-0.8, -3.5], [-1.6, -3.5]]
+  lob-izq-3: [[-2.4, -3.5], [-3.7, -3.4], [-5.1, -2.6], [-6.1, -1.3], [-6.6, 0.3], [-6.6, 2],
+              [-6, 3.6], [-4.9, 4.5], [-3.4, 4.5], [-2, 3.7], [-1, 2.6], [-0.5, 1.5]]
+  b-3: [[0.45, 0.5], [0.85, 0], [1.1, -1], [1.1, -2.2], [1.1, -3.6], [1.05, -5]]
+  # Pasos 4 a 7: los dos firmes, por el centro del nudo.
+  a-centro: [[-1.05, -5], [-1.1, -3.8], [-1.1, -2.6], [-1.1, -1.4], [-1.1, -0.2], [-1.1, 1],
+             [-1.1, 2.2], [-1.1, 3.2]]
+  b-centro: [[1.1, 3.2], [1.1, 2.2], [1.1, 1], [1.1, -0.2], [1.1, -1.4], [1.1, -2.6],
+             [1.1, -3.8], [1.05, -5]]
+  # La primera mitad doblada cruza el centro sobre los firmes (4 y 5), y la segunda, sobre todo (6, 7 y 8).
+  d-centro: [[-1.4, 0.2], [-0.7, 0.55], [0, 0.9], [0.7, 1.25], [1.4, 1.6]]
+  e-centro: [[-1.4, 1.6], [-0.7, 1.25], [0, 0.9], [0.7, 0.55], [1.4, 0.2]]
+  # Pasos 5 a 7: los lazos de los costados. El de la izquierda va de la punta del firme
+  # izquierdo, por arriba, hasta la segunda mitad; el de la derecha es su espejo.
+  l1-arriba: [[-1.1, 4], [-1.15, 4.41], [-1.31, 4.8], [-1.57, 5.13], [-1.9, 5.39], [-2.29, 5.55],
+              [-2.7, 5.6], [-3.6, 5.71], [-4.5, 5.93], [-5.4, 6.05], [-6.3, 5.96], [-7.2, 5.74],
+              [-8.23, 5.6], [-8.81, 5.5], [-9.32, 5.2], [-9.7, 4.75], [-9.9, 4.2]]
+  l1-abajo: [[-9.9, 3.6], [-9.7, 3.05], [-9.32, 2.6], [-8.81, 2.3], [-8.23, 2.2], [-7.33, 2.08],
+             [-6.43, 1.84], [-5.53, 1.75], [-4.63, 1.9], [-3.73, 2.13], [-3.07, 2.2],
+             [-2.76, 2.18], [-2.46, 2.11], [-2.18, 1.99]]
+  l2-abajo: [[2.18, 1.99], [2.46, 2.11], [2.76, 2.18], [3.07, 2.2], [3.73, 2.13], [4.63, 1.9],
+             [5.53, 1.75], [6.43, 1.84], [7.33, 2.08], [8.23, 2.2], [8.81, 2.3], [9.32, 2.6],
+             [9.7, 3.05], [9.9, 3.6]]
+  l2-arriba: [[9.9, 4.2], [9.7, 4.75], [9.32, 5.2], [8.81, 5.5], [8.23, 5.6], [7.2, 5.74],
+              [6.3, 5.96], [5.4, 6.05], [4.5, 5.93], [3.6, 5.71], [2.7, 5.6], [2.29, 5.55],
+              [1.9, 5.39], [1.57, 5.13], [1.31, 4.8], [1.15, 4.41], [1.1, 4]]
+  # Paso 4: el lazo de la derecha, que rodea al de la izquierda ya doblado.
+  afuera-4: [[-1, 4.6], [-0.4, 5.9], [0.8, 6.9], [2.6, 7.4], [4.8, 7.6], [7, 7.4], [9, 6.6],
+             [10.5, 5.2], [11.2, 3.2], [11.1, 1], [10.3, -0.9], [9, -2.4], [7.2, -3.3],
+             [5, -3.6], [2.8, -3.55]]
+  # Pasos 4 y 5: los lados del lazo de abajo.
+  cl-bulto: [[-2.3, -3.48], [-2.91, -3.23], [-3.38, -2.75], [-3.61, -2.13], [-3.56, -1.47],
+             [-3.26, -0.88], [-2.74, -0.47]]
+  cr-bulto: [[2.74, -0.47], [3.26, -0.88], [3.56, -1.47], [3.61, -2.13], [3.38, -2.75],
+             [2.91, -3.23], [2.3, -3.48]]
+  # Pasos 6 y 7: el lado izquierdo del lazo de abajo sube por el lazo de la izquierda.
+  # Sus dos patas pasan sobre el borde de abajo (9, 12) y bajo el de arriba (10, 11).
+  cl-pata-h: [[-2.68, -3.5], [-3.09, -3.45], [-3.47, -3.3], [-3.81, -3.06], [-4.08, -2.75],
+              [-4.27, -2.38], [-4.96, -0.5], [-5.47, 0.9], [-5.72, 1.6], [-5.94, 2.2],
+              [-6.41, 3.5], [-7.18, 5.6], [-7.43, 6.3]]
+  cl-pata-d: [[-6.1, 6.3], [-5.85, 5.6], [-5.08, 3.5], [-4.61, 2.2], [-4.28, 1.3], [-4.11, 0.84],
+              [-3.9, 0.44], [-3.59, 0.12], [-3.2, -0.1], [-2.77, -0.21], [-2.32, -0.19],
+              [-1.89, -0.05]]
+  # La punta que asoma en el paso 6; en el paso 7, la gaza.
+  cl-punta-6: [[-7.58, 6.54], [-7.89, 6.96], [-8.25, 7.36], [-8.62, 7.76], [-8.97, 8.16],
+               [-9.26, 8.58], [-9.53, 9.44], [-9.47, 9.94], [-9.26, 10.39], [-8.92, 10.76],
+               [-8.48, 11], [-7.99, 11.09], [-7.49, 11.03], [-7.04, 10.82], [-6.67, 10.48],
+               [-6.33, 9.65], [-6.28, 9.14], [-6.29, 8.6], [-6.32, 8.06], [-6.33, 7.52],
+               [-6.3, 7]]
+  cl-gaza: [[-7.81, 7.05], [-8.42, 7.93], [-9.14, 8.72], [-9.94, 9.47], [-10.78, 10.24],
+            [-11.59, 11.03], [-12.34, 11.86], [-13.01, 12.74], [-13.39, 13.57], [-13.46, 14.29],
+            [-13.3, 14.99], [-12.92, 15.61], [-12.38, 16.08], [-11.72, 16.36], [-11, 16.43],
+            [-10.3, 16.26], [-9.68, 15.89], [-9.11, 15.18], [-8.6, 14.2], [-8.19, 13.16],
+            [-7.83, 12.08], [-7.51, 10.99], [-7.17, 9.86], [-6.85, 8.71], [-6.53, 7.6]]
+  # El lado derecho, espejo del izquierdo (13 a 16).
+  cr-pata-e: [[1.89, -0.05], [2.32, -0.19], [2.77, -0.21], [3.2, -0.1], [3.59, 0.12],
+              [3.9, 0.44], [4.11, 0.84], [4.28, 1.3], [4.61, 2.2], [5.08, 3.5], [5.85, 5.6],
+              [6.1, 6.3]]
+  cr-pata-h: [[7.43, 6.3], [7.18, 5.6], [6.41, 3.5], [5.94, 2.2], [5.72, 1.6], [5.47, 0.9],
+              [4.96, -0.5], [4.27, -2.38], [4.08, -2.75], [3.81, -3.06], [3.47, -3.3],
+              [3.09, -3.45], [2.68, -3.5]]
+  cr-punta-6: [[6.3, 7], [6.33, 7.52], [6.32, 8.06], [6.29, 8.6], [6.28, 9.14], [6.33, 9.65],
+               [6.67, 10.48], [7.04, 10.82], [7.49, 11.03], [7.99, 11.09], [8.48, 11],
+               [8.92, 10.76], [9.26, 10.39], [9.47, 9.94], [9.53, 9.44], [9.26, 8.58],
+               [8.97, 8.16], [8.62, 7.76], [8.25, 7.36], [7.89, 6.96], [7.58, 6.54]]
+  cr-gaza: [[6.53, 7.6], [6.85, 8.71], [7.17, 9.86], [7.51, 10.99], [7.83, 12.08], [8.19, 13.16],
+            [8.6, 14.2], [9.11, 15.18], [9.68, 15.89], [10.3, 16.26], [11, 16.43],
+            [11.72, 16.36], [12.38, 16.08], [12.92, 15.61], [13.3, 14.99], [13.46, 14.29],
+            [13.39, 13.57], [13.01, 12.74], [12.34, 11.86], [11.59, 11.03], [10.78, 10.24],
+            [9.94, 9.47], [9.14, 8.72], [8.42, 7.93], [7.81, 7.05]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      El nudo va en medio de la cuerda, así que los dos extremos son firmes. Dobla un seno de
+      unos 80 cm, con los dos firmes juntos hacia ti.
+    trazado: [firme-a, sube-1, punta-1, baja-1, firme-b]
+    secuencia: ""
+
+  - titulo: Cruza los firmes
+    texto: >-
+      Justo debajo del seno, cruza los dos firmes: el de la derecha pasa por encima del otro,
+      hacia la izquierda. Arriba del cruce queda un lazo.
+    trazado: [firme-a, a-2, lazo-2, b-2, firme-b]
+    secuencia: "1U 1O"
+    resaltar: {desde: "a-2[0]", hasta: "b-2[-1]"}
+
+  - titulo: Baja el lazo por detrás
+    texto: >-
+      Lleva la punta del lazo hacia ti, por debajo de los dos firmes. Ahora tienes un lazo a
+      cada lado, unidos abajo por el tramo que pasa bajo los firmes.
+    trazado: [firme-a, a-3, lob-der-3, h, lob-izq-3, b-3, firme-b]
+    secuencia: "2O 1U 3U 2U 1O 3O"
+    resaltar: {desde: "lob-der-3[0]", hasta: "lob-izq-3[-1]"}
+
+  - titulo: Dobla el lazo de la izquierda
+    texto: >-
+      Dobla el lazo de la izquierda sobre los firmes, hacia la derecha, como la página de un
+      libro. Queda dentro del otro lazo, y abajo a la izquierda se forma un lazo pequeño.
+    trazado: [firme-a, a-centro, afuera-4, h, cl-bulto, d-centro, l2-abajo, l2-arriba, b-centro, firme-b]
+    secuencia: "2O 4U 3U 2U 4O 5O 5U 3O"
+    resaltar: {desde: "cl-bulto[0]", hasta: "l2-arriba[-1]"}
+
+  - titulo: Dobla el lazo de la derecha
+    texto: >-
+      Ahora dobla el lazo grande de la derecha hacia la izquierda, por encima de todo. Quedan
+      dos lazos arriba y uno abajo, en el centro, por donde pasan los firmes.
+    trazado: [firme-a, a-centro, l1-arriba, l1-abajo, e-centro, cr-bulto, h, cl-bulto, d-centro, l2-abajo, l2-arriba, b-centro, firme-b]
+    secuencia: "2O 4U 6U 6O 7O 8O 3U 2U 4O 7U 5O 5U 8U 3O"
+    resaltar: {desde: "l1-arriba[0]", hasta: "cr-bulto[-1]"}
+
+  - titulo: Sube los lados por los lazos
+    texto: >-
+      Sube cada lado del lazo de abajo por el lazo de arriba de su lado: por encima del borde
+      de abajo y por debajo del de arriba. Asoman dos puntas.
+    trazado: [firme-a, a-centro, l1-arriba, l1-abajo, e-centro, cr-pata-e, cr-punta-6, cr-pata-h, h, cl-pata-h, cl-punta-6, cl-pata-d, d-centro, l2-abajo, l2-arriba, b-centro, firme-b]
+    secuencia: "2O 4U 6U 11O 10O 9U 12U 6O 7O 8O 13O 14U 15U 16O 3U 2U 9O 10U 11U 12O 4O 7U 5O 13U 16U 15O 14O 5U 8U 3O"
+    # Empieza y termina fuera de los cruces 9 a 16: los lazos de los costados quedan azules y
+    # se ve por dónde pasa cada lado. Es lo que compara la imagen del error.
+    resaltar: {desde: "cr-pata-e[0]", hasta: "cl-pata-d[-1]"}
+
+  - titulo: Forma las gazas
+    texto: >-
+      Tira de las dos puntas hasta que las gazas tengan el tamaño que necesitas. Después
+      sostenlas y tira de los dos firmes a la vez, de a poco, hasta que el nudo quede firme.
+    trazado: [firme-a, a-centro, l1-arriba, l1-abajo, e-centro, cr-pata-e, cr-gaza, cr-pata-h, h, cl-pata-h, cl-gaza, cl-pata-d, d-centro, l2-abajo, l2-arriba, b-centro, firme-b]
+    secuencia: "2O 4U 6U 11O 10O 9U 12U 6O 7O 8O 13O 14U 15U 16O 3U 2U 9O 10U 11U 12O 4O 7U 5O 13U 16U 15O 14O 5U 8U 3O"
+    resaltar: {desde: "cr-gaza[0]", hasta: "cl-gaza[-1]"}
+
+# El error más común: subir los lados al revés, por debajo del borde de abajo y por encima del
+# de arriba. Es el paso 6 con los cruces 9 a 16 invertidos.
+error:
+  paso: 6
+  invierte: [9, 10, 11, 12, 13, 14, 15, 16]
+  titulo: Los lados subieron al revés
+  texto: >-
+    Subiste los lados del lazo de abajo por debajo del borde de abajo de los lazos, y no por
+    encima. Así los lazos no los abrazan y el nudo no queda armado. Sácalos y vuelve a
+    subirlos: por encima del borde de abajo y por debajo del de arriba.
+  encuadre:
+    x: [-10.5, 10.5]
+    y: [-4.5, 11.5]
+  otros:
+    - titulo: Apretarlo de un solo lado
+      texto: >-
+        Si tiras de una sola gaza, la cuerda pasa de una gaza a la otra y quedan de distinto
+        tamaño. Sostén las dos gazas y tira de los dos firmes a la vez.
+
+# El nudo terminado se muestra por delante y por detrás.
+terminado:
+  encuadre:
+    x: [-14.5, 14.5]
+    y: [-6.0, 17.0]
