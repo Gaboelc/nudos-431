@@ -10,3 +10,7 @@ simple
 ocho
 ocho-doble
 mariposa-alpina
+as-de-guia-espanol
+margarita
+arnes-de-hombre
+silla-de-bombero

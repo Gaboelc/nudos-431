@@ -44,7 +44,14 @@ alternativas:
     cuando: Cuando necesitas la gaza en el extremo de la cuerda y no en el medio.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-13
+    resultado: aprobado
+    ficha: eb656c7
 
 encuadre:
   x: [-10.8, 5.8]
