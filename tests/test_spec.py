@@ -1,6 +1,8 @@
 """Lectura y validación de especificaciones."""
 import pytest
+import yaml
 
+from nudos import SPECS
 from nudos.spec import SpecError, desde_datos
 
 
@@ -254,3 +256,27 @@ def test_puntos_casi_iguales_solo_dentro_de_una_cuerda():
     """El último punto de una cuerda puede quedar junto al primero de la siguiente."""
     segmentos = {**SEGMENTOS_DOS, "c": [[4, 1.01], [1, -1], [1, 1]]}
     desde_datos(datos_dos(segmentos=segmentos))
+
+# --------------------------------------------------------------------------
+# Un nudo en medio de la cuerda (dos_firmes)
+# --------------------------------------------------------------------------
+def test_sin_dos_firmes_la_cuerda_termina_en_un_chicote():
+    assert desde_datos(datos()).dos_firmes is False
+    assert desde_datos(datos(dos_firmes=False)).dos_firmes is False
+    assert desde_datos(datos(dos_firmes=True)).dos_firmes is True
+
+
+def test_dos_firmes_es_true_o_false():
+    with pytest.raises(SpecError, match="«dos_firmes» es true o false"):
+        desde_datos(datos(dos_firmes="sí"))
+
+
+def test_dos_firmes_es_de_una_sola_cuerda():
+    with pytest.raises(SpecError, match="«dos_firmes» es de un nudo de una sola cuerda"):
+        desde_datos(datos_dos(dos_firmes=True))
+
+
+def test_dos_firmes_no_va_en_una_plantilla():
+    amarre = yaml.safe_load((SPECS / "amarre-cuadrado.yaml").read_text(encoding="utf-8"))
+    with pytest.raises(SpecError, match="«dos_firmes» no va en un nudo de plantilla"):
+        desde_datos({**amarre, "dos_firmes": True})

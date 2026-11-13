@@ -105,7 +105,11 @@ def girado_y(e: Encuadre | None) -> Encuadre | None:
 
 def nombres(modelo: Modelo, chicote: bool = True) -> tuple[str, ...]:
     """Los nombres que llevan las imágenes, como claves de render/escena.js: «Firme» y
-    «Chicote» con una cuerda; con varias, el de cada cuerda junto a su firme y «Chicote»."""
+    «Chicote» con una cuerda; con varias, el de cada cuerda junto a su firme y «Chicote». Un
+    nudo en medio de la cuerda (`dos_firmes`) lleva «Firme» en los dos extremos y nunca
+    «Chicote». Con `chicote` en falso, como en el error común, solo los firmes."""
+    if modelo.spec.dos_firmes:
+        return ("firme", "otro-firme")
     firmes = tuple(f"cuerda-{c.nombre}" for c in modelo.spec.cuerdas) or ("firme",)
     return firmes + (("chicote",) if chicote else ())
 
@@ -280,17 +284,22 @@ def _dibujar(navegador, base: str, img: Imagen, ancho: int, alto: int) -> bytes:
                   else problemas.append(f"pidió un recurso de fuera: {r.url}"))
         pagina.goto(base + "index.html", wait_until="load")
         pagina.wait_for_function("window.impresionLista === true", timeout=30000)
-        pagina.evaluate("t => window.dibujar(t)", {
-            "modelo": img.escena, "paso": img.indice, "vista": img.vista,
-            "resaltar": img.resaltar, "nombres": list(img.nombres),
-            "reservado": [px(img.reservado_mm[0]), px(img.reservado_mm[1])],
-            "mejoras": list(img.mejoras),
-        })
+        pagina.evaluate("t => window.dibujar(t)", trabajo(img))
         if problemas:
             raise ImpresionError(f"{img.nombre}: el navegador dio errores:\n  " + "\n  ".join(problemas))
         return pagina.screenshot(type="png", animations="disabled", caret="hide")
     finally:
         contexto.close()
+
+
+def trabajo(img: Imagen) -> dict:
+    """Lo que recibe window.dibujar de render/impresion.js para dibujar la imagen."""
+    return {
+        "modelo": img.escena, "paso": img.indice, "vista": img.vista,
+        "resaltar": img.resaltar, "nombres": list(img.nombres),
+        "reservado": [px(img.reservado_mm[0]), px(img.reservado_mm[1])],
+        "mejoras": list(img.mejoras),
+    }
 
 
 # --------------------------------------------------------------------------

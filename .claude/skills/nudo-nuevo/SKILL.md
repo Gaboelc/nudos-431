@@ -28,7 +28,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 ## 1. Lee la fuente
 
 - Recorre las imágenes en orden. De cada una, anota qué cambió desde la anterior: qué tramo se movió y por dónde pasó. Ordénalas por lo que muestran y no por el nombre del archivo: a veces los números no siguen el orden en que se ata.
-- Distingue el firme, la parte larga que no se mueve, del chicote, el extremo que trabaja.
+- Distingue el firme, la parte larga que no se mueve, del chicote, el extremo que trabaja. Un nudo que va en medio de la cuerda tiene dos firmes y ningún chicote.
 - `info.txt` o `fuente.md` dicen para qué sirve, otros nombres y errores comunes. Úsalos para saber qué escribir, no para copiarlo.
 - **Si las imágenes son de otro nudo,** o de otra versión del mismo, detente y pregunta cuál es antes de seguir. Pasó con el ocho doble: las imágenes seguían hasta el ocho de dos gazas, y el del libro es la gaza en ocho, que solo muestran las primeras.
 
@@ -46,13 +46,13 @@ Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una e
 Tres casos que sí caben en lo que hay:
 
 - **Un nudo que la fuente ata en la mano,** como la mariposa alpina: la mano no es un anfitrión. Dibújalo sobre la mesa, con la forma que tiene armado en la foto y en el orden de las vueltas que da la fuente, y dilo en las dudas.
-- **Un nudo en medio de la cuerda, sin chicote libre,** como la mariposa: recórrelo desde uno de los dos firmes, que hace de firme, y el otro termina la cuerda. Mientras el formato no tenga nudos sin chicote, ese otro firme lleva «Chicote» en las imágenes. Dilo en las dudas.
+- **Un nudo en medio de la cuerda, sin chicote libre,** como la mariposa: pon `dos_firmes: true` y recórrelo desde el firme que queda quieto hasta el otro, que es con el que se trabaja. En las imágenes, los dos llevan «Firme». En el texto, el otro nunca se llama «chicote»: llámalo «el otro firme» o, por ejemplo, «el firme de la izquierda» (ver «En medio de la cuerda» en el formato).
 - **Un nudo atado con la cuerda doblada,** como el ocho doble: escribe cada tramo doble dos veces, la ida hacia el seno y el regreso, a medio diámetro a cada lado de la línea central. Cada cruce de la cuerda doble son cuatro cruces de la cuerda. El apretado casi no aprieta la cuerda doble: mira el terminado apretado en la hoja.
 
 ## 3. Decide los pasos
 
 - Un paso por cada cosa nueva que tiene que hacer quien ata. Casi siempre es una imagen de la fuente por paso, pero dos imágenes pueden ser un solo paso, y una imagen que solo aprieta no es un paso.
-- **El primer paso prepara la cuerda, sin cruces** (Gabriel, 12 de noviembre de 2026): dónde va el firme, cuál es el chicote y cuánto chicote dejar.
+- **El primer paso prepara la cuerda, sin cruces** (Gabriel, 12 de noviembre de 2026): dónde va el firme, cuál es el chicote y cuánto chicote dejar. En un nudo en medio de la cuerda, cuál de los dos firmes queda quieto, con cuál trabajas y cuánto dejar de ese lado.
 - La ficha lleva bien hasta 7 pasos: seis en la página izquierda y el resto en la derecha.
 - Anota en `revision/<slug>/pasos.yaml` qué imágenes usaste en cada paso y tus dudas. La hoja de revisión las pone junto a cada paso:
 

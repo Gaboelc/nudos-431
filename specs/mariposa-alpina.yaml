@@ -1,9 +1,9 @@
 # Mariposa alpina. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de referencia
 # solo se usaron para leer la topología (qué tramo pasa por encima en cada cruce).
 #
-# El nudo va en medio de la cuerda, así que tiene dos firmes. La cuerda se recorre desde el
-# que queda a la derecha y quieto («Firme» en las imágenes) y termina en el otro, que es el
-# lado con que se trabaja: en las imágenes lleva «Chicote».
+# El nudo va en medio de la cuerda, así que tiene dos firmes y ningún chicote (`dos_firmes`).
+# La cuerda se recorre desde el que queda a la derecha y quieto y termina en el otro, que es
+# el lado con que se trabaja. En las imágenes, los dos llevan «Firme».
 #
 # La fuente lo ata enrollando la cuerda en la mano. Aquí se ata sobre la mesa, armando
 # tramo por tramo la forma del nudo flojo, en el mismo orden que las vueltas a la mano.
@@ -11,6 +11,7 @@ slug: mariposa-alpina
 nombre: Mariposa alpina
 familia: Gazas
 abok: 1053
+dos_firmes: true
 
 # Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
 usos: >-
@@ -65,7 +66,7 @@ segmentos:
   firme: [[31.20, -19.20], [24.00, -14.82], [18.00, -11.16], [13.44, -8.34], [10.08, -6.24],
           [7.44, -4.63], [5.28, -3.29], [3.84, -2.39], [2.34, -1.45], [0.00, 0.00],
           [-2.34, 1.45], [-3.84, 2.39], [-5.40, 3.36], [-6.48, 4.08]]
-  # El chicote suelto antes de empezar.
+  # El otro firme, suelto antes de empezar.
   recto: [[-7.68, 4.84], [-9.36, 5.88], [-11.04, 6.92]]
   # El lazo de la izquierda: sube, da la vuelta y baja hacia el centro.
   lazo-izq: [[-7.25, 4.8], [-7.55, 5.75], [-7.3, 6.75], [-6.55, 7.5], [-5.5, 7.95],
@@ -106,14 +107,14 @@ pasos:
   - titulo: Prepara la cuerda
     texto: >-
       El nudo va en medio de la cuerda: los dos extremos son firmes. Pon la cuerda en
-      diagonal. El de la derecha queda quieto; con el otro lado, el chicote, trabajas.
-      Deja de ese lado 1,5 m.
+      diagonal. El firme de la derecha queda quieto; con el otro trabajas. Deja de ese
+      lado 1,5 m.
     trazado: [firme, recto]
     secuencia: ""
 
   - titulo: Haz un lazo
     texto: >-
-      Lleva el chicote hacia el fondo, dale la vuelta hacia la derecha y bájalo en
+      Lleva el otro firme hacia el fondo, dale la vuelta hacia la derecha y bájalo en
       diagonal hacia el centro, formando un lazo a la izquierda. Todavía no cruza nada.
     trazado: [firme, lazo-izq, t1, "t1-baja[:2]"]
     secuencia: ""
@@ -121,7 +122,7 @@ pasos:
 
   - titulo: Haz un ojo pequeño
     texto: >-
-      Gira el chicote hacia la izquierda y súbelo cruzando por encima del tramo que
+      Gira el otro firme hacia la izquierda y súbelo cruzando por encima del tramo que
       bajaba. Debajo del cruce queda un ojo pequeño.
     trazado: [firme, lazo-izq, t1, ojo, t2, "lazo-der[:2]"]
     secuencia: "1U 1O"
@@ -129,8 +130,8 @@ pasos:
 
   - titulo: Cruza por encima del firme
     texto: >-
-      Haz otro lazo, ahora a la derecha, y baja el chicote en diagonal hacia tu
-      izquierda, por encima del firme.
+      Haz otro lazo, ahora a la derecha, y baja el otro firme en diagonal hacia tu
+      izquierda, por encima del firme de la derecha.
     trazado: [firme, lazo-izq, t1, ojo, t2, lazo-der, d2]
     secuencia: "2U 1U 1O 2O"
     resaltar: {desde: "lazo-der[1]", hasta: fin}
@@ -138,7 +139,7 @@ pasos:
   - titulo: Baja el ojo
     texto: >-
       Toma el ojo pequeño y bájalo hacia ti, por encima del cruce de abajo, hasta que
-      quede debajo de él. Sus dos lados pasan por encima del firme y del chicote.
+      quede debajo de él. Sus dos lados pasan por encima de los dos firmes.
     trazado: [firme, lazo-izq, t1, t1-baja, pata-der, fondo, pata-izq, t2, lazo-der, d2]
     secuencia: "4U 2U 6U 1U 3O 4O 5O 6O 1O 3U 2O 5U"
     resaltar: {desde: "t1-baja[0]", hasta: "t2[0]"}
@@ -150,7 +151,7 @@ pasos:
     trazado: [firme, lazo-izq, t1, t1-baja, pata-der, rizo-der, gaza, rizo-izq, pata-izq,
               t2, lazo-der, d2]
     secuencia: "4U 7O 2U 9O 6U 1U 3O 4O 7U 8U 9U 10U 5O 6O 1O 3U 8O 2O 10O 5U"
-    # Empieza y termina fuera de los cruces 7 a 10: el firme y el chicote llegan azules y
+    # Empieza y termina fuera de los cruces 7 a 10: los dos firmes llegan azules y
     # se ve que la punta pasa por debajo. Es lo que compara la imagen del error.
     resaltar: {desde: "rizo-der[0]", hasta: "rizo-izq[-1]"}
 

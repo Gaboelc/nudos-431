@@ -28,7 +28,7 @@ ESTADOS = ("borrador", "modelado", "cuerda-ok", "novato-ok", "publicado")
 _CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materiales",
            "verificacion", "precauciones", "alternativas", "seguridad", "encuadre", "anfitrion",
            "cuerdas", "segmentos", "plantilla", "pasos", "error", "terminado", "filtros",
-           "estado"}
+           "estado", "dos_firmes"}
 _CAMPOS_ALTERNATIVA = {"nudo", "cuando"}
 _CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
 _CAMPOS_PASO_PLANTILLA = {"titulo", "texto", "hasta"}
@@ -192,6 +192,9 @@ class Spec:
     seguridad: str | None = None         # solo cuando aplica
     filtros: tuple[Filtro, ...] = ()
     estado: str = "borrador"             # uno de ESTADOS; sin «estado», borrador
+    # Un nudo en medio de la cuerda, como la mariposa alpina: la cuerda termina en otro firme y
+    # no en un chicote, así que en las imágenes su final también lleva «Firme».
+    dos_firmes: bool = False
 
 
 def cargar(slug_o_ruta: str | Path) -> Spec:
@@ -265,6 +268,7 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         seguridad=_texto_opcional(datos, "seguridad", falla),
         filtros=_filtros(datos.get("filtros"), falla),
         estado=_estado(datos.get("estado"), falla),
+        dos_firmes=_dos_firmes(datos.get("dos_firmes"), cuerdas, plantilla, falla),
     )
     return spec if plantilla is None else _con_medidas(spec, plantilla.medidas(), falla)
 
@@ -407,6 +411,20 @@ def _estado(datos, falla) -> str:
         return "borrador"
     if datos not in ESTADOS:
         raise falla(f"«estado» es {', '.join(ESTADOS[:-1])} o {ESTADOS[-1]}")
+    return datos
+
+
+def _dos_firmes(datos, cuerdas: tuple[Cuerda, ...], plantilla, falla) -> bool:
+    if datos is None:
+        return False
+    if not isinstance(datos, bool):
+        raise falla("«dos_firmes» es true o false")
+    if datos and cuerdas:
+        raise falla("por ahora, «dos_firmes» es de un nudo de una sola cuerda: con varias, "
+                    "cada cuerda lleva su nombre junto a su firme")
+    if datos and plantilla is not None:
+        raise falla("«dos_firmes» no va en un nudo de plantilla: la plantilla dice qué "
+                    "nombres lleva cada paso")
     return datos
 
 

@@ -1,6 +1,6 @@
-# Formato de especificación de nudo (v1.1)
+# Formato de especificación de nudo (v1.2)
 
-Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.1 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
+Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.2 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
 Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo, con una cuerda sobre la mesa; `specs/ballestrinque.yaml`, sobre un poste; `specs/vuelta-de-escota.yaml`, con dos cuerdas, y `specs/amarre-cuadrado.yaml`, con una plantilla.
 
@@ -8,7 +8,7 @@ Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo
 
 - El diámetro de la cuerda vale 1. Todas las medidas están en diámetros. En un nudo de varias cuerdas, 1 es el diámetro de la cuerda de siempre y cada cuerda declara su grosor.
 - x crece hacia la derecha, y hacia el fondo de la mesa (lejos de quien ata) y z hacia arriba desde la mesa.
-- La cuerda se recorre desde el firme hasta el chicote. Los primeros puntos del firme quedan fijos. Con varias cuerdas, cada una se recorre desde su firme.
+- La cuerda se recorre desde el firme hasta el chicote. Los primeros puntos del firme quedan fijos. Con varias cuerdas, cada una se recorre desde su firme. Un nudo en medio de la cuerda se recorre desde uno de sus dos firmes hasta el otro (ver «En medio de la cuerda»).
 
 ## Campos
 
@@ -27,6 +27,7 @@ Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo
 | `seguridad` | no | Solo cuando aplica. Si el nudo tiene usos con personas, sigue la postura de seguridad del libro (D1 del plan). |
 | `encuadre` | no | Zona de la mesa que se muestra, como `x: [mín, máx]` e `y: [mín, máx]`. Si falta, se calcula con todos los pasos. |
 | `anfitrion` | no | El objeto alrededor del que se ata el nudo, por ejemplo un poste o los dos palos de un amarre (ver abajo). |
+| `dos_firmes` | no | Solo en un nudo que se ata en medio de la cuerda, como la mariposa alpina: `true` dice que la cuerda termina en otro firme y no en un chicote (ver «En medio de la cuerda»). Sin él, `false`. |
 | `cuerdas` | no | Solo en los nudos de dos o más cuerdas: el nombre, el grosor y el color de cada una (ver abajo). Un nudo de una sola cuerda no lo lleva. |
 | `segmentos` | sí, salvo con `plantilla` | Tramos de cuerda con nombre. Cada uno es una lista de puntos `[x, y]` sobre la mesa, o `{poste: [[x, ángulo], ...]}` sobre el poste. |
 | `plantilla` | no | En un nudo que se genera a partir de unas pocas medidas, como un amarre, el tipo de plantilla y sus medidas (ver abajo). Entonces el nudo no lleva `segmentos`. |
@@ -90,6 +91,15 @@ Es horizontal y va a lo largo de x, con el eje en y = 0, como el poste, pero el 
 Un segmento sobre el poste se escribe `{poste: [[x, ángulo], ...]}`. `x` es la posición a lo largo del eje y `ángulo`, en grados, el giro alrededor del eje: 0 arriba, 90 hacia quien ata, 180 abajo y 270 atrás. El ángulo no vuelve a 0: una vuelta por encima del poste que empieza al frente va, por ejemplo, de 90 a -270, y la siguiente sigue bajando. Así el sentido de cada vuelta queda escrito en los números. No hay capas: qué tramo queda encima en cada cruce lo dice la secuencia, igual que sobre la mesa.
 
 Un paso puede pasar de la mesa al poste y volver. Conviene que la cuerda no suba por el frente del poste para bajar enseguida a la mesa: esa esquina no existe en la cuerda real y la relajación no la resuelve.
+
+## En medio de la cuerda
+
+Algunos nudos se atan en medio de la cuerda, sin usar sus extremos, como la mariposa alpina. Tienen dos firmes y ningún chicote. Se declaran con `dos_firmes: true`, y la cuerda se recorre desde uno de los dos firmes, normalmente el que queda quieto, hasta el otro, que es con el que se trabaja.
+
+- En las imágenes y en el visor, los dos extremos llevan «Firme» y ninguno lleva «Chicote». El primero va donde la cuerda entra al encuadre y el otro donde sale o, si no sale, junto a su final. Las imágenes del error común también llevan los dos.
+- Solo cambian los nombres. La cuerda, los cruces, el remate del final y el nudo apretado son los de siempre: después de su último cruce, el otro firme es la cola, que el nudo arrastra al apretarse (ver «El nudo apretado»).
+- En el texto, el otro firme no se llama «chicote». Puede ser «el otro firme» o «el firme de la izquierda».
+- Por ahora, solo un nudo de una sola cuerda y sin plantilla lleva `dos_firmes`. Con varias cuerdas, cada una ya lleva su nombre junto a su firme, y en un nudo de plantilla es la plantilla la que dice qué nombres lleva cada paso.
 
 ## Varias cuerdas
 
@@ -332,7 +342,7 @@ Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la par
 
 ## Versiones
 
-Este es el formato v1.1. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.2. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -361,3 +371,4 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja`) todavía no dib
 
 - **v1** (11 de noviembre de 2026; Gabriel lo aprobó en el Punto de control B, con la cabeza de turco provisional): el formato de los cuatro nudos del piloto. Desde v0, que era el del as de guía en T1, se agregaron el error común y el nudo terminado (T3), el texto de la ficha y `filtros` (T4), el anfitrión y el poste (T5), las varias cuerdas (T6), `alternativas` y `precauciones` (T6b), y la cruz, las plantillas, `hasta` y el error con `variante` y `otros` (T7).
 - **v1.1** (11 de noviembre de 2026): el campo `estado` (T10). Es un cambio compatible: sin él, una especificación está en `borrador`.
+- **v1.2** (12 de noviembre de 2026): el campo `dos_firmes`, para un nudo en medio de la cuerda, como la mariposa alpina (fase 4, tanda 1). Es un cambio compatible: sin él, la cuerda termina en un chicote, como antes, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.

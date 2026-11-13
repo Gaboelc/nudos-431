@@ -55,7 +55,10 @@ def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado]
     resaltado (el nudo terminado), la última que se movió.
 
     En un nudo de plantilla se ven los dos extremos de la cuerda, y los dos llevan remate
-    («dos_remates»). Ver _paso_de_plantilla."""
+    («dos_remates»). Ver _paso_de_plantilla.
+
+    En un nudo en medio de la cuerda («dos_firmes»), la cuerda termina en otro firme, que
+    también lleva «Firme», y ningún extremo lleva «Chicote»."""
     s = modelo.spec
     mueve = cuerda_que_se_mueve(modelo.pasos)
     pasos = []
@@ -80,6 +83,8 @@ def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado]
     }
     if s.plantilla is not None:
         datos["dos_remates"] = True
+    if s.dos_firmes:
+        datos["dos_firmes"] = True
     if s.cuerdas:
         datos["cuerdas"] = [{"nombre": c.nombre, "etiqueta": etiqueta(c), "grosor": c.grosor,
                              "color": c.color} for c in s.cuerdas]
