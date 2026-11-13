@@ -158,6 +158,9 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [ ] Arnés de hombre (13 nov: borrador en la rama `claude/suspicious-boyd-67faff`, d73fcf5: 5 pasos y 7 cruces, sin fallas, con `dos_firmes`; la ficha cabe. La fuente es una sola imagen con cinco dibujos, así que el filtro 1 importa más; ABOK 153 sin confirmar. Gabriel aprobó la hoja: en `main` y en `modelado`, la ficha cabe. Filtro 1 aprobado el 13 nov, ficha eb656c7; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
 - [ ] Silla de bombero (requiere D1) (13 nov: borrador en la rama `claude/tanda1-silla-c99584`, 36e68d4: 7 pasos y 18 cruces, sin fallas, con `dos_firmes`; la ficha cabe; apretado, baja de 187,3 a 174,5 diámetros. Son 7 pasos y no 6, porque cada paso resalta un solo tramo; el 5 y el 6 se pueden juntar. ABOK 1100 sin confirmar. Gabriel aprobó la hoja: en `main` y en `modelado`, la ficha cabe, y su seguridad dice que se practica sin carga o con un objeto (D1). Filtro 1 aprobado el 13 nov, ficha eb656c7; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
 - [ ] Punto de control de la tanda 1
+  - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (13 nov; el filtro 2 sigue en pausa)
+  - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (13 nov: 398 pruebas)
+  - [ ] Revisión con Gabriel (ver «Punto de control de la tanda 1» en la fase 4 del plan)
 
 ### Tanda 2: libres, dos cuerdas o dos extremos
 - [ ] Rizo
