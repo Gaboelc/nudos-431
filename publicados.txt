@@ -6,3 +6,7 @@ as-de-guia
 ballestrinque
 vuelta-de-escota
 amarre-cuadrado
+simple
+ocho
+ocho-doble
+mariposa-alpina
