@@ -1,0 +1,180 @@
+# Arnés de hombre. Borrador de la skill nudo-nuevo. Trazado propio: el dibujo de referencia
+# solo se usó para leer la topología (qué tramo pasa por encima en cada cruce).
+#
+# El nudo va en medio de la cuerda, así que tiene dos firmes y ningún chicote (`dos_firmes`).
+# La cuerda se recorre desde el que llega por la derecha y queda quieto, y termina en el
+# otro, que es con el que se trabaja. En las imágenes, los dos llevan «Firme».
+#
+# Se ata como en la fuente: una vuelta, el otro firme por detrás de ella, el lado derecho de
+# la vuelta doblado por debajo del otro firme y sacado por encima del lado izquierdo, que es
+# la gaza. Al sacarla, la vuelta se cierra alrededor de las patas de la gaza.
+slug: arnes-de-hombre
+nombre: Arnés de hombre
+familia: Gazas
+abok: 153
+dos_firmes: true
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Forma una gaza fija en medio de la cuerda, sin usar los extremos, y se ata y se desata
+  rápido. Sirve de asa para tirar de una cuerda con la mano o el hombro, por ejemplo entre
+  varias personas, o para enganchar algo a una cuerda tendida. Puedes hacer varias a lo
+  largo de la misma cuerda.
+materiales: >-
+  Una cuerda de unos 2 m: el nudo va en el medio. Para aprender, usa una de 6 a 10 mm de
+  grosor que no sea rígida.
+verificacion:
+  - Los dos firmes salen del nudo y la gaza sale hacia un costado.
+  - Las dos patas de la gaza pasan por encima de la vuelta y por debajo del otro firme.
+  - Si tiras de la gaza, no se cierra ni se corre.
+  - La gaza quedó del tamaño que necesitas.
+seguridad: >-
+  Aunque se llama arnés, no es para sostener a una persona: si la gaza deja de tirar, el
+  nudo se corre. En las actividades del grupo no lo uses para sostener, subir ni bajar a
+  nadie. Esa práctica se hace únicamente con instructor y equipo certificados.
+# Texto propio: los cuidados que ya dice «seguridad» no se repiten aquí.
+precauciones:
+  - Aguanta mientras la gaza tira. Si tiras de los firmes con la gaza suelta, el nudo se deforma y se puede correr.
+  - Apriétalo bien antes de cargarlo, sosteniendo la gaza.
+  - El tamaño de la gaza sale del tamaño de la vuelta. Para una gaza más grande, empieza con una vuelta más grande.
+alternativas:
+  - nudo: Mariposa alpina
+    cuando: Cuando la gaza tiene que aguantar mucho o tirones hacia cualquier lado. Es más segura, aunque tarda más en atarse.
+  - nudo: As de guía
+    cuando: Cuando necesitas la gaza en el extremo de la cuerda y no en el medio.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+encuadre:
+  x: [-10.8, 5.8]
+  y: [-7.0, 7.2]
+
+# Tallado, como el nudo armado del dibujo antes de apretarlo: la vuelta del cuerpo y los dos
+# rizos van cerrados y solo la gaza y los firmes quedan grandes. Los puntos salen de rectas y
+# arcos de radio 1,45 a 1,9, cada medio diámetro: con puntos más separados la curva se
+# quiebra un poco donde una recta se une con un arco, y al relajar la cuerda esas curvas se
+# encogen y se doblan sobre sí mismas.
+segmentos:
+  # El firme llega desde la derecha y sigue hacia la izquierda. Pasa por los cruces 1 y 2.
+  firme: [[24.0, 3.5], [17.0, 3.5], [11.0, 3.5], [6.5, 3.5], [4.4, 3.5], [3.32, 3.5],
+          [2.24, 3.5], [1.16, 3.5], [0.08, 3.5], [-1.0, 3.5]]
+  # El otro firme, estirado antes de empezar (paso 1).
+  recto: [[-2.4, 3.5], [-5.6, 3.5], [-9.2, 3.5], [-13.0, 3.5], [-17.0, 3.5]]
+  # La vuelta (pasos 2 a 4): baja por la izquierda y pasa por abajo hacia la derecha.
+  lazo: [[-1.42, 3.5], [-1.84, 3.5], [-2.26, 3.5], [-2.68, 3.5], [-3.1, 3.5], [-3.59, 3.44],
+         [-4.05, 3.25], [-4.44, 2.94], [-4.75, 2.55], [-4.94, 2.09], [-5.0, 1.6], [-5.0, 1.11],
+         [-5.0, 0.62], [-5.0, 0.14], [-5.0, -0.35], [-5.0, -0.84], [-5.0, -1.33],
+         [-5.0, -1.81], [-5.0, -2.3], [-4.94, -2.79], [-4.75, -3.25], [-4.44, -3.64],
+         [-4.05, -3.95], [-3.59, -4.14], [-3.1, -4.2], [-2.66, -4.2], [-2.21, -4.2],
+         [-1.77, -4.2], [-1.33, -4.2], [-0.89, -4.2], [-0.44, -4.2], [0.0, -4.2]]
+  # El lado derecho de la vuelta, que sube hasta el cruce 1 (pasos 2 y 3).
+  lado-der: [[0.47, -4.2], [0.93, -4.2], [1.4, -4.2], [1.81, -4.15], [2.2, -3.99],
+             [2.53, -3.73], [2.79, -3.4], [2.95, -3.01], [3.0, -2.6], [3.0, -2.11],
+             [3.0, -1.63], [3.0, -1.14], [3.0, -0.65], [3.0, -0.17], [3.0, 0.32], [3.0, 0.8],
+             [3.0, 1.29], [3.0, 1.78], [3.0, 2.26], [3.0, 2.75]]
+  # Pasa por encima del firme y sigue hacia el fondo y la izquierda (paso 2).
+  sube: [[3.0, 3.5], [3.0, 4.3], [2.75, 5.2], [2.1, 6.0], [1.1, 6.6], [-0.3, 7.2], [-2.0, 7.9],
+         [-4.0, 8.7], [-6.5, 9.6]]
+  # Pasa por encima del firme en el cruce 1 y se dobla hacia la izquierda (pasos 3 a 5).
+  rizo: [[3.0, 3.5], [3.0, 3.9], [2.93, 4.36], [2.71, 4.78], [2.38, 5.11], [1.96, 5.33],
+         [1.5, 5.4], [1.04, 5.33], [0.62, 5.11], [0.29, 4.78], [0.07, 4.36], [0.0, 3.9]]
+  # El otro firme baja por debajo de la vuelta y sale hacia ti: cruces 2, 5, 4 y 3. Donde
+  # pasa por debajo de un tramo y por encima del siguiente, esos dos van a 2,3 diámetros o
+  # más, para que la cuerda alcance a subir.
+  baja: [[0.0, 3.5], [0.0, 2.72], [0.0, 1.94], [0.0, 1.15], [0.0, 0.37], [0.0, -0.41],
+         [0.0, -1.19], [0.0, -1.97], [0.0, -2.75], [0.0, -3.54], [0.0, -4.32], [0.0, -5.1],
+         [-0.25, -6.3], [-0.7, -7.7], [-1.4, -9.4], [-2.3, -11.5], [-3.3, -14.0]]
+  # El lado derecho doblado por debajo del otro firme (pasos 4 y 5): el rizo de abajo, del
+  # cruce 3 al 4.
+  fondo: [[0.47, -4.2], [0.93, -4.2], [1.4, -4.2], [1.86, -4.13], [2.28, -3.91], [2.61, -3.58],
+          [2.83, -3.16], [2.9, -2.7], [2.83, -2.24], [2.61, -1.82], [2.28, -1.49],
+          [1.86, -1.27], [1.4, -1.2], [0.93, -1.2], [0.47, -1.2]]
+  # El seno, dentro de la vuelta (paso 4): pasa por debajo del otro firme en los cruces 4 y 5.
+  # Sus patas van a 2,4 diámetros en los cruces y la punta tiene radio 1,45: más cerrado, al
+  # relajar la cuerda la punta se encoge y se dobla sobre sí misma.
+  seno: [[0.0, -1.2], [-0.45, -1.26], [-0.91, -1.32], [-1.36, -1.38], [-1.81, -1.44],
+         [-2.3, -1.42], [-2.76, -1.24], [-3.13, -0.91], [-3.37, -0.48], [-3.45, 0.0],
+         [-3.37, 0.48], [-3.13, 0.91], [-2.76, 1.24], [-2.3, 1.42], [-1.81, 1.44],
+         [-1.36, 1.38], [-0.91, 1.32], [-0.45, 1.26], [0.0, 1.2]]
+  # Del cruce 5 sube hacia el cruce 1 (pasos 4 y 5).
+  rizo-ini: [[0.4, 1.2], [0.8, 1.2], [1.2, 1.2], [1.67, 1.26], [2.1, 1.44], [2.47, 1.73],
+             [2.76, 2.1], [2.94, 2.53], [3.0, 3.0]]
+  # La vuelta cerrada alrededor de las patas de la gaza (paso 5): los cruces 7, 6 y 3.
+  lazo-chico: [[-1.41, 3.45], [-1.8, 3.29], [-2.13, 3.03], [-2.39, 2.7], [-2.55, 2.31],
+               [-2.6, 1.9], [-2.6, 1.4], [-2.6, 0.9], [-2.6, 0.4], [-2.6, -0.1], [-2.6, -0.6],
+               [-2.6, -1.1], [-2.6, -1.6], [-2.6, -2.1], [-2.6, -2.6], [-2.55, -3.01],
+               [-2.39, -3.4], [-2.13, -3.73], [-1.8, -3.99], [-1.41, -4.15], [-1.0, -4.2],
+               [-0.5, -4.2], [0.0, -4.2]]
+  # La gaza sacada hacia la izquierda (paso 5): sus patas pasan por encima de la vuelta en
+  # los cruces 6 y 7.
+  gaza: [[0.0, -1.2], [-0.45, -1.2], [-0.9, -1.2], [-1.35, -1.2], [-1.8, -1.2], [-2.25, -1.2],
+         [-2.7, -1.2], [-3.15, -1.2], [-3.6, -1.2], [-4.42, -1.3], [-5.24, -1.4],
+         [-6.06, -1.49], [-6.88, -1.59], [-7.7, -1.69], [-8.18, -1.68], [-8.63, -1.53],
+         [-9.03, -1.27], [-9.34, -0.91], [-9.53, -0.47], [-9.6, 0.0], [-9.53, 0.47],
+         [-9.34, 0.91], [-9.03, 1.27], [-8.63, 1.53], [-8.18, 1.68], [-7.7, 1.69],
+         [-6.88, 1.59], [-6.06, 1.49], [-5.24, 1.4], [-4.42, 1.3], [-3.6, 1.2], [-3.15, 1.2],
+         [-2.7, 1.2], [-2.25, 1.2], [-1.8, 1.2], [-1.35, 1.2], [-0.9, 1.2], [-0.45, 1.2],
+         [0.0, 1.2]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      El nudo va en medio de la cuerda: los dos extremos son firmes. Estira la cuerda de
+      derecha a izquierda. El firme de la derecha queda quieto; con el otro trabajas. Deja
+      de ese lado 1 m.
+    trazado: [firme, recto]
+    secuencia: ""
+
+  - titulo: Haz una vuelta
+    texto: >-
+      Lleva el otro firme hacia ti, después a la derecha, y súbelo hacia el fondo por encima
+      del firme. Queda una vuelta.
+    trazado: [firme, lazo, lado-der, sube]
+    secuencia: "1U 1O"
+    resaltar: {desde: "lazo[0]", hasta: fin}
+
+  - titulo: Pásalo por detrás
+    texto: >-
+      Dobla el otro firme hacia la izquierda y bájalo hacia ti por debajo de la vuelta:
+      pasa por debajo del tramo de arriba y del de abajo.
+    trazado: [firme, lazo, lado-der, rizo, baja]
+    secuencia: "1U 2O 3O 1O 2U 3U"
+    resaltar: {desde: "rizo[1]", hasta: fin}
+
+  - titulo: Dobla el lado derecho
+    texto: >-
+      Toma el lado derecho de la vuelta y llévalo doblado hacia la izquierda, por debajo
+      del otro firme. Queda un seno dentro de la vuelta.
+    trazado: [firme, lazo, fondo, seno, rizo-ini, rizo, baja]
+    secuencia: "1U 2O 3O 4U 5U 1O 2U 5O 4O 3U"
+    # Empieza y termina fuera de los cruces 4 y 5: el otro firme queda azul y se ve que el
+    # seno pasa por debajo. Es lo que compara la imagen del error.
+    resaltar: {desde: "fondo[0]", hasta: "rizo-ini[-1]"}
+
+  - titulo: Saca la gaza
+    texto: >-
+      Pasa la punta del seno por encima del lado izquierdo de la vuelta y sácala hacia la
+      izquierda: es la gaza. Sostenla y tira de los dos firmes a la vez, de a poco, hasta
+      que el nudo quede firme.
+    trazado: [firme, lazo-chico, fondo, gaza, rizo-ini, rizo, baja]
+    secuencia: "1U 2O 7U 6U 3O 4U 6O 7O 5U 1O 2U 5O 4O 3U"
+    resaltar: {desde: "gaza[1]", hasta: "gaza[-2]"}
+
+# El error más común: pasar el seno por encima del otro firme y no por debajo. Es el paso 4
+# con los cruces 4 y 5 invertidos: el seno queda encima de todo y no hay nudo.
+error:
+  paso: 4
+  invierte: [4, 5]
+  titulo: El seno pasó por encima
+  texto: >-
+    Pasaste el seno por encima del otro firme, y no por debajo. Así no queda nudo: cuando
+    sacas la gaza, se suelta. Regrésalo y pásalo por debajo.
+  encuadre:
+    x: [-6.0, 4.2]
+    y: [-5.2, 6.4]
+  otros:
+    - titulo: Apretarlo con la gaza suelta
+      texto: >-
+        Si tiras de los firmes sin sostener la gaza, el nudo se tuerce y la gaza se achica
+        o se suelta. Sostén la gaza y tira de los dos firmes a la vez.
