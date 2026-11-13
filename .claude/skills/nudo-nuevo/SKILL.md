@@ -92,10 +92,12 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
   - **Ninguna curva del trazado baja de radio 1,2,** tampoco donde una recta se une con un arco, y mejor 1,5. Con menos, el relajado encoge la cuerda en esa curva hasta que colapsa, y la falla sale como estiramiento, a veces lejos de la curva que la causa. Lo encontraron los borradores del as de guía español, la margarita y el arnés de hombre (13 nov): los arcos de radio 1,5 a 1,9, con puntos cada medio diámetro, ya no fallan.
   - Donde una cuerda se teje entre dos tramos (pasa por debajo de uno y por encima del siguiente), esos dos tramos van a 2,3 diámetros o más: la que se teje necesita lugar para subir y bajar.
   - Cada paso agrega lo suyo junto a lo que ya está, sin agrandar el resto. Lo que se mueve en un paso puede ir un poco más abierto, para que se vea por dónde pasa.
+  - **El borde del apretado:** el apretado acorta la cuerda a menos de 6 diámetros de los cruces. La punta de una gaza tiene que quedar entera dentro de esa zona o bien lejos, con el borde en un tramo recto: si el borde cae en la punta, el apretado se detiene en las primeras rondas.
+  - Un nudo muy ancho sale chico en las imágenes de la ficha. Si se puede elegir hacia dónde van las gazas sin alejarse de la fuente, que el nudo quede más compacto.
   - Compara el último paso con la foto del nudo armado: tienen que parecerse. El apretado de la ficha solo acorta la cuerda cerca de los cruces, así que un nudo dibujado suelto también queda suelto en la ficha.
 - **Las uniones entre pasos:** cuando dos pasos comparten un segmento y terminan distinto, cada pieza propia termina en su propio último punto. Si el segmento compartido y la pieza de un paso se traslapan, la cuerda se estira justo en la unión.
 - **Dibuja el nudo como en la foto, no su imagen en espejo.** El espejo da la misma secuencia y es el nudo al revés, y ninguna prueba lo nota. Comprueba que la primera vuelta gire hacia el mismo lado que en la foto.
-- Cada paso resalta lo que se mueve en él (`resaltar`).
+- Cada paso resalta lo que se mueve en él (`resaltar`), y el resaltado es un solo tramo de la cuerda. Si un paso mueve dos tramos separados, como los dos firmes de un nudo en medio de la cuerda, pártelo en dos pasos.
 - Sigue los consejos del formato: el cruce de una cuerda gruesa sobre una delgada va en diagonal, y sobre un poste la cuerda no sube por el frente para bajar enseguida a la mesa.
 - Pon un `encuadre` que muestre el nudo entero en todos los pasos.
 
@@ -112,7 +114,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 - **Separación:** dos tramos quedan muy cerca; sepáralos en ese punto.
 - **Curvatura:** una curva es muy cerrada; ábrela o agrégale puntos.
 - **Estiramiento:** al relajar, la cuerda se estiró o se encogió más de 2 % en algún punto, casi siempre porque tuvo que separar tramos muy apretados. Abre esa zona o dale más cuerda.
-- La separación, la curvatura y el estiramiento dicen cerca de qué punto de la mesa ocurren. El nudo terminado por detrás se construye y se comprueba como un paso más, y sus fallas también cuentan: la hoja de revisión lo dibuja al final.
+- La separación, la curvatura y el estiramiento dicen cerca de qué punto de la mesa ocurren. El nudo terminado por detrás se construye y se comprueba como un paso más, y sus fallas también cuentan: la hoja de revisión lo dibuja al final. Suele ser más frágil que los pasos: en un cote, el lado que pasa por encima de las patas no puede ir pegado al cuerpo.
 - **Un cruce que salta:** la misma etiqueta quedó en otro lugar en el paso siguiente; probablemente es otro cruce. Un cruce no puede moverse más de 2,5 diámetros de un paso al siguiente, así que, si la fuente arma un lazo a un lado y después lo lleva a su lugar, dibuja el lazo cerca de donde termina.
 
 `python -m nudos hoja <slug>` y `--vista 55` dibujan todos los pasos en una imagen, para mirar rápido. Si después de varios intentos queda una falla, detente y di cuál es y qué probaste.
