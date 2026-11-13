@@ -44,7 +44,7 @@ alternativas:
     cuando: Cuando necesitas la gaza en el extremo de la cuerda y no en el medio.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 encuadre:
   x: [-10.8, 5.8]

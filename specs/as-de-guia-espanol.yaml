@@ -52,7 +52,7 @@ alternativas:
     cuando: Cuando necesitas ajustar el tamaño de cada gaza antes de fijarla.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 encuadre:
   x: [-14.5, 14.5]

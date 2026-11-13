@@ -17,7 +17,7 @@ Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo
 | `slug` | sí | Identificador permanente, con minúsculas, números y guiones. Es igual al nombre del archivo. Cuando su QR se imprime, ya no cambia. |
 | `nombre` | sí | Nombre del nudo en la ficha. |
 | `otros_nombres` | no | Lista de otros nombres, cuando una sección lo llama distinto. La ficha los pone bajo el nombre. |
-| `familia` | sí | Familia del índice: De tope, De unión, Gazas, De sujeción, Autoblocantes, Corredizos, De ligadura, Amarres… |
+| `familia` | sí | Familia del índice: De tope, De unión, Gazas, De sujeción, Autoblocantes, Corredizos, De ligadura, Amarres, Decorativos, De acortamiento… |
 | `abok` | no | Número en *The Ashley Book of Knots*. |
 | `usos` | para la ficha | Para qué sirve. |
 | `materiales` | para la ficha | Qué cuerda y qué objetos hacen falta. |

@@ -46,7 +46,7 @@ alternativas:
     cuando: Cuando tienes un extremo libre y quieres ajustar el largo de una cuerda tendida, como el viento de una carpa.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 encuadre:
   x: [-13.3, 13.3]
