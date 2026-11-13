@@ -28,7 +28,14 @@ alternativas:
     cuando: Cuando quieres que la punta de la cuerda no se deshilache nunca, sin un nudo que estorbe.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-12
+    resultado: aprobado
+    ficha: c2627a8
 
 encuadre:
   x: [-6.6, 6.6]

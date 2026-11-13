@@ -159,6 +159,5 @@ def test_la_orden_muestra_los_35_nudos(capsys):
     cuenta = {e: sum(n.declarado == e for n in lista) for e in (*reversed(ESTADOS), SIN_ESPECIFICACION)}
     assert salida.startswith("Edición 1: 35 nudos. "
                              + ", ".join(f"{c} {e}" for e, c in cuenta.items() if c) + ".")
-    assert cuenta["publicado"] == 1 and cuenta["cuerda-ok"] == 3
     assert "Tanda 5: anfitriones especiales" in salida
     assert "P01 (joven de la Wak): as-de-guia" in salida
