@@ -69,6 +69,8 @@ Tres casos que sí caben en lo que hay:
 
   La duda `general` va arriba de todo en la hoja; las demás, junto a su paso o al error.
 
+  Si la fuente es una sola imagen con varios dibujos, enlaza la imagen entera en cada paso y di en las dudas qué dibujo es cada paso.
+
 ## 4. Lee los cruces
 
 Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal leído que se repite igual en todos los pasos pasa todas las pruebas. Lee cada cruce con cuidado.
@@ -86,7 +88,9 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 - Empieza por el último paso: dibuja la forma entera, tallada (ver abajo). Después arma los pasos anteriores reusando sus segmentos, para que un tramo que no cambia se escriba una sola vez.
 - **El nudo va tallado** (Gabriel, 12 de noviembre de 2026). Un nudo suelto, con los lazos abiertos y los tramos separados, confunde: parece un diagrama, no el nudo. Dibújalo como se ve en la foto del nudo armado, antes de apretarlo:
   - Donde en la cuerda real dos tramos se tocan, van a 1,1 o 1,3 diámetros entre sus ejes, no más. La comprobación pide al menos 0,97.
-  - Las vueltas del cuerpo del nudo van cerradas, con un radio de 1 a 2 diámetros y sin espacio de sobra adentro. Solo la gaza, el firme y el chicote van grandes.
+  - Las vueltas del cuerpo del nudo van cerradas, con un radio de 1,5 a 2 diámetros y sin espacio de sobra adentro. Solo la gaza, el firme y el chicote van grandes.
+  - **Ninguna curva del trazado baja de radio 1,2,** tampoco donde una recta se une con un arco, y mejor 1,5. Con menos, el relajado encoge la cuerda en esa curva hasta que colapsa, y la falla sale como estiramiento, a veces lejos de la curva que la causa. Lo encontraron los borradores del as de guía español, la margarita y el arnés de hombre (13 nov): los arcos de radio 1,5 a 1,9, con puntos cada medio diámetro, ya no fallan.
+  - Donde una cuerda se teje entre dos tramos (pasa por debajo de uno y por encima del siguiente), esos dos tramos van a 2,3 diámetros o más: la que se teje necesita lugar para subir y bajar.
   - Cada paso agrega lo suyo junto a lo que ya está, sin agrandar el resto. Lo que se mueve en un paso puede ir un poco más abierto, para que se vea por dónde pasa.
   - Compara el último paso con la foto del nudo armado: tienen que parecerse. El apretado de la ficha solo acorta la cuerda cerca de los cruces, así que un nudo dibujado suelto también queda suelto en la ficha.
 - **Las uniones entre pasos:** cuando dos pasos comparten un segmento y terminan distinto, cada pieza propia termina en su propio último punto. Si el segmento compartido y la pieza de un paso se traslapan, la cuerda se estira justo en la unión.
@@ -98,7 +102,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 ## 6. Error común y texto de la ficha
 
 - **El error común** es el más frecuente al atarlo, con los cruces que quedan al revés (`invierte`). Si la fuente lo dice, es ese. Si no lo dice, elige el que más probablemente comete quien lo ata por primera vez, casi siempre un cruce al revés en el paso que define el nudo, y dilo en las dudas. Su resaltado empieza o termina fuera del cruce invertido, para que se vea cuál va encima. Los errores que no se ven en una imagen van en `otros`.
-- **El texto:** `usos`, `materiales`, `verificacion` (criterios que se comprueban mirando o tirando del nudo), `precauciones`, `alternativas` (con el nombre de su ficha si el otro nudo está en el libro), `seguridad` cuando aplica y `otros_nombres` cuando una sección lo llama distinto. La familia es una de las que ya usan los demás nudos, salvo que no encaje en ninguna.
+- **El texto:** `usos`, `materiales`, `verificacion` (criterios que se comprueban mirando o tirando del nudo), `precauciones`, `alternativas` (con el nombre de su ficha si el otro nudo está en el libro), `seguridad` cuando aplica y `otros_nombres` cuando una sección lo llama distinto. La familia es una de las que ya usan los demás nudos. Si no encaja en ninguna, propón una nueva y dilo en el informe, porque es para el índice del libro y la decide Gabriel.
 
 ## 7. Construye y corrige
 
@@ -109,7 +113,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 - **Curvatura:** una curva es muy cerrada; ábrela o agrégale puntos.
 - **Estiramiento:** al relajar, la cuerda se estiró o se encogió más de 2 % en algún punto, casi siempre porque tuvo que separar tramos muy apretados. Abre esa zona o dale más cuerda.
 - La separación, la curvatura y el estiramiento dicen cerca de qué punto de la mesa ocurren. El nudo terminado por detrás se construye y se comprueba como un paso más, y sus fallas también cuentan: la hoja de revisión lo dibuja al final.
-- **Un cruce que salta:** la misma etiqueta quedó en otro lugar en el paso siguiente; probablemente es otro cruce.
+- **Un cruce que salta:** la misma etiqueta quedó en otro lugar en el paso siguiente; probablemente es otro cruce. Un cruce no puede moverse más de 2,5 diámetros de un paso al siguiente, así que, si la fuente arma un lazo a un lado y después lo lleva a su lugar, dibuja el lazo cerca de donde termina.
 
 `python -m nudos hoja <slug>` y `--vista 55` dibujan todos los pasos en una imagen, para mirar rápido. Si después de varios intentos queda una falla, detente y di cuál es y qué probaste.
 
