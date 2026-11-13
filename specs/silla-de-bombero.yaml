@@ -55,7 +55,7 @@ alternativas:
     cuando: Cuando te basta una sola gaza en medio de la cuerda.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 encuadre:
   x: [-17.5, 17.5]
