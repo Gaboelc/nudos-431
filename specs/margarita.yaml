@@ -1,0 +1,207 @@
+# Margarita. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de referencia solo se
+# usaron para leer la topología (qué tramo pasa por encima en cada cruce).
+#
+# El nudo va en medio de la cuerda, así que tiene dos firmes y ningún chicote (`dos_firmes`).
+# La cuerda se dobla en tres tramos juntos y cada seno de las puntas queda trabado por una
+# vuelta del firme de su lado. La cuerda se recorre desde el firme de la derecha hasta el de
+# la izquierda. En las fotos el nudo es simétrico si se gira media vuelta sobre la mesa, así
+# que la mitad izquierda es la derecha girada: (x, y) -> (-x, -y).
+#
+# Cruces: 1 es el de la vuelta de la izquierda y 2 a 5, los de esa vuelta con los dos tramos
+# de su seno; 6 es el de la vuelta de la derecha y 7 a 10, los de esa vuelta con su seno. En
+# cada vuelta, la cuerda que viene de los tres tramos pasa por encima de la que sigue hacia
+# el firme, y la vuelta pasa por encima de los dos tramos del seno del lado del nudo y por
+# debajo del lado de la punta.
+slug: margarita
+nombre: Margarita
+familia: De acortamiento
+abok: 1152
+dos_firmes: true
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Acorta una cuerda en su parte media, sin cortarla y sin usar sus extremos: la cuerda se
+  dobla en tres y cada punta queda trabada por una vuelta. Sirve cuando los dos extremos
+  están amarrados o no los alcanzas, por ejemplo para quitarle lo que sobra a un cordel
+  tendido, y se deshace en cuanto lo aflojas.
+materiales: >-
+  Una cuerda de unos 2 m: la margarita va en el medio. Para aprender, usa una de 6 a 10 mm
+  de grosor que no sea rígida.
+verificacion:
+  - Ves tres tramos juntos y paralelos, con un seno en cada punta.
+  - Cada seno sale por la vuelta del firme de su lado, y su punta sobresale de la vuelta.
+  - En cada vuelta, el firme sale por debajo del cruce, apretado contra los tramos del seno.
+  - Si tiras de los dos firmes, las vueltas se aprietan sobre los senos y nada se corre.
+seguridad: >-
+  Nunca uses la margarita en una cuerda que sostenga, suba o baje a una persona, ni en una
+  que pueda dejar caer algo sobre alguien si se suelta.
+precauciones:
+  - Solo aguanta mientras la cuerda está tensa. Si se afloja o se sacude, las vueltas se salen de los senos y el nudo se deshace solo.
+  - Con cuerdas lisas o resbalosas, como las de nailon, se puede soltar aunque esté tensa. Pruébala antes de confiar en ella.
+  - Si tiene que quedar puesta mucho tiempo, amarra la punta de cada seno a los tramos de al lado con un cordel.
+alternativas:
+  - nudo: Mariposa alpina
+    cuando: Cuando la cuerda va a cargar o a sacudirse. También acorta la cuerda, con su gaza, y no se suelta al aflojarla.
+  - nudo: Tensor ajustable
+    cuando: Cuando tienes un extremo libre y quieres ajustar el largo de una cuerda tendida, como el viento de una carpa.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+encuadre:
+  x: [-13.3, 13.3]
+  y: [-6.8, 6.8]
+
+# Tallado, como el nudo armado de la foto antes de apretarlo: los tres tramos se tocan, a 1,25
+# diámetros entre sus ejes, y cada vuelta va cerrada sobre los dos tramos de su seno. Solo los
+# senos de las puntas y los firmes van grandes.
+segmentos:
+  # El firme de la derecha, lejos del nudo.
+  firme-der: [[22.00, 1.30], [17.00, 1.30], [12.80, 1.30]]
+  # Antes de doblarla (paso 1): el resto de la cuerda, estirado.
+  recta: [[10.50, 1.28], [5.00, 1.25], [0.00, 1.25], [-5.00, 1.25], [-10.50, 1.28],
+          [-16.00, 1.30], [-22.00, 1.30]]
+  # El tramo de arriba por la zona de la derecha, antes de hacer su vuelta (pasos 2 a 4).
+  t-der-recto: [[9.30, 1.28], [7.00, 1.25], [4.60, 1.25], [2.20, 1.25]]
+  # El paso 5: el firme de la derecha y su vuelta, junto al seno y todavía sin pasarlo. Es la
+  # vuelta del paso 3 girada media vuelta: la cuerda que viene del nudo pasa por encima del
+  # cruce 6 y la que sigue al firme, por debajo.
+  firme-der-suelto: [[20.80, 1.30], [17.60, 1.90], [14.30, 3.70], [11.30, 5.30], [8.30, 5.90]]
+  vuelta-der-suelta: [[6.30, 5.85], [5.30, 5.55], [4.71, 4.90], [4.40, 4.05], [4.09, 3.21],
+                      [4.02, 2.41], [4.36, 1.68], [5.02, 1.22], [5.82, 1.15], [6.55, 1.49],
+                      [7.01, 2.15], [7.08, 2.95], [6.74, 3.68], [6.08, 4.14], [5.28, 4.21],
+                      [4.40, 4.05], [3.42, 3.88], [2.53, 3.72], [1.90, 3.30], [1.35, 2.60],
+                      [0.80, 1.80], [0.55, 1.40]]
+  # La vuelta de la derecha, terminada (paso 6), recorrida desde el firme: pasa por debajo del
+  # cruce 6, baja por el lado que da al nudo por encima de los tramos del medio y de abajo
+  # (cruces 7 y 8), pasa por debajo de ellos, sube por el lado de la punta por debajo de los
+  # dos (9 y 10), pasa por encima del cruce 6 y sigue a la izquierda como el tramo de arriba.
+  vuelta-der: [[9.60, 1.45], [7.80, 2.10], [6.30, 2.65], [5.15, 2.75], [4.72, 2.42],
+               [4.15, 1.70], [3.58, 0.92], [3.00, 0.30], [2.68, -0.45], [2.62, -1.25],
+               [2.75, -2.15], [3.30, -2.75], [4.15, -2.95], [5.00, -2.75], [5.55, -2.15],
+               [5.72, -1.25], [5.75, 0.00], [5.60, 0.85], [5.05, 1.48], [4.15, 1.70],
+               [3.20, 1.75], [2.20, 1.42]]
+  # Los tres tramos en el medio, que no cambian desde el paso 2.
+  t-medio: [[-1.10, 1.25]]
+  # El tramo de arriba por la zona de la izquierda: es un lado del seno de la izquierda. Pasa
+  # por debajo del lado de su vuelta que da al nudo (cruce 2) y por encima del de la punta (3).
+  t-izq: [[-2.20, 1.25], [-4.15, 1.25], [-5.20, 1.25]]
+  # El seno de la izquierda: sobresale de su vuelta y se abre hacia el fondo.
+  seno-izq: [[-6.25, 1.42], [-6.85, 2.10], [-7.60, 2.95], [-8.55, 3.45], [-9.60, 3.35],
+             [-10.40, 2.75], [-10.65, 1.75], [-10.20, 0.75], [-9.10, 0.10], [-7.60, -0.08]]
+  # El otro lado del seno, que vuelve por la zona de la izquierda (cruces 4 y 5).
+  m-izq: [[-6.10, 0.00], [-4.15, 0.00], [-2.20, 0.00]]
+  # El tramo del medio lleva una S muy suave: le da un poco de cuerda, que las dos vueltas le
+  # quitan. Recto, se estiraba 1,6 % en el paso 6.
+  m-medio: [[-1.10, 0.12], [1.10, -0.12]]
+  # El tramo del medio por la zona de la derecha: es un lado del seno de la derecha (cruces 7
+  # y 10).
+  m-der: [[2.20, 0.00], [4.15, 0.00], [6.10, 0.00]]
+  # El seno de la derecha: sobresale de su vuelta y se abre hacia ti.
+  seno-der: [[7.60, 0.08], [9.10, -0.10], [10.20, -0.75], [10.65, -1.75], [10.40, -2.75],
+             [9.60, -3.35], [8.55, -3.45], [7.60, -2.95], [6.85, -2.10], [6.25, -1.42]]
+  # El otro lado del seno, que vuelve por la zona de la derecha (cruces 9 y 8).
+  b-der: [[5.20, -1.25], [4.15, -1.25], [2.20, -1.25]]
+  b-medio: [[1.10, -1.25]]
+  # El tramo de abajo por la zona de la izquierda y el firme de la izquierda, antes de hacer
+  # su vuelta (paso 2).
+  b-izq-recto: [[-2.20, -1.25], [-4.60, -1.25], [-7.00, -1.25], [-9.30, -1.28]]
+  # El paso 3: la vuelta del firme de la izquierda, junto al seno y todavía sin pasarlo. La
+  # cuerda que viene del nudo baja, pasa por encima del cruce 1 hacia la izquierda, da la
+  # vuelta hacia la derecha por el fondo y vuelve a pasar por el cruce, por debajo, hacia el
+  # firme.
+  vuelta-izq-suelta: [[-0.55, -1.40], [-0.80, -1.80], [-1.35, -2.60], [-1.90, -3.30],
+                      [-2.53, -3.72], [-3.42, -3.88], [-4.40, -4.05], [-5.28, -4.21],
+                      [-6.08, -4.14], [-6.74, -3.68], [-7.08, -2.95], [-7.01, -2.15],
+                      [-6.55, -1.49], [-5.82, -1.15], [-5.02, -1.22], [-4.36, -1.68],
+                      [-4.02, -2.41], [-4.09, -3.21], [-4.40, -4.05], [-4.71, -4.90],
+                      [-5.30, -5.55], [-6.30, -5.85]]
+  firme-izq-suelto: [[-8.30, -5.90], [-11.30, -5.30], [-14.30, -3.70], [-17.60, -1.90],
+                     [-20.80, -1.30]]
+  # La vuelta de la izquierda, terminada (pasos 4 a 6): la de la derecha girada media vuelta.
+  # Pasa por encima del cruce 1, sube por el lado de la punta por debajo de los tramos del
+  # medio y de arriba (4 y 3), baja por el lado que da al nudo por encima de los dos (2 y 5) y
+  # pasa por debajo del cruce 1 hacia el firme.
+  vuelta-izq: [[-2.20, -1.42], [-3.20, -1.75], [-4.15, -1.70], [-5.05, -1.48],
+               [-5.60, -0.85], [-5.75, 0.00], [-5.72, 1.25], [-5.55, 2.15], [-5.00, 2.75],
+               [-4.15, 2.95], [-3.30, 2.75], [-2.75, 2.15], [-2.62, 1.25], [-2.68, 0.45],
+               [-3.00, -0.30], [-3.58, -0.92], [-4.15, -1.70], [-4.72, -2.42],
+               [-5.15, -2.75], [-6.30, -2.65], [-7.80, -2.10], [-9.60, -1.45]]
+  # El firme de la izquierda, lejos del nudo.
+  firme-izq: [[-12.80, -1.30], [-17.00, -1.30], [-22.00, -1.30]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      Va en medio de la cuerda: los dos extremos son firmes y trabajas con los dos, primero
+      con el de la izquierda. Estira la cuerda y deja 40 cm a cada lado del tramo que acortas.
+    trazado: [firme-der, recta]
+    secuencia: ""
+
+  - titulo: Dobla la cuerda en tres
+    texto: >-
+      Dobla la cuerda en forma de Z: quedan tres tramos juntos y paralelos, con un seno en
+      cada punta. La cuerda se acorta el doble de lo que miden los tramos.
+    trazado: [firme-der, t-der-recto, t-medio, t-izq, seno-izq, m-izq, m-medio, m-der,
+              seno-der, b-der, b-medio, b-izq-recto, firme-izq]
+    secuencia: ""
+    resaltar: {desde: "seno-izq[0]", hasta: fin}
+
+  - titulo: Haz una vuelta en el firme de la izquierda
+    texto: >-
+      Con el firme de la izquierda, junto al seno, haz una vuelta: la cuerda que viene de los
+      tres tramos pasa por encima de la que sigue hacia el firme.
+    trazado: [firme-der, t-der-recto, t-medio, t-izq, seno-izq, m-izq, m-medio, m-der,
+              seno-der, b-der, b-medio, vuelta-izq-suelta, firme-izq-suelto]
+    secuencia: "1O 1U"
+    # Empieza después del cruce 1: la cuerda que viene del nudo llega azul y se ve que pasa
+    # por encima. Es lo que compara la imagen del error.
+    resaltar: {desde: "vuelta-izq-suelta[7]", hasta: fin}
+
+  - titulo: Pásala por el seno
+    texto: >-
+      Baja la vuelta sobre la punta del seno de la izquierda, para que la punta salga por
+      dentro. Después tira del firme hasta que la vuelta apriete los dos tramos del seno,
+      cerca de su punta.
+    trazado: [firme-der, t-der-recto, t-medio, t-izq, seno-izq, m-izq, m-medio, m-der,
+              seno-der, b-der, b-medio, vuelta-izq, firme-izq]
+    secuencia: "2U 3O 4O 5U 1O 4U 3U 2O 5O 1U"
+    resaltar: {desde: "vuelta-izq[0]", hasta: fin}
+
+  - titulo: Haz otra vuelta en el firme de la derecha
+    texto: >-
+      Repite con el firme de la derecha, junto a su seno: la cuerda que viene de los tres
+      tramos pasa por encima de la que sigue hacia el firme.
+    trazado: [firme-der-suelto, vuelta-der-suelta, t-medio, t-izq, seno-izq, m-izq, m-medio,
+              m-der, seno-der, b-der, b-medio, vuelta-izq, firme-izq]
+    secuencia: "6U 6O 2U 3O 4O 5U 1O 4U 3U 2O 5O 1U"
+    resaltar: {desde: "firme-der-suelto[-2]", hasta: "vuelta-der-suelta[-1]"}
+
+  - titulo: Pásala por el otro seno
+    texto: >-
+      Baja la vuelta sobre la punta del seno de la derecha y tira del firme hasta que apriete
+      sus dos tramos. Después tira de los dos firmes a la vez: la margarita aguanta mientras
+      la cuerda siga tensa.
+    trazado: [firme-der, vuelta-der, t-medio, t-izq, seno-izq, m-izq, m-medio, m-der,
+              seno-der, b-der, b-medio, vuelta-izq, firme-izq]
+    secuencia: "6U 7O 8O 9U 10U 6O 2U 3O 4O 5U 7U 10O 9O 8U 1O 4U 3U 2O 5O 1U"
+    resaltar: {desde: "vuelta-der[0]", hasta: "vuelta-der[-1]"}
+
+# El error más común: hacer la vuelta al revés, con la cuerda que va al firme por encima. Es
+# el paso 3 con el cruce 1 invertido. La fuente no trae un error con imagen.
+error:
+  paso: 3
+  invierte: [1]
+  titulo: La vuelta quedó al revés
+  texto: >-
+    Si la cuerda que va al firme pasa por encima, la vuelta no aprieta el seno y se suelta al
+    primer tirón. Deshazla y vuelve a hacerla con la cuerda que viene de los tres tramos por
+    encima.
+  encuadre:
+    x: [-7.8, -0.3]
+    y: [-6.0, 0.5]
+  otros:
+    - titulo: Las puntas muy cortas
+      texto: >-
+        Si la punta de un seno apenas sale de su vuelta, se escapa cuando tiras. Deja que
+        cada punta sobresalga unos 5 cm.
