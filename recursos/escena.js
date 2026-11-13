@@ -211,11 +211,15 @@ function puntos(cuerda) {
    grosor, su color, la clave del nombre que va junto a su firme y si lleva el nombre
    «Chicote». Un nudo de una sola cuerda trae los puntos en el paso: es una cuerda azul de
    grosor 1, con «Firme» y «Chicote». En un nudo de plantilla, el paso puede decir qué
-   nombres lleva («nombres») y la cuerda lleva remate en los dos extremos («dos_remates»). */
+   nombres lleva («nombres») y la cuerda lleva remate en los dos extremos («dos_remates»).
+   Un nudo en medio de la cuerda («dos_firmes») termina en otro firme y no en un chicote:
+   «claveFin» es la clave del nombre que va junto a ese otro firme. */
 function cuerdasDe(modelo, paso) {
   if (!modelo.cuerdas) {
-    return [{ p: paso.p, hl: paso.hl, grosor: 1, color: "azul", clave: "firme", chicote: true,
-              nombres: paso.nombres, remateInicio: !!modelo.dos_remates }];
+    const dos = !!modelo.dos_firmes;
+    return [{ p: paso.p, hl: paso.hl, grosor: 1, color: "azul", clave: "firme", chicote: !dos,
+              claveFin: dos ? "otro-firme" : null, nombres: paso.nombres,
+              remateInicio: !!modelo.dos_remates }];
   }
   return modelo.cuerdas.map((c, k) => ({
     p: paso.cuerdas[k].p, hl: paso.cuerdas[k].hl, grosor: c.grosor, color: c.color,
@@ -225,8 +229,12 @@ function cuerdasDe(modelo, paso) {
 
 /* Los nombres que puede llevar la escena, en el orden en que se colocan: con una cuerda,
    «Firme» y «Chicote»; con varias, el de cada cuerda junto a su firme y «Chicote» en la que
-   se mueve. Las páginas crean una etiqueta para cada uno. */
+   se mueve. En un nudo en medio de la cuerda, «Firme» en los dos extremos. Las páginas
+   crean una etiqueta para cada uno. */
 export function nombresDe(modelo) {
+  if (!modelo.cuerdas && modelo.dos_firmes) {
+    return [{ clave: "firme", texto: "Firme" }, { clave: "otro-firme", texto: "Firme" }];
+  }
   const firmes = modelo.cuerdas
     ? modelo.cuerdas.map((c) => ({ clave: `cuerda-${c.nombre}`, texto: c.etiqueta }))
     : [{ clave: "firme", texto: "Firme" }];
@@ -266,7 +274,7 @@ function altoDeEncuadre(modelo, B) {
       }
     }
   }
-  if (a && a.tipo === "poste") alto = Math.max(alto, a.z + a.radio);
+  if (a && (a.tipo === "poste" || a.tipo === "tubo")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   return alto;
 }
@@ -338,8 +346,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   mesa.receiveShadow = true;
   scene.add(mesa);
 
-  // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x o la
-  // cruz de los amarres. El cilindro de three.js va a lo largo de y.
+  // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x, la
+  // cruz de los amarres o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
+  // three.js va a lo largo de y.
   const a = modelo.anfitrion;
   const palo = (largo, x, y, z, aLoLargoDeX) => {
     const geo = new THREE.CylinderGeometry(a.radio, a.radio, largo, 64, 1, false);
@@ -356,6 +365,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   };
   const ejesPalos = [];
   if (a && a.tipo === "poste") palo(a.hasta - a.desde, (a.desde + a.hasta) / 2, a.y, a.z, true);
+  if (a && a.tipo === "tubo") palo(a.largo, 0, 0, a.z, true);
   // La cruz: el palo de abajo va a lo largo de y y el de arriba a lo largo de x, cruzados en
   // x = y = 0, con los ejes a las alturas «z_abajo» y «z_arriba». En el amarre volteado
   // (el nudo terminado por detrás), el de abajo queda encima.
@@ -407,9 +417,10 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   }
 
   // Nombres: el de cada cuerda («Firme» con una sola) junto a donde entra al encuadre y
-  // «Chicote» junto al extremo de la que se mueve. Aquí solo se preparan los lugares
-  // posibles, de cerca hacia afuera. Cuál se usa se decide en pantalla (colocarNombres),
-  // porque depende del tamaño del nombre y de la cámara.
+  // «Chicote» junto al extremo de la que se mueve. En un nudo en medio de la cuerda, el otro
+  // firme lleva «Firme» junto a donde sale del encuadre o, si no sale, junto a su final.
+  // Aquí solo se preparan los lugares posibles, de cerca hacia afuera. Cuál se usa se decide
+  // en pantalla (colocarNombres), porque depende del tamaño del nombre y de la cámara.
   const plano = (v) => { v.setZ(0); return v.lengthSq() > 1e-12 ? v.normalize() : v.set(1, 0, 0); };
   const giro = (v, g) => {
     const a = (g * Math.PI) / 180;
@@ -463,12 +474,22 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       tubos.push({ malla: tubo, n, L, grosor: c.grosor });
       todos.push(...pts);
       const lleva = (clave) => !c.nombres || c.nombres.includes(clave);
+      // El firme: el primer punto dentro del encuadre, con la cuerda que sigue hacia el nudo.
+      const firmeEn = (k, siguiente) => {
+        const t = plano(siguiente.clone().sub(pts[k]));
+        const f = { punto: pts[k].clone(), candidatos: alrededor(pts[k], t, [1.9, 2.8, 3.8, 5.0], [90, -90, 135, -135, 45, -45]) };
+        f.etiqueta = f.candidatos[0];
+        return f;
+      };
       let k = 0;
       while (k < pts.length - 2 && !dentro(pts[k])) k++;
-      const t = plano(pts[k + 1].clone().sub(pts[k]));
-      const firme = { punto: pts[k].clone(), candidatos: alrededor(pts[k], t, [1.9, 2.8, 3.8, 5.0], [90, -90, 135, -135, 45, -45]) };
-      firme.etiqueta = firme.candidatos[0];
-      if (lleva(c.clave)) nombres[c.clave] = firme;
+      if (lleva(c.clave)) nombres[c.clave] = firmeEn(k, pts[k + 1]);
+      if (c.claveFin && lleva(c.claveFin)) {
+        // El otro firme se busca igual, desde el final de la cuerda hacia atrás.
+        let j = pts.length - 1;
+        while (j > 1 && !dentro(pts[j])) j--;
+        nombres[c.claveFin] = firmeEn(j, pts[j - 1]);
+      }
       if (c.chicote && lleva("chicote")) {
         const fin = curva.getPointAt(1), tanFin = plano(curva.getTangentAt(1));
         chicote = { punto: fin.clone(), candidatos: alrededor(fin, tanFin, [2.2, 3.2, 4.4, 5.6, 7.0], [0, 45, -45, 90, -90, 135, -135, 180]) };
