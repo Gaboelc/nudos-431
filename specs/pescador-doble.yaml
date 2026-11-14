@@ -1,0 +1,264 @@
+# Pescador doble: une dos cuerdas del mismo grosor con un nudo de dos vueltas de cada una
+# alrededor de la otra. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de
+# Animated Knots (entradas/pescador-doble) solo se usaron para leer la topología.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa.
+slug: pescador-doble
+nombre: Pescador doble
+familia: De unión
+# Según la fuente; sin confirmar.
+abok: 294
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Une dos cuerdas del mismo grosor con más firmeza que el pescador, también si son
+  resbalosas. Sirve para cerrar un cordón en anillo y para unir dos cuerdas largas.
+materiales: >-
+  Dos cuerdas del mismo grosor, de 1,5 m y de colores distintos. Para aprender, de 6 a
+  10 mm y que no sean rígidas.
+verificacion:
+  - Cada cuerda da dos vueltas alrededor de las dos, y su chicote pasa por dentro de ellas.
+  - Las dos vueltas de cada nudo van una junto a la otra, sin montarse.
+  - Los dos nudos quedan juntos, uno contra el otro.
+  - Cada chicote sale hacia afuera, junto al firme de la otra cuerda.
+  - A cada chicote le sobra por lo menos el ancho de tu mano.
+seguridad: >-
+  En escalada y rescate se usa para unir cuerdas que sostienen a una persona; aquí es solo
+  conocimiento. En las actividades del grupo no lo uses para sostener, subir ni bajar a
+  nadie: esa práctica se hace solo con instructor y equipo certificados.
+# Texto propio: los cuidados que ya dice «seguridad» no se repiten aquí.
+precauciones:
+  - >-
+    Apretado, y más si estuvo cargado, a veces no se puede desatar. Si lo vas a desatar,
+    usa otro nudo.
+  - >-
+    Con cuerdas resbalosas o tiesas, revisa que las vueltas sigan en su lugar antes de
+    volver a tirar.
+alternativas:
+  - nudo: Pescador
+    cuando: >-
+      Cuando las cuerdas no son resbalosas y basta un nudo más chico: cada cuerda da una
+      sola vuelta.
+  - nudo: Vuelta de escota
+    cuando: Cuando las cuerdas son de distinto grosor o la vas a desatar después.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+cuerdas:
+  - {nombre: azul, grosor: 1, color: azul}
+  - {nombre: crema, grosor: 1, color: crema}
+
+encuadre:
+  x: [-16.4, 16.4]
+  y: [-5.5, 5.5]
+
+# Como en las fotos: la azul llega por la izquierda, del lado tuyo, y la crema por la
+# derecha, del lado del fondo. La azul ata primero, a la derecha. Tallado con las medidas
+# que funcionaron en el pescador: las cuerdas a 1,3 diámetros, todos los arcos de radio
+# 1,8 (con 1,6, el reverso del terminado quedaba encogido más de 2 %), y 3,6 diámetros
+# entre dos tramos donde una cuerda se teje entre ellos. Las vueltas no se dibujan
+# apretadas alrededor de las cuerdas: cada una cruza las dos cuerdas y se cierra del lado
+# del fondo (o del tuyo), sin montarse en las otras, y el chicote pasa por dentro de ellas. El nudo de la crema es el de la azul girado
+# media vuelta, con los mismos encima/debajo. El segundo nudo se ata junto al primero, a
+# 1,5 diámetros, y el último paso solo dice que se tiren los firmes.
+segmentos:
+  # Paso 1: cada cuerda estirada junto a la otra y doblada hacia afuera (recto, u).
+  # vuelta1: la primera vuelta, hasta que vuelve por debajo de las dos cuerdas.
+  # vuelta2: la segunda vuelta, al lado de la primera y más cerca del firme.
+  # cae1, cae2: el chicote suelto después de cada vuelta.
+  # mete: el gancho, el chicote por encima de las dos cuerdas y por dentro de las vueltas.
+  azul-firme: [[-30.00, -0.65], [-24.00, -0.65], [-18.00, -0.65], [-15.00, -0.65],
+               [-14.02, -0.65], [-13.05, -0.65], [-12.07, -0.65], [-11.09, -0.65],
+               [-10.12, -0.65], [-9.14, -0.65], [-8.16, -0.65], [-7.19, -0.65], [-6.21, -0.65],
+               [-5.23, -0.65], [-4.26, -0.65], [-3.28, -0.65], [-2.30, -0.65], [-1.32, -0.65],
+               [-0.35, -0.65], [0.63, -0.65], [1.61, -0.65], [2.58, -0.65], [3.56, -0.65],
+               [4.54, -0.65], [5.51, -0.65], [6.49, -0.65], [7.47, -0.65], [8.44, -0.65],
+               [9.42, -0.65], [10.40, -0.65], [11.37, -0.65], [12.35, -0.65]]
+  azul-recto: [[12.85, -0.65], [13.35, -0.65]]
+  azul-u: [[13.81, -0.72], [14.23, -0.94], [14.56, -1.27], [14.78, -1.69], [14.85, -2.15],
+           [14.78, -2.61], [14.56, -3.03], [14.23, -3.36], [13.81, -3.58], [13.35, -3.65],
+           [12.36, -3.65], [11.38, -3.65], [10.39, -3.65], [9.40, -3.65], [8.41, -3.65],
+           [7.42, -3.65], [6.44, -3.65], [5.45, -3.65], [4.46, -3.65], [3.47, -3.65],
+           [2.49, -3.65], [1.50, -3.65]]
+  azul-vuelta1: [[12.82, -0.59], [13.25, -0.41], [13.62, -0.12], [13.91, 0.25], [14.09, 0.68],
+                 [14.15, 1.15], [14.15, 1.63], [14.15, 2.12], [14.15, 2.60], [14.09, 3.07],
+                 [13.91, 3.50], [13.62, 3.87], [13.25, 4.16], [12.82, 4.34], [12.35, 4.40],
+                 [11.88, 4.34], [11.45, 4.16], [11.08, 3.87], [10.79, 3.50], [10.61, 3.07],
+                 [10.55, 2.60], [10.55, 2.14], [10.55, 1.69], [10.55, 1.23], [10.55, 0.78],
+                 [10.55, 0.32], [10.55, -0.13], [10.55, -0.59], [10.55, -1.04], [10.55, -1.50]]
+  azul-cae1: [[10.55, -2.00], [10.60, -2.41], [10.76, -2.80], [11.02, -3.13], [11.35, -3.39],
+              [11.74, -3.55], [12.15, -3.60], [13.03, -3.60], [13.91, -3.60], [14.79, -3.60],
+              [15.67, -3.60], [16.55, -3.60]]
+  azul-vuelta2: [[10.49, -1.97], [10.31, -2.40], [10.02, -2.77], [9.65, -3.06], [9.22, -3.24],
+                 [8.75, -3.30], [8.28, -3.24], [7.85, -3.06], [7.48, -2.77], [7.19, -2.40],
+                 [7.01, -1.97], [6.95, -1.50], [6.95, -1.04], [6.95, -0.59], [6.95, -0.13],
+                 [6.95, 0.32], [6.95, 0.78], [6.95, 1.23], [6.95, 1.69], [6.95, 2.14],
+                 [6.95, 2.60], [6.89, 3.07], [6.71, 3.50], [6.42, 3.87], [6.05, 4.16],
+                 [5.62, 4.34], [5.15, 4.40], [4.72, 4.40], [4.28, 4.40], [3.85, 4.40],
+                 [3.42, 4.40], [2.98, 4.40], [2.55, 4.40], [2.08, 4.34], [1.65, 4.16],
+                 [1.28, 3.87], [0.99, 3.50], [0.81, 3.07], [0.75, 2.60], [0.75, 2.14],
+                 [0.75, 1.69], [0.75, 1.23], [0.75, 0.78], [0.75, 0.32], [0.75, -0.13],
+                 [0.75, -0.59], [0.75, -1.04], [0.75, -1.50]]
+  azul-cae2: [[0.75, -1.95], [0.75, -2.40], [0.75, -2.85], [0.75, -3.30], [0.80, -3.71],
+              [0.96, -4.10], [1.22, -4.43], [1.55, -4.69], [1.94, -4.85], [2.35, -4.90],
+              [3.26, -4.90], [4.18, -4.90], [5.09, -4.90], [6.01, -4.90], [6.92, -4.90],
+              [7.84, -4.90], [8.75, -4.90]]
+  azul-mete: [[0.81, -1.97], [0.99, -2.40], [1.28, -2.77], [1.65, -3.06], [2.08, -3.24],
+              [2.55, -3.30], [3.02, -3.24], [3.45, -3.06], [3.82, -2.77], [4.11, -2.40],
+              [4.29, -1.97], [4.35, -1.50], [4.35, -1.04], [4.35, -0.58], [4.35, -0.12],
+              [4.35, 0.33], [4.35, 0.79], [4.35, 1.25], [4.41, 1.72], [4.59, 2.15],
+              [4.88, 2.52], [5.25, 2.81], [5.68, 2.99], [6.15, 3.05], [6.63, 3.05],
+              [7.11, 3.05], [7.59, 3.05], [8.07, 3.05], [8.55, 3.05], [9.03, 3.05],
+              [9.51, 3.05], [9.99, 3.05], [10.47, 3.05], [10.95, 3.05], [11.43, 3.05],
+              [11.91, 3.05], [12.39, 3.05], [12.87, 3.05], [13.35, 3.05], [13.83, 3.05],
+              [14.31, 3.05], [14.79, 3.05], [15.27, 3.05], [15.75, 3.05]]
+  crema-firme: [[30.00, 0.65], [24.00, 0.65], [18.00, 0.65], [15.00, 0.65], [14.02, 0.65],
+                [13.05, 0.65], [12.07, 0.65], [11.09, 0.65], [10.12, 0.65], [9.14, 0.65],
+                [8.16, 0.65], [7.19, 0.65], [6.21, 0.65], [5.23, 0.65], [4.26, 0.65],
+                [3.28, 0.65], [2.30, 0.65], [1.32, 0.65], [0.35, 0.65], [-0.63, 0.65],
+                [-1.61, 0.65], [-2.58, 0.65], [-3.56, 0.65], [-4.54, 0.65], [-5.51, 0.65],
+                [-6.49, 0.65], [-7.47, 0.65], [-8.44, 0.65], [-9.42, 0.65], [-10.40, 0.65],
+                [-11.37, 0.65], [-12.35, 0.65]]
+  crema-recto: [[-12.85, 0.65], [-13.35, 0.65]]
+  crema-u: [[-13.81, 0.72], [-14.23, 0.94], [-14.56, 1.27], [-14.78, 1.69], [-14.85, 2.15],
+            [-14.78, 2.61], [-14.56, 3.03], [-14.23, 3.36], [-13.81, 3.58], [-13.35, 3.65],
+            [-12.36, 3.65], [-11.38, 3.65], [-10.39, 3.65], [-9.40, 3.65], [-8.41, 3.65],
+            [-7.42, 3.65], [-6.44, 3.65], [-5.45, 3.65], [-4.46, 3.65], [-3.47, 3.65],
+            [-2.49, 3.65], [-1.50, 3.65]]
+  crema-vuelta1: [[-12.82, 0.59], [-13.25, 0.41], [-13.62, 0.12], [-13.91, -0.25],
+                  [-14.09, -0.68], [-14.15, -1.15], [-14.15, -1.63], [-14.15, -2.12],
+                  [-14.15, -2.60], [-14.09, -3.07], [-13.91, -3.50], [-13.62, -3.87],
+                  [-13.25, -4.16], [-12.82, -4.34], [-12.35, -4.40], [-11.88, -4.34],
+                  [-11.45, -4.16], [-11.08, -3.87], [-10.79, -3.50], [-10.61, -3.07],
+                  [-10.55, -2.60], [-10.55, -2.14], [-10.55, -1.69], [-10.55, -1.23],
+                  [-10.55, -0.78], [-10.55, -0.32], [-10.55, 0.13], [-10.55, 0.59],
+                  [-10.55, 1.04], [-10.55, 1.50]]
+  crema-vuelta2: [[-10.49, 1.97], [-10.31, 2.40], [-10.02, 2.77], [-9.65, 3.06], [-9.22, 3.24],
+                  [-8.75, 3.30], [-8.28, 3.24], [-7.85, 3.06], [-7.48, 2.77], [-7.19, 2.40],
+                  [-7.01, 1.97], [-6.95, 1.50], [-6.95, 1.04], [-6.95, 0.59], [-6.95, 0.13],
+                  [-6.95, -0.32], [-6.95, -0.78], [-6.95, -1.23], [-6.95, -1.69],
+                  [-6.95, -2.14], [-6.95, -2.60], [-6.89, -3.07], [-6.71, -3.50],
+                  [-6.42, -3.87], [-6.05, -4.16], [-5.62, -4.34], [-5.15, -4.40],
+                  [-4.72, -4.40], [-4.28, -4.40], [-3.85, -4.40], [-3.42, -4.40],
+                  [-2.98, -4.40], [-2.55, -4.40], [-2.08, -4.34], [-1.65, -4.16],
+                  [-1.28, -3.87], [-0.99, -3.50], [-0.81, -3.07], [-0.75, -2.60],
+                  [-0.75, -2.14], [-0.75, -1.69], [-0.75, -1.23], [-0.75, -0.78],
+                  [-0.75, -0.32], [-0.75, 0.13], [-0.75, 0.59], [-0.75, 1.04], [-0.75, 1.50]]
+  crema-cae2: [[-0.75, 1.95], [-0.75, 2.40], [-0.75, 2.85], [-0.75, 3.30], [-0.80, 3.71],
+               [-0.96, 4.10], [-1.22, 4.43], [-1.55, 4.69], [-1.94, 4.85], [-2.35, 4.90],
+               [-3.26, 4.90], [-4.18, 4.90], [-5.09, 4.90], [-6.01, 4.90], [-6.92, 4.90],
+               [-7.84, 4.90], [-8.75, 4.90]]
+  crema-mete: [[-0.81, 1.97], [-0.99, 2.40], [-1.28, 2.77], [-1.65, 3.06], [-2.08, 3.24],
+               [-2.55, 3.30], [-3.02, 3.24], [-3.45, 3.06], [-3.82, 2.77], [-4.11, 2.40],
+               [-4.29, 1.97], [-4.35, 1.50], [-4.35, 1.04], [-4.35, 0.58], [-4.35, 0.12],
+               [-4.35, -0.33], [-4.35, -0.79], [-4.35, -1.25], [-4.41, -1.72], [-4.59, -2.15],
+               [-4.88, -2.52], [-5.25, -2.81], [-5.68, -2.99], [-6.15, -3.05], [-6.63, -3.05],
+               [-7.11, -3.05], [-7.59, -3.05], [-8.07, -3.05], [-8.55, -3.05], [-9.03, -3.05],
+               [-9.51, -3.05], [-9.99, -3.05], [-10.47, -3.05], [-10.95, -3.05],
+               [-11.43, -3.05], [-11.91, -3.05], [-12.39, -3.05], [-12.87, -3.05],
+               [-13.35, -3.05], [-13.83, -3.05], [-14.31, -3.05], [-14.79, -3.05],
+               [-15.27, -3.05], [-15.75, -3.05]]
+
+pasos:
+  - titulo: Prepara las cuerdas
+    texto: >-
+      Pon las cuerdas lado a lado: la azul llega por la izquierda y la crema por la derecha.
+      Deja unos 40 cm de cada chicote junto a la otra cuerda.
+    trazado:
+      azul: [azul-firme, azul-recto, azul-u]
+      crema: [crema-firme, crema-recto, crema-u]
+    secuencia:
+      azul: ""
+      crema: ""
+
+  - titulo: Da una vuelta con la azul
+    texto: >-
+      Lleva el chicote de la azul hacia el fondo por encima de la crema. Rodea las dos
+      cuerdas y vuelve hacia ti por debajo de las dos.
+    trazado:
+      azul: [azul-firme, azul-vuelta1, azul-cae1]
+      crema: [crema-firme, crema-recto, crema-u]
+    secuencia:
+      azul: "3O 1O 2U 3U"
+      crema: "1U 2O"
+    resaltar: {desde: "azul-vuelta1[0]", hasta: fin}
+
+  - titulo: Da la segunda vuelta
+    texto: >-
+      Da otra vuelta igual alrededor de las dos cuerdas, junto a la primera y más cerca del
+      firme de la azul.
+    trazado:
+      azul: [azul-firme, azul-vuelta1, azul-vuelta2, azul-cae2]
+      crema: [crema-firme, crema-recto, crema-u]
+    secuencia:
+      azul: "7O 4U 3O 1O 2U 3U 4O 5O 6U 7U"
+      crema: "1U 2O 5U 6O"
+    resaltar: {desde: "azul-vuelta2[0]", hasta: fin}
+
+  - titulo: Mete el chicote de la azul
+    texto: >-
+      Mételo por dentro de las dos vueltas: por encima de las dos cuerdas y por debajo de
+      las vueltas. Sácalo hacia la derecha y tira de él para cerrar el nudo.
+    trazado:
+      azul: [azul-firme, azul-vuelta1, azul-vuelta2, azul-mete]
+      crema: [crema-firme, crema-recto, crema-u]
+    secuencia:
+      azul: "7O 8U 4U 3O 1O 12O 11U 2U 3U 4O 5O 10O 6U 7U 8O 9O 10U 11O 12U"
+      crema: "1U 2O 5U 9U 6O"
+    # Empieza después del cruce 7: en los cruces 8 y 9, la azul y la crema llegan sin
+    # resaltar y el chicote pasa por encima. Es lo que compara la imagen del error.
+    resaltar: {desde: "azul-mete[0]", hasta: fin}
+
+  - titulo: Da dos vueltas con la crema
+    texto: >-
+      Haz lo mismo del otro lado: lleva el chicote de la crema hacia ti por encima de la
+      azul y da dos vueltas alrededor de las dos cuerdas, la segunda más cerca del firme de
+      la crema.
+    trazado:
+      azul: [azul-firme, azul-vuelta1, azul-vuelta2, azul-mete]
+      crema: [crema-firme, crema-vuelta1, crema-vuelta2, crema-cae2]
+    secuencia:
+      azul: "13U 14O 17U 18O 7O 8U 4U 3O 1O 12O 11U 2U 3U 4O 5O 10O 6U 7U 8O 9O 10U 11O 12U"
+      crema: "1U 2O 5U 9U 6O 19O 16U 15O 13O 14U 15U 16O 17O 18U 19U"
+    resaltar: {desde: "crema-vuelta1[0]", hasta: fin}
+
+  - titulo: Mete el chicote de la crema
+    texto: >-
+      Mételo por dentro de sus dos vueltas, por encima de las dos cuerdas, y sácalo hacia
+      la izquierda. Tira de los dos firmes para que los nudos se junten y se traben.
+    trazado:
+      azul: [azul-firme, azul-vuelta1, azul-vuelta2, azul-mete]
+      crema: [crema-firme, crema-vuelta1, crema-vuelta2, crema-mete]
+    secuencia:
+      azul: "13U 14O 17U 21U 18O 7O 8U 4U 3O 1O 12O 11U 2U 3U 4O 5O 10O 6U 7U 8O 9O 10U 11O 12U"
+      crema: "1U 2O 5U 9U 6O 19O 20U 16U 15O 13O 24O 23U 14U 15U 16O 17O 22O 18U 19U 20O 21O 22U 23O 24U"
+    resaltar: {desde: "crema-mete[0]", hasta: fin}
+
+# El error más común: meter el chicote por debajo de las dos cuerdas, por fuera de las
+# vueltas. Es el paso 4 con los cruces 8 y 9 invertidos; así no queda ningún nudo.
+error:
+  paso: 4
+  invierte: [8, 9]
+  titulo: El chicote por debajo de las cuerdas
+  texto: >-
+    Pasaste el chicote por debajo de las dos cuerdas, por fuera de las vueltas. Así no
+    queda nudo: al tirar, las vueltas se desarman. Vuelve a meterlo por encima de las dos
+    cuerdas.
+  encuadre:
+    x: [-0.6, 16.4]
+    y: [-5.5, 5.5]
+  otros:
+    - titulo: El chicote por una sola vuelta
+      texto: >-
+        El chicote tiene que pasar por dentro de las dos vueltas. Si pasa solo por una, el
+        nudo queda flojo y se puede correr.
+    - titulo: Los chicotes muy cortos
+      texto: >-
+        Si dejas poco chicote, un nudo se puede correr hasta la punta y salirse al
+        apretarlo. Deja por lo menos el ancho de tu mano después de cada nudo.
+
+# El nudo terminado, apretado, se muestra por delante y por detrás.
+terminado:
+  encuadre:
+    x: [-16.4, 16.4]
+    y: [-5.2, 5.2]
