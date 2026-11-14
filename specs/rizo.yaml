@@ -1,0 +1,190 @@
+# Rizo. Borrador de la skill nudo-nuevo. Trazado propio: las fotos de referencia solo se
+# usaron para leer la topología (qué tramo pasa por encima en cada cruce).
+# Se dibuja con dos cuerdas, una por cada punta, aunque al usarlo casi siempre son las dos
+# puntas de una misma cuerda alrededor de algo: así cada punta lleva su color y su nombre.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa.
+slug: rizo
+nombre: Rizo
+familia: De ligadura
+abok: 1402
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Ata las dos puntas de una misma cuerda alrededor de algo, para que quede apretado: un
+  paquete, un bulto, un saco o una venda. Queda plano, así que no molesta, y se desata
+  fácil. Es también el nudo que hay debajo del lazo de los cordones.
+materiales: >-
+  Una cuerda de 1 m, de 4 a 8 mm, o dos cuerdas del mismo grosor. En las imágenes, cada
+  punta es una cuerda de otro color: la izquierda y la derecha.
+verificacion:
+  - Cada cuerda forma una U que abraza los dos tramos de la otra.
+  - Cada punta sale junto a su propio firme, del mismo lado del nudo.
+  - Las dos puntas salen por el mismo borde del nudo, no una por arriba y otra por abajo.
+  - El nudo queda plano. Si queda torcido, con las puntas atravesadas, es un nudo de vaca.
+  - A cada punta le sobra por lo menos el ancho de tu mano.
+precauciones:
+  - >-
+    No lo uses para unir dos cuerdas que van a cargar: si tiras fuerte o la cuerda se
+    sacude, se deforma y se suelta. Para eso usa la vuelta de escota.
+  - >-
+    Si tiras de una punta hacia afuera, el nudo se deshace. Así se desata rápido, pero
+    también se puede soltar si una punta se engancha.
+  - Con cuerdas de distinto grosor o resbalosas se corre y no aguanta.
+alternativas:
+  - nudo: Vuelta de escota
+    cuando: Para unir dos cuerdas, sobre todo si van a cargar o si son de distinto grosor.
+  - nudo: Pescador
+    cuando: Para unir dos cuerdas delgadas o resbalosas, como dos sedales.
+  - nudo: Nudo de cirujano
+    cuando: >-
+      Cuando el primer medio nudo se afloja mientras haces el segundo, como al atar un
+      paquete apretado: en el primero das dos vueltas en vez de una.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+cuerdas:
+  - {nombre: izquierda, grosor: 1, color: azul}
+  - {nombre: derecha, grosor: 1, color: crema}
+
+encuadre:
+  x: [-9.0, 9.0]
+  y: [-2.6, 6.2]
+
+# Tallado, como en la foto del rizo apretado. En el nudo terminado, cuatro tramos cruzan el
+# medio a 1,15 diámetros unos de otros. A la izquierda van, de arriba abajo: el de arriba de
+# la derecha, los dos de la izquierda y el de abajo de la derecha. A la derecha, los de
+# arriba y los de abajo cambian de lugar con una curva en S (cruces 5 y 2). La U de cada
+# cuerda, de radio 1,75, rodea los dos tramos de la otra. La izquierda es el espejo de la
+# derecha. Los puntos salen de rectas y arcos tangentes de radio 1,5 o más, con un punto
+# cada medio diámetro en las curvas.
+segmentos:
+  # La izquierda: el firme llega desde la izquierda, baja por la S de abajo, da la U de la
+  # derecha y sube por su lado derecho (cruces 1 y 6).
+  # Pasos 1 a 3: su punta sube derecho. Pasos 4 y 5: termina la U, cruza arriba por la S
+  # (cruce 5) y sale a la izquierda, por debajo de la U de la derecha (cruce 4).
+  # La derecha: el firme llega desde la derecha. Paso 2: cruza por encima del lado derecho
+  # de la izquierda (cruce 1) y su punta va hacia arriba. Pasos 3 a 5: el lazo pasa por
+  # debajo de la izquierda en la S de abajo (cruce 2), da la U de la izquierda y sube por
+  # encima del firme de la izquierda (cruce 3). Pasos 3 y 4: su punta sube derecho.
+  # Paso 5: termina la U, pasa por debajo de la izquierda en la S de arriba (cruce 5) y sale
+  # a la derecha, por encima de la U de la izquierda (cruce 6).
+  izq-cuerpo: [[-28.00, 0.00], [-25.02, 0.00], [-22.04, 0.00], [-19.06, 0.00], [-16.08, 0.00],
+               [-13.10, 0.00], [-10.12, 0.00], [-7.14, 0.00], [-4.16, 0.00], [-1.18, 0.00],
+               [-0.73, -0.07], [-0.33, -0.27], [-0.00, -0.58], [0.33, -0.88], [0.73, -1.08],
+               [1.18, -1.15], [1.59, -1.15], [2.00, -1.15], [2.45, -1.09], [2.88, -0.92],
+               [3.24, -0.64], [3.52, -0.28], [3.69, 0.15], [3.75, 0.60]]
+  izq-punta: [[3.75, 1.43], [3.75, 2.27], [3.75, 3.10], [3.75, 3.93], [3.75, 4.77],
+              [3.75, 5.60]]
+  izq-arriba: [[3.69, 1.05], [3.52, 1.47], [3.24, 1.84], [2.88, 2.12], [2.45, 2.29],
+               [2.00, 2.35], [1.59, 2.35], [1.18, 2.35], [0.73, 2.28], [0.33, 2.08],
+               [-0.00, 1.77], [-0.33, 1.47], [-0.73, 1.27], [-1.18, 1.20], [-1.69, 1.20],
+               [-2.20, 1.20], [-2.72, 1.20], [-3.23, 1.20], [-3.74, 1.20], [-4.25, 1.20],
+               [-4.62, 1.24], [-4.97, 1.37], [-5.28, 1.57], [-5.89, 2.09], [-6.50, 2.60],
+               [-7.12, 3.12], [-7.73, 3.63], [-8.34, 4.15]]
+  der-firme: [[28.00, 0.00], [25.12, 0.00], [22.25, 0.00], [19.38, 0.00], [16.50, 0.00],
+              [13.62, 0.00], [10.75, 0.00], [7.88, 0.00], [5.00, 0.00]]
+  der-cruza: [[4.40, 0.00], [3.80, 0.00], [3.20, 0.00], [2.60, 0.00], [2.00, 0.00],
+              [1.54, 0.07], [1.12, 0.26], [0.77, 0.57], [0.29, 1.15], [-0.19, 1.72],
+              [-0.67, 2.30], [-1.15, 2.87]]
+  der-lazo: [[4.24, 0.00], [3.47, 0.00], [2.71, 0.00], [1.94, 0.00], [1.18, 0.00],
+             [0.73, -0.07], [0.33, -0.27], [-0.00, -0.57], [-0.33, -0.88], [-0.73, -1.08],
+             [-1.18, -1.15], [-1.59, -1.15], [-2.00, -1.15], [-2.45, -1.09], [-2.88, -0.92],
+             [-3.24, -0.64], [-3.52, -0.27], [-3.69, 0.15], [-3.75, 0.60]]
+  der-sube: [[-3.75, 1.43], [-3.75, 2.27], [-3.75, 3.10], [-3.75, 3.93], [-3.75, 4.77],
+             [-3.75, 5.60]]
+  der-rodea: [[-3.69, 1.05], [-3.52, 1.48], [-3.24, 1.84], [-2.88, 2.12], [-2.45, 2.29],
+              [-2.00, 2.35], [-1.59, 2.35], [-1.18, 2.35], [-0.73, 2.28], [-0.33, 2.08],
+              [0.00, 1.78], [0.33, 1.47], [0.73, 1.27], [1.18, 1.20], [1.69, 1.20],
+              [2.20, 1.20], [2.72, 1.20], [3.23, 1.20], [3.74, 1.20], [4.25, 1.20],
+              [4.62, 1.24], [4.97, 1.37], [5.28, 1.57], [5.89, 2.09], [6.50, 2.60],
+              [7.12, 3.12], [7.73, 3.63], [8.34, 4.15]]
+
+pasos:
+  - titulo: Prepara las dos puntas
+    texto: >-
+      La izquierda llega por la izquierda y sube; la derecha, por la derecha. En un
+      paquete son las dos puntas de una cuerda. Deja unos 25 cm en cada una.
+    trazado:
+      izquierda: [izq-cuerpo, izq-punta]
+      derecha: [der-firme]
+    secuencia:
+      izquierda: ""
+      derecha: ""
+
+  - titulo: Cruza la derecha por encima
+    texto: >-
+      Lleva la punta de la cuerda derecha hacia la izquierda, por encima de la punta de
+      la cuerda izquierda.
+    trazado:
+      izquierda: [izq-cuerpo, izq-punta]
+      derecha: [der-firme, der-cruza]
+    secuencia:
+      izquierda: "1U"
+      derecha: "1O"
+    resaltar: {desde: "der-cruza[0]", hasta: fin}
+
+  - titulo: Rodéala por debajo
+    texto: >-
+      Pásala por debajo de la cuerda izquierda y súbela por encima del firme izquierdo.
+      Ya tienes medio nudo, con las puntas hacia arriba.
+    trazado:
+      izquierda: [izq-cuerpo, izq-punta]
+      derecha: [der-firme, der-lazo, der-sube]
+    secuencia:
+      izquierda: "3U 2O 1U"
+      derecha: "1O 2U 3O"
+    resaltar: {desde: "der-lazo[0]", hasta: fin}
+
+  - titulo: Cruza otra vez las puntas
+    texto: >-
+      Lleva la punta de la cuerda izquierda al otro lado, por debajo de la punta derecha.
+      Así la derecha queda otra vez encima, como en el primer cruce.
+    trazado:
+      izquierda: [izq-cuerpo, izq-arriba]
+      derecha: [der-firme, der-lazo, der-sube]
+    secuencia:
+      izquierda: "3U 2O 1U 4U"
+      derecha: "1O 2U 3O 4O"
+    # Empieza en el lado derecho de la U, lejos del cruce 4: así el error se ve.
+    resaltar: {desde: "izq-arriba[0]", hasta: fin}
+
+  - titulo: Rodéala y sácala junto a su firme
+    texto: >-
+      Pasa la punta derecha por debajo de la punta izquierda y sácala por encima de la
+      cuerda izquierda, junto a su firme. Tira a la vez de puntas y firmes.
+    trazado:
+      izquierda: [izq-cuerpo, izq-arriba]
+      derecha: [der-firme, der-lazo, der-rodea]
+    secuencia:
+      izquierda: "3U 2O 1U 6U 5O 4U"
+      derecha: "1O 2U 3O 4O 5U 6O"
+    resaltar: {desde: "der-rodea[0]", hasta: fin}
+
+# El error más común: el segundo cruce al revés, que da el nudo de vaca.
+error:
+  paso: 4
+  invierte: [4]
+  titulo: El segundo cruce al revés
+  texto: >-
+    En el segundo cruce, la punta derecha quedó debajo. Así sale un nudo de vaca: queda
+    torcido, con las puntas atravesadas, y se suelta solo. Deshaz ese cruce y hazlo con la
+    derecha encima, como en el primero.
+  encuadre:
+    x: [-9.0, 1.5]
+    y: [-2.6, 6.2]
+  otros:
+    - titulo: Las puntas en lados opuestos
+      texto: >-
+        Si una punta sale por arriba del nudo y la otra por abajo, no es un rizo y se
+        suelta al tirar. Deshazlo y átalo otra vez, paso por paso.
+    - titulo: Las puntas muy cortas
+      texto: >-
+        Si dejas muy poca punta, el nudo se afloja y se suelta. Deja por lo menos el ancho
+        de tu mano en cada una.
+
+# El nudo terminado, apretado, se muestra por delante y por detrás.
+terminado:
+  encuadre:
+    x: [-9.0, 9.0]
+    y: [-2.8, 5.4]
