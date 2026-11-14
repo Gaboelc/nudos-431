@@ -166,7 +166,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [ ] Rizo
 - [ ] Pescador (el sencillo, como el manual de la Tropa; Gabriel, 13 nov)
 - [ ] Pescador doble (el de las imágenes de Animated Knots, después del sencillo; Gabriel, 13 nov)
-- [ ] Nudo aguja (el del manual de la Tropa)
+- [ ] Nudo aguja (el del manual de la Tropa) (13 nov: Gabriel eligió un anfitrión nuevo para el destorcedor, un cilindro corto parado sobre la mesa, que puede servir también para la estaca del tensor ajustable. Es una tarea de código, como T5: su sesión propone el diseño, Gabriel lo aprueba y después se dibuja el nudo)
 - [ ] Punto de control de la tanda 2
 
 ### Tanda 3: sobre anfitrión
