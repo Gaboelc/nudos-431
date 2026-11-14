@@ -1,0 +1,146 @@
+# Nudo aguja, el de la página 25 del manual de la Tropa (decisión D9 del plan): ata un sedal
+# al ojo de un destorcedor. Borrador de la skill nudo-nuevo, por revisar con Gabriel.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# El destorcedor es un cilindro parado en x = y = 0; el nudo se hace a su izquierda.
+slug: nudo-aguja
+nombre: Nudo aguja
+familia: De sujeción
+estado: borrador
+
+usos: >-
+  Ata un sedal al ojo de un destorcedor. Con él se arman las líneas de pesca de varios
+  anzuelos, en las que cambias la profundidad de cada anzuelo corriendo su destorcedor.
+materiales: >-
+  Un sedal o un cordel delgado de 1 m y un destorcedor. Para practicar, una cuerda delgada y
+  una argolla.
+verificacion:
+  - El chicote da dos vueltas al firme y una vuelta y media al tramo que vuelve del destorcedor.
+  - Las vueltas quedan juntas, sin montarse unas sobre otras.
+  - El chicote sale del nudo hacia el lado contrario al destorcedor.
+  - Al tirar del firme con el destorcedor sujeto, las vueltas se aprietan y no se corren.
+precauciones:
+  - >-
+    Moja el sedal antes de apretar el nudo: el nailon seco se calienta con el roce y queda
+    más débil.
+  - Al cortar el chicote, deja unos milímetros; si lo cortas al ras, el nudo se puede soltar.
+  - Cuida tus dedos de los anzuelos mientras atas.
+alternativas:
+  - nudo: Media llave y dos cotes
+    cuando: Cuando atas una cuerda a una argolla grande y no un sedal a un destorcedor.
+
+anfitrion: {tipo: destorcedor, radio: 2, alto: 2}
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-22.0, 4.5]
+  y: [-6.0, 6.5]
+
+segmentos:
+  # El firme llega por la izquierda, cerca de quien ata, y le da la vuelta al destorcedor por
+  # la derecha.
+  firme: [[-24, -2.6], [-21, -2.6], [-18.5, -2.6], [-16.5, -2.6]]
+  firme-recto: [[-13, -2.6], [-9.5, -2.6], [-6, -2.6]]
+  # Desde el paso 3, donde el chicote lo rodea, el firme se ondula al revés que el chicote,
+  # como dos cuerdas torcidas: así tiene el largo que necesita para pasar por encima de él.
+  firme-torcido: [[-14.75, -2.1], [-13, -2.6], [-11.25, -3.1], [-9.5, -2.6], [-7.75, -2.1],
+                  [-6, -2.6]]
+  firme-llega: [[-4, -2.6], [-3.2, -2.675], [-1.6, -2.47]]
+  vuelta: [[0, -2.55], [0.469, -2.507], [0.921, -2.378], [1.342, -2.168], [1.718, -1.884],
+           [2.035, -1.537], [2.283, -1.137], [2.453, -0.698], [2.539, -0.235],
+           [2.539, 0.235], [2.453, 0.698], [2.283, 1.137], [2.035, 1.537],
+           [1.718, 1.884], [1.342, 2.168], [0.921, 2.378], [0.469, 2.507], [0, 2.55]]
+  # El tramo que vuelve del destorcedor, hacia la izquierda. En el paso 5 se ondula como el
+  # firme, donde el chicote lo rodea.
+  vuelve: [[-1.6, 2.47], [-3.2, 2.675], [-4, 2.6], [-6, 2.6]]
+  vuelve-recto: [[-9.5, 2.6], [-13, 2.6], [-14.5, 2.6]]
+  vuelve-torcido: [[-7.75, 2.1], [-9.5, 2.6], [-11.25, 3.1], [-13, 2.6], [-14.5, 2.6]]
+  # Paso 1: el chicote sigue derecho hacia la izquierda.
+  suelto: [[-17, 2.65], [-20, 2.75]]
+  # Paso 2 en adelante: el chicote baja hacia el firme.
+  baja: [[-14.945, 2.55], [-15.368, 2.402], [-15.747, 2.164], [-16.064, 1.847],
+         [-16.302, 1.468], [-16.45, 1.045], [-16.5, 0.6], [-16.5, -0.4]]
+  cruza-firme: [[-16.5, -2.6], [-16.459, -2.979], [-16.336, -3.34], [-16.138, -3.665],
+                [-15.875, -3.941]]
+  # Dos vueltas al firme, hacia el destorcedor: debajo del firme, encima, debajo.
+  envuelve-firme: [[-16.5, -2.6], [-16.429, -3.093], [-16.222, -3.546], [-15.896, -3.923],
+                   [-15.477, -4.192], [-14.999, -4.332], [-14.501, -4.332],
+                   [-14.023, -4.192], [-13.604, -3.923], [-13.278, -3.546],
+                   [-13.071, -3.093], [-13, -2.6], [-12.929, -2.107],
+                   [-12.722, -1.654], [-12.396, -1.277], [-11.977, -1.008],
+                   [-11.499, -0.868], [-11.001, -0.868], [-10.523, -1.008],
+                   [-10.104, -1.277], [-9.778, -1.654], [-9.571, -2.107],
+                   [-9.5, -2.6], [-9.429, -3.093], [-9.222, -3.546],
+                   [-8.896, -3.923], [-8.477, -4.192], [-7.999, -4.332],
+                   [-7.501, -4.332], [-7.023, -4.192], [-6.604, -3.923],
+                   [-6.278, -3.546], [-6.071, -3.093], [-6, -2.6]]
+  fin-3: [[-6, -1.6]]
+  sube: [[-6, -1.1], [-6, 0], [-6, 1.1]]
+  cruza-vuelve: [[-6, 2.6], [-6.06, 3.053], [-6.234, 3.475], [-6.513, 3.837]]
+  # Una vuelta y media al tramo que vuelve, alejándose del destorcedor.
+  envuelve-vuelve: [[-6, 2.6], [-6.071, 3.093], [-6.278, 3.546], [-6.604, 3.923],
+                    [-7.023, 4.192], [-7.501, 4.332], [-7.999, 4.332],
+                    [-8.477, 4.192], [-8.896, 3.923], [-9.222, 3.546],
+                    [-9.429, 3.093], [-9.5, 2.6], [-9.571, 2.107],
+                    [-9.778, 1.654], [-10.104, 1.277], [-10.523, 1.008],
+                    [-11.001, 0.868], [-11.499, 0.868], [-11.977, 1.008],
+                    [-12.396, 1.277], [-12.722, 1.654], [-12.929, 2.107],
+                    [-13, 2.6]]
+  cola: [[-13, 3.65], [-13.073, 4.114], [-13.286, 4.532], [-13.618, 4.864], [-14.036, 5.077],
+         [-14.5, 5.15], [-16.5, 5.25], [-19, 5.45]]
+
+pasos:
+  - titulo: Pasa el chicote por el destorcedor
+    texto: >-
+      El firme llega desde la izquierda. Pasa el chicote por el ojo del destorcedor y tráelo
+      de vuelta hacia la izquierda, separado del firme. Deja un chicote de un palmo.
+    trazado: [firme, firme-recto, firme-llega, vuelta, vuelve, vuelve-recto, suelto]
+    secuencia: ""
+    resaltar: {desde: "vuelta[0]", hasta: fin}
+  - titulo: Cruza el chicote sobre el firme
+    texto: >-
+      Lejos del destorcedor, dobla el chicote hacia el firme y pásalo por encima de él. Entre
+      el destorcedor y el cruce queda un lazo largo.
+    trazado: [firme, firme-recto, firme-llega, vuelta, vuelve, vuelve-recto, baja, cruza-firme]
+    secuencia: "1U 1O"
+    resaltar: {desde: "vuelve-recto[-1]", hasta: fin}
+  - titulo: Enrolla el chicote en el firme
+    texto: >-
+      Rodea el firme con el chicote, avanzando hacia el destorcedor: pasa por debajo, por
+      encima y otra vez por debajo. Son dos vueltas, dentro del lazo.
+    trazado: [firme, firme-torcido, firme-llega, vuelta, vuelve, vuelve-recto, baja,
+              envuelve-firme, fin-3]
+    secuencia: "1U 2O 3U 4O 1O 2U 3O 4U"
+    resaltar: {desde: "baja[-1]", hasta: fin}
+  - titulo: Pasa al tramo que vuelve
+    texto: >-
+      Lleva el chicote derecho hacia el tramo que vuelve del destorcedor y pásalo por encima
+      de él.
+    trazado: [firme, firme-torcido, firme-llega, vuelta, vuelve, vuelve-recto, baja,
+              envuelve-firme, sube, cruza-vuelve]
+    secuencia: "1U 2O 3U 4O 5U 1O 2U 3O 4U 5O"
+    resaltar: {desde: "sube[0]", hasta: fin}
+  - titulo: Enróllalo en el tramo que vuelve
+    texto: >-
+      Rodea ese tramo alejándote del destorcedor: por debajo y otra vez por encima. Saca el
+      chicote hacia la izquierda y tira del firme y del destorcedor para apretar las vueltas.
+    trazado: [firme, firme-torcido, firme-llega, vuelta, vuelve, vuelve-torcido, baja,
+              envuelve-firme, sube, envuelve-vuelve, cola]
+    secuencia: "1U 2O 3U 4O 5U 6O 7U 1O 2U 3O 4U 5O 6U 7O"
+    resaltar: {desde: "sube[-1]", hasta: fin}
+
+error:
+  paso: 4
+  invierte: [5]
+  titulo: El chicote pasa por debajo
+  # Más cerca del cruce 5, que es el que cambia.
+  encuadre:
+    x: [-14.0, 4.0]
+    y: [-5.5, 6.0]
+  texto: >-
+    Si pasas el chicote por debajo del tramo que vuelve, las vueltas siguientes no lo rodean
+    y el nudo se suelta al tirar. Tiene que pasar por encima.
+  otros:
+    - titulo: Las vueltas montadas
+      texto: >-
+        Si aprietas con las vueltas montadas unas sobre otras, el nudo queda flojo. Acomódalas
+        juntas antes de tirar.
