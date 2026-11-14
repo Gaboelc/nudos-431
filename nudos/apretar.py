@@ -113,17 +113,22 @@ def apretado(spec: Spec, final: Resultado, reverso: Resultado | None = None,
              rondas: int = RONDAS) -> tuple[Resultado | None, Resultado | None]:
     """El último paso de la especificación, ya construido (`final`), apretado, y el nudo por
     detrás (`reverso`, el último paso volteado), apretado. Sobre un poste no hay reverso: se
-    mira el mismo nudo desde el otro lado. En un nudo de plantilla, que no se aprieta, los dos
-    son None."""
+    mira el mismo nudo desde el otro lado. Con el destorcedor, todo el nudo va sobre la mesa y
+    se aprieta como sin anfitrión, con el destorcedor sacando la cuerda de él. En un nudo de
+    plantilla, que no se aprieta, los dos son None."""
     if spec.plantilla is not None:
         return None, None
     paso: Paso = spec.pasos[-1]
-    if spec.anfitrion is not None:
+    if spec.anfitrion is not None and not spec.anfitrion.en_la_mesa:
         from .anfitrion import apretar_paso
         return apretar_paso(paso, spec.anfitrion, final, rondas), None
-    delante = apretar(final, paso.secuencia, paso.pasadas, rondas=rondas)
+    mesa = {}
+    if spec.anfitrion is not None:
+        from .anfitrion import en_la_mesa
+        mesa = en_la_mesa(spec.anfitrion, paso.n)
+    delante = apretar(final, paso.secuencia, paso.pasadas, rondas=rondas, **mesa)
     detras = None if reverso is None else apretar(reverso, invertida(paso.secuencia),
-                                                  paso.pasadas, rondas=rondas)
+                                                  paso.pasadas, rondas=rondas, **mesa)
     return delante, detras
 
 

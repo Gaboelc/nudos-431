@@ -38,12 +38,16 @@ _CAMPOS_TERMINADO = {"encuadre"}
 _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 # Campos de cada tipo de anfitrión, además de «tipo»; todos son medidas en diámetros.
 _MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "largo"),
-                      "tubo": ("radio", "largo")}
+                      "tubo": ("radio", "largo"), "destorcedor": ("radio", "alto")}
 TIPOS_ANFITRION = tuple(_MEDIDAS_ANFITRION)
 # Los anfitriones que solo se usan con una plantilla, con la plantilla de ejemplo.
 _SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco"}
 # Cómo se nombra el anfitrión en los mensajes.
-_DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo"}
+_DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo",
+                  "destorcedor": "del destorcedor"}
+# Los anfitriones con los que todo el nudo va sobre la mesa: se construye, se voltea y se
+# aprieta como un nudo libre, y el anfitrión solo empuja la cuerda (nudos/anfitrion.py).
+EN_LA_MESA = ("destorcedor",)
 # Una medida de la plantilla dentro del texto, como {vueltas}.
 _MEDIDA = re.compile(r"\{([^{}]*)\}")
 _CAMPOS_CUERDA = {"nombre", "grosor", "color"}
@@ -102,12 +106,22 @@ class Anfitrion:
 
     Tubo: un cilindro horizontal a lo largo de x, centrado en x = 0 y con el eje en y = 0,
     para la cabeza de turco. El nudo lo rodea entero y se apoya sobre él: debajo de cada
-    cruce hay dos capas de cuerda, así que el eje queda a la altura radio + 2. Mide `largo`."""
+    cruce hay dos capas de cuerda, así que el eje queda a la altura radio + 2. Mide `largo`.
+
+    Destorcedor: el ojo de un destorcedor de pesca, un cilindro corto parado sobre la mesa,
+    con el eje vertical en x = y = 0 y `alto` desde la mesa. La cuerda le da la vuelta a ras
+    de la mesa y nunca pasa por encima, así que todo el nudo va sobre la mesa (EN_LA_MESA)."""
     tipo: str
     radio: float
     desde: float | None = None   # poste: extremos a lo largo de x
     hasta: float | None = None
     largo: float | None = None   # cruz: largo de cada palo; tubo: su largo
+    alto: float | None = None    # destorcedor: su alto desde la mesa
+
+    @property
+    def en_la_mesa(self) -> bool:
+        """Si todo el nudo va sobre la mesa y se trata como un nudo libre (EN_LA_MESA)."""
+        return self.tipo in EN_LA_MESA
 
 
 @dataclass(frozen=True)
@@ -565,6 +579,9 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         raise af("«largo» es el largo de cada palo; tiene que ser mayor que su grosor")
     if tipo == "tubo" and numeros["largo"] <= 2 * numeros["radio"]:
         raise af("«largo» es el largo del tubo; tiene que ser mayor que su grosor")
+    if tipo == "destorcedor" and numeros["alto"] <= 1:
+        raise af("«alto» es el alto del destorcedor desde la mesa; tiene que ser mayor que 1, "
+                 "el grosor de la cuerda que lo rodea")
     return Anfitrion(tipo, **numeros)
 
 
@@ -615,6 +632,9 @@ def _segmentos(datos, anfitrion: Anfitrion | None, falla) -> dict[str, Segmento]
             if anfitrion is None:
                 raise falla(f"segmento {nombre}: va sobre el poste y la especificación no "
                             "declara «anfitrion»")
+            if anfitrion.en_la_mesa:
+                raise falla(f"segmento {nombre}: va sobre el poste, y con el anfitrión "
+                            f"{anfitrion.tipo} todo el nudo va sobre la mesa, como [x, y]")
             puntos = puntos["poste"]
         try:
             arr = np.asarray(puntos, dtype=float)

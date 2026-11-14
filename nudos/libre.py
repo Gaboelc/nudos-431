@@ -122,10 +122,13 @@ class Resultado:
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None,
                    cuerdas: tuple[Cuerda, ...] = ()) -> Resultado:
-    """`cuerdas` son las de la especificación, cuando el nudo tiene varias."""
-    if anfitrion is not None:
+    """`cuerdas` son las de la especificación, cuando el nudo tiene varias. Con un anfitrión
+    que deja todo el nudo sobre la mesa (el destorcedor), el paso se construye aquí y el
+    anfitrión solo saca la cuerda de él al relajar."""
+    if anfitrion is not None and not anfitrion.en_la_mesa:
         from .anfitrion import construir_paso as sobre_anfitrion
         return sobre_anfitrion(paso, anfitrion)
+    mesa = _en_la_mesa(anfitrion, paso.n)
     X2, h, ctrl_s, reparto = _curva(paso, cuerdas)
     cruces = encontrar_cruces(X2, h, None if reparto is None else reparto.seguido)
     declarados = len(paso.secuencia) // 2
@@ -148,8 +151,18 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None,
     if paso.resaltar is not None:
         a, b = paso.resaltar
         resaltado = (float(ctrl_s[a]), float(ctrl_s[b]))
-    return _resultado(paso.n, relajar(X, h, reparto=reparto), h, paso.secuencia, resaltado,
-                      reparto=reparto, pasadas=paso.pasadas)
+    return _resultado(paso.n, relajar(X, h, reparto=reparto, anfitrion=mesa.get("anfitrion")), h,
+                      paso.secuencia, resaltado, medir=mesa.get("medir"), reparto=reparto,
+                      pasadas=paso.pasadas)
+
+
+def _en_la_mesa(anfitrion: Anfitrion | None, n: int) -> dict:
+    """El sólido y la comprobación de un anfitrión con el que todo el nudo va sobre la mesa
+    (nudos/anfitrion.py, en_la_mesa); sin anfitrión, nada."""
+    if anfitrion is None:
+        return {}
+    from .anfitrion import en_la_mesa
+    return en_la_mesa(anfitrion, n)
 
 
 def _curva(paso: Paso, cuerdas: tuple[Cuerda, ...]):
@@ -176,11 +189,14 @@ def _curva(paso: Paso, cuerdas: tuple[Cuerda, ...]):
     return np.vstack([Xk for Xk, _, _ in partes]), h, np.concatenate(ctrl_s), reparto
 
 
-def voltear(r: Resultado, secuencia, pasadas=None) -> Resultado:
+def voltear(r: Resultado, secuencia, pasadas=None, anfitrion: Anfitrion | None = None) -> Resultado:
     """El paso visto por detrás: la cuerda se voltea sobre el eje y (como una página) y
     vuelve a asentarse en la mesa. `secuencia` es la declarada del paso; al voltear,
     cada cruce queda al revés, así que se espera esa misma secuencia invertida. Con
-    varias cuerdas, `pasadas` es la del paso: cada pasada sigue en su cuerda."""
+    varias cuerdas, `pasadas` es la del paso: cada pasada sigue en su cuerda. Con el
+    destorcedor (`anfitrion`), que está en x = 0 y es simétrico, el nudo se voltea con él y
+    queda en el mismo lugar."""
+    mesa = _en_la_mesa(anfitrion, r.n)
     rep = r.reparto or Reparto.una(len(r.puntos))
     X = r.puntos.copy()
     X[:, 0] *= -1
@@ -189,8 +205,9 @@ def voltear(r: Resultado, secuencia, pasadas=None) -> Resultado:
     for i in rep.inicios:   # los puntos fijos de cada firme siguen sobre la mesa
         X[i:i + 3, 2] = rep.radio[i]
     invertida = tuple(t[:-1] + ("U" if encima(t) else "O") for t in secuencia)
-    return _resultado(r.n, relajar(X, r.h, reparto=r.reparto), r.h, invertida, None,
-                      reparto=r.reparto, pasadas=pasadas)
+    return _resultado(r.n, relajar(X, r.h, reparto=r.reparto, anfitrion=mesa.get("anfitrion")),
+                      r.h, invertida, None, medir=mesa.get("medir"), reparto=r.reparto,
+                      pasadas=pasadas)
 
 
 def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=None,

@@ -45,8 +45,9 @@ def faltan_textos(s: Spec) -> list[str]:
 
 def faltantes(modelo: Modelo) -> list[str]:
     """Lo que la especificación todavía no tiene y la ficha necesita."""
-    faltan = faltan_textos(modelo.spec)
-    if modelo.reverso is None and modelo.spec.anfitrion is None:
+    s = modelo.spec
+    faltan = faltan_textos(s)
+    if modelo.reverso is None and (s.anfitrion is None or s.anfitrion.en_la_mesa):
         faltan.append("el nudo terminado por detrás (no se pudo construir el último paso)")
     return faltan
 
@@ -118,7 +119,9 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
               "poste": "Por detrás es como lo ves desde el otro lado del poste.",
               "cruz": "Por detrás es como lo ves si volteas los dos palos juntos como la página "
                       "de un libro.",
-              "tubo": "Por detrás es como lo ves si giras el tubo media vuelta."}[s.anfitrion and s.anfitrion.tipo]
+              "tubo": "Por detrás es como lo ves si giras el tubo media vuelta.",
+              "destorcedor": "Por detrás es como lo ves si volteas el nudo con el destorcedor "
+                             "como la página de un libro."}[s.anfitrion and s.anfitrion.tipo]
     terminado = (f'    <figure class="panel terminado"><div class="imgs">'
                  f'<div class="img"><img src="{img("terminado-frente")}" alt=""><span class="sello">Por delante</span></div>'
                  f'<div class="img"><img src="{img("terminado-reverso")}" alt=""><span class="sello">Por detrás</span></div>'

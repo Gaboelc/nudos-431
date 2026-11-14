@@ -276,6 +276,7 @@ function altoDeEncuadre(modelo, B) {
   }
   if (a && (a.tipo === "poste" || a.tipo === "tubo")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
+  if (a && a.tipo === "destorcedor") alto = Math.max(alto, a.alto);
   return alto;
 }
 
@@ -348,7 +349,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
 
   // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x, la
   // cruz de los amarres o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
-  // three.js va a lo largo de y.
+  // three.js va a lo largo de y. El destorcedor, de metal, va más abajo.
   const a = modelo.anfitrion;
   const palo = (largo, x, y, z, aLoLargoDeX) => {
     const geo = new THREE.CylinderGeometry(a.radio, a.radio, largo, 64, 1, false);
@@ -372,6 +373,19 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   if (a && a.tipo === "cruz") {
     palo(a.largo, 0, 0, a.z_abajo, false);
     palo(a.largo, 0, 0, a.z_arriba, true);
+  }
+  // El destorcedor del nudo aguja: un cilindro corto de metal, parado sobre la mesa en
+  // x = y = 0, de la mesa hasta «alto». Es gris acero, para no confundirlo con la madera.
+  if (a && a.tipo === "destorcedor") {
+    const geo = new THREE.CylinderGeometry(a.radio, a.radio, a.alto, 64, 1, false);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38,
+      metalness: 0.55 });
+    const m = new THREE.Mesh(geo, mat);
+    m.rotation.x = Math.PI / 2;
+    m.position.set(0, 0, a.alto / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+    ejesPalos.push({ a: [0, 0, 0], b: [0, 0, a.alto], radio: a.radio });
   }
 
   // Materiales de cada cuerda: su color, ámbar para lo que se mueve en el paso y el remate

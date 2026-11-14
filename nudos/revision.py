@@ -19,6 +19,7 @@ from pathlib import Path
 import yaml
 
 from . import RAIZ
+from .anfitrion import solido
 from .construir import Modelo, datos_json
 from .hoja import ANCHO, hoja
 from .libre import LIMITES, Resultado
@@ -60,12 +61,13 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
         viejo.unlink()
     mapa = leer_pasos(destino / "pasos.yaml")
     datos = datos_json(modelo)
+    anfitrion = None if modelo.spec.anfitrion is None else solido(modelo.spec.anfitrion).datos()
 
     def dibujos(dibujo: dict, nombre: str) -> str:
         """`dibujo` es el paso como lo trae modelo.json."""
         celdas = []
         for vista in VISTAS:
-            im = hoja({**datos, "pasos": [dibujo]}, vista)
+            im = hoja({**datos, "pasos": [dibujo]}, vista, anfitrion)
             im = im.crop((0, 0, ANCHO, im.height))
             archivo = f"{nombre}-{vista}.png"
             im.save(destino / archivo)

@@ -63,7 +63,7 @@ def construir_error(spec: Spec, correcto: Resultado | None) -> tuple[Resultado |
 
 def construir_reverso(spec: Spec, final: Resultado) -> tuple[Resultado, list[str]]:
     """El último paso volteado, para mostrar el nudo terminado por detrás."""
-    r = voltear(final, spec.pasos[-1].secuencia, spec.pasos[-1].pasadas)
+    r = voltear(final, spec.pasos[-1].secuencia, spec.pasos[-1].pasadas, spec.anfitrion)
     return r, [f"Reverso del nudo terminado: {f}" for f in r.fallas]
 
 

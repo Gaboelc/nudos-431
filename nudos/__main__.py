@@ -9,7 +9,7 @@ from pathlib import Path
 from PIL import Image
 
 from . import BUILD, RAIZ
-from .anfitrion import Tubo
+from .anfitrion import Tubo, solido
 from .construir import construir, guardar
 from .estado import nudos, probadores, tabla
 from .exportar import SitioError, construir_sitio
@@ -196,8 +196,8 @@ def _hoja(slug: str, vista: str) -> int:
     with open(origen, encoding="utf-8") as f:
         datos = json.load(f)
     destino = origen.parent / f"hoja-{vista}.png"
-    imagen = hoja(datos, vista)
     spec = cargar(slug)
+    imagen = hoja(datos, vista, None if spec.anfitrion is None else solido(spec.anfitrion).datos())
     if spec.anfitrion is not None and spec.anfitrion.tipo == "tubo":
         # Sobre el tubo, la hoja lleva además el tubo desenrollado, con cada cruce.
         abajo = mapa(datos, Tubo(spec.anfitrion), spec.plantilla.senos)

@@ -139,7 +139,8 @@ def imagenes(modelo: Modelo) -> list[Imagen]:
 def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> list[Imagen]:
     """Las dos vistas del nudo terminado: `final` por delante y `reverso` por detrás. Sobre un
     poste no hay reverso (se mira `final` desde el otro lado), sobre la cruz se voltea
-    `final` con los palos y sobre el tubo se gira `final` media vuelta con el tubo. Se llaman
+    `final` con los palos y sobre el tubo se gira `final` media vuelta con el tubo. Con el
+    destorcedor se mira como sin anfitrión: el reverso es el nudo volteado con él. Se llaman
     <prefijo>-frente y <prefijo>-reverso."""
     s = modelo.spec
     todos = nombres(modelo)
@@ -162,7 +163,7 @@ def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> lis
                 Imagen(atras, "Terminado, por detrás",
                        datos_escena(modelo, espejo(enc), [volteado], anfitrion=cruz), 1,
                        VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO)]
-    if s.anfitrion is not None:
+    if s.anfitrion is not None and not s.anfitrion.en_la_mesa:
         escena = datos_escena(modelo, enc, [final])
         delante, detras = VISTAS_TERMINADO_ANFITRION
         return [Imagen(frente, "Terminado, por delante", escena, 1, delante, False, todos,

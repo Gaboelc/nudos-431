@@ -1,6 +1,8 @@
 """Nudos sobre un anfitrión rígido: el poste, un cilindro horizontal, la cruz, los dos
-palos de los amarres, y el tubo de la cabeza de turco. Los pasos sobre la cruz y el tubo los
-construye su plantilla (nudos/plantillas/pasos.py); aquí están solo como sólidos.
+palos de los amarres, el tubo de la cabeza de turco y el destorcedor, un cilindro corto
+parado sobre la mesa. Los pasos sobre la cruz y el tubo los construye su plantilla
+(nudos/plantillas/pasos.py), y los del destorcedor, el generador libre (nudos/libre.py), porque
+todo el nudo va sobre la mesa; aquí están solo como sólidos.
 
 Sobre el poste, cada paso se construye como en el generador libre (nudos/libre.py), con tres
 diferencias:
@@ -34,6 +36,7 @@ PASADAS_LARGO = 16    # correcciones de largo por vuelta de la relajación (en l
 class Poste:
     """Cilindro horizontal a lo largo de x, con el eje en y = 0 y a la altura radio + 1:
     se apoya sobre la cuerda que pasa por debajo."""
+    MEDIDA = ("penetracion_poste", "en el poste")   # la clave de la medida y dónde entra
 
     def __init__(self, a: Anfitrion):
         self.radio = a.radio
@@ -204,9 +207,46 @@ class Tubo:
                        medidas={**r.medidas, "altura_max": float(Y[:, 2].max())})
 
 
-def solido(a: Anfitrion) -> Poste | Cruz | Tubo:
+class Destorcedor:
+    """El ojo de un destorcedor: un cilindro corto parado sobre la mesa, con el eje vertical
+    en x = y = 0, de la mesa hasta `alto`. La cuerda le da la vuelta a ras de la mesa y nunca
+    pasa por encima, así que el nudo se construye, se voltea y se aprieta como uno libre
+    (nudos/libre.py, nudos/apretar.py): solo cambia que la cuerda no puede entrar en él. Como
+    está en x = 0 y es simétrico, al voltear el nudo como una página queda en el mismo lugar.
+
+    La estaca del tensor ajustable será este mismo sólido, de madera y más alto."""
+    MEDIDA = ("penetracion_destorcedor", "en el destorcedor")
+
+    def __init__(self, a: Anfitrion):
+        self.radio, self.alto = a.radio, a.alto
+        self.rb = a.radio + R    # distancia al eje del eje de una cuerda que lo toca
+
+    def empujar(self, X, libre) -> None:
+        """Saca del destorcedor los puntos que entraron, hacia afuera en el plano de la mesa,
+        a cualquier altura: la cuerda no pasa por encima. Un punto justo en el eje sale hacia
+        x positivo."""
+        d = np.hypot(X[:, 0], X[:, 1])
+        m = libre & (d < self.rb)
+        if m.any():
+            dm = d[m]
+            lejos = dm > 1e-9
+            ux = np.where(lejos, X[m, 0] / np.maximum(dm, 1e-9), 1.0)
+            uy = np.where(lejos, X[m, 1] / np.maximum(dm, 1e-9), 0.0)
+            X[m, 0] = ux * self.rb
+            X[m, 1] = uy * self.rb
+
+    def penetracion(self, X) -> float:
+        """Cuánto entra la cuerda en el destorcedor (0 si no entra)."""
+        return float(max(0.0, (self.rb - np.hypot(X[:, 0], X[:, 1])).max()))
+
+    def datos(self) -> dict:
+        """Lo que necesita render/escena.js para dibujarlo."""
+        return {"tipo": "destorcedor", "radio": self.radio, "alto": self.alto}
+
+
+def solido(a: Anfitrion) -> Poste | Cruz | Tubo | Destorcedor:
     """El anfitrión de la especificación como sólido."""
-    return {"cruz": Cruz, "tubo": Tubo}.get(a.tipo, Poste)(a)
+    return {"cruz": Cruz, "tubo": Tubo, "destorcedor": Destorcedor}.get(a.tipo, Poste)(a)
 
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
@@ -242,15 +282,27 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
                       buscar=lambda Y: _cruces(Y, h, sobre, poste), medir=_medir(paso.n, poste))
 
 
-def _medir(n: int, poste: Poste):
-    """La comprobación propia del poste: cuánto entra la cuerda en él."""
+def _medir(n: int, poste: Poste | Destorcedor):
+    """La comprobación propia del anfitrión: cuánto entra la cuerda en él."""
+    clave, donde = poste.MEDIDA
+
     def medir(X):
         pen = poste.penetracion(X)
         fallas = [] if pen <= PENETRACION_MAX else [
-            f"Paso {n}: la cuerda entra {pen:.2f} diámetros en el poste; el máximo es "
+            f"Paso {n}: la cuerda entra {pen:.2f} diámetros {donde}; el máximo es "
             f"{PENETRACION_MAX}."]
-        return {"penetracion_poste": pen}, fallas
+        return {clave: pen}, fallas
     return medir
+
+
+def en_la_mesa(a: Anfitrion | None, n: int) -> dict:
+    """Lo que se le pasa a la relajación y a la comprobación de un nudo libre con este
+    anfitrión (el destorcedor), para el paso `n`: `anfitrion`, que saca la cuerda de él, y
+    `medir`, cuánto entra. Sin anfitrión, nada."""
+    if a is None:
+        return {}
+    d = solido(a)
+    return {"anfitrion": d, "medir": _medir(n, d)}
 
 
 def apretar_paso(paso: Paso, anfitrion: Anfitrion, final: Resultado, rondas: int,

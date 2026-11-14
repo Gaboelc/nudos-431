@@ -1,6 +1,6 @@
-# Formato de especificación de nudo (v1.2)
+# Formato de especificación de nudo (v1.3)
 
-Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.2 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
+Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.3 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
 Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo, con una cuerda sobre la mesa; `specs/ballestrinque.yaml`, sobre un poste; `specs/vuelta-de-escota.yaml`, con dos cuerdas, y `specs/amarre-cuadrado.yaml`, con una plantilla.
 
@@ -58,11 +58,11 @@ Los índices se cuentan sobre el segmento tal como está definido. Dos puntos se
 
 ## Anfitrión
 
-Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres y el tubo de la cabeza de turco; los demás (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
+Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres, el tubo de la cabeza de turco y el destorcedor; los demás (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
 
 | Campo | Qué es |
 |---|---|
-| `tipo` | `poste`, `cruz` o `tubo`. |
+| `tipo` | `poste`, `cruz`, `tubo` o `destorcedor`. |
 | `radio` | Radio del poste, en diámetros de cuerda. Un palo de escoba con una cuerda de 8 mm da alrededor de 1,5. |
 | `desde`, `hasta` | Dónde empieza y termina el poste a lo largo de x. |
 
@@ -91,6 +91,20 @@ Es horizontal y va a lo largo de x, con el eje en y = 0, como el poste, pero el 
 Un segmento sobre el poste se escribe `{poste: [[x, ángulo], ...]}`. `x` es la posición a lo largo del eje y `ángulo`, en grados, el giro alrededor del eje: 0 arriba, 90 hacia quien ata, 180 abajo y 270 atrás. El ángulo no vuelve a 0: una vuelta por encima del poste que empieza al frente va, por ejemplo, de 90 a -270, y la siguiente sigue bajando. Así el sentido de cada vuelta queda escrito en los números. No hay capas: qué tramo queda encima en cada cruce lo dice la secuencia, igual que sobre la mesa.
 
 Un paso puede pasar de la mesa al poste y volver. Conviene que la cuerda no suba por el frente del poste para bajar enseguida a la mesa: esa esquina no existe en la cuerda real y la relajación no la resuelve.
+
+El destorcedor es el ojo de un destorcedor de pesca, como en el nudo aguja: un cilindro corto, parado sobre la mesa, con el eje vertical en x = y = 0. La cuerda le da la vuelta a ras de la mesa y nunca pasa por encima de él.
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `destorcedor`. |
+| `radio` | Radio del cilindro, en diámetros de cuerda. |
+| `alto` | Alto del cilindro desde la mesa. Es mayor que 1, para que la cuerda que lo rodea no quede por encima. Solo cambia el dibujo. |
+
+```yaml
+anfitrion: {tipo: destorcedor, radio: 1.5, alto: 2}
+```
+
+Con el destorcedor, todo el nudo va sobre la mesa: los segmentos son `[x, y]`, como sin anfitrión, y un segmento `{poste: …}` es un error. El paso se construye como un nudo libre, pero al relajar la cuerda no puede entrar en el destorcedor: lo que entra se empuja hacia afuera, en el plano de la mesa. Traza la cuerda que lo rodea con su eje a `radio + 0,5` del centro, o un poco más, con puntos cada medio diámetro: así la curva suave no lo corta por dentro y la cuerda no se estira al salir. En las imágenes y en el visor es de metal, gris; en la hoja de revisión, gris.
 
 ## En medio de la cuerda
 
@@ -262,7 +276,7 @@ Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el r
 
 ## Nudo terminado
 
-El último paso se muestra por delante y por detrás, apretado (ver «El nudo apretado», abajo). Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Sobre un poste el nudo no se voltea: se mira desde el otro lado de la mesa.
+El último paso se muestra por delante y por detrás, apretado (ver «El nudo apretado», abajo). Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Con el destorcedor es igual: se voltea con el nudo y, como está en x = 0, queda en el mismo lugar. Sobre un poste el nudo no se voltea: se mira desde el otro lado de la mesa.
 
 Sobre la cruz se voltea el amarre entero, palos y cuerda, como un marco sobre la mesa: media vuelta alrededor del eje y, como una página, hasta apoyarse en lo que queda más abajo. El palo de abajo queda encima y se ven las vueltas que pasaban por debajo de él. Es un giro rígido: la cuerda no se relaja otra vez y, como los cruces se miden respecto a los palos, la secuencia no cambia. Por delante y por detrás se mira como los pasos.
 
@@ -278,7 +292,7 @@ Cada tramo del último paso conserva el largo que le dio el trazado, así que el
 
 - **Cómo sale.** La cuerda se acorta dentro del nudo, como si se tirara de sus cabos, y después de cada poco se deshacen los choques, así que ningún tramo atraviesa a otro y ningún cruce cambia. Se acorta lo que está a menos de 6 diámetros, sobre la mesa, de algún cruce del último paso. El chicote después de su último cruce no se acorta: el nudo lo arrastra. El resto, como el firme o la gaza grande del as de guía, se queda donde está, como si lo sostuvieras con las manos. Con cuerdas de distinto grosor solo se acorta la más delgada: la gruesa, que es más rígida, conserva su forma y la delgada se ajusta alrededor.
 - **Mientras se aprieta, los tramos chocan a 1,12 veces la suma de sus radios.** Una cuerda que abraza a otra del mismo grosor se dobla con radio 1, así que un nudo apretado del todo quedaría al borde del límite de curvatura. Con esa holgura las vueltas quedan con radio de 0,9 o más; en una cuerda de 8 mm es 1 mm de luz.
-- **Se aprieta por rondas, 30 como máximo, y cada una se comprueba como un paso:** la secuencia del último paso y los mismos límites (sobre el poste, también la penetración). El apretado es la ronda más apretada que los cumple. Si ninguna los cumple, es el último paso tal cual, así que el apretado nunca agrega fallas.
+- **Se aprieta por rondas, 30 como máximo, y cada una se comprueba como un paso:** la secuencia del último paso y los mismos límites (con un anfitrión, también la penetración). El apretado es la ronda más apretada que los cumple. Si ninguna los cumple, es el último paso tal cual, así que el apretado nunca agrega fallas.
 - **Por detrás** es el nudo por detrás de siempre, el último paso volteado y relajado, apretado igual y con la secuencia invertida. Sobre el poste no hay reverso: se mira el mismo nudo apretado desde el otro lado.
 - **Un nudo de plantilla no se aprieta,** porque su plantilla ya traza la cuerda tensa. El amarre terminado sigue siendo el último paso y su volteo rígido.
 
@@ -334,7 +348,7 @@ Cada nudo avanza así: `borrador → modelado → cuerda-ok → novato-ok → pu
    - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés. El amarre volteado con sus palos no se construye otra vez: es un giro rígido del último paso.
 6. El nudo terminado apretado, por delante y por detrás, tiene la secuencia del último paso (por detrás, invertida) y cumple los mismos límites. Lo garantiza cómo se elige: entre las rondas que los cumplen (ver «El nudo apretado»).
 
-**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
+**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con el destorcedor también, porque la cuerda no sale de la mesa. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
 
 Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la parte tejida, y la mesa, con el extremo corto que cuelga y el resto hasta que llegan al nudo. Los cruces del tubo se buscan en su superficie desenrollada, y cada uno guarda su lugar en el mapa del nudo (a lo largo del tubo y alrededor, desde el seno A) y no en la mesa: como el nudo se gira entre pasos, en la mesa un mismo cruce se movería. Alrededor del tubo, ese lugar da la vuelta a mitad de camino entre dos cruces, donde no hay ninguno. Dos pasadas de una misma cuerda a menos de 3 diámetros a lo largo de ella no cuentan como cruce: ahí la cuerda no puede volver sobre sí misma, y vista desde arriba, donde cae casi vertical al costado del tubo, se pliega sobre sí misma al relajar.
 
@@ -342,7 +356,7 @@ Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la par
 
 ## Versiones
 
-Este es el formato v1.2. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.3. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -360,15 +374,16 @@ La cabeza de turco no entra en v1: el anfitrión `tubo`, la plantilla `cabeza-de
 Son cambios compatibles que ya se conocen:
 
 - `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
-- Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
+- Los anfitriones que faltan (argolla, estaca, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use. La estaca del tensor ajustable es el mismo cilindro parado que el destorcedor, de madera y más alto.
 - Las plantillas de la tanda 4: los amarres redondo, diagonal y trípode, el refuerzo de cabo, el adujado y el puño de mono.
 - Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
 
-Fuera del formato, la hoja de revisión (`python -m nudos hoja`) todavía no dibuja el anfitrión en la vista de la mesa: solo dibuja la cuerda, y el tubo desenrollado de la cabeza de turco.
+Fuera del formato, la hoja de revisión (`python -m nudos hoja`) todavía no dibuja el poste ni la cruz en la vista de la mesa: dibuja la cuerda, el destorcedor y el tubo desenrollado de la cabeza de turco.
 
 ### Registro
 
 - **v1** (11 de noviembre de 2026; Gabriel lo aprobó en el Punto de control B, con la cabeza de turco provisional): el formato de los cuatro nudos del piloto. Desde v0, que era el del as de guía en T1, se agregaron el error común y el nudo terminado (T3), el texto de la ficha y `filtros` (T4), el anfitrión y el poste (T5), las varias cuerdas (T6), `alternativas` y `precauciones` (T6b), y la cruz, las plantillas, `hasta` y el error con `variante` y `otros` (T7).
 - **v1.1** (11 de noviembre de 2026): el campo `estado` (T10). Es un cambio compatible: sin él, una especificación está en `borrador`.
 - **v1.2** (12 de noviembre de 2026): el campo `dos_firmes`, para un nudo en medio de la cuerda, como la mariposa alpina (fase 4, tanda 1). Es un cambio compatible: sin él, la cuerda termina en un chicote, como antes, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.3** (14 de noviembre de 2026): el anfitrión `destorcedor`, un cilindro corto parado sobre la mesa, para el nudo aguja (fase 4, tanda 2). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.

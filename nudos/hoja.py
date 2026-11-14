@@ -6,6 +6,9 @@ imprimir.
 
 Sobre el tubo de la cabeza de turco, la vista desde arriba no sirve para revisar decenas de
 cruces: la hoja dibuja además el tubo desenrollado (mapa()), con cada cruce y su etiqueta.
+
+De los anfitriones, la hoja dibuja solo el destorcedor, en gris: es parte de la cuerda que se
+revisa, porque la gaza lo rodea. El poste y la cruz no se dibujan.
 """
 from __future__ import annotations
 
@@ -23,15 +26,19 @@ CREMA = np.array([0.93, 0.89, 0.78])
 COLORES = {"azul": AZUL, "crema": CREMA}   # los de nudos/spec.py COLORES
 AMBAR = np.array([0.95, 0.55, 0.12])
 REMATE = np.array([0.35, 0.06, 0.06])
+GRIS = np.array([0.62, 0.64, 0.67])   # el destorcedor
+RADIO_SUPERFICIE = 0.25   # las esferas con que se dibuja la superficie del destorcedor
 MESA = np.array([0.80, 0.81, 0.80])
 ANCHO = 520          # píxeles de cada cuadro
 COLUMNAS = 4
 MARGEN_AUTO = 1.5    # diámetros alrededor del nudo cuando no hay encuadre
 
 
-def hoja(datos: dict, vista: str = "arriba") -> Image.Image:
+def hoja(datos: dict, vista: str = "arriba", anfitrion: dict | None = None) -> Image.Image:
     """Un cuadro por paso. `datos` es el contenido de modelo.json y `vista` es
-    «arriba» o la inclinación de la cámara en grados."""
+    «arriba» o la inclinación de la cámara en grados. `anfitrion` es el del nudo, como lo
+    recibe render/escena.js (nudos/anfitrion.py, datos()): modelo.json no lo lleva."""
+    solido = _destorcedor(anfitrion)
     x0, x1, y0, y1 = _encuadre(datos)
     ppd = ANCHO / (x1 - x0)
     alto = int(round((y1 - y0) * ppd))
@@ -39,7 +46,8 @@ def hoja(datos: dict, vista: str = "arriba") -> Image.Image:
     angulo = "arriba" if vista == "arriba" else float(vista)
     cuadros = []
     for p in datos["pasos"]:
-        im = Image.fromarray(_cuadro(_cuerdas(datos, p), angulo, ANCHO, alto, ppd, centro))
+        im = Image.fromarray(_cuadro(_cuerdas(datos, p), angulo, ANCHO, alto, ppd, centro,
+                                     solido=solido))
         ImageDraw.Draw(im).text((12, 10), f"Paso {p['n']}", fill=(30, 30, 30))
         cuadros.append(im)
     filas = (len(cuadros) + COLUMNAS - 1) // COLUMNAS
@@ -72,6 +80,25 @@ def _cuerdas(datos: dict, p: dict) -> list[tuple[np.ndarray, float, np.ndarray, 
             hl = [v - s0 for v in hl] if s0 <= (hl[0] + hl[1]) / 2 <= s1 else None
         out.append((X[i0:i1 + 1], c["grosor"] * R, COLORES[c["color"]], hl))
     return out
+
+
+def _destorcedor(anfitrion: dict | None) -> np.ndarray | None:
+    """Puntos sobre la superficie del destorcedor, para dibujarla con esferas de
+    RADIO_SUPERFICIE: el costado, en anillos, y la tapa, en anillos concéntricos. None si el
+    nudo no tiene destorcedor."""
+    if not anfitrion or anfitrion.get("tipo") != "destorcedor":
+        return None
+    rs, paso = RADIO_SUPERFICIE, 0.12
+    r, alto = anfitrion["radio"] - rs, anfitrion["alto"] - rs
+    puntos = []
+    for z in np.arange(rs, alto + 1e-9, paso):
+        a = np.linspace(0, 2 * math.pi, max(12, int(2 * math.pi * r / paso)), endpoint=False)
+        puntos.append(np.column_stack([r * np.cos(a), r * np.sin(a), np.full(len(a), z)]))
+    for ri in np.arange(r, 0, -paso):
+        a = np.linspace(0, 2 * math.pi, max(6, int(2 * math.pi * ri / paso)), endpoint=False)
+        puntos.append(np.column_stack([ri * np.cos(a), ri * np.sin(a), np.full(len(a), alto)]))
+    puntos.append(np.array([[0.0, 0.0, alto]]))
+    return np.vstack(puntos)
 
 
 def _densificar(X, paso=0.06):
@@ -127,9 +154,10 @@ def _esferas(C, W, H, ppd, radios, normales=True):
     return zb, idx, nrm
 
 
-def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0)):
+def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0), solido=None):
     """`cuerdas` es la lista de _cuerdas. Cada una se densifica por separado: entre el final
-    de una y el comienzo de la siguiente no hay cuerda."""
+    de una y el comienzo de la siguiente no hay cuerda. `solido` son los puntos de la
+    superficie del destorcedor (_destorcedor), que se dibujan en gris."""
     partes = []
     for X, radio, color, resaltado in cuerdas:
         Xd, sd, L = _densificar(X)
@@ -138,6 +166,9 @@ def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0)):
             col[(sd >= resaltado[0]) & (sd <= resaltado[1])] = AMBAR
         col[sd > L - 0.8 * (radio / R)] = REMATE
         partes.append((Xd, col, np.full(len(Xd), radio)))
+    if solido is not None:
+        partes.append((solido, np.tile(GRIS, (len(solido), 1)),
+                       np.full(len(solido), RADIO_SUPERFICIE)))
     Xd = np.vstack([x for x, _, _ in partes])
     col = np.vstack([c for _, c, _ in partes])
     radios = np.concatenate([r for _, _, r in partes])
