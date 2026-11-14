@@ -5,7 +5,7 @@ borrador → modelado → cuerda-ok → novato-ok → publicado. Aquí se compru
 declarado no diga más de lo que muestran los hechos, y se arma la tabla de
 `python -m nudos estado`, con lo que le falta a cada nudo para el estado siguiente.
 
-Que el nudo construya sin fallas no se comprueba aquí, porque construir los 35 tarda
+Que el nudo construya sin fallas no se comprueba aquí, porque construir los 36 tarda
 minutos: lo comprueban las pruebas (tests/test_estado.py) y `python -m nudos construir`.
 """
 from __future__ import annotations

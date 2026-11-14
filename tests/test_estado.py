@@ -1,5 +1,5 @@
 """Estado de producción: el estado declarado no dice más que los hechos, y la tabla de los
-35 nudos de la edición 1."""
+36 nudos de la edición 1."""
 import datetime as dt
 
 import pytest
@@ -31,10 +31,10 @@ def filtro(n, resultado="aprobado", fecha=DIA, codigo="P02"):
 
 # --- La edición ------------------------------------------------------------
 
-def test_la_edicion_tiene_35_nudos_sin_repetir():
+def test_la_edicion_tiene_36_nudos_sin_repetir():
     slugs = [s for tanda in leer_edicion().values() for s in tanda]
-    assert len(slugs) == 35
-    assert len(set(slugs)) == 35
+    assert len(slugs) == 36   # 35 hasta que el pescador pasó a dos fichas (13 nov)
+    assert len(set(slugs)) == 36
 
 
 def test_cada_especificacion_y_cada_nudo_publicado_estan_en_la_edicion():
@@ -152,12 +152,12 @@ def test_los_nudos_modelados_construyen_sin_fallas(slug, request):
 
 # --- La orden -----------------------------------------------------------------
 
-def test_la_orden_muestra_los_35_nudos(capsys):
+def test_la_orden_muestra_los_36_nudos(capsys):
     assert main(["estado"]) == 0
     salida = capsys.readouterr().out
     lista = nudos()
     cuenta = {e: sum(n.declarado == e for n in lista) for e in (*reversed(ESTADOS), SIN_ESPECIFICACION)}
-    assert salida.startswith("Edición 1: 35 nudos. "
+    assert salida.startswith("Edición 1: 36 nudos. "
                              + ", ".join(f"{c} {e}" for e, c in cuenta.items() if c) + ".")
     assert "Tanda 5: anfitriones especiales" in salida
     assert "P01 (joven de la Wak): as-de-guia" in salida

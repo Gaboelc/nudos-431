@@ -314,9 +314,9 @@ Cada nudo avanza así: `borrador → modelado → cuerda-ok → novato-ok → pu
 - Vale el último registro de cada filtro: si una prueba no pasa, se corrige la ficha y se repite.
 - Un mismo código hace una sola vez el filtro 2 de un nudo: si no pasa, se repite con otra persona.
 - Estar en `publicados.txt` no basta para estar en `publicado`. El ballestrinque, la vuelta de escota y el amarre cuadrado tienen su visor en el sitio y siguen en `cuerda-ok`, porque el filtro 2 está en pausa desde el 9 de noviembre de 2026.
-- Los 35 nudos de la edición 1 están en `config/edicion-1.yaml`, por tanda, con el slug que tiene o tendrá su especificación. Cada especificación de `specs/` tiene que estar en esa lista.
+- Los 36 nudos de la edición 1 están en `config/edicion-1.yaml`, por tanda, con el slug que tiene o tendrá su especificación. Cada especificación de `specs/` tiene que estar en esa lista.
 
-`python -m nudos estado` muestra los 35 nudos con su estado y lo que les falta para el siguiente, y los códigos del filtro 2 con los nudos que ya probó cada uno, para no repetir un probador en un nudo que ya conoce. Falla si algún nudo dice un estado que no tiene. Que el nudo construya sin fallas no lo comprueba esa orden, porque construir todos tarda minutos: lo comprueban las pruebas (`tests/test_estado.py`).
+`python -m nudos estado` muestra los 36 nudos con su estado y lo que les falta para el siguiente, y los códigos del filtro 2 con los nudos que ya probó cada uno, para no repetir un probador en un nudo que ya conoce. Falla si algún nudo dice un estado que no tiene. Que el nudo construya sin fallas no lo comprueba esa orden, porque construir todos tarda minutos: lo comprueban las pruebas (`tests/test_estado.py`).
 
 ## Qué se comprueba al construir
 

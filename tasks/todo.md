@@ -164,7 +164,8 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 
 ### Tanda 2: libres, dos cuerdas o dos extremos
 - [ ] Rizo
-- [ ] Pescador
+- [ ] Pescador (el sencillo, como el manual de la Tropa; Gabriel, 13 nov)
+- [ ] Pescador doble (el de las imágenes de Animated Knots, después del sencillo; Gabriel, 13 nov)
 - [ ] Nudo aguja (el del manual de la Tropa)
 - [ ] Punto de control de la tanda 2
 

@@ -45,7 +45,7 @@ def main(argv=None) -> int:
     r = ordenes.add_parser("revision", help="hoja de revisión privada de un borrador, con la "
                                             "fuente junto a cada paso (en revision/<slug>/)")
     r.add_argument("slug")
-    ordenes.add_parser("estado", help="estado de producción de los 35 nudos de la edición 1 "
+    ordenes.add_parser("estado", help="estado de producción de los 36 nudos de la edición 1 "
                                      "y qué le falta a cada uno para el siguiente")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "

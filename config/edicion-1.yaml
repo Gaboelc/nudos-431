@@ -1,4 +1,5 @@
-# Los 35 nudos de la edición 1, por tanda (ver la fase 4 del plan).
+# Los 36 nudos de la edición 1, por tanda (ver la fase 4 del plan). Eran 35 hasta el
+# 13 de noviembre de 2026, cuando Gabriel decidió que el pescador va en dos fichas.
 # Cada uno va con el slug que tiene o tendrá su especificación, que es el nombre de su
 # carpeta en entradas/. «python -m nudos estado» muestra el estado de cada uno.
 Piloto:
@@ -19,6 +20,7 @@ Piloto:
 "Tanda 2: libres, dos cuerdas o dos extremos":
   - rizo
   - pescador
+  - pescador-doble
   - nudo-aguja
 "Tanda 3: sobre anfitrión":
   - ballestrinque-doble
