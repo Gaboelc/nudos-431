@@ -163,17 +163,10 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
   - [x] Revisión con Gabriel (13 nov: cerró el punto de control y pidió arrancar la tanda 2; siguen abiertos los números ABOK sin confirmar del simple, el arnés de hombre y la silla, el paso de preparar del ocho y el filtro 2)
 
 ### Tanda 2: libres, dos cuerdas o dos extremos
-<<<<<<< HEAD
 - [ ] Rizo (14 nov: borrador en la rama `claude/friendly-ishizaka-2fd396`, ab4fe90: 5 pasos y 6 cruces sin fallas, con dos cuerdas, una por cada punta; la ficha cabe. Familia «De ligadura»; error, el nudo de vaca. Falta que Gabriel revise su hoja)
 - [ ] Pescador (el sencillo, como el manual de la Tropa; Gabriel, 13 nov) (14 nov: borrador en la rama `claude/lucid-poincare-388d17`, d0215af: 6 pasos sin fallas; la ficha cabe. Los encima/debajo salen de las fotos del doble, porque los dibujos del manual son muy chicos. Falta que Gabriel revise su hoja)
 - [ ] Pescador doble (el de las imágenes de Animated Knots, después del sencillo; Gabriel, 13 nov) (14 nov: borrador en la misma rama, d8d7201: 6 pasos sin fallas; la ficha cabe, con imágenes chicas porque el nudo es ancho. Falta que Gabriel revise su hoja)
 - [ ] Nudo aguja (el del manual de la Tropa) (13 nov: Gabriel eligió un anfitrión nuevo para el destorcedor, un cilindro corto parado sobre la mesa, que puede servir también para la estaca del tensor ajustable. Es una tarea de código, como T5: su sesión propone el diseño, Gabriel lo aprueba y después se dibuja el nudo. 14 nov: Gabriel aprobó el diseño, `anfitrion: {tipo: destorcedor}` (formato v1.3); anfitrión y borrador en la rama `claude/nice-kepler-d00550`, 693d369 y 81d68f0; los 12 publicados quedan iguales. Falta que Gabriel revise la hoja)
-=======
-- [ ] Rizo
-- [ ] Pescador (el sencillo, como el manual de la Tropa; Gabriel, 13 nov)
-- [ ] Pescador doble (el de las imágenes de Animated Knots, después del sencillo; Gabriel, 13 nov)
-- [ ] Nudo aguja (el del manual de la Tropa) (13 nov: Gabriel eligió un anfitrión nuevo para el destorcedor, un cilindro corto parado sobre la mesa, que puede servir también para la estaca del tensor ajustable. Es una tarea de código, como T5: su sesión propone el diseño, Gabriel lo aprueba y después se dibuja el nudo) (14 nov: Gabriel aprobó el diseño; el destorcedor está hecho y el borrador espera su revisión)
->>>>>>> 693d369 (Tanda 2: el destorcedor, un anfitrión nuevo para el nudo aguja)
 - [ ] Punto de control de la tanda 2
 
 ### Tanda 3: sobre anfitrión

@@ -1,11 +1,12 @@
 # Nudo aguja, el de la página 25 del manual de la Tropa (decisión D9 del plan): ata un sedal
-# al ojo de un destorcedor. Borrador de la skill nudo-nuevo, por revisar con Gabriel.
+# al ojo de un destorcedor. Salió de la skill nudo-nuevo; Gabriel aprobó su hoja el 14 de
+# noviembre de 2026.
 # Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
 # El destorcedor es un cilindro parado en x = y = 0; el nudo se hace a su izquierda.
 slug: nudo-aguja
 nombre: Nudo aguja
 familia: De sujeción
-estado: borrador
+estado: modelado
 
 usos: >-
   Ata un sedal al ojo de un destorcedor. Con él se arman las líneas de pesca de varios
