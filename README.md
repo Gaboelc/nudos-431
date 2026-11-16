@@ -21,12 +21,14 @@ python -m nudos mejoras
 python -m nudos sitio
 python -m nudos estado
 python -m nudos revision as-de-guia
+python -m nudos diagnostico as-de-guia --pasos 3
+python -m nudos ampliar entradas/as-de-guia/<imagen> --zona 0.2,0.2,0.6,0.6
 python -m pytest
 ```
 
 `imprimir` necesita Google Chrome instalado (o la ruta de otro Chrome en la variable `NUDOS_CHROME`). Deja en `build/<slug>/impresion/` las imágenes a 300 ppp y `prueba.pdf`, una página de prueba en color y en escala de grises. `ficha` genera esas imágenes y arma con ellas `build/<slug>/ficha.pdf`, el pliego de dos páginas con QR al visor. `mejoras` arma `build/mejoras/prueba.pdf`, la página de prueba de las mejoras del render: algunas imágenes sin mejoras, con cada una y con todas, que son las de las fichas, para mirarlas en papel.
 
-`sitio` arma en `build/sitio/` el visor de cada nudo de `publicados.txt`, y solo de esos. Con `--con <slug>` agrega otro, para verlo en el sitio local antes de publicarlo. `estado` muestra en qué va cada uno de los 36 nudos de la edición 1 y qué le falta. `revision` arma en `revision/<slug>/`, fuera de git, la hoja privada con la fuente junto a cada paso. Los borradores de nudos nuevos los escribe la skill `/nudo-nuevo` (`.claude/skills/nudo-nuevo/`).
+`sitio` arma en `build/sitio/` el visor de cada nudo de `publicados.txt`, y solo de esos. Con `--con <slug>` agrega otro, para verlo en el sitio local antes de publicarlo. `estado` muestra en qué va cada uno de los 36 nudos de la edición 1 y qué le falta. `revision` arma en `revision/<slug>/`, fuera de git, la hoja privada con la fuente junto a cada paso. `diagnostico` construye solo los pasos elegidos y dice qué falla o está cerca del límite y cerca de qué punto de la especificación; `ampliar` copia una zona de una imagen de la fuente, ampliada y con cuadrícula, en `revision/_ampliadas/`. Los borradores de nudos nuevos los escribe la skill `/nudo-nuevo` (`.claude/skills/nudo-nuevo/`).
 
 Para publicar el sitio, desde `main` ya subido: `scripts/publicar.sh`. Sube el sitio a la rama `gh-pages`, que es la que sirve GitHub Pages.
 

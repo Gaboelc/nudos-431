@@ -11,8 +11,9 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 
 ## Antes de empezar
 
-- Lee `CLAUDE.md` y `docs/formato-spec.md` completo. En el plan (`tasks/plan.md`), lee la tanda del nudo en la fase 4 y D1, si el nudo tiene usos con personas.
-- Usa como ejemplo las especificaciones de `specs/` del mismo tipo: `as-de-guia` (libre, una cuerda), `ballestrinque` (sobre un poste), `vuelta-de-escota` (dos cuerdas) y `amarre-cuadrado` (plantilla). En una corrida dorada falta la del nudo que se prueba, y a veces otras. No las busques en el historial de git ni en ninguna otra parte (ver «Corrida dorada»).
+- **Lee lo justo.** Todo lo que lees, cada imagen y cada salida de una orden, queda en el contexto hasta el final, y se vuelve a leer en cada llamada. Un borrador hacía de 70 a 120 llamadas con un contexto de 300 mil tokens o más (15 nov).
+- Lee `CLAUDE.md`. Del formato (`docs/formato-spec.md`) lee solo lo que usa un borrador: «Unidades y ejes», «Campos», «Segmentos y referencias», «Pasos», «Secuencia de cruces», «Error común», «Nudo terminado» y «Qué se comprueba al construir», más la sección de su generador si la tiene («Anfitrión», «En medio de la cuerda» o «Varias cuerdas»). `grep -n '^## ' docs/formato-spec.md` dice dónde empieza cada una. En el plan (`tasks/plan.md`), lee la tanda del nudo en la fase 4 y D1, si el nudo tiene usos con personas.
+- Usa como ejemplo una sola especificación de `specs/`, la del mismo tipo: `as-de-guia` (libre, una cuerda), `ballestrinque` (sobre un poste), `vuelta-de-escota` (dos cuerdas) y `amarre-cuadrado` (plantilla). En una corrida dorada falta la del nudo que se prueba, y a veces otras. No las busques en el historial de git ni en ninguna otra parte (ver «Corrida dorada»).
 - Las entradas están en `entradas/<slug>/` de la carpeta de A: (`A:\Scouts\06 Identidad\Diseños Propios\Libro Nudos\entradas`). En un worktree no existen: léelas desde esa ruta y corre `python -m nudos revision` con `NUDOS_ENTRADAS` apuntando a esa carpeta.
 - Si `specs/<slug>.yaml` ya existe, detente y pregunta: la skill no sobrescribe un nudo.
 - Los comandos van con el venv de A: (`.venv/Scripts/python -m nudos …`) y `PYTHONUTF8=1`, desde la raíz del repositorio o del worktree.
@@ -27,7 +28,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 
 ## 1. Lee la fuente
 
-- Recorre las imágenes en orden. De cada una, anota qué cambió desde la anterior: qué tramo se movió y por dónde pasó. Ordénalas por lo que muestran y no por el nombre del archivo: a veces los números no siguen el orden en que se ata.
+- Recorre las imágenes en orden, mirando cada una una sola vez. De cada una, anota qué cambió desde la anterior: qué tramo se movió y por dónde pasó. Ordénalas por lo que muestran y no por el nombre del archivo: a veces los números no siguen el orden en que se ata. Después trabaja con tus notas: vuelve a una imagen solo por un cruce dudoso, y entonces amplía solo esa zona (ver «Lee los cruces»).
 - Distingue el firme, la parte larga que no se mueve, del chicote, el extremo que trabaja. Un nudo que va en medio de la cuerda tiene dos firmes y ningún chicote.
 - `info.txt` o `fuente.md` dicen para qué sirve, otros nombres y errores comunes. Úsalos para saber qué escribir, no para copiarlo.
 - **Si las imágenes son de otro nudo,** o de otra versión del mismo, detente y pregunta cuál es antes de seguir. Pasó con el ocho doble: las imágenes seguían hasta el ocho de dos gazas, y el del libro es la gaza en ocho, que solo muestran las primeras.
@@ -81,7 +82,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 - Escribe la secuencia recorriendo la cuerda desde el firme: el número del cruce y `O` si pasa por encima o `U` si pasa por debajo. Cada número aparece dos veces en el paso, una con `O` y otra con `U`.
 - Si una imagen no deja ver un cruce, por una mano o una sombra, léelo en otra y anota la duda en `pasos.yaml`.
 - **Una cuerda que pasa justo sobre un cruce,** como cuando tres cuerdas se tapan en un punto, no se dibuja ahí: córrela hacia el lado por donde la ves pasar en la foto. Las dos maneras de correrla pueden ser la misma cuerda real y dar secuencias distintas, así que la que vale es la de la foto. Anota cuál elegiste y por qué en las dudas. Si falta la imagen de un paso, lee sus cruces en el nudo terminado y dilo en las dudas.
-- Para mirar un cruce de cerca, amplía la imagen en una copia fuera del repositorio, nunca en `entradas/`.
+- Para mirar un cruce de cerca, usa `python -m nudos ampliar <imagen> --zona x0,y0,x1,y1`, con la zona en fracciones de la imagen (0 a 1, desde arriba a la izquierda). Deja la copia en `revision/_ampliadas/`, fuera de git y nunca en `entradas/`, con una cuadrícula rotulada en esas fracciones para pedir la zona siguiente. No escribas scripts para ampliar.
 
 ## 5. Traza la cuerda
 
@@ -109,16 +110,18 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 
 ## 7. Construye y corrige
 
-`python -m nudos construir <slug>` construye cada paso, lo relaja y lo comprueba. Lee la tabla y corrige hasta que no queden fallas:
+`python -m nudos diagnostico <slug> --pasos 3` construye solo esos pasos, en segundos, y dice en pocas líneas qué falla (`!!`) o no cumple esta skill (`!`) y cerca de qué punto del YAML, como `gaza[3]`: el radio del trazado antes de relajar, la separación, la curvatura y el estiramiento de la cuerda relajada, y dónde quedó cada cruce y cuánto se movió desde el paso anterior. Úsalo mientras corriges los pasos. `python -m nudos construir <slug>` construye todo, también el error común, el nudo por detrás y el apretado: córrelo cuando los pasos ya no fallen, y `diagnostico --todo` si falla alguno de esos. No escribas scripts propios para medir el nudo: si el diagnóstico no dice algo que te hace falta, anótalo en el informe.
+
+Corrige hasta que no queden fallas:
 
 - **Secuencia distinta:** la cuerda trazada no forma los cruces declarados. Vuelve primero a la imagen. Si la leíste bien, corrige el trazado, nunca la secuencia para que coincida.
 - **Separación:** dos tramos quedan muy cerca; sepáralos en ese punto.
 - **Curvatura:** una curva es muy cerrada; ábrela o agrégale puntos.
 - **Estiramiento:** al relajar, la cuerda se estiró o se encogió más de 2 % en algún punto, casi siempre porque tuvo que separar tramos muy apretados. Abre esa zona o dale más cuerda.
-- La separación, la curvatura y el estiramiento dicen cerca de qué punto de la mesa ocurren. El nudo terminado por detrás se construye y se comprueba como un paso más, y sus fallas también cuentan: la hoja de revisión lo dibuja al final. Suele ser más frágil que los pasos: en un cote, el lado que pasa por encima de las patas no puede ir pegado al cuerpo.
+- La separación, la curvatura y el estiramiento dicen cerca de qué punto de la mesa ocurren, y en el diagnóstico, cerca de qué punto del YAML. El nudo terminado por detrás se construye y se comprueba como un paso más, y sus fallas también cuentan: la hoja de revisión lo dibuja al final. Suele ser más frágil que los pasos: en un cote, el lado que pasa por encima de las patas no puede ir pegado al cuerpo.
 - **Un cruce que salta:** la misma etiqueta quedó en otro lugar en el paso siguiente; probablemente es otro cruce. Un cruce no puede moverse más de 2,5 diámetros de un paso al siguiente, así que, si la fuente arma un lazo a un lado y después lo lleva a su lugar, dibuja el lazo cerca de donde termina.
 
-`python -m nudos hoja <slug>` y `--vista 55` dibujan todos los pasos en una imagen, para mirar rápido. Si después de varios intentos queda una falla, detente y di cuál es y qué probaste.
+`python -m nudos hoja <slug> --pasos 4-5` y `--vista 55` dibujan esos pasos en una imagen, para mirar rápido: mira solo los que cambiaste, porque la hoja de todos es una imagen grande. Si después de varios intentos queda una falla, detente y di cuál es y qué probaste.
 
 ## 8. Hoja de revisión e informe
 

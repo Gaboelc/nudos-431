@@ -173,6 +173,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
   - [x] Revisión con Gabriel (15 nov: cerró el punto de control y pidió arrancar la tanda 3 como se propuso; siguen abiertos los números ABOK sin confirmar, el paso de preparar del ocho y el filtro 2)
 
 ### Tanda 3: sobre anfitrión
+- [x] Menos tokens por borrador (15 nov: Gabriel aprobó las cuatro medidas; ver «Gastar menos tokens en los borradores» en el plan)
 - [ ] Ballestrinque doble (*rolling hitch*, entrada en el manual de la Tropa) (15 nov: sobre el poste, decidido en el punto de control de la tanda 2; borrador en su propia sesión)
 - [ ] Leñador o vuelta de braza (15 nov: sobre el poste; borrador en su propia sesión)
 - [ ] Media llave y dos cotes

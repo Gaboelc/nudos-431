@@ -11,6 +11,7 @@ from PIL import Image
 from . import BUILD, RAIZ
 from .anfitrion import Tubo, solido
 from .construir import construir, guardar
+from .diagnostico import ampliar, diagnostico, leer_pasos
 from .estado import nudos, probadores, tabla
 from .exportar import SitioError, construir_sitio
 from .ficha import FichaError, ficha, url_visor
@@ -32,6 +33,19 @@ def main(argv=None) -> int:
     h.add_argument("slug")
     h.add_argument("--vista", default="arriba",
                    help="«arriba» o la inclinación de la cámara en grados, por ejemplo 55")
+    h.add_argument("--pasos", default="", help="solo esos pasos, como 2,4-5 (por omisión, todos)")
+    d = ordenes.add_parser("diagnostico", help="construye solo los pasos elegidos y dice qué falla "
+                                               "o está cerca del límite, y cerca de qué punto del YAML")
+    d.add_argument("slug")
+    d.add_argument("--pasos", default="", help="como 2,4-5 (por omisión, todos)")
+    d.add_argument("--todo", action="store_true",
+                   help="también el error común, el nudo por detrás y los dos apretados")
+    a = ordenes.add_parser("ampliar", help="copia ampliada de una zona de una imagen de la fuente, "
+                                           "con cuadrícula, en revision/_ampliadas/")
+    a.add_argument("imagen", type=Path)
+    a.add_argument("--zona", default="0,0,1,1",
+                   help="x0,y0,x1,y1 en fracciones de la imagen, desde arriba a la izquierda")
+    a.add_argument("--lado", type=int, default=800, help="píxeles del lado mayor de la copia")
     s = ordenes.add_parser("sitio", help="construye el sitio con el visor de cada nudo")
     s.add_argument("--salida", type=Path, default=BUILD / "sitio",
                    help="carpeta donde queda el sitio (por omisión build/sitio)")
@@ -66,7 +80,11 @@ def main(argv=None) -> int:
             return _estado()
         if args.orden == "revision":
             return _revision(args.slug)
-        return _hoja(args.slug, args.vista)
+        if args.orden == "diagnostico":
+            return _diagnostico(args.slug, args.pasos, args.todo)
+        if args.orden == "ampliar":
+            return _ampliar(args.imagen, args.zona, args.lado)
+        return _hoja(args.slug, args.vista, args.pasos)
     except SpecError as e:
         print(f"Error en la especificación: {e}", file=sys.stderr)
         return 2
@@ -155,6 +173,30 @@ def _estado() -> int:
     return 0
 
 
+def _diagnostico(slug: str, pasos: str, todo: bool) -> int:
+    spec = cargar(slug)
+    try:
+        lineas = diagnostico(spec, leer_pasos(pasos, len(spec.pasos)), todo)
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        return 2
+    print("\n".join(lineas))
+    return 1 if any(l.startswith("!!") for l in lineas) else 0
+
+
+def _ampliar(imagen: Path, zona: str, lado: int) -> int:
+    try:
+        valores = tuple(float(v) for v in zona.split(","))
+        if len(valores) != 4:
+            raise ValueError
+        salida = ampliar(imagen, RAIZ / "revision" / "_ampliadas", valores, lado)
+    except (ValueError, OSError) as e:
+        print(f"No se pudo ampliar: {e or 'la zona va como x0,y0,x1,y1'}", file=sys.stderr)
+        return 2
+    print(f"Copia ampliada en {salida}")
+    return 0
+
+
 def _construir(slug: str) -> int:
     spec = cargar(slug)
     print(f"{spec.nombre} ({spec.slug}): {len(spec.pasos)} pasos\n")
@@ -179,7 +221,7 @@ def _construir(slug: str) -> int:
     return 0
 
 
-def _hoja(slug: str, vista: str) -> int:
+def _hoja(slug: str, vista: str, pasos: str = "") -> int:
     origen = BUILD / slug / "modelo.json"
     if not origen.exists():
         print(f"No hay modelo de {slug}. Corre primero: python -m nudos construir {slug}",
@@ -197,6 +239,15 @@ def _hoja(slug: str, vista: str) -> int:
         datos = json.load(f)
     destino = origen.parent / f"hoja-{vista}.png"
     spec = cargar(slug)
+    if pasos:
+        # Solo esos pasos, en una imagen más chica, para mirar lo que se acaba de cambiar.
+        try:
+            elegidos = leer_pasos(pasos, len(datos["pasos"]))
+        except ValueError as e:
+            print(e, file=sys.stderr)
+            return 2
+        datos = {**datos, "pasos": [p for p in datos["pasos"] if p["n"] in elegidos]}
+        destino = origen.parent / f"hoja-{vista}-pasos-{pasos.replace(',', '_')}.png"
     imagen = hoja(datos, vista, None if spec.anfitrion is None else solido(spec.anfitrion).datos())
     if spec.anfitrion is not None and spec.anfitrion.tipo == "tubo":
         # Sobre el tubo, la hoja lleva además el tubo desenrollado, con cada cruce.
