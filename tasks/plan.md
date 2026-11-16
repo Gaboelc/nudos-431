@@ -1089,7 +1089,7 @@ Después de cada tanda hay un punto de control:
 
 **El amarre diagonal (tanda 4).** Una plantilla nueva, `amarre-diagonal`, sobre la cruz del amarre cuadrado. La referencia es `entradas/amarre-diagonal/` (15 fotos y `info.txt`): una vuelta de braza alrededor de los dos palos, tres o cuatro vueltas en una diagonal, tres o cuatro en la otra, tres o cuatro ahorcados y un ballestrinque de cierre. La fuente explica por qué empieza con la vuelta de braza y no con un ballestrinque: al tirar de ella, los dos palos se juntan aunque haya un hueco entre ellos.
 
-**Diseño (pendiente de Gabriel):**
+**Diseño (16 de noviembre de 2026; Gabriel lo aprobó el mismo día con las cuatro propuestas del final):**
 - **Los palos** son la cruz de T7, en ángulo recto: el plan de T7 decía que el diagonal agregaría `angulo`, pero la propuesta de la tanda 4 los deja rectos, que es como se lee mejor. Lo único que cambia es la altura: debajo del palo de abajo se cruzan las dos diagonales, así que ahí hay dos capas de cuerda y su eje queda a `radio + 2`, no a `radio + 1`. La especificación no lo escribe: lo dice la plantilla (`CAPAS_DEBAJO = 2`), la carga lo pasa a la cruz y el cuadrado sigue a `radio + 1`. El modelo no guarda la cruz; la escena y la hoja la leen de `Cruz.datos()`, que ya da `z_abajo`.
 - **Medidas y límites:**
 
@@ -1173,7 +1173,7 @@ Después de cada tanda hay un punto de control:
 - **Riesgos:**
   - **El ancho de la primera diagonal,** con las vueltas del chicote en la cara de delante. Si no cabe en los huecos con radio 2,5, se ajusta el apartado junto a las vueltas del chicote o se agranda el radio, mirando las imágenes.
   - **Los 75 cruces,** que hacen el amarre más lento de construir que el cuadrado, que tarda cerca de un minuto. Puede llegar a dos o tres.
-- **Lo que tiene que decidir Gabriel:**
+- **Lo que decidió Gabriel (16 de noviembre), como se proponía:**
   1. El error con imagen son los ahorcados por encima del palo de arriba, el mismo del cuadrado. Sin imagen van empezar con un ballestrinque en un solo palo y la cuerda floja.
   2. Un solo `vueltas` para las dos diagonales, con 3 y 3 ahorcados.
   3. Son 9 pasos, y la vuelta de braza va en uno solo que remite a su ficha.
