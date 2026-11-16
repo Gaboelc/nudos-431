@@ -1,0 +1,132 @@
+# Presilla de alondra sobre un poste, hecha con el chicote.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# El poste va a lo largo de x, con el eje en y = 0. Sobre el poste, los puntos son
+# [x, ángulo]: 0° arriba, 90° hacia quien ata, 180° abajo y 270° atrás.
+# Las dos vueltas van en sentidos contrarios: es lo que la distingue del ballestrinque.
+slug: presilla-de-alondra
+nombre: Presilla de alondra
+familia: De sujeción
+
+usos: >-
+  Sujeta una cuerda a un poste, una baranda o una argolla. Es rápida de hacer y fácil
+  de desatar, aunque haya quedado tirante. Sirve para colgar cosas livianas o fijar un
+  cordón a un palo.
+materiales: >-
+  Una cuerda de 1 a 2 m y un palo redondo, como el de una escoba.
+verificacion:
+  - Por delante se ven dos vueltas, una a cada lado, que rodean el poste.
+  - El firme y el chicote salen juntos por el medio, entre las dos vueltas.
+  - El chicote pasa por encima del tramo que sube a la vuelta de la izquierda.
+  - Al tirar del firme y del chicote a la vez, las vueltas aprietan el poste.
+precauciones:
+  - Si solo tiras del firme, el nudo se puede correr por el poste. Aguanta mejor cuando
+    tiran los dos extremos.
+  - No la dejes sola cuando importa que aguante. Si tira solo el firme, remátala con un
+    cote.
+alternativas:
+  - nudo: Ballestrinque
+    cuando: >-
+      Cuando tira solo el firme: con las dos vueltas en el mismo sentido se corre menos.
+  - nudo: Media llave y dos cotes
+    cuando: >-
+      Cuando la cuerda va a quedar atada mucho tiempo o la carga cambia de dirección.
+
+anfitrion:
+  tipo: poste
+  radio: 1.5
+  desde: -14
+  hasta: 14
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-6.0, 6.0]
+  y: [-8.5, 7.0]
+
+segmentos:
+  firme: [[1.0, -12.5], [0.8, -9.0], [0.6, -6.5], [0.5, -4.5]]
+  punta-1: [[0.5, -3.2]]
+  # El firme pasa por debajo del poste, sobre la mesa.
+  bajo: [[0.5, -2.8], [0.5, -1.4]]
+  # Primera vuelta: por debajo, por detrás y por encima; vuelve hacia quien ata a la
+  # derecha del firme.
+  vuelta-1:
+    poste: [[0.5, 180], [0.6, 225], [0.8, 270], [1.05, 315], [1.35, 360], [1.65, 405],
+            [1.9, 450], [2.1, 490]]
+  chicote-2: [[2.3, -2.8], [2.6, -4.5], [3.0, -6.0]]
+  # El chicote cruza hacia la izquierda por debajo del firme.
+  cruce: [[2.2, -2.8], [2.0, -4.0], [1.3, -4.9], [0.5, -5.25], [-0.5, -5.35]]
+  punta-3: [[-1.8, -5.45], [-3.4, -5.45]]
+  subida: [[-1.8, -5.45], [-2.9, -5.35], [-3.6, -4.6], [-3.8, -3.4]]
+  # Segunda vuelta, en sentido contrario: por encima, por detrás y por debajo.
+  vuelta-2:
+    poste: [[-3.8, 110], [-3.6, 60], [-3.25, 0], [-2.9, -50], [-2.55, -90],
+            [-2.1, -130], [-1.6, -160], [-1.2, -180]]
+  atras-4: [[-2.3, 4.2], [-2.0, 6.3]]
+  # El chicote sale por debajo del poste, entre las dos vueltas, y pasa por encima de la
+  # subida.
+  salida: [[-1.0, -1.6], [-1.3, -3.0], [-1.9, -4.3], [-2.4, -5.4], [-2.7, -6.8], [-2.9, -8.2]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      Pon la cuerda frente al poste. El tramo largo es el firme; el extremo que vas a
+      mover es el chicote. Deja unos 40 cm de chicote.
+    trazado: [firme, punta-1]
+    secuencia: ""
+
+  - titulo: Da la primera vuelta
+    texto: >-
+      Pasa el chicote por debajo del poste, súbelo por detrás y bájalo por encima hacia
+      ti, a la derecha del firme.
+    trazado: [firme, bajo, vuelta-1, chicote-2]
+    secuencia: ""
+    resaltar: {desde: "bajo[0]", hasta: fin}
+
+  - titulo: Cruza por debajo del firme
+    texto: >-
+      Lleva el chicote hacia la izquierda por debajo del firme, cerca del poste.
+    trazado: [firme, bajo, vuelta-1, cruce, punta-3]
+    secuencia: "1O 1U"
+    resaltar: {desde: "cruce[0]", hasta: fin}
+
+  - titulo: Da la vuelta al revés
+    texto: >-
+      A la izquierda, pasa el chicote por encima del poste, de adelante hacia atrás. Esta
+      vuelta va en sentido contrario a la primera.
+    trazado: [firme, bajo, vuelta-1, cruce, subida, "vuelta-2[0:5]", atras-4]
+    secuencia: "1O 1U"
+    resaltar: {desde: "subida[0]", hasta: fin}
+
+  - titulo: Sácalo por el medio
+    texto: >-
+      Baja el chicote por detrás, pásalo por debajo del poste y sácalo hacia ti entre las
+      dos vueltas, por encima del tramo que sube. Tira del firme y del chicote a la vez.
+    trazado: [firme, bajo, vuelta-1, cruce, subida, vuelta-2, salida]
+    secuencia: "1O 1U 2U 2O"
+    resaltar: {desde: "vuelta-2[4]", hasta: fin}
+
+# Error con imagen: el chicote sale por debajo del tramo que sube, no por encima.
+error:
+  paso: 5
+  invierte: [2]
+  titulo: El chicote por debajo de la subida
+  texto: >-
+    Sacaste el chicote por debajo del tramo que sube a la segunda vuelta. Así no queda
+    atrapado y el nudo se deshace al tirar. Vuelve a sacarlo por encima.
+  encuadre:
+    x: [-4.5, 3.0]
+    y: [-7.5, 2.5]
+  otros:
+    - titulo: Las dos vueltas en el mismo sentido
+      texto: >-
+        Si la segunda vuelta va en el mismo sentido que la primera, te sale un
+        ballestrinque. En la presilla, la primera vuelta pasa por debajo del poste y la
+        segunda por encima.
+
+terminado:
+  encuadre:
+    x: [-5.0, 4.5]
+    y: [-8.0, 5.0]
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
