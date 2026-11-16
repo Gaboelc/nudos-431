@@ -1044,7 +1044,7 @@ Después de cada tanda hay un punto de control:
 
 **Filtro 1 y publicación de la tanda 2 (15 de noviembre de 2026).** Gabriel ató el rizo, el pescador, el pescador doble y el nudo aguja con las fichas de 6005d98, y los cuatro pasaron. En el nudo aguja confirmó las vueltas y el cruce 1, y en el pescador, los encima/debajo que salieron de las fotos del doble. Están en `cuerda-ok` y en `publicados.txt` (2943ac8), y en el sitio, construido desde 2943ac8 (`gh-pages` 964a4f3). Los cuatro visores cargan en línea sin errores en la consola, y el del nudo aguja muestra el destorcedor.
 
-**Punto de control de la tanda 2 (15 de noviembre de 2026; espera la revisión de Gabriel):**
+**Punto de control de la tanda 2 (15 de noviembre de 2026; Gabriel lo cerró el mismo día y pidió arrancar la tanda 3 como se propone abajo):**
 - **Los cuatro nudos están en el sitio** y en `cuerda-ok`, con su filtro 1. Ninguno llega a `publicado`, porque el filtro 2 sigue en pausa. El sitio tiene 16 nudos.
 - **La suite pasa:** 416 pruebas, y 1 se salta. Los 12 nudos publicados antes siguen iguales a la referencia de a62f791: se compararon al entrar el destorcedor (6005d98), y desde entonces no cambió el código que los construye.
 - **Lo que conviene revisar:**
