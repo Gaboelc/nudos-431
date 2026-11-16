@@ -1,0 +1,135 @@
+# Nudo de liberación rápida (mooring hitch) sobre un poste. Borrador de la skill nudo-nuevo.
+# Trazado propio: las fotos de entradas/nudo-de-liberacion-rapida solo se usaron para leer
+# el método y los cruces.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# El poste va a lo largo de x, con el eje en y = 0. Sobre el poste, los puntos son
+# [x, ángulo]: 0° arriba, 90° hacia quien ata, 180° abajo y 270° atrás.
+slug: nudo-de-liberacion-rapida
+nombre: Nudo de liberación rápida
+familia: De sujeción
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Sujeta una cuerda a un palo o una baranda por un rato y la suelta al instante con un
+  tirón del chicote, como para tener quieto un bote mientras te subes.
+materiales: >-
+  Una cuerda de unos 2 m y un palo o una baranda, de 2 a 5 cm de ancho.
+verificacion:
+  - El lazo queda encima del firme y el seno pasa por debajo del firme, atrapado entre los dos.
+  - El seno sale por el otro lado del lazo y el chicote queda suelto, del lado contrario.
+  - Al tirar del firme, el lazo se cierra sobre el seno y el nudo no se corre.
+  - Al tirar del chicote, el seno se sale y el nudo se deshace entero.
+precauciones:
+  - >-
+    Un tirón del chicote lo suelta, aunque sea sin querer. Deja el chicote donde nadie lo
+    pise ni se enrede con él.
+  - >-
+    No lo dejes atado mucho tiempo ni a algo que se mueve todo el día: con los tirones se
+    afloja o se traba.
+  - Si la cuerda es muy resbalosa, deja el seno largo para que no se salga solo.
+seguridad: >-
+  No lo uses nunca para sostener a una persona. Está hecho para soltarse con un tirón, y
+  basta con agarrar el chicote por error para que se suelte.
+alternativas:
+  - nudo: Fugitivo
+    cuando: >-
+      Cuando también quieres soltarlo de un tirón, pero el nudo va a aguantar tirones más
+      fuertes.
+  - nudo: Media llave y dos cotes
+    cuando: >-
+      Cuando la cuerda va a quedar atada mucho tiempo: no se suelta sola y se desata fácil.
+  - nudo: Ballestrinque
+    cuando: Cuando necesitas atarlo rápido y no importa soltarlo de un tirón.
+
+# Un palo de unos 3 cm con una cuerda de 8 mm.
+anfitrion:
+  tipo: poste
+  radio: 2
+  desde: -14
+  hasta: 14
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-13.5, 12.0]
+  y: [-14.5, 3.0]
+
+segmentos:
+  firme: [[0, -22], [0, -18], [0, -14], [0, -10], [0, -6], [0, -3.0]]
+  punta-1: [[0, -2.2]]
+  # Pasa por debajo del poste, sube por detrás, cruza por arriba y baja por delante, a la
+  # derecha del firme.
+  vuelta:
+    poste: [[0.0, 150], [0.1, 180], [0.25, 220], [0.4, 260], [0.55, 300], [0.7, 340],
+            [0.85, 380], [1.0, 420], [1.15, 450], [1.3, 465]]
+  baja: [[1.45, -3.0], [1.8, -4.3], [2.05, -5.5]]
+  # En el paso 2 el chicote sigue hacia ti.
+  cae-2: [[2.5, -7.0], [3.0, -8.5], [3.6, -10.0]]
+  # El lazo: baja a la derecha del firme, pasa por encima de él abajo, sube por la
+  # izquierda, vuelve a pasar por encima del firme arriba y por debajo de su propio tramo.
+  lazo: [[2.15, -7.0], [2.25, -8.3], [2.2, -9.1], [2.15, -10.2], [2.0, -11.4], [1.5, -12.6],
+         [0.6, -13.3], [-0.5, -13.4], [-1.6, -13.1], [-2.5, -12.3], [-3.1, -11.3],
+         [-3.35, -10.2], [-3.3, -9.1], [-2.95, -8.0], [-2.2, -7.15], [-1.15, -6.7],
+         [0, -6.55], [1.15, -6.45], [2.4, -6.45], [3.4, -6.55]]
+  # En el paso 3 el chicote sale del lazo hacia la derecha.
+  sale-3: [[4.6, -6.9], [6.5, -7.5], [8.5, -8.1], [10.5, -8.7]]
+  # El seno: el chicote baja por la derecha y vuelve hacia la izquierda por encima del
+  # lazo, por debajo del firme y otra vez por encima del lazo; da la vuelta y regresa igual.
+  seno: [[4.25, -7.1], [4.6, -8.0], [4.45, -8.9], [3.85, -9.5], [3.0, -9.7], [1.0, -9.7],
+         [-1.2, -9.7], [-4.5, -9.65], [-7.5, -9.4], [-9.5, -9.0], [-10.6, -8.9],
+         [-11.5, -9.15], [-12.1, -9.8], [-12.15, -10.7], [-11.6, -11.4], [-10.6, -11.7],
+         [-8.5, -11.4], [-6.0, -11.05], [-4.5, -11.0], [-1.2, -11.0], [1.0, -11.0],
+         [3.0, -11.0], [5.0, -11.1], [8.0, -11.4], [11.0, -11.8]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      Pon la cuerda frente al palo, con la punta junto a él. El tramo largo es el firme; el
+      extremo que vas a mover es el chicote. Deja un chicote de unos 80 cm.
+    trazado: [firme, punta-1]
+    secuencia: ""
+
+  - titulo: Rodea el palo
+    texto: >-
+      Pasa el chicote por debajo del palo, súbelo por detrás y bájalo por delante, a la
+      derecha del firme.
+    trazado: [firme, vuelta, baja, cae-2]
+    secuencia: ""
+    resaltar: {desde: "vuelta[0]", hasta: fin}
+
+  - titulo: Forma un lazo sobre el firme
+    texto: >-
+      Lleva el chicote hacia abajo y a la izquierda, por encima del firme. Súbelo y crúzalo
+      otra vez por encima del firme y por debajo de su propio tramo, hacia la derecha.
+    trazado: [firme, vuelta, baja, lazo, sale-3]
+    secuencia: "1U 2U 3O 1O 2O 3U"
+    resaltar: {desde: "lazo[0]", hasta: fin}
+
+  - titulo: Pasa un seno bajo el firme
+    texto: >-
+      Dobla el chicote en un seno. Pásalo hacia la izquierda por encima del lazo, por debajo
+      del firme y otra vez por encima del lazo. Tira del firme para apretar; para soltarlo,
+      tira del chicote.
+    trazado: [firme, vuelta, baja, lazo, seno]
+    secuencia: "1U 8O 5O 2U 3O 4U 9U 1O 7U 6U 2O 3U 4O 5U 6O 7O 8U 9O"
+    resaltar: {desde: "seno[0]", hasta: fin}
+
+# El error: la fuente no trae uno. El seno pasa por encima del firme en vez de por debajo,
+# así que nada lo atrapa.
+error:
+  paso: 4
+  invierte: [5, 8]
+  titulo: El seno por encima del firme
+  texto: >-
+    Pasaste el seno por encima del firme. Así nada lo sujeta y, al tirar del firme, se
+    sale y el nudo se deshace. Sácalo y pásalo por debajo del firme.
+  otros:
+    - titulo: Tirar del chicote para apretar
+      texto: >-
+        Si aprietas tirando del chicote, sacas el seno y el nudo se suelta. Aprieta siempre
+        tirando del firme.
+  encuadre:
+    x: [-5.0, 5.5]
+    y: [-14.5, -4.5]
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
