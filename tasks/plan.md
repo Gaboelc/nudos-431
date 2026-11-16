@@ -1042,6 +1042,22 @@ Después de cada tanda hay un punto de control:
 - Pasan 412 pruebas y 2 se saltan. La que dibuja dos veces la misma imagen falló en la suite y pasó al correrla sola: es la variación conocida del navegador.
 - **El nudo aguja:** cinco pasos y siete cruces. El chicote da dos vueltas al firme hacia el destorcedor y una y media al tramo que vuelve, alejándose de él. Rectos, el firme y el tramo que vuelve se estiraban más de 2 % al pasar por encima del chicote, y el reverso se comprimía 8 % entre los cruces 3 y 6. Con las vueltas de radio 1,75 y una onda de 0,5 en los dos tramos, como dos cuerdas torcidas, no queda ninguna falla. El terminado apretado se parece mucho al dibujo 3 del manual. Gabriel aprobó su hoja de revisión el mismo día, y el nudo pasó a `modelado`.
 
+**Filtro 1 y publicación de la tanda 2 (15 de noviembre de 2026).** Gabriel ató el rizo, el pescador, el pescador doble y el nudo aguja con las fichas de 6005d98, y los cuatro pasaron. En el nudo aguja confirmó las vueltas y el cruce 1, y en el pescador, los encima/debajo que salieron de las fotos del doble. Están en `cuerda-ok` y en `publicados.txt` (2943ac8), y en el sitio, construido desde 2943ac8 (`gh-pages` 964a4f3). Los cuatro visores cargan en línea sin errores en la consola, y el del nudo aguja muestra el destorcedor.
+
+**Punto de control de la tanda 2 (15 de noviembre de 2026; espera la revisión de Gabriel):**
+- **Los cuatro nudos están en el sitio** y en `cuerda-ok`, con su filtro 1. Ninguno llega a `publicado`, porque el filtro 2 sigue en pausa. El sitio tiene 16 nudos.
+- **La suite pasa:** 416 pruebas, y 1 se salta. Los 12 nudos publicados antes siguen iguales a la referencia de a62f791: se compararon al entrar el destorcedor (6005d98), y desde entonces no cambió el código que los construye.
+- **Lo que conviene revisar:**
+  - Tres números ABOK sin confirmar de esta tanda: el rizo (1402), el pescador (1414) y el pescador doble (294). El nudo aguja no lleva. Siguen pendientes los del simple, el arnés de hombre y la silla de bombero.
+  - El ocho sigue sin el paso de preparar la cuerda.
+  - El filtro 2: la propuesta sigue siendo retomarlo al menos una vez por tipo de nudo antes de su tanda. La tanda 3 es sobre anfitrión, como el ballestrinque.
+  - La tarea aparte de las pruebas de dibujo que fallan por el navegador. En las dos últimas corridas, la suite pasó entera.
+- **Lo que viene, la tanda 3: sobre anfitrión.** Son diez nudos. Lo que proponen sus entradas:
+  - **Sobre el poste, sin código nuevo:** el ballestrinque doble, porque la fuente dice que el esfuerzo tira a lo largo del mástil; la vuelta de braza, la media llave y dos cotes, el fugitivo, el constrictor, el nudo de liberación rápida y la presilla de alondra. El tensor también: en las fotos va en medio de la cuerda y su chicote da la vuelta a un gancho, que puede ser el poste, con el extremo fijo saliendo del encuadre por arriba.
+  - **El prusik** se ata con un cordino cerrado alrededor de otra cuerda. La propuesta es dibujarlo como un nudo libre de dos cuerdas, sin anfitrión: la cuerda gruesa, recta, y el cordino como una gaza cuyos dos tramos salen del encuadre, donde lo cierra un pescador doble, que ya tiene su ficha. No necesita código. Sus usos de escalada y rescate van como conocimiento (D1), como en la silla de bombero.
+  - **El tensor ajustable** va sobre una estaca, la tarea de código que quedó anotada con el destorcedor: el mismo sólido, con `tipo: estaca`, de madera y más alto. Falta decidir cómo se ve por detrás. La propuesta es como el destorcedor: se voltea el nudo como una página, como si sacaras la estaca.
+  - **La forma de trabajar** es la misma: una sesión por nudo, de a tres, y la estaca como tarea aparte, con un diseño que Gabriel aprueba antes del código.
+
 ### Fase 5: libro y primera edición
 
 #### T11: Material inicial del libro
