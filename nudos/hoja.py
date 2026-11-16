@@ -7,9 +7,10 @@ imprimir.
 Sobre el tubo de la cabeza de turco, la vista desde arriba no sirve para revisar decenas de
 cruces: la hoja dibuja además el tubo desenrollado (mapa()), con cada cruce y su etiqueta.
 
-De los anfitriones, la hoja dibuja solo los que van parados sobre la mesa: el destorcedor, en
-gris, y la estaca, color madera. Son parte de la cuerda que se revisa, porque la gaza los
-rodea. El poste y la cruz no se dibujan.
+De los anfitriones, la hoja dibuja el destorcedor, en gris, y la estaca, el poste y la cruz,
+color madera. Son parte de la cuerda que se revisa: sin ellos no se ve qué rodea la cuerda.
+El poste y los palos de la cruz se dibujan solo dentro del encuadre, más un margen. El tubo de
+la cabeza de turco no se dibuja: para eso está el tubo desenrollado.
 """
 from __future__ import annotations
 
@@ -31,6 +32,8 @@ GRIS = np.array([0.62, 0.64, 0.67])   # el destorcedor
 MADERA = np.array([0.78, 0.64, 0.48])  # la estaca, como los palos de render/escena.js
 COLOR_PARADO = {"destorcedor": GRIS, "estaca": MADERA}
 RADIO_SUPERFICIE = 0.25   # las esferas con que se dibuja la superficie del anfitrión parado
+RADIO_PALO, PASO_PALO = 0.7, 0.2   # las del poste y la cruz, más grandes: son más largos
+MARGEN_PALO = 2.0         # diámetros de palo que se dibujan fuera del encuadre
 MESA = np.array([0.80, 0.81, 0.80])
 ANCHO = 520          # píxeles de cada cuadro
 COLUMNAS = 4
@@ -45,8 +48,8 @@ def hoja(datos: dict, vista: str = "arriba", anfitrion: dict | None = None,
     `altura` es la z en la que se centra la vista inclinada; sin ella, la de la cuerda de
     estos pasos (_altura). Quien dibuja los pasos uno por uno la pasa, para que el cuadro
     no salte de un paso a otro."""
-    solido = _parado(anfitrion)
     x0, x1, y0, y1 = _encuadre(datos)
+    solido = _parado(anfitrion) or _palos(anfitrion, x0, x1, y0, y1)
     ppd = ANCHO / (x1 - x0)
     alto = int(round((y1 - y0) * ppd))
     angulo = "arriba" if vista == "arriba" else float(vista)
@@ -100,10 +103,10 @@ def _cuerdas(datos: dict, p: dict) -> list[tuple[np.ndarray, float, np.ndarray, 
     return out
 
 
-def _parado(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray] | None:
+def _parado(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray, float] | None:
     """Puntos sobre la superficie del destorcedor o la estaca, para dibujarla con esferas de
     RADIO_SUPERFICIE: el costado, en anillos, y la tapa, en anillos concéntricos, con su
-    color. None si el nudo no tiene ninguno de los dos."""
+    color y el radio de esas esferas. None si el nudo no tiene ninguno de los dos."""
     if not anfitrion or anfitrion.get("tipo") not in COLOR_PARADO:
         return None
     rs, paso = RADIO_SUPERFICIE, 0.12
@@ -116,7 +119,56 @@ def _parado(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray] | None:
         a = np.linspace(0, 2 * math.pi, max(6, int(2 * math.pi * ri / paso)), endpoint=False)
         puntos.append(np.column_stack([ri * np.cos(a), ri * np.sin(a), np.full(len(a), alto)]))
     puntos.append(np.array([[0.0, 0.0, alto]]))
-    return np.vstack(puntos), COLOR_PARADO[anfitrion["tipo"]]
+    return np.vstack(puntos), COLOR_PARADO[anfitrion["tipo"]], RADIO_SUPERFICIE
+
+
+def _palos(anfitrion: dict | None, x0: float, x1: float, y0: float,
+           y1: float) -> tuple[np.ndarray, np.ndarray, float] | None:
+    """Puntos sobre la superficie del poste o de los dos palos de la cruz, color madera, para
+    dibujarlos con esferas de RADIO_PALO. Cada palo se corta en el encuadre, más MARGEN_PALO,
+    y lleva tapa donde termina dentro de ese tramo. None si el nudo no tiene ninguno."""
+    if not anfitrion or anfitrion.get("tipo") not in ("poste", "cruz"):
+        return None
+    r = anfitrion["radio"]
+    m = MARGEN_PALO
+    if anfitrion["tipo"] == "poste":
+        palos = [("x", anfitrion["desde"], anfitrion["hasta"], x0 - m, x1 + m,
+                  anfitrion["y"], anfitrion["z"])]
+    else:
+        mitad = anfitrion["largo"] / 2
+        # el de abajo va a lo largo de y, en x = 0; el de arriba, a lo largo de x, en y = 0
+        palos = [("y", -mitad, mitad, y0 - m - 2 * r, y1 + m + 2 * r, 0.0, anfitrion["z_abajo"]),
+                 ("x", -mitad, mitad, x0 - m, x1 + m, 0.0, anfitrion["z_arriba"])]
+    puntos = [_palo(eje, max(a, c0), min(b, c1), lado, z, r, tapas=(a >= c0, b <= c1))
+              for eje, a, b, c0, c1, lado, z in palos if min(b, c1) > max(a, c0)]
+    if not puntos:
+        return None
+    return np.vstack(puntos), MADERA, RADIO_PALO
+
+
+def _palo(eje: str, a: float, b: float, lado: float, z: float, radio: float,
+          tapas: tuple[bool, bool]) -> np.ndarray:
+    """Un cilindro acostado a lo largo de x o de y, de a a b, con el eje en `lado` (la otra
+    coordenada) y a la altura z: anillos en el costado y, si se pide, anillos en las tapas."""
+    rs, paso = RADIO_PALO, PASO_PALO
+    r = radio - rs
+    n = max(12, int(2 * math.pi * r / paso))
+    ang = np.linspace(0, 2 * math.pi, n, endpoint=False)
+    largo = np.arange(a + rs, b - rs + 1e-9, paso)
+    u = np.repeat(largo, n)                                  # a lo largo del palo
+    v = lado + np.tile(r * np.cos(ang), len(largo))          # de lado
+    w = z + np.tile(r * np.sin(ang), len(largo))             # hacia arriba
+    partes = [(u, v, w)]
+    for extremo, hay in zip((a + rs, b - rs), tapas):
+        if not hay:
+            continue
+        for ri in np.arange(r, 0, -paso):
+            k = max(6, int(2 * math.pi * ri / paso))
+            t = np.linspace(0, 2 * math.pi, k, endpoint=False)
+            partes.append((np.full(k, extremo), lado + ri * np.cos(t), z + ri * np.sin(t)))
+        partes.append((np.array([extremo]), np.array([lado]), np.array([z])))
+    u, v, w = (np.concatenate(c) for c in zip(*partes))
+    return np.column_stack([u, v, w] if eje == "x" else [v, u, w])
 
 
 def _densificar(X, paso=0.06):
@@ -175,7 +227,7 @@ def _esferas(C, W, H, ppd, radios, normales=True):
 def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0), solido=None):
     """`cuerdas` es la lista de _cuerdas. Cada una se densifica por separado: entre el final
     de una y el comienzo de la siguiente no hay cuerda. `solido` son los puntos de la
-    superficie del destorcedor o la estaca, con su color (_parado)."""
+    superficie del anfitrión, con su color y el radio de sus esferas (_parado, _palos)."""
     partes = []
     for X, radio, color, resaltado in cuerdas:
         Xd, sd, L = _densificar(X)
@@ -185,9 +237,8 @@ def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0), solido=None
         col[sd > L - 0.8 * (radio / R)] = REMATE
         partes.append((Xd, col, np.full(len(Xd), radio)))
     if solido is not None:
-        puntos, color = solido
-        partes.append((puntos, np.tile(color, (len(puntos), 1)),
-                       np.full(len(puntos), RADIO_SUPERFICIE)))
+        puntos, color, radio = solido
+        partes.append((puntos, np.tile(color, (len(puntos), 1)), np.full(len(puntos), radio)))
     Xd = np.vstack([x for x, _, _ in partes])
     col = np.vstack([c for _, c, _ in partes])
     radios = np.concatenate([r for _, _, r in partes])

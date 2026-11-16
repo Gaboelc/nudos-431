@@ -393,7 +393,7 @@ Son cambios compatibles que ya se conocen:
 - Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
 
-Fuera del formato, la hoja de revisión (`python -m nudos hoja`) todavía no dibuja el poste ni la cruz en la vista de la mesa: dibuja la cuerda, el destorcedor, la estaca y el tubo desenrollado de la cabeza de turco.
+Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris, y la estaca, el poste y la cruz color madera. El poste y los palos de la cruz se cortan en el encuadre, más un margen. Del tubo de la cabeza de turco dibuja el tubo desenrollado. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
 
 ### Registro
 
