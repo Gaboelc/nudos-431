@@ -1087,6 +1087,98 @@ Después de cada tanda hay un punto de control:
 - **Puño de mono.** Una plantilla, `puno-de-mono`: tres juegos de tres vueltas, cada uno alrededor del anterior, y el remate escondido en el centro. Se propone sin bola en el centro, como se ata en los dedos, y con su forma de buscar los cruces, que no es la del tubo. No usa nada de la cabeza de turco, que sigue provisional: ni el tubo ni su plantilla. Gabriel confirma si es así.
 - **El orden:** primero el amarre diagonal, porque usa la cruz; después los palos paralelos, con el redondo y el trípode, y el cabo. El adujado y el puño de mono van al final, porque son los de más cruces. Los diseños se pueden pedir a la vez, en tres sesiones; el código va de a uno, porque los anfitriones nuevos tocan los mismos archivos (`nudos/spec.py`, `nudos/anfitrion.py`, `render/escena.js` y `nudos/hoja.py`).
 
+**El amarre diagonal (tanda 4).** Una plantilla nueva, `amarre-diagonal`, sobre la cruz del amarre cuadrado. La referencia es `entradas/amarre-diagonal/` (15 fotos y `info.txt`): una vuelta de braza alrededor de los dos palos, tres o cuatro vueltas en una diagonal, tres o cuatro en la otra, tres o cuatro ahorcados y un ballestrinque de cierre. La fuente explica por qué empieza con la vuelta de braza y no con un ballestrinque: al tirar de ella, los dos palos se juntan aunque haya un hueco entre ellos.
+
+**Diseño (pendiente de Gabriel):**
+- **Los palos** son la cruz de T7, en ángulo recto: el plan de T7 decía que el diagonal agregaría `angulo`, pero la propuesta de la tanda 4 los deja rectos, que es como se lee mejor. Lo único que cambia es la altura: debajo del palo de abajo se cruzan las dos diagonales, así que ahí hay dos capas de cuerda y su eje queda a `radio + 2`, no a `radio + 1`. La especificación no lo escribe: lo dice la plantilla (`CAPAS_DEBAJO = 2`), la carga lo pasa a la cruz y el cuadrado sigue a `radio + 1`. El modelo no guarda la cruz; la escena y la hoja la leen de `Cruz.datos()`, que ya da `z_abajo`.
+- **Medidas y límites:**
+
+  ```yaml
+  anfitrion: {tipo: cruz, radio: 2.5, largo: 40}
+  plantilla:
+    tipo: amarre-diagonal
+    vueltas: 3                              # en cada diagonal
+    ahorcados: 3                            # entre los palos
+    cierre: {poste: arriba, lado: derecha}  # ballestrinque de cierre
+  ```
+
+  - `vueltas`, de 2 a 4, es el número de vueltas en cada diagonal. La fuente da el mismo número a las dos, así que es un solo campo. No pasa de 4 porque las vueltas de una diagonal tienen que caber, una junto a otra, en los dos huecos entre los palos donde van.
+  - `ahorcados`, de 2 a 6, como en el cuadrado.
+  - `cierre`, como en el cuadrado: por ahora en el palo de arriba, a la `derecha` o a la `izquierda`. Las fotos lo hacen a la izquierda; la izquierda es el reflejo de todo el amarre, como en el cuadrado. Se propone a la derecha, como en el cuadrado.
+  - No hay `inicio`: la vuelta de braza siempre rodea los dos palos, en el mismo lugar. El chicote siempre da tres vueltas, como en la ficha de la vuelta de braza.
+  - Los 3 y 3 son los de la fuente. Con radio 2,5, la primera diagonal (la vuelta de braza y 3 vueltas, a 1,1 una de otra) ocupa unos 3,3 diámetros de ancho, y todavía cabe en los huecos. Con 4 vueltas puede no caber. Entonces `construir` falla y dice que no caben, como el cuadrado cuando un ahorcado no cabe. No se aflojan los límites: se agranda el radio o se queda en 3.
+- **El camino de la cuerda,** en el orden en que se ata. Como en el cuadrado, la plantilla calcula la cuerda entera una vez, desde el chicote corto, y cada paso es su comienzo hasta su `hasta`, con el resto que cae a la mesa. La primera diagonal va de delante a la derecha hacia atrás a la izquierda. Sus vueltas pasan entre los palos por esos dos huecos (cuadrantes 4 y 2). La segunda va de delante a la izquierda hacia atrás a la derecha (cuadrantes 3 y 1).
+  1. **Vuelta de braza.** El chicote rodea los dos palos en la primera diagonal: por encima del palo de arriba, entre los palos atrás a la izquierda, por debajo del palo de abajo y entre los palos delante a la derecha. En la cara de delante del palo de arriba, a la derecha del de abajo, rodea el firme y se enrolla tres veces en su propio tramo, bajando hacia el hueco. Ahí la ve quien ata.
+  2. **La primera diagonal.** El firme baja por la cara de delante, junto a la vuelta de braza, y da las vueltas en el mismo sentido: por debajo del palo de abajo, de derecha a izquierda; entre los palos atrás a la izquierda; por encima del de arriba, de atrás hacia delante; y entre los palos delante a la derecha. Cada vuelta va junto a la anterior, más hacia delante a la izquierda, sin montarse. Sobre la cara de delante, la primera vuelta se aparta de la vuelta de braza lo que ocupan las vueltas del chicote, y se junta otra vez antes de llegar a lo alto del palo, como las esquinas del cuadrado se apartan a media altura (`ABRIR`).
+  3. **El cambio de diagonal.** La última vuelta llega por encima del palo de arriba a su cara de delante, no baja al hueco y cruza esa cara hacia la izquierda. Ahí empieza la segunda diagonal. Nada de la primera queda a la izquierda de ese tramo, así que no cruza nada.
+  4. **La segunda diagonal.** Baja entre los palos delante a la izquierda, pasa por debajo del palo de abajo de izquierda a derecha, sube entre los palos atrás a la derecha y pasa por encima del palo de arriba, de atrás hacia delante. Cada vuelta nueva va más atrás a la izquierda que la anterior. Encima del palo de arriba y debajo del de abajo pasa por fuera de las vueltas de la primera, así que va un diámetro más lejos del palo donde las cruza, con rampas suaves, como la diagonal del ballestrinque. Fuera de ahí va pegada al palo.
+  5. **Los ahorcados** son los del cuadrado: vueltas tensas entre los palos, por fuera de todas las esquinas, por debajo del palo de arriba y por encima del de abajo. La salida de la última vuelta baja al hueco de delante a la izquierda y empieza el primer ahorcado sin cruzar nada. Como en el cuadrado, va en la zona de un palo mientras pasa junto a las esquinas, y el sentido de los ahorcados es el que deja esa salida.
+  6. **El ballestrinque de cierre** es el del cuadrado, en el palo de arriba, junto al último ahorcado.
+- **Qué se reúsa del cuadrado,** sin cambiar lo que construye: los palos (`_Palos`, `_tangente`, `_hermite`), el trazo por zonas (`trazo.py`), los ahorcados (`cerca`, `extremos`, `_cadena`) con su variante por encima del palo, el ballestrinque de cierre (`_ballestrinque`), los restos que caen a la mesa (`_resto`), la búsqueda de cruces por zona (`pasos.py`), el volteo del terminado (`Cruz.voltear`) y los nombres de la escena (`CON_FIRME`). Hoy los ahorcados y el cierre están dentro de `cuerda()`, en `amarre.py`. Se sacan a funciones que reciben las esquinas, y las dos plantillas las usan. Es mover código sin cambiar el orden de las cuentas: si el `modelo.json` del cuadrado cambia aunque sea en un decimal, se vuelve atrás y el diagonal lleva su copia. Lo nuevo va en `nudos/plantillas/amarre_diagonal.py`: las vueltas en diagonal, la vuelta de braza y el cambio de diagonal.
+- **Las vueltas en diagonal.** Cada una va en un plano vertical a 45° de los dos palos, separado del de su vecina 1,1 diámetros. Sobre cada palo sigue el corte de ese plano con el palo, que es una elipse. Entre los palos baja por la tangente común de las dos elipses, como una cuerda tensa, y después se suaviza como las esquinas del cuadrado (`_hermite`). Así baja pegada a la cara de los dos palos, que es lo que Gabriel pidió en T7.
+- **Cómo se cuentan los cruces:** como en el cuadrado, cada zona tiene su mapa. El palo de abajo, el de arriba y la cintura entre los dos se desenrollan, y encima es lo más lejos del eje. Entre zonas solo se comprueba la separación.
+  - **La vuelta de braza:** sus 7 cruces sobre el palo de arriba, como en la ficha publicada: 2 al rodear el firme y 5 de las tres vueltas del chicote.
+  - **Las dos diagonales:** cada vuelta de la segunda pasa por encima de cada vuelta de la primera dos veces: sobre el palo de arriba y bajo el de abajo. La vuelta de braza cuenta como una vuelta más de la primera. Las dos diagonales no se tocan entre los palos, porque van en huecos distintos. Las vueltas del chicote van en la cara de delante, y ninguna vuelta de la segunda diagonal las cruza: cruza la vuelta de braza por la cara de atrás.
+  - **Los ahorcados:** cada uno pasa por encima de cada esquina. Cada vuelta tiene dos esquinas, y son 2n + 1 vueltas: la vuelta de braza, n de la primera diagonal y n de la segunda.
+  - **El ballestrinque de cierre** tiene sus 2.
+  - En total son 7 + 2·n·(n + 1) + 2·m·(2n + 1) + 2. Con 3 y 3 son 75 cruces, contra los 40 del cuadrado. La plantilla escribe esa secuencia hasta cada hito, como `_secuencias`, y se compara con la que se mide en la cuerda relajada. La consistencia entre pasos y el cruce que salta se comprueban igual.
+- **Los pasos** (`hasta`, en este orden): `inicio`, `vuelta-1` … `vuelta-<n>`, `segunda-1` … `segunda-<n>`, `ahorcado-1` … `ahorcado-<m>`, `cierre-1` y `cierre`. `vueltas`, `segundas` y `ahorcados` son alias del último de cada uno. No hay `inicio-1`: la cuerda empieza en el chicote, y la vuelta de braza sin las vueltas del chicote no es un comienzo de ella. El texto puede decir `{vueltas}` y `{ahorcados}`. Se proponen 9 pasos:
+
+  ```yaml
+  pasos:
+    - {titulo: Haz una vuelta de braza alrededor de los dos palos, hasta: inicio}
+    - {titulo: Da la primera vuelta en diagonal, hasta: vuelta-1}
+    - {titulo: Completa las {vueltas} vueltas, hasta: vueltas}
+    - {titulo: Cambia a la otra diagonal, hasta: segunda-1}
+    - {titulo: Completa las {vueltas} vueltas de la otra diagonal, hasta: segundas}
+    - {titulo: Da el primer ahorcado, hasta: ahorcado-1}
+    - {titulo: Completa los {ahorcados} ahorcados, hasta: ahorcados}
+    - {titulo: Empieza el ballestrinque de cierre, hasta: cierre-1}
+    - {titulo: Termina el ballestrinque, hasta: cierre}
+  ```
+
+  El paso 1 remite a la ficha de la vuelta de braza, como el cuadrado remite a la del ballestrinque. En la ficha caben 9 pasos: la rejilla tiene tres columnas, así que son 6 en la página 1 y 3 en la 2, en la misma fila donde el cuadrado tiene uno solo. El paso 1 lleva «Firme» y «Chicote»; desde el 2, solo «Chicote» (`CON_FIRME = ("inicio",)`).
+- **El error común,** con imagen: la variante `ahorcados-por-fuera` del cuadrado, con los ahorcados por encima del palo de arriba en lugar de entre los palos. Se ve desde `ahorcado-1` y va junto al paso 7. Sale casi gratis, porque los ahorcados son los mismos, y es igual de común en los dos amarres. Sin imagen (`error.otros`) van dos:
+  - **Empezar con un ballestrinque en un solo palo.** Los palos no se juntan, y el amarre puede soltarse. Es lo que la fuente explica.
+  - **La cuerda floja mientras atas**, como en el cuadrado.
+  - La otra variante que se pensó, todas las vueltas en una sola diagonal, no se propone: no caben una junto a otra en los huecos, y montadas no se pueden comparar en el mapa.
+- **Nudo terminado:** como en el cuadrado. Por delante, en la vista de los pasos. Por detrás, el amarre se voltea entero como un marco (`Cruz.voltear`), y se ven las dos diagonales cruzadas bajo el palo de abajo. Se aprieta como el cuadrado (T7c).
+- **Lo que cambia en el formato (v1.5, compatible):** la plantilla `amarre-diagonal`, con sus campos, sus hitos, `{vueltas}` y `{ahorcados}`, y la variante `ahorcados-por-fuera`. Con ella, el palo de abajo de la cruz queda a `radio + 2`. Ninguna especificación anterior la usa. Se agrega a «Plantillas», a «Anfitrión» (la altura de la cruz) y a «Error común» de `docs/formato-spec.md`, y se anota en el registro. La skill lleva la fila del amarre diagonal en «Elige el generador».
+- **Pruebas,** en `tests/test_amarre_diagonal.py`, con la forma de `test_amarre_cuadrado.py`:
+  - Se lee bien, y las medidas fuera de rango o los campos desconocidos se detectan. No lleva `inicio`.
+  - Los hitos siguen la cuerda. Al pasar de 3 a 4 vueltas, los mismos pasos siguen valiendo.
+  - La secuencia del método tiene 7 + 2n(n + 1) + 2m(2n + 1) + 2 cruces con 2 y 2, 3 y 3, 3 y 4 y 4 y 3. Cada vuelta de la segunda diagonal pasa por encima de cada una de la primera en los dos palos.
+  - Los cruces se buscan solo dentro de cada zona.
+  - El palo de abajo queda a `radio + 2` con el diagonal y sigue a `radio + 1` con el cuadrado.
+  - Los 9 pasos se construyen sin fallas, sin entrar en los palos ni en otras vueltas, con los cruces del método. El error se construye como un paso más y cruza las mismas esquinas.
+  - Cada paso resalta lo que agrega, y un cruce conserva su etiqueta y su lugar.
+  - La escena dibuja la cruz más alta. «Firme» va solo en el paso 1. Por detrás, el amarre se voltea con los palos.
+  - Las pruebas del cuadrado no cambian.
+- **Archivos:**
+  - `nudos/plantillas/amarre_diagonal.py` (nuevo).
+  - `nudos/plantillas/amarre.py`: los ahorcados y el cierre, sacados a funciones.
+  - `nudos/plantillas/__init__.py`, en `TIPOS`.
+  - `nudos/plantillas/pasos.py`: la geometría de los dos amarres.
+  - `nudos/anfitrion.py`: `Cruz` con las capas debajo.
+  - `nudos/spec.py`: un campo interno de `Anfitrion` con esas capas, que no se escribe en el YAML, y la carga, que lo toma de la plantilla.
+  - `docs/formato-spec.md`, `.claude/skills/nudo-nuevo/SKILL.md` y `tests/test_amarre_diagonal.py`.
+  - Después, `specs/amarre-diagonal.yaml`, en `modelado` cuando Gabriel apruebe las imágenes.
+  - No cambian `render/escena.js` ni `nudos/hoja.py`, que ya leen la altura de cada palo, ni la frase de «por detrás» de `nudos/ficha.py`.
+- **Que los 26 publicados no cambien:**
+  1. Antes del código, desde `main` y en un worktree aparte, se construyen e imprimen con Edge los 26 nudos de `publicados.txt`. Esa referencia queda fuera de git, con el commit anotado.
+  2. Después del código, se construyen e imprimen los mismos 26 desde la rama.
+  3. Los 26 `modelo.json` tienen que ser iguales byte a byte, y las imágenes de impresión iguales en RGB, píxel por píxel. Se usa el `comparar.py` de las notas de T7c.
+  4. Si una imagen difiere en un nivel, ese nudo se vuelve a imprimir solo desde el commit de referencia, como se hizo con la estaca, para ver si era de la corrida.
+  5. El que más importa es el amarre cuadrado, porque es el único que pasa por el código que se mueve. Pasa toda la suite.
+- **Riesgos:**
+  - **El ancho de la primera diagonal,** con las vueltas del chicote en la cara de delante. Si no cabe en los huecos con radio 2,5, se ajusta el apartado junto a las vueltas del chicote o se agranda el radio, mirando las imágenes.
+  - **Los 75 cruces,** que hacen el amarre más lento de construir que el cuadrado, que tarda cerca de un minuto. Puede llegar a dos o tres.
+- **Lo que tiene que decidir Gabriel:**
+  1. El error con imagen son los ahorcados por encima del palo de arriba, el mismo del cuadrado. Sin imagen van empezar con un ballestrinque en un solo palo y la cuerda floja.
+  2. Un solo `vueltas` para las dos diagonales, con 3 y 3 ahorcados.
+  3. Son 9 pasos, y la vuelta de braza va en uno solo que remite a su ficha.
+  4. El cierre va a la derecha, como en el cuadrado, aunque las fotos lo hacen a la izquierda.
+
 **La estaca del tensor ajustable (tanda 3).** La entrada (`entradas/tensor-ajustable`) es una sola imagen con cuatro dibujos: una estaca clavada, la cuerda que le da la vuelta a ras del suelo y el nudo sobre el firme, a unos diez diámetros de ella.
 
 **Diseño (15 de noviembre de 2026; Gabriel lo aprobó el mismo día):**
