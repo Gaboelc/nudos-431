@@ -1,0 +1,170 @@
+# Fugitivo sobre un poste. Borrador de la skill nudo-nuevo.
+# Trazado propio: la imagen de entradas/fugitivo solo se usó para leer el método y los cruces.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# El poste va a lo largo de x, con el eje en y = 0. Sobre el poste, los puntos son
+# [x, ángulo]: 0° arriba, 90° hacia quien ata, 180° abajo y 270° atrás.
+# La foto se mira con el palo acostado: lo que en la foto cuelga hacia abajo va sobre la mesa,
+# hacia quien ata; lo que pasa por detrás del palo pasa por debajo, y lo que sube por encima
+# del palo va hacia el fondo. El nudo queda en la cara de arriba, la que se ve.
+# Con radio 5 de la cuerda alrededor del eje, 1 diámetro sobre el poste son 11,46°.
+slug: fugitivo
+nombre: Fugitivo
+otros_nombres: [vuelta del forajido, vuelta del tirón]
+familia: De sujeción
+# De info.txt, sin confirmar.
+abok: 409
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Ata una cuerda a un palo o una baranda y la sueltas de un tirón del chicote, aunque el
+  firme siga tirando. Sirve para atar un animal o dejar algo amarrado por un rato.
+materiales: >-
+  Una cuerda de unos 2 m y un palo o una baranda de 3 a 8 cm de ancho.
+verificacion:
+  - El seno del firme pasa por dentro del seno que rodea el palo, y este lo aprieta.
+  - El seno del chicote pasa por dentro del seno del firme, y el firme lo aprieta al tirar.
+  - Al tirar del firme, el nudo se ajusta contra el palo y no se corre.
+  - Al tirar del chicote, el nudo se suelta entero.
+precauciones:
+  - >-
+    Un tirón del chicote lo deshace, también uno sin querer: un animal que lo muerde o una
+    rama que lo engancha. Si el chicote queda al alcance, átalo más corto o protégelo.
+  - >-
+    Con el firme flojo o con tirones que van y vienen, el nudo se puede aflojar. Revísalo de
+    vez en cuando y ajústalo tirando del firme.
+  - Tira siempre del firme para cargar. Si tiras del chicote, el nudo se suelta.
+alternativas:
+  - nudo: Media llave y dos cotes
+    cuando: >-
+      Cuando la cuerda va a quedar atada mucho tiempo o nadie va a estar cerca: no se
+      suelta sola y se desata fácil cuando la descargas.
+  - nudo: Nudo de liberación rápida
+    cuando: >-
+      Cuando quieres soltarlo de un tirón, pero el nudo tiene que aguantar mejor los tirones
+      que van y vienen.
+
+anfitrion:
+  tipo: poste
+  radio: 4.5
+  desde: -16
+  hasta: 16
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-6.0, 9.0]
+  y: [-10.0, 4.0]
+
+segmentos:
+  firme: [[1.6, -24], [1.6, -19], [1.6, -14.5]]
+  # En los pasos 1 y 2, el firme entra directo por debajo del palo.
+  entra: [[2.5, -10.5], [3.4, -6.6], [3.8, -3.4]]
+  debajo:
+    poste: [[3.8, 160], [3.8, 180], [3.8, 200]]
+  mas-alla: [[3.8, 3.4], [3.8, 7.0], [3.8, 11.0], [3.8, 15.0]]
+  # El seno que rodea el palo: la rama del firme pasa por debajo, sube por detrás, cruza
+  # por encima y baja por delante hasta la punta del seno.
+  vuelta-d:
+    poste: [[3.8, 160], [4.07, 180], [4.34, 200], [4.61, 220], [4.88, 240], [5.15, 260],
+            [5.42, 280], [5.69, 300], [5.96, 320], [6.1, 335], [6.1, 350], [6.1, 365],
+            [6.1, 380], [6.1, 394.4]]
+  # La punta del seno, de derecha a izquierda, y la rama del chicote, que vuelve por
+  # encima del palo y baja por detrás.
+  seno-1:
+    poste: [[5.9, 403.0], [5.35, 409.3], [4.6, 411.6], [3.3, 411.6], [1.9, 411.6],
+            [0.6, 411.6], [-0.8, 411.6], [-1.55, 409.3], [-2.1, 403.0], [-2.3, 394.4],
+            [-2.3, 380], [-2.3, 365], [-2.3, 350], [-2.3, 335], [-1.86, 315],
+            [-1.27, 295], [-0.68, 275], [-0.10, 255]]
+  # En los pasos 2 y 3, el chicote cuelga por detrás del palo.
+  baja-atras:
+    poste: [[0.34, 240]]
+  chicote-atras: [[0.5, 6.5], [0.4, 9.5], [0.3, 12.5]]
+  # Desde el paso 3, el firme sube por delante del palo y forma el segundo seno.
+  firme-3: [[0.8, -11.2], [0.2, -8.8], [0.0, -6.7]]
+  rama-a:
+    poste: [[0.0, 98], [0.0, 88], [0.0, 78], [0.0, 68], [0.0, 60], [0.0, 51], [0.0, 43.5]]
+  arco-2:
+    poste: [[0.255, 32.7], [0.95, 24.7], [1.9, 21.8], [2.85, 24.7], [3.545, 32.7],
+            [3.8, 43.5]]
+  rama-b:
+    poste: [[3.8, 51], [3.8, 60], [3.8, 75], [3.8, 90], [3.8, 105], [3.8, 120], [3.8, 135],
+            [3.8, 150]]
+  # Paso 4: el chicote pasa por debajo del palo, sube entre las dos ramas del segundo seno
+  # y forma el tercero.
+  vuelta-i:
+    poste: [[0.34, 240], [0.93, 220], [1.52, 200], [2.11, 180], [2.55, 165]]
+  rama-c:
+    poste: [[2.55, 150], [2.55, 135], [2.55, 120], [2.55, 105], [2.55, 90], [2.55, 75],
+            [2.55, 63], [2.55, 52], [2.55, 42], [2.55, 32]]
+  seno-3:
+    poste: [[2.55, 22.9], [2.88, 14.7], [3.21, 6.5], [3.54, -1.7], [3.67, -13.9],
+            [3.17, -24.9], [1.9, -30.9], [0.63, -24.9], [0.13, -13.9], [0.27, -1.7],
+            [0.59, 6.5], [0.92, 14.7], [1.25, 22.9]]
+  rama-e:
+    poste: [[1.25, 34.4], [1.25, 45.8], [1.1, 56.0], [0.6, 63.5], [0.0, 70.5], [-0.6, 78.0],
+            [-1.1, 86.0], [-1.4, 94.0], [-1.5, 100]]
+  chicote-4: [[-1.6, -6.5], [-2.6, -8.4], [-3.6, -10.3]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      Pasa la cuerda por detrás del palo. El tramo de tu lado es el firme; el extremo del
+      otro lado es el chicote. Deja ahí unos 80 cm.
+    trazado: [firme, entra, debajo, mas-alla]
+    secuencia: ""
+
+  - titulo: Pasa un seno por encima
+    texto: >-
+      Dobla la cuerda del otro lado en un seno y pásalo por encima del palo hacia ti. El
+      chicote cuelga por detrás.
+    trazado: [firme, entra, vuelta-d, seno-1, baja-atras, chicote-atras]
+    secuencia: ""
+    resaltar: {desde: "vuelta-d[0]", hasta: "seno-1[-1]"}
+
+  - titulo: Mete un seno del firme
+    texto: >-
+      Dobla el firme en un segundo seno y mételo de abajo hacia arriba por debajo de la
+      punta del primero. Tira del chicote para que el primero lo apriete.
+    trazado: [firme, firme-3, rama-a, arco-2, rama-b, vuelta-d, seno-1, baja-atras,
+              chicote-atras]
+    secuencia: "1U 2U 2O 1O"
+    resaltar: {desde: "firme-3[0]", hasta: "rama-b[-1]"}
+
+  - titulo: Mete un seno del chicote
+    texto: >-
+      Pasa el chicote por debajo del palo hacia ti. Dóblalo en un tercer seno, súbelo entre
+      las ramas del segundo y mételo por debajo de su punta. Tira del firme para apretar.
+    trazado: [firme, firme-3, rama-a, arco-2, rama-b, vuelta-d, seno-1, vuelta-i, rama-c,
+              seno-3, rama-e, chicote-4]
+    secuencia: "7U 1U 5O 4O 2U 2O 3U 6U 1O 3O 4U 5U 6O 7O"
+    resaltar: {desde: "vuelta-i[0]", hasta: fin}
+
+# El error: la fuente no trae uno. El seno del firme pasa por encima de la punta del primero,
+# no por debajo, así que nada lo sujeta.
+error:
+  paso: 3
+  invierte: [1, 2]
+  titulo: El segundo seno queda encima
+  texto: >-
+    Pasaste el seno del firme por encima de la punta del primer seno. Así no queda preso y,
+    al tirar del firme, el nudo se desarma. Mételo por debajo de la punta, entre ella y el
+    palo.
+  otros:
+    - titulo: Los senos cambiados
+      texto: >-
+        Si haces el segundo seno con el chicote y el tercero con el firme, el chicote ya no
+        suelta el nudo, y el firme lo deshace al tirar. El segundo seno es siempre del firme.
+    - titulo: El tercer seno por encima
+      texto: >-
+        El seno del chicote también va por debajo de la punta del segundo. Si queda encima,
+        el firme no lo aprieta y el nudo se suelta solo.
+  encuadre:
+    x: [-3.5, 7.5]
+    y: [-7.5, 2.0]
+
+terminado:
+  encuadre:
+    x: [-6.0, 9.0]
+    y: [-10.0, 4.0]
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
