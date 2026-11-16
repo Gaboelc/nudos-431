@@ -13,10 +13,8 @@ abok: 1720
 
 # Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
 usos: >-
-  Sujeta una cuerda a un poste, una baranda, un árbol o una argolla, y aguanta aunque la
-  carga tire fuerte o cambie de dirección. Sirve para amarrar un bote, tensar el viento de
-  una carpa o colgar una carga. Las dos vueltas al poste aguantan el tirón mientras haces
-  los cotes, y al final se desata fácil.
+  Sujeta una cuerda a un poste, un árbol o una argolla, aunque la carga tire fuerte o
+  cambie de dirección, como un bote o el viento de una carpa. Se desata fácil.
 materiales: >-
   Una cuerda de unos 2 m y un poste o un palo grueso.
 verificacion:
@@ -116,17 +114,16 @@ segmentos:
 pasos:
   - titulo: Prepara la cuerda
     texto: >-
-      Pon la cuerda sobre la mesa, frente al poste, con la punta tocando la base del poste.
-      El tramo largo, hacia ti, es el firme; el extremo junto al poste es el chicote. Deja
-      un chicote de 1 m.
+      Pon la cuerda frente al poste. El tramo largo, hacia ti, es el firme; el extremo junto
+      al poste es el chicote. Deja un chicote de 1 m.
     trazado: [firme, punta-1]
     secuencia: ""
 
   - titulo: Da dos vueltas al poste
     texto: >-
-      Pasa el chicote por debajo del poste, súbelo por detrás y bájalo por delante. Da una
-      segunda vuelta igual, a la izquierda de la primera, y trae el chicote hacia ti, a la
-      izquierda del firme. Esta es la media llave: ya aguanta el tirón mientras sigues.
+      Pasa el chicote por debajo del poste, súbelo por detrás y bájalo por delante. Da otra
+      vuelta igual, a la izquierda, y trae el chicote hacia ti. Esta media llave aguanta el
+      tirón mientras sigues.
     trazado: [firme, vueltas, bajada, punta-2]
     secuencia: ""
     resaltar: {desde: "vueltas[0]", hasta: fin}
@@ -141,17 +138,16 @@ pasos:
 
   - titulo: Cierra el primer cote
     texto: >-
-      Sigue con el chicote hacia la izquierda y pásalo por encima del tramo que baja del
-      poste. Tira del chicote para ajustar el cote contra las vueltas.
+      Sigue hacia la izquierda y pasa el chicote por encima del tramo que baja del poste.
+      Ajusta el cote contra las vueltas.
     trazado: [firme, vueltas, bajada, rodea, cierra, punta-4]
     secuencia: "1U 2O 3U 1O 2U 3O"
     resaltar: {desde: "cierra[0]", hasta: fin}
 
   - titulo: Haz el segundo cote
     texto: >-
-      Haz otro cote igual, más cerca de ti y girando hacia el mismo lado: por encima del
-      firme, por debajo, y por encima del tramo que llega del primer cote. Junta los dos
-      cotes y tira del firme para apretar.
+      Haz otro cote igual, más cerca de ti y hacia el mismo lado: por encima del firme, por
+      debajo y por encima del tramo que llega del primero. Júntalos y tira del firme.
     trazado: [firme, vueltas, bajada, rodea, cierra, arco]
     secuencia: "4U 5O 1U 2O 3U 1O 2U 3O 6U 4O 5U 6O"
     resaltar: {desde: "arco[0]", hasta: fin}
