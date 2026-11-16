@@ -174,12 +174,12 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 
 ### Tanda 3: sobre anfitrión
 - [x] Menos tokens por borrador (15 nov: Gabriel aprobó las cuatro medidas; ver «Gastar menos tokens en los borradores» en el plan)
-- [ ] Ballestrinque doble (*rolling hitch*, entrada en el manual de la Tropa) (15 nov: sobre el poste, decidido en el punto de control de la tanda 2; borrador en su propia sesión)
-- [ ] Leñador o vuelta de braza (15 nov: sobre el poste; borrador en su propia sesión)
+- [ ] Ballestrinque doble (*rolling hitch*, entrada en el manual de la Tropa) (15 nov: sobre el poste, decidido en el punto de control de la tanda 2; borrador en su propia sesión. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`, con la versión del palo sobre el poste. Falta el filtro 1, con la ficha)
+- [ ] Leñador o vuelta de braza (15 nov: sobre el poste; borrador en su propia sesión. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son los cruces 1, 3, 4 y 6)
 - [ ] Media llave y dos cotes
 - [ ] Fugitivo
 - [ ] Tensor (*trucker's hitch*)
-- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca) (15 nov: Gabriel aprobó el diseño de la estaca, `anfitrion: {tipo: estaca}` (formato v1.4); anfitrión y borrador en la rama `claude/tanda3-estaca-45866b`; los 16 publicados quedan iguales. Falta que Gabriel revise la hoja; la duda principal es el cruce 8, el remate)
+- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca) (15 nov: Gabriel aprobó el diseño de la estaca, `anfitrion: {tipo: estaca}` (formato v1.4); anfitrión y borrador en la rama `claude/tanda3-estaca-45866b`; los 16 publicados quedan iguales. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`, con la estaca. Falta el filtro 1, con la ficha; la duda principal es el cruce 8, el remate)
 - [ ] Constrictor
 - [ ] Nudo de liberación rápida (*mooring hitch*)
 - [ ] Presilla de alondra

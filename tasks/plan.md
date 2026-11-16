@@ -1080,6 +1080,8 @@ Después de cada tanda hay un punto de control:
 - Pasan 432 pruebas y 1 se salta (`tests/test_estaca.py` es nueva).
 - **El tensor ajustable:** cuatro pasos y ocho cruces. El chicote da dos vueltas al firme dentro de la gaza, hacia la estaca (cruces 1 a 4), pasa por debajo del tramo que sube a las vueltas (5) y da una vuelta más por fuera, más lejos de la estaca (6 y 7), y sale entre su propio tramo y el firme (8). Con vueltas de radio 1,3 a 1,5, el reverso y el error común se comprimían hasta 8 %. Con las del nudo aguja (radio 1,75 y una onda de 0,5 en el firme) no queda ninguna falla. La duda principal es el cruce 8: el dibujo es una perspectiva de la cuerda en el aire, y leído desde arriba deja el chicote por fuera de su tramo, sin nada que lo apriete. Se puso como lo pide un cote, y se revisa en el filtro 1.
 
+**Los tres borradores en `main` (16 de noviembre de 2026).** Gabriel revisó las hojas del ballestrinque doble, la vuelta de braza y el tensor ajustable y los aprobó el 16 nov. Entraron a `main` con la estaca (formato v1.4) y la hoja de revisión que encuadra el reverso volteado, y pasaron a `modelado`. Los 16 `modelo.json` publicados son iguales byte a byte a la referencia de 74e1b1b, y sus imágenes también; dos de la vuelta de escota variaron en 1 nivel en la corrida con todos y salen iguales impresas solas. Pasan 446 pruebas y 1 se salta. Las tres fichas caben y están listas para el filtro 1. Las dudas que se revisan con cuerda: en la vuelta de braza, los cruces 1, 3, 4 y 6; en el tensor ajustable, el cruce 8.
+
 ### Fase 5: libro y primera edición
 
 #### T11: Material inicial del libro
