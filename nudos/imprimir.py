@@ -140,7 +140,7 @@ def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> lis
     """Las dos vistas del nudo terminado: `final` por delante y `reverso` por detrás. Sobre un
     poste no hay reverso (se mira `final` desde el otro lado), sobre la cruz se voltea
     `final` con los palos y sobre el tubo se gira `final` media vuelta con el tubo. Con el
-    destorcedor se mira como sin anfitrión: el reverso es el nudo volteado con él. Se llaman
+    destorcedor o la estaca se mira como sin anfitrión: el reverso es el nudo volteado con él. Se llaman
     <prefijo>-frente y <prefijo>-reverso."""
     s = modelo.spec
     todos = nombres(modelo)

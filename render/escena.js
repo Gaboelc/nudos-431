@@ -308,6 +308,12 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const esquinas = [];
   const altoFit = altoDeEncuadre(modelo, B);
   for (const x of [B.x0, B.x1]) for (const y of [B.y0, B.y1]) for (const z of [0, altoFit]) esquinas.push(new THREE.Vector3(x, y, z));
+  // La estaca es alta: no sube toda la caja, como el destorcedor, sino que se encuadra su tapa,
+  // para que se vea entera sin achicar el nudo.
+  const est = modelo.anfitrion;
+  if (est && est.tipo === "estaca") {
+    for (const x of [-est.radio, est.radio]) for (const y of [-est.radio, est.radio]) esquinas.push(new THREE.Vector3(x, y, est.alto));
+  }
   const centroFit = new THREE.Vector3(cx, cy, 0.5);
   // Donde la cuerda entra al encuadre se pone el nombre «Firme».
   const e = modelo.encuadre;
@@ -349,11 +355,12 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
 
   // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x, la
   // cruz de los amarres o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
-  // three.js va a lo largo de y. El destorcedor, de metal, va más abajo.
+  // three.js va a lo largo de y. El destorcedor, de metal, y la estaca van más abajo.
   const a = modelo.anfitrion;
+  const madera = () => new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 });
   const palo = (largo, x, y, z, aLoLargoDeX) => {
     const geo = new THREE.CylinderGeometry(a.radio, a.radio, largo, 64, 1, false);
-    const mat = new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 });
+    const mat = madera();
     const m = new THREE.Mesh(geo, mat);
     if (aLoLargoDeX) m.rotation.z = Math.PI / 2;
     m.position.set(x, y, z);
@@ -374,11 +381,12 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     palo(a.largo, 0, 0, a.z_abajo, false);
     palo(a.largo, 0, 0, a.z_arriba, true);
   }
-  // El destorcedor del nudo aguja: un cilindro corto de metal, parado sobre la mesa en
-  // x = y = 0, de la mesa hasta «alto». Es gris acero, para no confundirlo con la madera.
-  if (a && a.tipo === "destorcedor") {
+  // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
+  // la mesa en x = y = 0, de la mesa hasta «alto». El destorcedor es corto y gris acero, para
+  // no confundirlo con la madera; la estaca es de madera, como los palos.
+  if (a && (a.tipo === "destorcedor" || a.tipo === "estaca")) {
     const geo = new THREE.CylinderGeometry(a.radio, a.radio, a.alto, 64, 1, false);
-    const mat = new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38,
+    const mat = a.tipo === "estaca" ? madera() : new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38,
       metalness: 0.55 });
     const m = new THREE.Mesh(geo, mat);
     m.rotation.x = Math.PI / 2;

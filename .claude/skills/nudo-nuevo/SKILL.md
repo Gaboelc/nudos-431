@@ -41,9 +41,10 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 | Dos cuerdas | libre con `cuerdas` | `vuelta-de-escota` |
 | Alrededor de un palo o una barra | libre con `anfitrion: {tipo: poste}` | `ballestrinque` |
 | Atado al ojo de un destorcedor, con una gaza que le da la vuelta sobre la mesa | libre con `anfitrion: {tipo: destorcedor}` | `nudo-aguja` |
+| Atado a una estaca clavada en el suelo, con una gaza que le da la vuelta a ras del suelo | libre con `anfitrion: {tipo: estaca}` | `tensor-ajustable` |
 | Amarre cuadrado: vueltas y ahorcados regulares sobre dos palos | `plantilla: {tipo: amarre-cuadrado}` | `amarre-cuadrado` |
 
-Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una estaca, una cornamusa, un barril u otra cuerda; otra plantilla, o varias cuerdas sobre un anfitrión), detente y no lo fuerces con lo que hay. Di en tu informe qué haría falta: es una tarea de código, como fueron T5 y T7.
+Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una cornamusa, un barril u otra cuerda; otra plantilla, o varias cuerdas sobre un anfitrión), detente y no lo fuerces con lo que hay. Di en tu informe qué haría falta: es una tarea de código, como fueron T5 y T7.
 
 Tres casos que sí caben en lo que hay:
 
@@ -100,7 +101,7 @@ Aquí un borrador puede quedar mal sin que ninguna prueba lo note: un cruce mal 
 - **Las uniones entre pasos:** cuando dos pasos comparten un segmento y terminan distinto, cada pieza propia termina en su propio último punto. Si el segmento compartido y la pieza de un paso se traslapan, la cuerda se estira justo en la unión.
 - **Dibuja el nudo como en la foto, no su imagen en espejo.** El espejo da la misma secuencia y es el nudo al revés, y ninguna prueba lo nota. Comprueba que la primera vuelta gire hacia el mismo lado que en la foto.
 - Cada paso resalta lo que se mueve en él (`resaltar`), y el resaltado es un solo tramo de la cuerda. Si un paso mueve dos tramos separados, como los dos firmes de un nudo en medio de la cuerda, pártelo en dos pasos.
-- Sigue los consejos del formato: el cruce de una cuerda gruesa sobre una delgada va en diagonal; sobre un poste, la cuerda no sube por el frente para bajar enseguida a la mesa, y alrededor del destorcedor va con su eje a `radio + 0,5` del centro, con puntos cada medio diámetro.
+- Sigue los consejos del formato: el cruce de una cuerda gruesa sobre una delgada va en diagonal; sobre un poste, la cuerda no sube por el frente para bajar enseguida a la mesa, y alrededor del destorcedor o la estaca va con su eje a `radio + 0,5` del centro, con puntos cada medio diámetro.
 - Pon un `encuadre` que muestre el nudo entero en todos los pasos.
 
 ## 6. Error común y texto de la ficha

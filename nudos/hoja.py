@@ -7,8 +7,9 @@ imprimir.
 Sobre el tubo de la cabeza de turco, la vista desde arriba no sirve para revisar decenas de
 cruces: la hoja dibuja además el tubo desenrollado (mapa()), con cada cruce y su etiqueta.
 
-De los anfitriones, la hoja dibuja solo el destorcedor, en gris: es parte de la cuerda que se
-revisa, porque la gaza lo rodea. El poste y la cruz no se dibujan.
+De los anfitriones, la hoja dibuja solo los que van parados sobre la mesa: el destorcedor, en
+gris, y la estaca, color madera. Son parte de la cuerda que se revisa, porque la gaza los
+rodea. El poste y la cruz no se dibujan.
 """
 from __future__ import annotations
 
@@ -27,7 +28,9 @@ COLORES = {"azul": AZUL, "crema": CREMA}   # los de nudos/spec.py COLORES
 AMBAR = np.array([0.95, 0.55, 0.12])
 REMATE = np.array([0.35, 0.06, 0.06])
 GRIS = np.array([0.62, 0.64, 0.67])   # el destorcedor
-RADIO_SUPERFICIE = 0.25   # las esferas con que se dibuja la superficie del destorcedor
+MADERA = np.array([0.78, 0.64, 0.48])  # la estaca, como los palos de render/escena.js
+COLOR_PARADO = {"destorcedor": GRIS, "estaca": MADERA}
+RADIO_SUPERFICIE = 0.25   # las esferas con que se dibuja la superficie del anfitrión parado
 MESA = np.array([0.80, 0.81, 0.80])
 ANCHO = 520          # píxeles de cada cuadro
 COLUMNAS = 4
@@ -38,7 +41,7 @@ def hoja(datos: dict, vista: str = "arriba", anfitrion: dict | None = None) -> I
     """Un cuadro por paso. `datos` es el contenido de modelo.json y `vista` es
     «arriba» o la inclinación de la cámara en grados. `anfitrion` es el del nudo, como lo
     recibe render/escena.js (nudos/anfitrion.py, datos()): modelo.json no lo lleva."""
-    solido = _destorcedor(anfitrion)
+    solido = _parado(anfitrion)
     x0, x1, y0, y1 = _encuadre(datos)
     ppd = ANCHO / (x1 - x0)
     alto = int(round((y1 - y0) * ppd))
@@ -82,11 +85,11 @@ def _cuerdas(datos: dict, p: dict) -> list[tuple[np.ndarray, float, np.ndarray, 
     return out
 
 
-def _destorcedor(anfitrion: dict | None) -> np.ndarray | None:
-    """Puntos sobre la superficie del destorcedor, para dibujarla con esferas de
-    RADIO_SUPERFICIE: el costado, en anillos, y la tapa, en anillos concéntricos. None si el
-    nudo no tiene destorcedor."""
-    if not anfitrion or anfitrion.get("tipo") != "destorcedor":
+def _parado(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray] | None:
+    """Puntos sobre la superficie del destorcedor o la estaca, para dibujarla con esferas de
+    RADIO_SUPERFICIE: el costado, en anillos, y la tapa, en anillos concéntricos, con su
+    color. None si el nudo no tiene ninguno de los dos."""
+    if not anfitrion or anfitrion.get("tipo") not in COLOR_PARADO:
         return None
     rs, paso = RADIO_SUPERFICIE, 0.12
     r, alto = anfitrion["radio"] - rs, anfitrion["alto"] - rs
@@ -98,7 +101,7 @@ def _destorcedor(anfitrion: dict | None) -> np.ndarray | None:
         a = np.linspace(0, 2 * math.pi, max(6, int(2 * math.pi * ri / paso)), endpoint=False)
         puntos.append(np.column_stack([ri * np.cos(a), ri * np.sin(a), np.full(len(a), alto)]))
     puntos.append(np.array([[0.0, 0.0, alto]]))
-    return np.vstack(puntos)
+    return np.vstack(puntos), COLOR_PARADO[anfitrion["tipo"]]
 
 
 def _densificar(X, paso=0.06):
@@ -157,7 +160,7 @@ def _esferas(C, W, H, ppd, radios, normales=True):
 def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0), solido=None):
     """`cuerdas` es la lista de _cuerdas. Cada una se densifica por separado: entre el final
     de una y el comienzo de la siguiente no hay cuerda. `solido` son los puntos de la
-    superficie del destorcedor (_destorcedor), que se dibujan en gris."""
+    superficie del destorcedor o la estaca, con su color (_parado)."""
     partes = []
     for X, radio, color, resaltado in cuerdas:
         Xd, sd, L = _densificar(X)
@@ -167,8 +170,9 @@ def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0), solido=None
         col[sd > L - 0.8 * (radio / R)] = REMATE
         partes.append((Xd, col, np.full(len(Xd), radio)))
     if solido is not None:
-        partes.append((solido, np.tile(GRIS, (len(solido), 1)),
-                       np.full(len(solido), RADIO_SUPERFICIE)))
+        puntos, color = solido
+        partes.append((puntos, np.tile(color, (len(puntos), 1)),
+                       np.full(len(puntos), RADIO_SUPERFICIE)))
     Xd = np.vstack([x for x, _, _ in partes])
     col = np.vstack([c for _, c, _ in partes])
     radios = np.concatenate([r for _, _, r in partes])

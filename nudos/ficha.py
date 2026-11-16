@@ -24,6 +24,18 @@ from .spec import Spec
 LIBRO = RAIZ / "libro"
 TERMINOS = RAIZ / "config" / "terminos_seccion.txt"
 PASOS_IZQUIERDA = 6   # dos filas de tres en la página izquierda; el resto va en la derecha
+# Cómo se mira el nudo terminado por detrás, según el anfitrión (None: sin anfitrión). Cada
+# tipo de nudos/spec.py TIPOS_ANFITRION tiene la suya.
+POR_DETRAS = {
+    None: "Por detrás es como lo ves si lo volteas como la página de un libro.",
+    "poste": "Por detrás es como lo ves desde el otro lado del poste.",
+    "cruz": "Por detrás es como lo ves si volteas los dos palos juntos como la página de un libro.",
+    "tubo": "Por detrás es como lo ves si giras el tubo media vuelta.",
+    "destorcedor": "Por detrás es como lo ves si volteas el nudo con el destorcedor como la "
+                   "página de un libro.",
+    "estaca": "Por detrás es como lo ves si sacas la estaca, volteas el nudo como la página de "
+              "un libro y la vuelves a clavar.",
+}
 
 
 class FichaError(Exception):
@@ -115,13 +127,7 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
              f'<div class="img"><img src="{img("error")}" alt=""><span class="sello mal">Así no</span></div>'
              f'</div><figcaption><span class="aviso">Error común · paso {e.paso}</span>'
              f'<span class="t">{esc(e.titulo)}</span>{esc(e.texto)}{otros_errores}</figcaption></figure>')
-    detras = {None: "Por detrás es como lo ves si lo volteas como la página de un libro.",
-              "poste": "Por detrás es como lo ves desde el otro lado del poste.",
-              "cruz": "Por detrás es como lo ves si volteas los dos palos juntos como la página "
-                      "de un libro.",
-              "tubo": "Por detrás es como lo ves si giras el tubo media vuelta.",
-              "destorcedor": "Por detrás es como lo ves si volteas el nudo con el destorcedor "
-                             "como la página de un libro."}[s.anfitrion and s.anfitrion.tipo]
+    detras = POR_DETRAS[s.anfitrion and s.anfitrion.tipo]
     terminado = (f'    <figure class="panel terminado"><div class="imgs">'
                  f'<div class="img"><img src="{img("terminado-frente")}" alt=""><span class="sello">Por delante</span></div>'
                  f'<div class="img"><img src="{img("terminado-reverso")}" alt=""><span class="sello">Por detrás</span></div>'

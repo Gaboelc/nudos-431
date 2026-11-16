@@ -23,7 +23,8 @@ class Modelo:
     pasos: list[Resultado]
     fallas: list[str]
     error: Resultado | None = None     # el error común, si la especificación lo declara
-    # El último paso volteado: el nudo terminado por detrás (sin anfitrión o con el destorcedor).
+    # El último paso volteado: el nudo terminado por detrás (sin anfitrión, o con el
+    # destorcedor o la estaca).
     reverso: Resultado | None = None
     # El nudo terminado apretado (nudos/apretar.py), por delante y por detrás. Si no se pudo
     # apretar, es el último paso o el reverso tal cual. None en un nudo de plantilla; por
@@ -52,8 +53,8 @@ def construir(spec: Spec) -> Modelo:
     reverso = None
     final = por_n.get(len(spec.pasos))
     # Un nudo sobre el poste no se voltea: por detrás se mira desde el otro lado (la vista
-    # «detras» de render/escena.js). Con el destorcedor, todo el nudo va sobre la mesa y se
-    # voltea como sin anfitrión.
+    # «detras» de render/escena.js). Con el destorcedor o la estaca, todo el nudo va sobre la
+    # mesa y se voltea como sin anfitrión.
     if final is not None and (spec.anfitrion is None or spec.anfitrion.en_la_mesa):
         reverso, f_reverso = construir_reverso(spec, final)
         fallas.extend(f_reverso)

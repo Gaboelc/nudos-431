@@ -113,8 +113,8 @@ def apretado(spec: Spec, final: Resultado, reverso: Resultado | None = None,
              rondas: int = RONDAS) -> tuple[Resultado | None, Resultado | None]:
     """El último paso de la especificación, ya construido (`final`), apretado, y el nudo por
     detrás (`reverso`, el último paso volteado), apretado. Sobre un poste no hay reverso: se
-    mira el mismo nudo desde el otro lado. Con el destorcedor, todo el nudo va sobre la mesa y
-    se aprieta como sin anfitrión, con el destorcedor sacando la cuerda de él. En un nudo de
+    mira el mismo nudo desde el otro lado. Con el destorcedor o la estaca, todo el nudo va
+    sobre la mesa y se aprieta como sin anfitrión, con el anfitrión sacando la cuerda de él. En un nudo de
     plantilla, que no se aprieta, los dos son None."""
     if spec.plantilla is not None:
         return None, None

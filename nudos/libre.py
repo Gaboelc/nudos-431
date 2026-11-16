@@ -123,7 +123,7 @@ class Resultado:
 def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None,
                    cuerdas: tuple[Cuerda, ...] = ()) -> Resultado:
     """`cuerdas` son las de la especificación, cuando el nudo tiene varias. Con un anfitrión
-    que deja todo el nudo sobre la mesa (el destorcedor), el paso se construye aquí y el
+    que deja todo el nudo sobre la mesa (el destorcedor o la estaca), el paso se construye aquí y el
     anfitrión solo saca la cuerda de él al relajar."""
     if anfitrion is not None and not anfitrion.en_la_mesa:
         from .anfitrion import construir_paso as sobre_anfitrion
@@ -194,8 +194,8 @@ def voltear(r: Resultado, secuencia, pasadas=None, anfitrion: Anfitrion | None =
     vuelve a asentarse en la mesa. `secuencia` es la declarada del paso; al voltear,
     cada cruce queda al revés, así que se espera esa misma secuencia invertida. Con
     varias cuerdas, `pasadas` es la del paso: cada pasada sigue en su cuerda. Con el
-    destorcedor (`anfitrion`), que está en x = 0 y es simétrico, el nudo se voltea con él y
-    queda en el mismo lugar."""
+    destorcedor o la estaca (`anfitrion`), que está en x = 0 y es simétrico, el nudo se voltea
+    con él y queda en el mismo lugar."""
     mesa = _en_la_mesa(anfitrion, r.n)
     rep = r.reparto or Reparto.una(len(r.puntos))
     X = r.puntos.copy()

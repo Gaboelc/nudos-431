@@ -38,16 +38,17 @@ _CAMPOS_TERMINADO = {"encuadre"}
 _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 # Campos de cada tipo de anfitrión, además de «tipo»; todos son medidas en diámetros.
 _MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "largo"),
-                      "tubo": ("radio", "largo"), "destorcedor": ("radio", "alto")}
+                      "tubo": ("radio", "largo"), "destorcedor": ("radio", "alto"),
+                      "estaca": ("radio", "alto")}
 TIPOS_ANFITRION = tuple(_MEDIDAS_ANFITRION)
 # Los anfitriones que solo se usan con una plantilla, con la plantilla de ejemplo.
 _SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco"}
 # Cómo se nombra el anfitrión en los mensajes.
 _DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo",
-                  "destorcedor": "del destorcedor"}
+                  "destorcedor": "del destorcedor", "estaca": "de la estaca"}
 # Los anfitriones con los que todo el nudo va sobre la mesa: se construye, se voltea y se
 # aprieta como un nudo libre, y el anfitrión solo empuja la cuerda (nudos/anfitrion.py).
-EN_LA_MESA = ("destorcedor",)
+EN_LA_MESA = ("destorcedor", "estaca")
 # Una medida de la plantilla dentro del texto, como {vueltas}.
 _MEDIDA = re.compile(r"\{([^{}]*)\}")
 _CAMPOS_CUERDA = {"nombre", "grosor", "color"}
@@ -110,13 +111,16 @@ class Anfitrion:
 
     Destorcedor: el ojo de un destorcedor de pesca, un cilindro corto parado sobre la mesa,
     con el eje vertical en x = y = 0 y `alto` desde la mesa. La cuerda le da la vuelta a ras
-    de la mesa y nunca pasa por encima, así que todo el nudo va sobre la mesa (EN_LA_MESA)."""
+    de la mesa y nunca pasa por encima, así que todo el nudo va sobre la mesa (EN_LA_MESA).
+
+    Estaca: la del tensor ajustable, clavada en el suelo. Es el mismo cilindro parado que el
+    destorcedor, de madera y más alto."""
     tipo: str
     radio: float
     desde: float | None = None   # poste: extremos a lo largo de x
     hasta: float | None = None
     largo: float | None = None   # cruz: largo de cada palo; tubo: su largo
-    alto: float | None = None    # destorcedor: su alto desde la mesa
+    alto: float | None = None    # destorcedor y estaca: su alto desde la mesa
 
     @property
     def en_la_mesa(self) -> bool:
@@ -579,9 +583,9 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         raise af("«largo» es el largo de cada palo; tiene que ser mayor que su grosor")
     if tipo == "tubo" and numeros["largo"] <= 2 * numeros["radio"]:
         raise af("«largo» es el largo del tubo; tiene que ser mayor que su grosor")
-    if tipo == "destorcedor" and numeros["alto"] <= 1:
-        raise af("«alto» es el alto del destorcedor desde la mesa; tiene que ser mayor que 1, "
-                 "el grosor de la cuerda que lo rodea")
+    if tipo in EN_LA_MESA and numeros["alto"] <= 1:
+        raise af(f"«alto» es el alto {_DEL_ANFITRION[tipo]} desde la mesa; tiene que ser mayor "
+                 "que 1, el grosor de la cuerda que le da la vuelta")
     return Anfitrion(tipo, **numeros)
 
 
