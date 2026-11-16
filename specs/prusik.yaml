@@ -35,7 +35,7 @@ seguridad: >-
   con instructor y equipo certificados.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 cuerdas:
   - {nombre: gruesa, grosor: 1.5, color: azul}
