@@ -42,7 +42,7 @@ alternativas:
     cuando: Cuando las cuerdas son de distinto grosor o la vas a desatar después.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 cuerdas:
   - {nombre: azul, grosor: 1, color: azul}

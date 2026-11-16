@@ -41,7 +41,7 @@ alternativas:
       paquete apretado: en el primero das dos vueltas en vez de una.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 cuerdas:
   - {nombre: izquierda, grosor: 1, color: azul}

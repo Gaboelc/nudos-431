@@ -41,7 +41,7 @@ alternativas:
     cuando: Para atar apretado alrededor de algo, como un paquete o una venda.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 cuerdas:
   - {nombre: azul, grosor: 1, color: azul}
