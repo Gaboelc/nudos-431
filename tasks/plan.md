@@ -1089,7 +1089,7 @@ Después de cada tanda hay un punto de control:
 
 **El cabo y el refuerzo de cabo (tanda 4).** La entrada (`entradas/refuerzo-de-cabo/`) son 18 fotos de un mismo método y su descripción. El cabo, de tres cordones, está parado con la punta arriba, sujeta con cinta. El cordel se pone a lo largo del cabo, con el extremo corto hacia la punta y más allá de ella. Con el largo se dan unas vueltas apretadas hacia la punta, sobre el extremo corto. Ese extremo, que sale por encima de las vueltas, se dobla hacia abajo en un seno que queda sobre ellas, con la curva hacia la punta y su extremo por debajo de las vueltas. Se dan otras tantas vueltas encima de las dos ramas del seno, también hacia la punta, hasta que solo queda fuera la curva. El largo se pasa por el seno y se tira del extremo corto: el seno se mete bajo las vueltas de encima y arrastra al largo con él. Al final se cortan las dos puntas al ras. La descripción advierte que no se tire de más: el seno tiene que quedar a medio camino.
 
-**Diseño (pendiente de Gabriel):**
+**Diseño (16 de noviembre de 2026; Gabriel lo aprobó el mismo día, con las seis decisiones del final tal como están):**
 - **El cabo es un cilindro rígido, no una segunda cuerda.** Se pensó dibujarlo como una cuerda gruesa de verdad, con dos cuerdas (T6). No conviene, por tres razones:
   - Los cruces de dos cuerdas se buscan en la proyección desde arriba. Ahí las vueltas, que rodean el cabo, se ven casi de canto a los costados, y las ramas que van bajo las vueltas quedan una encima de otra en el mismo lugar. Es lo que en T7 obligó a usar los mapas desenrollados.
   - Una cuerda gruesa relajada se dobla y cae a la mesa por su peso, y el refuerzo se ata sobre un tramo recto.
@@ -1163,7 +1163,7 @@ Después de cada tanda hay un punto de control:
   En `tests/test_hoja.py`, la hoja dibuja el cabo y su mapa. La prueba de que cada tipo de anfitrión tiene su frase en `POR_DETRAS` ya existe y cubre el cabo.
 - **Archivos:** `nudos/spec.py`, `nudos/anfitrion.py` (`Cabo`), `nudos/plantillas/refuerzo.py` (nuevo), `nudos/plantillas/__init__.py`, `nudos/plantillas/pasos.py` (`geometria()`), `nudos/plantillas/trazo.py` (la zona del cabo), `nudos/exportar.py` (`NOMBRES`), `nudos/imprimir.py` (el terminado sobre el cabo), `nudos/ficha.py` (`POR_DETRAS`), `nudos/hoja.py` y `nudos/__main__.py` (el mapa del cabo), `render/escena.js`, `docs/formato-spec.md`, la tabla de la skill `nudo-nuevo`, `tests/test_refuerzo_de_cabo.py` y `tests/test_hoja.py`. Después, `specs/refuerzo-de-cabo.yaml`, con texto propio, en `borrador` hasta que Gabriel revise sus imágenes.
 - **Riesgo:** el paso de tirar. Bajo las vueltas de encima quedan la curva del seno y la vuelta que da el largo alrededor de ella, entre las dos ramas, con las vueltas encima. Es donde más tramos hay en menos espacio. Si no cabe a un diámetro con estas medidas, se separan más las ramas o se agranda el radio del cabo, mirando las imágenes. Los límites no se aflojan. El otro riesgo es que ocho vueltas de cordel no se lean en la ficha; eso se ve en la página de prueba, y si pasa, se baja `vueltas` a 3.
-- **Lo que tiene que decidir Gabriel:**
+- **Lo que decidió Gabriel (16 de noviembre):** aprobó las seis propuestas.
   1. El cabo como cilindro rígido dibujado como cuerda crema, recto, con la punta cortada a la derecha y sin cinta, en vez de una segunda cuerda.
   2. Las medidas: radio 3 (un cabo de 12 mm con un cordel de 2 mm) y 4 vueltas por mitad.
   3. Los 7 pasos, con «Corta las puntas» al final: el terminado es el refuerzo cortado, sin puntas a la vista.
