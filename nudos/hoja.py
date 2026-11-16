@@ -37,16 +37,22 @@ COLUMNAS = 4
 MARGEN_AUTO = 1.5    # diámetros alrededor del nudo cuando no hay encuadre
 
 
-def hoja(datos: dict, vista: str = "arriba", anfitrion: dict | None = None) -> Image.Image:
+def hoja(datos: dict, vista: str = "arriba", anfitrion: dict | None = None,
+         altura: float | None = None) -> Image.Image:
     """Un cuadro por paso. `datos` es el contenido de modelo.json y `vista` es
     «arriba» o la inclinación de la cámara en grados. `anfitrion` es el del nudo, como lo
-    recibe render/escena.js (nudos/anfitrion.py, datos()): modelo.json no lo lleva."""
+    recibe render/escena.js (nudos/anfitrion.py, datos()): modelo.json no lo lleva.
+    `altura` es la z en la que se centra la vista inclinada; sin ella, la de la cuerda de
+    estos pasos (_altura). Quien dibuja los pasos uno por uno la pasa, para que el cuadro
+    no salte de un paso a otro."""
     solido = _parado(anfitrion)
     x0, x1, y0, y1 = _encuadre(datos)
     ppd = ANCHO / (x1 - x0)
     alto = int(round((y1 - y0) * ppd))
-    centro = np.array([(x0 + x1) / 2, (y0 + y1) / 2, 0.0])
     angulo = "arriba" if vista == "arriba" else float(vista)
+    centro = np.array([(x0 + x1) / 2, (y0 + y1) / 2,
+                       0.0 if angulo == "arriba"
+                       else altura if altura is not None else _altura(datos, x0, x1, y0, y1)])
     cuadros = []
     for p in datos["pasos"]:
         im = Image.fromarray(_cuadro(_cuerdas(datos, p), angulo, ANCHO, alto, ppd, centro,
@@ -58,6 +64,15 @@ def hoja(datos: dict, vista: str = "arriba", anfitrion: dict | None = None) -> I
     for k, c in enumerate(cuadros):
         out.paste(c, ((k % COLUMNAS) * ANCHO, (k // COLUMNAS) * alto))
     return out
+
+
+def _altura(datos: dict, x0: float, x1: float, y0: float, y1: float) -> float:
+    """Altura de la cuerda dentro del encuadre, en la mediana de todos los pasos. La vista
+    inclinada se centra ahí: un nudo sobre el poste queda muy por encima de la mesa y, con la
+    cámara centrada en z = 0, saldría del cuadro."""
+    X = np.vstack([np.asarray(p["puntos"], float) for p in datos["pasos"]])
+    dentro = (X[:, 0] >= x0) & (X[:, 0] <= x1) & (X[:, 1] >= y0) & (X[:, 1] <= y1)
+    return float(np.median(X[dentro, 2])) if dentro.any() else 0.0
 
 
 def _encuadre(datos: dict) -> tuple[float, float, float, float]:

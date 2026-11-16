@@ -21,7 +21,7 @@ import yaml
 from . import RAIZ
 from .anfitrion import solido
 from .construir import Modelo, datos_json
-from .hoja import ANCHO, hoja
+from .hoja import ANCHO, _altura, _encuadre, hoja
 from .libre import LIMITES, Resultado
 
 DESTINO = RAIZ / "revision"   # fuera de git (.gitignore)
@@ -62,6 +62,9 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
     mapa = leer_pasos(destino / "pasos.yaml")
     datos = datos_json(modelo)
     anfitrion = None if modelo.spec.anfitrion is None else solido(modelo.spec.anfitrion).datos()
+    # La vista inclinada se centra a la misma altura en todos los cuadros: la de la cuerda de
+    # todos los pasos. Un nudo sobre el poste queda muy por encima de la mesa.
+    altura = _altura(datos, *_encuadre(datos))
 
     def dibujos(dibujo: dict, nombre: str, volteado: bool = False) -> str:
         """`dibujo` es el paso como lo trae modelo.json. El nudo por detrás está volteado sobre
@@ -73,7 +76,7 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
             base = {**datos, "encuadre": {"x": [-x1, -x0], "y": y}}
         celdas = []
         for vista in VISTAS:
-            im = hoja({**base, "pasos": [dibujo]}, vista, anfitrion)
+            im = hoja({**base, "pasos": [dibujo]}, vista, anfitrion, altura)
             im = im.crop((0, 0, ANCHO, im.height))
             archivo = f"{nombre}-{vista}.png"
             im.save(destino / archivo)
