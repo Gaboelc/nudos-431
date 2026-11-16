@@ -14,3 +14,7 @@ as-de-guia-espanol
 margarita
 arnes-de-hombre
 silla-de-bombero
+rizo
+pescador
+pescador-doble
+nudo-aguja

@@ -41,7 +41,14 @@ alternativas:
       paquete apretado: en el primero das dos vueltas en vez de una.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-15
+    resultado: aprobado
+    ficha: 6005d98
 
 cuerdas:
   - {nombre: izquierda, grosor: 1, color: azul}

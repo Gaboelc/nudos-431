@@ -6,7 +6,14 @@
 slug: nudo-aguja
 nombre: Nudo aguja
 familia: De sujeción
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-15
+    resultado: aprobado
+    ficha: 6005d98
 
 usos: >-
   Ata un sedal al ojo de un destorcedor. Con él se arman las líneas de pesca de varios
