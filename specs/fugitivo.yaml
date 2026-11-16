@@ -167,4 +167,4 @@ terminado:
     y: [-7.5, 5.5]
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado

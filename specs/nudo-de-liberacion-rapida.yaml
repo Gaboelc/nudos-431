@@ -132,4 +132,4 @@ error:
     y: [-14.5, -4.5]
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
