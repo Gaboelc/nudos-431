@@ -1,0 +1,185 @@
+# Tensor (trucker's hitch) sobre un poste. Borrador de la skill nudo-nuevo.
+# Trazado propio: las imágenes de entradas/tensor solo se usaron para leer el método y los cruces.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# El poste va a lo largo de x, con el eje en y = 0. Sobre el poste, los puntos son
+# [x, ángulo]: 0° arriba, 90° hacia quien ata, 180° abajo y 270° atrás.
+# La foto se mira desde arriba: el firme sale por arriba (hacia el fondo) y el gancho de la
+# foto es el poste, abajo. El nudo va en la cuerda, a unos 15 diámetros del poste.
+# Con radio 2,5 de la cuerda alrededor del eje, 1 diámetro sobre el poste son 22,9°.
+slug: tensor
+nombre: Tensor
+familia: De sujeción
+# De info.txt, sin confirmar: la fuente dice que esta forma es una variante del 2126.
+abok: 2126
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Tensa con fuerza una cuerda que sujeta una carga, como una lona sobre un carro, o un cordel
+  entre dos árboles. El seno que cuelga del nudo trabaja como una polea, así que tiras con
+  menos fuerza. Se suelta de un tirón de la punta del lazo de arriba.
+materiales: >-
+  Una cuerda de unos 4 m y un palo o una baranda firme de 3 a 5 cm de ancho. Para
+  practicar, ata el firme a algo alto.
+verificacion:
+  - La punta del segundo lazo pasa por dentro del primero, y el primero la aprieta.
+  - El chicote rodea el palo y sube por dentro del seno que cuelga.
+  - Al tirar del chicote, el firme se tensa y el nudo de arriba no se corre.
+  - Con el chicote suelto, al tirar de la punta del lazo de arriba el nudo se deshace.
+precauciones:
+  - Con una cuerda resbalosa, el nudo de arriba se suelta solo. Usa una que agarre.
+  - >-
+    El seno que hace de polea se gasta con el roce. Si tensas muchas veces, revisa la cuerda.
+  - Multiplica tu fuerza; no tenses tanto que se rompa la cuerda, el palo o la carga.
+alternativas:
+  - nudo: Tensor ajustable
+    cuando: Cuando solo necesitas ajustar una cuerda atada a una estaca, sin mucha fuerza.
+  - nudo: Media llave y dos cotes
+    cuando: Cuando solo hace falta atar la cuerda al palo, sin tensarla.
+
+anfitrion:
+  tipo: poste
+  radio: 2
+  desde: -11
+  hasta: 4
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-10.0, 11.0]
+  y: [-4.0, 24.0]
+
+segmentos:
+  firme: [[-3.0, 30.0], [-3.0, 26.0], [-3.0, 22.5]]
+  # Paso 1: la cuerda baja hasta cerca del palo y sube a la derecha.
+  recto-1: [[-3.0, 19.0], [-3.0, 15.5], [-3.0, 12.0], [-2.95, 9.5], [-2.75, 8.0], [-2.2, 6.9],
+            [-1.3, 6.2], [-0.2, 6.0], [0.9, 6.2], [1.8, 6.9], [2.35, 8.0], [2.7, 9.8],
+            [3.3, 12.3], [4.1, 15.0], [4.9, 17.6], [5.6, 20.2], [6.2, 22.0]]
+  # El primer lazo: el firme baja, cruza por encima (cruce 1), da la vuelta hacia la
+  # derecha y vuelve a cruzar por debajo.
+  anillo: [[-2.95, 20.5], [-2.75, 19.1], [-2.4, 17.9], [-2.0, 17.0], [-1.5, 16.1], [-0.8, 15.2],
+           [0.1, 14.6], [1.1, 14.35], [2.15, 14.5], [3.1, 15.1], [3.65, 16.0], [3.8, 17.1],
+           [3.6, 18.15], [2.95, 18.95], [1.95, 19.4], [0.85, 19.45], [-0.1, 19.05],
+           [-0.8, 18.45], [-1.4, 17.75], [-2.6, 16.3], [-3.1, 15.5], [-3.4, 14.5],
+           [-3.6, 13.3]]
+  # La rama izquierda del seno que cuelga y su fondo.
+  bajada: [[-3.7, 12.0], [-3.75, 10.8], [-3.75, 9.6], [-3.7, 8.6], [-3.65, 7.8], [-3.42, 6.95],
+           [-2.8, 6.33], [-1.95, 6.1], [-1.1, 6.33], [-0.48, 6.95], [-0.25, 7.8]]
+  # Paso 2: el resto de la cuerda sube a la derecha.
+  sube-2: [[-0.15, 9.2], [0.4, 10.5], [1.5, 11.5], [2.9, 12.3], [4.2, 13.5], [5.1, 15.1],
+           [5.8, 17.1], [6.4, 19.4], [6.9, 21.8]]
+  # Paso 3: el segundo lazo, a la derecha del primero. La cuerda que sube pasa por encima
+  # (cruce 2) y la que baja hacia el chicote, por debajo.
+  sube-3: [[-0.15, 8.9], [0.15, 9.7], [0.65, 10.3], [1.3, 10.65], [2.0, 10.85], [2.6, 10.9],
+           [3.4, 11.0], [4.3, 11.2], [5.2, 11.45], [6.2, 11.75], [7.12, 12.12], [7.55, 12.57],
+           [7.78, 13.15], [7.76, 13.78], [7.51, 14.35], [7.06, 14.78], [6.48, 15.01],
+           [5.85, 14.99], [5.28, 14.74], [4.75, 14.35], [4.2, 13.8], [3.65, 13.1], [3.2, 12.3],
+           [2.85, 11.5], [2.62, 10.1], [2.75, 9.2], [3.1, 8.4], [3.8, 7.8], [4.8, 7.6],
+           [5.9, 7.9], [7.0, 8.6], [8.0, 9.7], [8.8, 11.2], [9.4, 13.2], [9.8, 15.5],
+           [10.0, 17.5]]
+  # Paso 4: el segundo lazo, de punta hacia arriba, entra en el primero: sus dos ramas pasan
+  # por encima del borde de abajo (cruces 3 y 6) y por debajo del de arriba (4 y 5).
+  sube-4: [[-0.2, 8.8], [-0.1, 9.8], [0.2, 10.9], [0.6, 11.8], [1.05, 12.5], [1.7, 13.2],
+           [2.25, 13.9], [2.5, 14.7], [2.5, 15.8], [2.5, 16.9], [2.5, 18.0], [2.5, 19.1],
+           [2.6, 20.2], [2.7, 21.3], [2.48, 22.13], [1.88, 22.73], [1.05, 22.95], [0.23, 22.73],
+           [-0.38, 22.13], [-0.6, 21.3], [-0.45, 20.2], [-0.25, 19.1], [-0.2, 18.0],
+           [-0.2, 16.9], [-0.2, 15.8], [-0.2, 14.8], [-0.1, 13.95], [0.3, 13.25], [1.75, 11.8],
+           [2.35, 11.0], [2.75, 10.1], [2.95, 9.2]]
+  cola-4: [[3.25, 8.4], [3.9, 7.9], [4.8, 7.9], [5.7, 8.5], [6.5, 9.6], [7.1, 11.2], [7.6, 13.2],
+           [8.0, 15.4], [8.3, 17.6]]
+  # Paso 5: el chicote baja al palo, le da una vuelta y sube por dentro del seno: por debajo
+  # de su fondo (cruce 7) y por encima de su rama izquierda (cruce 8).
+  baja: [[2.95, 8.0], [2.6, 6.6], [2.0, 5.2], [1.5, 3.9], [1.1, 2.6]]
+  vuelta-1:
+    poste: [[1.0, 200], [0.83, 180], [0.66, 160], [0.5, 140], [0.33, 120], [0.16, 100],
+            [-0.01, 80], [-0.17, 60], [-0.34, 40], [-0.51, 20], [-0.68, 0], [-0.84, -20],
+            [-1.01, -40], [-1.18, -60], [-1.35, -80], [-1.51, -100], [-1.6, -110]]
+  sube-5: [[-1.65, 3.8], [-1.85, 4.9], [-1.93, 6.1], [-1.97, 7.2], [-2.0, 8.3], [-2.15, 9.3],
+           [-2.55, 10.1], [-3.05, 10.6], [-3.7, 10.85], [-4.4, 10.95]]
+  cola-5: [[-5.2, 11.3], [-6.0, 12.0], [-6.7, 13.0], [-7.2, 14.3]]
+  # Paso 6: el chicote baja otra vez al palo, le da otra vuelta y sube.
+  baja-6: [[-5.1, 10.75], [-5.7, 10.1], [-6.0, 9.1], [-6.1, 7.6], [-6.0, 6.0], [-5.9, 4.5],
+           [-5.8, 3.4], [-5.8, 2.6]]
+  vuelta-2:
+    poste: [[-5.8, 200], [-5.94, 180], [-6.08, 160], [-6.23, 140], [-6.37, 120], [-6.51, 100],
+            [-6.65, 80], [-6.79, 60], [-6.94, 40], [-7.08, 20], [-7.22, 0], [-7.36, -20],
+            [-7.5, -40], [-7.65, -60], [-7.79, -80], [-7.93, -100], [-8.0, -110]]
+  sube-6: [[-8.05, 3.8], [-8.2, 5.2], [-8.3, 7.0], [-8.4, 9.5], [-8.5, 12.5], [-8.5, 15.5],
+           [-8.5, 18.5], [-8.5, 21.0]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      El firme sube hacia lo que vas a sujetar y el palo queda abajo. Deja entre los dos un
+      seno largo de cuerda floja. El chicote queda a la derecha, con unos 2 m.
+    trazado: [firme, recto-1]
+    secuencia: ""
+
+  - titulo: Haz un lazo en el firme
+    texto: >-
+      A unos dos palmos del palo, haz un lazo chico con el firme: la cuerda que baja pasa
+      por encima y el lazo queda a la derecha.
+    trazado: [firme, anillo, bajada, sube-2]
+    secuencia: "1O 1U"
+    resaltar: {desde: "anillo[0]", hasta: "anillo[-1]"}
+
+  - titulo: Haz un lazo del otro lado
+    texto: >-
+      Al otro lado del seno, haz un segundo lazo: la cuerda que sube desde el seno pasa por
+      encima de la que sigue hacia el chicote.
+    trazado: [firme, anillo, bajada, sube-3]
+    secuencia: "1O 1U 2O 2U"
+    resaltar: {desde: "sube-3[0]", hasta: "sube-3[26]"}
+
+  - titulo: Mete el segundo lazo en el primero
+    texto: >-
+      Mete la punta del segundo lazo en el primero: por encima de su borde de abajo y por
+      debajo del de arriba. El seno que queda colgando hará de polea.
+    trazado: [firme, anillo, bajada, sube-4, cola-4]
+    secuencia: "1O 6U 3U 4O 5O 1U 2O 3O 4U 5U 6O 2U"
+    resaltar: {desde: "sube-4[0]", hasta: "sube-4[-1]"}
+
+  - titulo: Rodea el palo y sube por el seno
+    texto: >-
+      Baja el chicote, dale una vuelta al palo y súbelo por dentro del seno que cuelga: por
+      debajo de su fondo y por encima de su rama izquierda.
+    trazado: [firme, anillo, bajada, sube-4, baja, vuelta-1, sube-5, cola-5]
+    secuencia: "1O 6U 3U 4O 5O 1U 8U 7O 2O 3O 4U 5U 6O 2U 7U 8O"
+    resaltar: {desde: "baja[0]", hasta: fin}
+
+  - titulo: Tensa y da otra vuelta
+    texto: >-
+      Tira del chicote hasta que el firme quede tenso. Sin soltarlo, dale otra vuelta al palo
+      y súbelo. Mantenlo tenso y asegúralo con dos cotes.
+    trazado: [firme, anillo, bajada, sube-4, baja, vuelta-1, sube-5, baja-6, vuelta-2, sube-6]
+    secuencia: "1O 6U 3U 4O 5O 1U 8U 7O 2O 3O 4U 5U 6O 2U 7U 8O"
+    resaltar: {desde: "baja-6[0]", hasta: fin}
+
+# El error: la fuente no trae uno. El segundo lazo queda debajo del primero sin pasar por
+# dentro, así que nada lo sujeta.
+error:
+  paso: 4
+  invierte: [3, 6]
+  titulo: El segundo lazo no entra
+  texto: >-
+    Dejaste el segundo lazo debajo del primero, sin meterlo. Al tirar, el primero no lo
+    aprieta y el nudo se desarma. Su punta pasa por encima del borde de abajo del primer
+    lazo y por debajo del de arriba.
+  otros:
+    - titulo: El nudo muy cerca del palo
+      texto: >-
+        Si haces el nudo muy cerca del palo, el seno llega al palo antes de que la cuerda
+        quede tensa y ya no puedes tirar más. Hazlo más lejos.
+    - titulo: Soltar el chicote
+      texto: >-
+        Si sueltas el chicote antes de asegurarlo, la cuerda se afloja. Sujétalo tenso hasta
+        rematarlo.
+  encuadre:
+    x: [-5.5, 5.5]
+    y: [5.0, 24.0]
+
+terminado:
+  encuadre:
+    x: [-10.0, 11.0]
+    y: [-4.0, 24.0]
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
