@@ -1,0 +1,108 @@
+# Tensor ajustable sobre una estaca. Borrador de la skill nudo-nuevo, para que Gabriel lo revise.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# La estaca es un cilindro parado en x = y = 0. El firme llega por la derecha, del lado de la
+# carpa, y el nudo se hace sobre él, a la derecha de la estaca. Las vueltas del chicote al
+# firme son semicírculos de radio 1,75 que lo cruzan cada 3,5 diámetros, y el firme se ondula
+# 0,5 al revés que el chicote, como dos cuerdas torcidas (como en el nudo aguja).
+slug: tensor-ajustable
+nombre: Tensor ajustable
+familia: De sujeción
+estado: borrador
+
+usos: >-
+  Tensa una cuerda atada a una estaca, como el viento de una carpa o de un toldo, o una cuerda
+  para colgar ropa. El nudo se corre por la cuerda para tensarla o aflojarla, y cuando la
+  cuerda tira se traba y no se mueve.
+materiales: >-
+  Una cuerda de 2 a 3 m y una estaca clavada. Para practicar, ata el otro extremo a algo fijo
+  y usa como estaca la pata de una silla.
+verificacion:
+  - Dentro de la gaza, el chicote da dos vueltas al firme, una junto a la otra.
+  - Por fuera de esas vueltas, más lejos de la estaca, da una vuelta más y sale apretado entre el firme y el tramo que sube a él.
+  - Con la cuerda floja, el nudo se corre por el firme; con la cuerda tensa, se traba.
+precauciones:
+  - >-
+    Con una cuerda lisa o resbalosa, como el nailon delgado, puede correrse. Antes de dejarlo,
+    tira fuerte de la cuerda y mira que no se mueva.
+  - "Revisa la tensión después de la lluvia y por la mañana: la cuerda cambia de largo al mojarse y al secarse."
+alternativas:
+  - nudo: Tensor
+    cuando: Cuando necesitas tensar mucho la cuerda, como para sujetar una carga, y no solo ajustarla.
+  - nudo: Media llave y dos cotes
+    cuando: Cuando la cuerda solo tiene que quedar atada a la estaca y no hace falta ajustarla.
+
+anfitrion: {tipo: estaca, radio: 1.5, alto: 5}
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-3.5, 26.3]
+  y: [-4.0, 4.5]
+
+segmentos:
+  firme: [[30, 2.05], [28.5, 2.05], [28, 2.05], [27.5, 2.05], [27, 2.05], [26.5, 2.05], [26, 2.05], [25.5, 2.05], [25, 2.05], [24.5, 2.05], [23.2, 2.05], [22, 2.05]]
+  firme-recto: [[20.5, 2.05], [17.5, 2.05], [14.5, 2.05], [11.5, 2.05], [8.5, 2.05], [5.5, 2.05], [3, 2.05], [1.5, 2.05]]
+  firme-afuera: [[20.9, 2.05], [20.3, 2.05], [18.55, 1.55], [16.8, 2.05]]
+  firme-junto: [[15.4, 2.05]]
+  firme-afuera-recto: [[20.9, 2.05], [20.3, 2.05], [16.8, 2.05], [15.4, 2.05]]
+  firme-torcido: [[14, 2.05], [12.25, 1.55], [10.5, 2.05], [8.75, 2.55], [7, 2.05], [5.25, 1.55], [3.5, 2.05]]
+  firme-llega: [[2.1, 2.05], [1.5, 2.05]]
+  vuelta: [[0.6, 2.05], [-0.491, 1.99], [-0.953, 1.815], [-1.359, 1.534], [-1.687, 1.165], [-1.917, 0.727], [-2.035, 0.247], [-2.035, -0.247], [-1.917, -0.727], [-1.687, -1.165], [-1.359, -1.534], [-0.953, -1.815], [-0.491, -1.99], [0.6, -2.05]]
+  vuelve: [[1.5, -2.05], [3.5, -2.175], [5.5, -2.2]]
+  suelto: [[8.5, -2.2], [11.5, -2.2], [14.5, -2.2], [16, -2.2]]
+  sube: [[10.5, -2.2], [12.5, -2.2], [12.964, -2.127], [13.382, -1.914], [13.714, -1.582], [13.927, -1.164], [14, -0.7], [14, 0.4], [14, 1.2]]
+  vueltas: [[14, 2.05], [13.929, 2.543], [13.722, 2.996], [13.396, 3.373], [12.977, 3.642], [12.499, 3.782], [12.001, 3.782], [11.523, 3.642], [11.104, 3.373], [10.778, 2.996], [10.571, 2.543], [10.5, 2.05], [10.429, 1.557], [10.222, 1.104], [9.896, 0.727], [9.477, 0.458], [8.999, 0.318], [8.501, 0.318], [8.023, 0.458], [7.604, 0.727], [7.278, 1.104], [7.071, 1.557], [7, 2.05], [6.929, 2.543], [6.722, 2.996], [6.396, 3.373], [5.977, 3.642], [5.499, 3.782], [5.001, 3.782], [4.523, 3.642], [4.104, 3.373], [3.778, 2.996], [3.571, 2.543], [3.5, 2.05]]
+  fin-2: [[3.5, 1.05], [3.5, 0.05]]
+  sale: [[3.5, 1.05], [3.5, 0.85], [3.56, 0.397], [3.734, -0.025], [4.013, -0.387], [4.375, -0.666], [4.797, -0.84], [5.25, -0.9], [11, -0.9], [12.8, -0.9]]
+  cruza-vuelve: [[14, -1.05], [15.3, -1.85]]
+  sube-afuera: [[18.9, -2.2], [19.333, -2.131], [19.723, -1.933], [20.033, -1.623], [20.231, -1.233], [20.3, -0.8], [20.3, 0.6]]
+  cruza-firme: [[20.3, 2.05], [20.229, 2.543], [20.022, 2.996], [19.696, 3.373], [19.277, 3.642]]
+  tercera: [[20.3, 2.05], [20.229, 2.543], [20.022, 2.996], [19.696, 3.373], [19.277, 3.642], [18.799, 3.782], [18.301, 3.782], [17.823, 3.642], [17.404, 3.373], [17.078, 2.996], [16.871, 2.543], [16.8, 2.05]]
+  remata: [[16.8, 1.475], [16.8, 0.9], [16.869, 0.467], [17.067, 0.077], [17.377, -0.233], [17.767, -0.431], [18.2, -0.5], [20.3, -0.5], [21.9, -0.9], [23.1, -1.9]]
+
+pasos:
+  - titulo: Rodea la estaca
+    texto: >-
+      El firme llega desde la derecha, del lado de la carpa. Pasa la cuerda por detrás de la
+      estaca, a ras del suelo, y trae el chicote de vuelta hacia la derecha. Deja un chicote
+      de un metro.
+    trazado: [firme, firme-recto, vuelta, vuelve, suelto]
+    secuencia: ""
+    resaltar: {desde: "vuelta[0]", hasta: fin}
+  - titulo: Da dos vueltas al firme
+    texto: >-
+      Dentro de la gaza, sube el chicote al firme y rodéalo dos veces, avanzando hacia la
+      estaca: por debajo, por encima, por debajo y por encima.
+    trazado: [firme, firme-afuera-recto, firme-torcido, firme-llega, vuelta, vuelve, sube,
+              vueltas, fin-2]
+    secuencia: "1O 2U 3O 4U 1U 2O 3U 4O"
+    resaltar: {desde: "sube[0]", hasta: fin}
+  - titulo: Pasa por fuera de las vueltas
+    texto: >-
+      Trae el chicote hacia ti y llévalo hacia la carpa: pásalo por debajo del tramo que sube
+      a las vueltas y después por debajo del firme, más allá de las dos vueltas.
+    trazado: [firme, firme-afuera, firme-junto, firme-torcido, firme-llega, vuelta, vuelve,
+              sube, vueltas, sale, cruza-vuelve, sube-afuera, cruza-firme]
+    secuencia: "6O 1O 2U 3O 4U 5O 1U 2O 3U 4O 5U 6U"
+    resaltar: {desde: "sale[0]", hasta: fin}
+  - titulo: Remata con una vuelta más
+    texto: >-
+      Vuelve con el chicote por encima del firme, hacia la estaca, y sácalo hacia la carpa
+      por encima del tramo que sube al firme. Aprieta las vueltas y corre el nudo para
+      tensar la cuerda.
+    trazado: [firme, firme-afuera, firme-junto, firme-torcido, firme-llega, vuelta, vuelve,
+              sube, vueltas, sale, cruza-vuelve, sube-afuera, tercera, remata]
+    secuencia: "6O 7U 1O 2U 3O 4U 5O 1U 2O 3U 4O 5U 8U 6U 7O 8O"
+    resaltar: {desde: "tercera[0]", hasta: fin}
+
+error:
+  paso: 2
+  invierte: [2]
+  titulo: Una vuelta que no rodea el firme
+  texto: >-
+    Si el chicote pasa dos veces seguidas por debajo del firme, no le da la vuelta y el nudo
+    no se traba. En cada vuelta, el chicote pasa una vez por debajo y una por encima.
+  otros:
+    - titulo: El remate dentro de la gaza
+      texto: >-
+        La última vuelta va por fuera de las otras dos, más lejos de la estaca. Si la das junto
+        a ellas, dentro de la gaza, el nudo se corre cuando la cuerda tira.

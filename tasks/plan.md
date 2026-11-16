@@ -1064,6 +1064,22 @@ Después de cada tanda hay un punto de control:
 - **Menos contexto fijo:** `.claude/settings.json`, que leen también los worktrees, apaga en este proyecto los plugins que no usa: datos, diseño (taste-skill), gestión de plugins y agent-skills. Gabriel ya había apagado los conectores de Google y Spotify.
 - **La skill lee lo justo:** del formato, solo las secciones que usa un borrador; una sola especificación de ejemplo; cada imagen una vez, y después solo la zona de un cruce dudoso con `ampliar`; `diagnostico` mientras corrige y `construir` al final, sin scripts propios.
 
+**La estaca del tensor ajustable (tanda 3).** La entrada (`entradas/tensor-ajustable`) es una sola imagen con cuatro dibujos: una estaca clavada, la cuerda que le da la vuelta a ras del suelo y el nudo sobre el firme, a unos diez diámetros de ella.
+
+**Diseño (15 de noviembre de 2026; Gabriel lo aprobó el mismo día):**
+- **El tipo y sus medidas:** `anfitrion: {tipo: estaca, radio: 1.5, alto: 5}`. Es el mismo cilindro parado en x = y = 0 que el destorcedor, con las mismas reglas (radio de al menos medio diámetro y alto mayor que 1), de madera y más alto. Es redondo, aunque el dibujo la muestra cuadrada: una cuadrada sería otro sólido, con otro empuje. El alto se elige al dibujar; con 5 se ve como estaca y casi no tapa la cuerda que pasa detrás de ella.
+- **Cómo se construye:** como con el destorcedor. `EN_LA_MESA` lleva los dos, y en `nudos/anfitrion.py` comparten la clase `Parado`; `Estaca` solo cambia el nombre de su medida (`penetracion_estaca`) y lo que manda a la escena.
+- **El nudo por detrás** se voltea como una página, como si sacaras la estaca y la volvieras a clavar. En el uso real la cuerda está tensa en el aire, y su otra cara es la que ves desde el otro lado de la cuerda, que es lo mismo. La estaca sigue en la imagen, en el mismo lugar. La ficha: «Por detrás es como lo ves si sacas la estaca, volteas el nudo como la página de un libro y la vuelves a clavar».
+- **El apretado** es el del destorcedor.
+- **En la escena,** de madera, como los palos. Al encuadrar, su alto no levanta toda la caja, como el del destorcedor: se encuadran solo las cuatro esquinas de su tapa, para que se vea entera sin achicar el nudo, que es largo. El destorcedor no cambia.
+- **En la hoja de revisión,** color madera. **En la ficha,** las frases de «por detrás» están en `POR_DETRAS` (`nudos/ficha.py`), con una prueba de que cada tipo de anfitrión tiene la suya.
+- **Formato v1.4, un cambio compatible.** La skill lleva la estaca en «Elige el generador».
+
+**Cómo se hizo (15 y 16 de noviembre de 2026).** Está como en el diseño (7680606).
+- **Los nudos publicados no cambian:** los 16 `modelo.json` son iguales byte a byte a la referencia, construida e impresa desde 74e1b1b antes del cambio. De las imágenes, 6 de 5 nudos diferían en 1 nivel en 4 a 20 píxeles; impresos otra vez desde 74e1b1b en un worktree aparte, esos 5 nudos dan las mismas imágenes que la rama, así que la variación era de la corrida de referencia.
+- Pasan 432 pruebas y 1 se salta (`tests/test_estaca.py` es nueva).
+- **El tensor ajustable:** cuatro pasos y ocho cruces. El chicote da dos vueltas al firme dentro de la gaza, hacia la estaca (cruces 1 a 4), pasa por debajo del tramo que sube a las vueltas (5) y da una vuelta más por fuera, más lejos de la estaca (6 y 7), y sale entre su propio tramo y el firme (8). Con vueltas de radio 1,3 a 1,5, el reverso y el error común se comprimían hasta 8 %. Con las del nudo aguja (radio 1,75 y una onda de 0,5 en el firme) no queda ninguna falla. La duda principal es el cruce 8: el dibujo es una perspectiva de la cuerda en el aire, y leído desde arriba deja el chicote por fuera de su tramo, sin nada que lo apriete. Se puso como lo pide un cote, y se revisa en el filtro 1.
+
 ### Fase 5: libro y primera edición
 
 #### T11: Material inicial del libro

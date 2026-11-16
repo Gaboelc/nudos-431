@@ -179,7 +179,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [ ] Media llave y dos cotes
 - [ ] Fugitivo
 - [ ] Tensor (*trucker's hitch*)
-- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca) (15 nov: la estaca es un anfitrión nuevo, como el destorcedor; su sesión propone el diseño, Gabriel lo aprueba y después vienen el código y el borrador)
+- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca) (15 nov: Gabriel aprobó el diseño de la estaca, `anfitrion: {tipo: estaca}` (formato v1.4); anfitrión y borrador en la rama `claude/tanda3-estaca-45866b`; los 16 publicados quedan iguales. Falta que Gabriel revise la hoja; la duda principal es el cruce 8, el remate)
 - [ ] Constrictor
 - [ ] Nudo de liberación rápida (*mooring hitch*)
 - [ ] Presilla de alondra
