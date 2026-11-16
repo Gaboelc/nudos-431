@@ -1,0 +1,144 @@
+# Constrictor sobre un poste, hecho con el chicote. Empieza como el ballestrinque, pero la
+# primera vuelta corre hacia la izquierda y el chicote, al final, pasa por debajo del firme
+# y de la diagonal: los dos extremos se cruzan bajo la diagonal.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# El poste va a lo largo de x, con el eje en y = 0. Sobre el poste, los puntos son
+# [x, ángulo]: 0° arriba, 90° hacia quien ata, 180° abajo y 270° atrás.
+slug: constrictor
+nombre: Constrictor
+familia: De ligadura
+abok: 1249
+
+usos: >-
+  Aprieta algo y no lo suelta: cierra la boca de una bolsa, junta un atado de palos o
+  sujeta la punta de una cuerda que se deshilacha mientras le haces un remate. También
+  sostiene piezas juntas mientras se pega algo.
+materiales: >-
+  Un cordel o una cuerda delgada de 1 m y un palo redondo, como el de una escoba.
+verificacion:
+  - Por delante, la diagonal cruza por encima de los dos extremos.
+  - El chicote pasa por debajo de la diagonal y también por debajo del firme.
+  - El firme sale hacia ti y el chicote hacia atrás, los dos por debajo de la diagonal.
+  - Al tirar de los dos extremos, el nudo muerde el palo y no se corre.
+# Texto propio. Pendiente: que Gabriel lo revise.
+precauciones:
+  - >-
+    Apretado, cuesta mucho desatarlo y a veces hay que cortarlo. Si lo cortas, corta la
+    diagonal por encima de las vueltas, para que ellas protejan el palo o la cuerda.
+  - Necesita algo redondo debajo. Sobre una caja o una superficie plana no muerde y se afloja.
+  - "No sirve para colgar ni arrastrar cargas: es para apretar y sujetar."
+alternativas:
+  - nudo: Ballestrinque
+    cuando: >-
+      Cuando la cuerda tiene que poder correrse o desatarse fácil: se hace igual, pero no
+      aprieta tanto.
+  - nudo: Media llave y dos cotes
+    cuando: Cuando la cuerda va a tirar de algo y tiene que desatarse sin cortarla.
+
+anfitrion:
+  tipo: poste
+  radio: 1.5
+  desde: -14
+  hasta: 14
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-6.0, 6.0]
+  y: [-7.0, 7.5]
+
+segmentos:
+  firme: [[16, -12.5], [10, -12.6], [5, -11.9], [1.8, -9.8], [0.0, -7.0], [-0.5, -4.6], [-0.6, -3.3]]
+  punta-1: [[-0.6, -3.0]]
+  # Primera vuelta: sube por delante, pasa por arriba, por detrás y por debajo, y vuelve
+  # hacia quien ata a la izquierda del firme.
+  vuelta-1:
+    poste: [[-0.6, 100], [-0.6, 75], [-0.6, 50], [-0.6, 25], [-0.65, 0], [-0.75, -30],
+            [-0.9, -60], [-1.05, -90], [-1.3, -135], [-1.6, -180], [-1.95, -225],
+            [-2.3, -262]]
+  # En el paso 2 el chicote sale por debajo del poste, directo sobre la mesa.
+  chicote-2: [[-1.8, -2.7], [-2.7, -4.7], [-4.1, -5.9]]
+  # Diagonal: cruza por delante, por encima del firme, y sube otra vez por arriba.
+  diagonal:
+    poste: [[-1.7, -280], [-1.2, -300], [-0.6, -322], [0.4, -342], [1.3, -358],
+            [1.7, -372]]
+  # Segunda vuelta, a la derecha de la primera.
+  vuelta-2:
+    poste: [[1.8, -400], [1.85, -450], [1.9, -500], [1.95, -540], [2.0, -585],
+            [2.05, -620]]
+  atras-3: [[2.0, 4.2], [2.3, 6.4]]
+  chicote-4: [[2.1, -2.7], [2.8, -4.7], [4.1, -5.9]]
+  # El chicote sube por delante hacia la izquierda, por debajo de la diagonal y después de
+  # la primera vuelta, que es el firme subiendo por el poste, y sale hacia atrás. La foto
+  # muestra el cruce con el firme más abajo, bajo la X; es el mismo nudo, pero ahí el firme
+  # se despega del poste y el cruce no se puede comprobar.
+  metido:
+    poste: [[1.6, -640], [1.2, -660], [0.8, -680], [0.4, -698], [0.0, -710],
+            [-0.6, -722], [-1.2, -732], [-1.8, -745], [-2.2, -765], [-2.35, -790]]
+  atras-5: [[-2.4, 4.0], [-2.6, 6.4]]
+
+pasos:
+  - titulo: Prepara la cuerda
+    texto: >-
+      Pon la cuerda frente al palo. El tramo largo es el firme; el extremo que vas a
+      mover es el chicote. Deja unos 40 cm de chicote.
+    trazado: [firme, punta-1]
+    secuencia: ""
+
+  - titulo: Da la primera vuelta
+    texto: >-
+      Pasa el chicote por encima del palo, por detrás y por debajo. Tráelo hacia ti a la
+      izquierda del firme.
+    trazado: [firme, "vuelta-1[0:10]", chicote-2]
+    secuencia: ""
+    resaltar: {desde: "vuelta-1[0]", hasta: fin}
+
+  - titulo: Cruza por encima del firme
+    texto: >-
+      Cruza el chicote en diagonal por encima del firme, hacia la derecha, y pásalo otra
+      vez por encima del palo.
+    trazado: [firme, vuelta-1, diagonal, "vuelta-2[0:2]", atras-3]
+    secuencia: "1U 1O"
+    resaltar: {desde: "diagonal[0]", hasta: fin}
+
+  - titulo: Da la segunda vuelta
+    texto: >-
+      Baja el chicote por detrás y pásalo por debajo del palo, a la derecha de la primera
+      vuelta. Tráelo hacia ti.
+    trazado: [firme, vuelta-1, diagonal, "vuelta-2[0:4]", chicote-4]
+    secuencia: "1U 1O"
+    resaltar: {desde: "vuelta-2[1]", hasta: fin}
+
+  - titulo: Pásalo bajo la diagonal y el firme
+    texto: >-
+      Sube el chicote por delante, hacia la izquierda: por debajo de la diagonal y después
+      por debajo del firme, donde empieza la primera vuelta. Sácalo hacia atrás por encima
+      del palo y tira de los dos extremos.
+    trazado: [firme, vuelta-1, diagonal, vuelta-2, metido, atras-5]
+    secuencia: "1U 3O 1O 2O 2U 3U"
+    resaltar: {desde: "metido[0]", hasta: fin}
+
+# El error más común: el chicote pasa bajo la diagonal pero por encima del firme. Así
+# queda un ballestrinque, que no aprieta igual.
+error:
+  paso: 5
+  invierte: [3]
+  titulo: El chicote por encima del firme
+  texto: >-
+    Pasaste el chicote por encima del firme. Así te queda un ballestrinque, que se afloja.
+    Sácalo y vuelve a pasarlo por debajo de la diagonal y también del firme.
+  encuadre:
+    x: [-4.0, 3.5]
+    y: [-4.5, 3.5]
+  otros:
+    - titulo: Apretarlo sobre algo plano
+      texto: >-
+        Sobre una caja o una tabla, la diagonal no muerde y el nudo se suelta. Átalo sobre
+        algo redondo.
+
+terminado:
+  encuadre:
+    x: [-4.5, 4.5]
+    y: [-6.0, 6.0]
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
