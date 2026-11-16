@@ -52,8 +52,8 @@ anfitrion:
 
 # Zona que se muestra en todos los pasos.
 encuadre:
-  x: [-7.0, 13.0]
-  y: [-7.5, 5.5]
+  x: [-6.0, 12.0]
+  y: [-7.0, 0.5]
 
 segmentos:
   firme:
@@ -175,8 +175,8 @@ error:
 
 terminado:
   encuadre:
-    x: [-7.0, 13.0]
-    y: [-7.5, 5.5]
+    x: [-6.0, 13.0]
+    y: [-7.0, 3.0]
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
 estado: borrador
