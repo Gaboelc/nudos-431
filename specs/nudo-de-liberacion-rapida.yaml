@@ -132,4 +132,11 @@ error:
     y: [-14.5, -4.5]
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-16
+    resultado: aprobado
+    ficha: f1fd6d0

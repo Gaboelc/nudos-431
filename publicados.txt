@@ -18,3 +18,13 @@ rizo
 pescador
 pescador-doble
 nudo-aguja
+ballestrinque-doble
+vuelta-de-braza
+tensor-ajustable
+media-llave-y-dos-cotes
+fugitivo
+nudo-de-liberacion-rapida
+tensor
+constrictor
+presilla-de-alondra
+prusik
