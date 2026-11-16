@@ -173,12 +173,12 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
   - [x] Revisión con Gabriel (15 nov: cerró el punto de control y pidió arrancar la tanda 3 como se propuso; siguen abiertos los números ABOK sin confirmar, el paso de preparar del ocho y el filtro 2)
 
 ### Tanda 3: sobre anfitrión
-- [ ] Ballestrinque doble (*rolling hitch*, entrada en el manual de la Tropa)
-- [ ] Leñador o vuelta de braza
+- [ ] Ballestrinque doble (*rolling hitch*, entrada en el manual de la Tropa) (15 nov: sobre el poste, decidido en el punto de control de la tanda 2; borrador en su propia sesión)
+- [ ] Leñador o vuelta de braza (15 nov: sobre el poste; borrador en su propia sesión)
 - [ ] Media llave y dos cotes
 - [ ] Fugitivo
 - [ ] Tensor (*trucker's hitch*)
-- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca)
+- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca) (15 nov: la estaca es un anfitrión nuevo, como el destorcedor; su sesión propone el diseño, Gabriel lo aprueba y después vienen el código y el borrador)
 - [ ] Constrictor
 - [ ] Nudo de liberación rápida (*mooring hitch*)
 - [ ] Presilla de alondra
