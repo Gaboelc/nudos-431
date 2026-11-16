@@ -8,6 +8,7 @@ import math
 
 import numpy as np
 import pytest
+from PIL import Image
 
 from nudos.anfitrion import PENETRACION_MAX, Estaca, solido
 from nudos.ficha import POR_DETRAS
@@ -177,3 +178,18 @@ def test_la_hoja_dibuja_la_estaca_de_madera(modelo):
 def test_cada_anfitrion_dice_como_se_mira_por_detras():
     assert set(POR_DETRAS) == {None, *TIPOS_ANFITRION}
     assert "estaca" in POR_DETRAS["estaca"]
+
+
+def test_la_hoja_de_revision_encuadra_el_reverso_volteado(tmp_path):
+    # El nudo va a un lado de la estaca; volteado queda del otro, y la hoja lo encuadra ahí.
+    from nudos.hoja import AZUL
+    from nudos.revision import revision
+    m = construir(desde_datos(datos(encuadre={"x": [-20.0, 4.0], "y": [-7.0, 7.0]})))
+    (tmp_path / "entradas" / "gaza-de-prueba").mkdir(parents=True)
+    pagina = revision(m, tmp_path / "revision", tmp_path / "entradas")
+
+    def cuerda(nombre):
+        im = np.asarray(Image.open(pagina.parent / nombre).convert("RGB"), float) / 255
+        return int((np.abs(im - AZUL).max(axis=2) < 0.2).sum())
+    for nombre in ("reverso-arriba.png", "reverso-apretado-arriba.png"):
+        assert cuerda(nombre) > 0.8 * cuerda("paso-2-arriba.png"), nombre

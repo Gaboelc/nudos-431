@@ -63,11 +63,17 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
     datos = datos_json(modelo)
     anfitrion = None if modelo.spec.anfitrion is None else solido(modelo.spec.anfitrion).datos()
 
-    def dibujos(dibujo: dict, nombre: str) -> str:
-        """`dibujo` es el paso como lo trae modelo.json."""
+    def dibujos(dibujo: dict, nombre: str, volteado: bool = False) -> str:
+        """`dibujo` es el paso como lo trae modelo.json. El nudo por detrás está volteado sobre
+        el eje y, así que se dibuja con el encuadre volteado, como en la ficha (imprimir.espejo):
+        un nudo que va a un lado del eje, como el tensor ajustable, queda del otro."""
+        base = datos
+        if volteado and datos.get("encuadre"):
+            (x0, x1), y = datos["encuadre"]["x"], datos["encuadre"]["y"]
+            base = {**datos, "encuadre": {"x": [-x1, -x0], "y": y}}
         celdas = []
         for vista in VISTAS:
-            im = hoja({**datos, "pasos": [dibujo]}, vista, anfitrion)
+            im = hoja({**base, "pasos": [dibujo]}, vista, anfitrion)
             im = im.crop((0, 0, ANCHO, im.height))
             archivo = f"{nombre}-{vista}.png"
             im.save(destino / archivo)
@@ -114,7 +120,7 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
         bloques.append(
             '<section><h2>Nudo terminado por detrás</h2><p>El último paso volteado y relajado '
             'otra vez, con todos los cruces al revés. Se construye y se comprueba como un paso más.</p>'
-            f'<div class="fila"><div class="render">{dibujos(datos["reverso"], "reverso")}</div></div>'
+            f'<div class="fila"><div class="render">{dibujos(datos["reverso"], "reverso", volteado=True)}</div></div>'
             f'{secuencias(modelo.reverso, volteada)}</section>')
     if modelo.apretado is not None:
         # El terminado de la ficha: el último paso apretado (nudos/apretar.py), por delante y,
@@ -124,7 +130,7 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
         despues = modelo.apretado.medidas["largo"]
         celdas = dibujos(datos["apretado"], "apretado")
         if modelo.reverso_apretado is not None:
-            celdas += dibujos(datos["reverso_apretado"], "reverso-apretado")
+            celdas += dibujos(datos["reverso_apretado"], "reverso-apretado", volteado=True)
         bloques.append(
             '<section><h2>Nudo terminado apretado</h2><p>Es el que va en la ficha, por delante y '
             f'por detrás. Al apretarlo, la cuerda del nudo bajó de {antes:.1f} a {despues:.1f} '
