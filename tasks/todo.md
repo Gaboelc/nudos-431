@@ -187,7 +187,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [x] Punto de control de la tanda 3 (16 nov)
   - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (16 nov; el filtro 2 sigue en pausa)
   - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (16 nov: 457 pruebas)
-  - [x] Revisión con Gabriel (16 nov: cerró el punto de control; la propuesta de la tanda 4 está en el plan, falta que la apruebe)
+  - [x] Revisión con Gabriel (16 nov: cerró el punto de control y aprobó la propuesta de la tanda 4, que está en el plan)
 
 ### Tanda 4: plantillas
 - [ ] Amarre redondo
