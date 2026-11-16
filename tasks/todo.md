@@ -184,10 +184,10 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [ ] Nudo de liberación rápida (*mooring hitch*) (16 nov: sobre el poste; borrador en la rama `claude/tanda3-liberacion-rapida-a8d91f`, 2f2a044, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; la duda principal es el cruce 2, y después el 7 y el 9. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
 - [ ] Presilla de alondra (16 nov: sobre el poste, con el chicote; borrador en la rama `claude/tanda3-presilla-alondra-d2d429`, fd0adff, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son el cruce 1 y el error común. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
 - [ ] Prusik (16 nov: libre, con dos cuerdas; borrador en la rama `claude/tanda3-prusik-c4499a`, 45368be, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son los cruces 1 y 4, que traban el nudo, y los de la primera pasada. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Punto de control de la tanda 3
+- [x] Punto de control de la tanda 3 (16 nov)
   - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (16 nov; el filtro 2 sigue en pausa)
   - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (16 nov: 457 pruebas)
-  - [ ] Revisión con Gabriel
+  - [x] Revisión con Gabriel (16 nov: cerró el punto de control; la propuesta de la tanda 4 está en el plan, falta que la apruebe)
 
 ### Tanda 4: plantillas
 - [ ] Amarre redondo
