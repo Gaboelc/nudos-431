@@ -69,7 +69,6 @@ NUDO_LEJOS = 0.5       # en la mesa, del pie del chicote al nudo
 _X, _Y, _Z = np.eye(3)
 EJES = {"A": (_Z, _X, _Y), "B": (_X, _Y, _Z), "C": (_Y, _Z, _X)}
 ENCIMA = {("B", "A"), ("C", "B"), ("A", "C")}   # (el de encima, el de abajo)
-JUEGO = {"A": 1, "B": 2, "C": 3}
 LETRA = {1: "A", 2: "B", 3: "C"}
 
 # Las esquinas del puño, donde se juntan tres caras y no pasa ninguna banda. El firme entra al
@@ -282,10 +281,6 @@ class _Rope:
     @property
     def fin(self) -> np.ndarray:
         return self.P[-1][-1]
-
-    def tangente(self) -> np.ndarray:
-        todos = np.vstack(self.P[-1:] if len(self.P[-1]) > 3 else self.P[-2:])
-        return _unit(todos[-1] - todos[-4])
 
     def n(self) -> int:
         return sum(len(p) for p in self.P)
@@ -540,10 +535,6 @@ class Cuerda:
             pasadas.append((c.sb, etiqueta + ("U" if arriba else "O")))
         return tuple(t for _, t in sorted(pasadas)), etiquetados
 
-    def del_nudo(self) -> set[str]:
-        """Las etiquetas de los cruces del nudo simple."""
-        return {e for k, e in self._etiquetas.items() if k[0] == "nudo"}
-
     # --- El paso ----------------------------------------------------------------------
     def trazo(self, hito: str, previo: str | None) -> TrazoDePaso:
         """Los puntos de control del paso y lo que se resalta: lo que agrega el paso."""
@@ -694,16 +685,6 @@ def direccion_del_lugar(p) -> np.ndarray:
     d[a], d[b] = (p[0] - LEJOS_CARA * (cara + 1)) / R_CARA, p[1] / R_CARA
     d[k] = signo * math.sqrt(max(0.0, 1.0 - d[a] ** 2 - d[b] ** 2))
     return d
-
-
-def direccion_en_el_mapa(M) -> np.ndarray:
-    """La dirección desde el centro de cada punto del mapa del puño (la inversa de la proyección)."""
-    e1, e2 = _marco_polo()
-    M = np.atleast_2d(M)
-    a, b = M[:, 0] / (2 * R_MAPA), M[:, 1] / (2 * R_MAPA)
-    q = a ** 2 + b ** 2
-    return ((2 * a / (1 + q))[:, None] * e1 + (2 * b / (1 + q))[:, None] * e2
-            + ((1 - q) / (1 + q))[:, None] * POLO)
 
 
 def _cruces_cerca(M, validos, h):

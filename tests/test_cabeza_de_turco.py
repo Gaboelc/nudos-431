@@ -109,7 +109,7 @@ def test_cambiar_las_medidas_es_cambiar_un_numero():
 
 @pytest.mark.parametrize("cambio, pista", [
     ({"tipo": "cabeza-de-moro"}, "«tipo» es uno de: amarre-cuadrado, amarre-diagonal, amarre-redondo, amarre-tripode, "
-                               "cabeza-de-turco, refuerzo-de-cabo"),
+                               "cabeza-de-turco, puno-de-mono, refuerzo-de-cabo"),
     ({"cabos": 1}, "«cabos» es un número entero de 2 a 5"),
     ({"cabos": 6}, "«cabos» es un número entero de 2 a 5"),
     ({"senos": 8}, "«senos» es un número entero de 2 a 7"),
