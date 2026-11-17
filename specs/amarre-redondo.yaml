@@ -1,0 +1,114 @@
+# Amarre redondo: une dos palos uno junto al otro, a lo largo. Es un nudo de plantilla: la
+# plantilla calcula la cuerda entera a partir de las medidas (nudos/plantillas/paralelos.py), y
+# cada paso dice con «hasta» hasta dónde llega. El método es el del diseño de «Los palos
+# paralelos» (tanda 4) en tasks/plan.md. Unidades: diámetros de cuerda. x a la derecha, y hacia
+# el fondo de la mesa. Los dos palos van acostados a lo largo de x, uno junto al otro; el de
+# delante es el que queda hacia quien ata.
+slug: amarre-redondo
+nombre: Amarre redondo
+familia: Amarres
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+# {vueltas} y {ahorcados} salen en letras. La cuerda del modelo mide 2,9 m con una de 8 mm, sin
+# lo que se deja para manejarla; los 4 m se confirman al atarlo.
+usos: >-
+  Une dos palos uno junto al otro, a lo largo, para que no se corran. Sirve para alargar un
+  palo con otro, como en un mástil o un asta.
+materiales: >-
+  Dos palos redondos de unos 4 cm de grosor y una cuerda de 6 a 8 mm y unos 4 m de largo.
+  Que la cuerda no sea rígida.
+verificacion:
+  - Las {vueltas} vueltas van una junto a otra, sin montarse, alrededor de los dos palos.
+  - Los {ahorcados} ahorcados pasan entre los dos palos y aprietan las vueltas por el medio.
+  - Cada ballestrinque está apretado contra su palo.
+  - Si tiras de un palo a lo largo, no se corre respecto al otro.
+precauciones:
+  - Antes de subirte a una construcción, revisa cada amarre. Si uno se corre o tiene la
+    cuerda floja, rehazlo.
+  - Revisa también los palos. Que no estén podridos ni rajados y que sean lo bastante
+    gruesos para el peso que van a llevar.
+  - >-
+    Con el uso, la lluvia y el sol, los amarres se aflojan. Si la construcción queda armada
+    varios días, revísalos antes de volver a usarla.
+alternativas:
+  - nudo: Amarre cuadrado
+    cuando: Para unir dos palos que se cruzan en ángulo recto, o casi.
+  - nudo: Amarre trípode
+    cuando: Para unir tres palos por una punta y abrirlos como un trípode.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+anfitrion:
+  tipo: palos
+  cantidad: 2
+  radio: 2.5      # un palo de 4 cm con una cuerda de 8 mm
+  largo: 30
+
+plantilla:
+  tipo: amarre-redondo
+  vueltas: 6
+  ahorcados: 2
+
+# Zona que se muestra en todos los pasos, el error y el nudo terminado.
+encuadre:
+  x: [-12.0, 12.5]
+  y: [-9.0, 8.0]
+
+pasos:
+  - titulo: Haz un ballestrinque en un palo
+    texto: >-
+      Pon los dos palos uno junto al otro. En el de delante, a la izquierda de donde irá el
+      amarre, ata un ballestrinque como en su ficha. Deja el chicote corto.
+    hasta: inicio
+
+  - titulo: Da la primera vuelta
+    texto: >-
+      Ahora mueves la parte larga. Pásala por encima de los dos palos, por detrás del de
+      atrás, por debajo de los dos y por delante del de delante.
+    hasta: vuelta-1
+
+  - titulo: Completa las {vueltas} vueltas
+    texto: >-
+      Da más vueltas por el mismo camino, cada una a la derecha de la anterior y pegada a
+      ella, hasta tener {vueltas}. Tira fuerte en cada una.
+    hasta: vueltas
+
+  - titulo: Da el primer ahorcado
+    texto: >-
+      Baja la cuerda entre los palos, a la derecha de las vueltas. Pásala por debajo, súbela
+      por la izquierda y vuelve por encima. Es un ahorcado: aprieta las vueltas.
+    hasta: ahorcado-1
+
+  - titulo: Completa los {ahorcados} ahorcados
+    texto: >-
+      Da más ahorcados por el mismo camino, cada uno junto al anterior, hasta tener
+      {ahorcados}. Tira fuerte en cada uno.
+    hasta: ahorcados
+
+  - titulo: Empieza el ballestrinque de cierre
+    texto: >-
+      A la derecha de los ahorcados, pasa la cuerda por encima del palo de delante, hacia
+      ti, y por debajo, y crúzala en diagonal sobre sí misma, hacia la derecha.
+    hasta: cierre-1
+
+  - titulo: Termina el ballestrinque
+    texto: >-
+      Da otra vuelta al palo, a la derecha de la primera, y mete el chicote por debajo de la
+      diagonal, entre las dos vueltas. Tira del chicote para apretar.
+    hasta: cierre
+
+# El error con imagen lo construye la plantilla: la cuerda va directo al ballestrinque de
+# cierre, sin ahorcados. Va junto al paso 6, con el mismo encuadre.
+error:
+  paso: 6
+  variante: sin-ahorcados
+  titulo: Sin ahorcados
+  texto: >-
+    Fuiste directo al ballestrinque de cierre, así que nada aprieta las vueltas y los palos se
+    corren. Antes de cerrar, pasa los ahorcados entre los dos palos, alrededor de las vueltas.
+  otros:
+    - titulo: Un solo amarre para alargar un palo
+      texto: >-
+        Con un solo amarre, los dos palos giran uno sobre el otro, como una tijera. Para
+        alargar un palo, átalos con dos amarres, uno en cada punta de la parte en que se juntan.
