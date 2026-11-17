@@ -191,7 +191,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 
 ### Tanda 4: plantillas
 - [ ] Amarre redondo
-- [ ] Amarre diagonal
+- [ ] Amarre diagonal (17 nov: plantilla `amarre-diagonal` y formato v1.5 en la rama `claude/tanda4-amarre-diagonal-065be5`; 9 pasos y el error sin fallas, 75 cruces; los 26 publicados iguales. Falta que Gabriel revise las imágenes y el texto, decida cómo cabe la ficha y pase a `modelado`; ver «Cómo se hizo» del amarre diagonal en el plan)
 - [ ] Amarre trípode
 - [ ] Refuerzo de cabo
 - [ ] Adujado

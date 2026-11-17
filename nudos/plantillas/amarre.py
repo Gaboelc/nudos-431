@@ -446,7 +446,7 @@ def alturas_de_ahorcados(m: int, por_fuera: bool, cruz):
 
 
 def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, encima: dict,
-                       salida) -> None:
+                       salida, fuera: float = FUERA) -> None:
     """Los ahorcados y el ballestrinque de cierre de un amarre sobre la cruz, trazados en `t`
     después de las vueltas. Los usan el amarre cuadrado y el diagonal.
 
@@ -456,7 +456,8 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
     las vueltas sobre el palo de arriba, a la derecha («der») y a la izquierda («izq»), a lo
     largo de x: en el error (`por_fuera`), los ahorcados pasan por encima de él más afuera. `salida(planos, pasa_ar, punto)` traza la
     salida de la última vuelta hasta donde el primer ahorcado pasa bajo el palo de arriba, a
-    la derecha y por delante. El cierre queda a la derecha; los otros lados son su reflejo."""
+    la derecha y por delante. El cierre queda a la derecha; los otros lados son su reflejo. En el
+    error, `fuera` es cuánto por fuera del palo de arriba empieza a subirlo el primer ahorcado."""
     from .trazo import ABAJO, ARRIBA, CINTURA, MESA, Plano, _densa
     rb, zt = pal.rb, pal.zt
     ang = lambda P: np.arctan2(P[..., 1], P[..., 0])
@@ -505,7 +506,7 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
         # Suben al palo de arriba y bajan de él en diagonal, desde un poco por delante o por
         # detrás de su cara; cada ahorcado, un poco más lejos que el anterior, para no tener
         # que rodear ahí mismo el pie del anterior.
-        pasa_ar = lambda z, j: rb + FUERA + (j - 1) * ABRE_FUERA
+        pasa_ar = lambda z, j: rb + fuera + (j - 1) * ABRE_FUERA
     else:
         pasa_ar = lambda z, j: pal.ancho_arriba(z) + 0.5
 

@@ -104,6 +104,8 @@ VUELTAS_CHICOTE = 2.5   # vueltas del chicote alrededor de su tramo: 5 cruces
 RAMPA = 42.0            # grados en que un tramo se aparta un diámetro del palo de arriba
 RAMPA_FIRME = 42.0      # lo mismo en el firme, donde el chicote pasa por debajo: más suave
 MARGEN = 6.0            # grados entre el último cruce de un tramo y lo que sigue en él
+FUERA_ERROR = 0.7       # en el error, como amarre.FUERA (ver cuerda())
+CABE = 0.4              # lo que deja, del radio de los palos, la vuelta más lejos del cruce
 PASO_ANG = 1.5          # grados entre dos puntos de un corte
 # Hacia dónde sale el resto de la cuerda en cada hito, sobre la mesa (en el marco del cuadrado,
 # antes del reflejo del cierre).
@@ -344,6 +346,11 @@ def cuerda(p: AmarreDiagonal, cruz, variante: str | None = None) -> Cuerda:
     c = [medio - x for x in c]
     # La segunda diagonal, en planos x − y = d, de mayor a menor.
     d = [((n - 1) / 2 - l) * dc for l in range(n)]
+    # Cada vuelta tiene que bajar entre los palos, no por encima de uno: su plano pasa a menos de
+    # un radio del cruce.
+    if max(abs(x) for x in c + d) > rb - CABE:
+        raise ValueError(f"las {n} vueltas de cada diagonal no caben entre palos de radio "
+                         f"{cruz.radio:g}: hace falta un palo más grueso o menos vueltas")
     k = _Cuerda()
 
     # --- La vuelta de braza y la primera diagonal ---
@@ -623,17 +630,31 @@ def _segunda_y_resto(p: AmarreDiagonal, g: _Geo, cruz, c, d, k: _Cuerda, a_cambi
     def salida(planos, pasa_ar, punto):
         # La segunda diagonal termina en la cara de delante del palo de arriba, a la derecha, y
         # de ahí va a pasar bajo él, por fuera de las esquinas, donde empieza el primer ahorcado.
+        if por_fuera:
+            # En el error, el primer ahorcado pasa por encima del palo de arriba: la cuerda baja
+            # un poco más por la cara de delante y vuelve a subir, en medio círculo, hasta donde
+            # pasa por encima del palo, fuera de las vueltas.
+            x0, P0 = t.fin[0], t.fin
+            R = (planos["der"] - x0) / 2
+            r = math.hypot(P0[1], P0[2] - zt)
+            a0 = math.atan2(P0[2] - zt, P0[1])
+            th = np.linspace(0.0, math.pi, 40)[1:]
+            a = a0 + np.sin(th) * R / r   # baja por la cara de delante (el ángulo crece)
+            # Termina un poco apartada del palo, para que de ahí salga tangente a él.
+            ra = r + 0.1 * th / math.pi
+            U = np.column_stack([x0 + R * (1 - np.cos(th)), ra * np.cos(a), zt + ra * np.sin(a)])
+            t.puntos(U, ARRIBA)
+            return
         zj = alto(1, 0.0)
         E0 = np.array([planos["der"], -pasa_ar(zj, 1), zj])
         llega_e0 = np.array([0.0, 1.0, 0.0])
-        if por_fuera:
-            # En el error, el primer ahorcado pasa por encima del palo de arriba: la salida va
-            # por la cara de delante, un poco apartada, hasta donde empieza a subirlo.
-            E0 = np.array([planos["der"], -(rb + 0.6), zt - 1.0])
-            llega_e0 = _unit(pal.arriba(E0[0], _tangente(pal.centro_ar, rb, E0[[1, 2]], -1)) - E0)
         t.puntos(_hermite(t.fin, E0, fin_dir, llega_e0), ARRIBA)
 
-    ahorcados_y_cierre(t, pal, m, por_fuera, alto, [(e, e.P) for e in esquinas], encima, salida)
+    # En el error, los ahorcados empiezan a subir el palo de arriba más cerca de su cara que en
+    # el cuadrado: con 1,0, uno cruza una esquina de la vuelta de braza justo donde llega al
+    # palo y, al relajar, deja de cruzarla.
+    ahorcados_y_cierre(t, pal, m, por_fuera, alto, [(e, e.P) for e in esquinas], encima, salida,
+                       fuera=FUERA_ERROR)
 
     X, Z, hitos = t.muestrear(RADIO_ESQUINA)
     quietos, Z = Z >= QUIETA, Z % QUIETA
@@ -667,17 +688,21 @@ def _secuencias(p: AmarreDiagonal, eventos, esquinas: list[_Esquina], alto,
     ahorcado pasa por encima de cada esquina, recorriéndolas en el sentido en que gira desde
     que pasa bajo el palo de arriba, a la derecha; sobre cada esquina pasan de abajo arriba (el
     primero es el más bajo o, si `bajan`, el más alto). El ballestrinque de cierre da los dos
-    últimos. Las etiquetas se numeran en el orden en que aparecen en la cuerda entera, así que
-    cada una nombra el mismo cruce en todos los pasos."""
+    últimos. Las etiquetas se numeran en el orden en que aparecen en la cuerda entera del amarre
+    bien hecho, así que cada una nombra el mismo cruce en todos los pasos y en el error."""
     m = p.ahorcados
-    ev = []
-    for e in eventos:
-        if e[0] == "esquina":
-            _, nombre, sube = e
-            orden = range(1, m + 1) if (sube > 0) != bajan else range(m, 0, -1)
-            ev += [("pasa", ("K", nombre, j), False) for j in orden]
-        else:
-            ev.append(e)
+
+    def con_esquinas(bajan):
+        ev = []
+        for e in eventos:
+            if e[0] == "esquina":
+                _, nombre, sube = e
+                orden = range(1, m + 1) if (sube > 0) != bajan else range(m, 0, -1)
+                ev += [("pasa", ("K", nombre, j), False) for j in orden]
+            else:
+                ev.append(e)
+        return ev
+    ev = con_esquinas(bajan)
     # Dónde cruza cada esquina al primer ahorcado: da el orden en que los ahorcados las recorren.
     giro = {}
     for e in esquinas:
@@ -690,8 +715,9 @@ def _secuencias(p: AmarreDiagonal, eventos, esquinas: list[_Esquina], alto,
         ev.append(("hito", f"ahorcado-{j}"))
     ev += [("pasa", ("C", 1), False), ("pasa", ("C", 1), True), ("hito", "cierre-1"),
            ("pasa", ("C", 2), True), ("pasa", ("C", 2), False), ("hito", "cierre")]
+    # Se numeran por el orden del amarre bien hecho: así el error lleva las mismas etiquetas.
     numero: dict = {}
-    for e in ev:
+    for e in con_esquinas(False) + ev:
         if e[0] == "pasa":
             numero.setdefault(e[1], len(numero) + 1)
     out = {}

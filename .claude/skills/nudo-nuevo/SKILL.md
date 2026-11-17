@@ -43,6 +43,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 | Atado al ojo de un destorcedor, con una gaza que le da la vuelta sobre la mesa | libre con `anfitrion: {tipo: destorcedor}` | `nudo-aguja` |
 | Atado a una estaca clavada en el suelo, con una gaza que le da la vuelta a ras del suelo | libre con `anfitrion: {tipo: estaca}` | `tensor-ajustable` |
 | Amarre cuadrado: vueltas y ahorcados regulares sobre dos palos | `plantilla: {tipo: amarre-cuadrado}` | `amarre-cuadrado` |
+| Amarre diagonal: vuelta de braza, vueltas en las dos diagonales y ahorcados sobre dos palos | `plantilla: {tipo: amarre-diagonal}` | `amarre-cuadrado` |
 
 Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una cornamusa, un barril u otra cuerda; otra plantilla, o varias cuerdas sobre un anfitrión), detente y no lo fuerces con lo que hay. Di en tu informe qué haría falta: es una tarea de código, como fueron T5 y T7.
 

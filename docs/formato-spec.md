@@ -1,4 +1,4 @@
-# Formato de especificación de nudo (v1.4)
+# Formato de especificación de nudo (v1.5)
 
 Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.4 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
@@ -74,7 +74,7 @@ La cruz son dos palos del mismo grosor, cruzados en ángulo recto sobre la mesa,
 | `radio` | Radio de los dos palos, en diámetros de cuerda. Un palo de 4 cm con una cuerda de 8 mm da 2,5. |
 | `largo` | Largo de cada palo. Los dos están centrados en el cruce. |
 
-Los palos se cruzan en x = y = 0. El de abajo va a lo largo de y, hacia el fondo de la mesa, y se apoya en la cuerda que pasa por debajo: su eje queda a la altura `radio + 1`, como el del poste. El de arriba va a lo largo de x y se apoya sobre el de abajo.
+Los palos se cruzan en x = y = 0. El de abajo va a lo largo de y, hacia el fondo de la mesa, y se apoya en la cuerda que pasa por debajo: su eje queda a la altura `radio + 1`, como el del poste. El de arriba va a lo largo de x y se apoya sobre el de abajo. Con el amarre diagonal, bajo el palo de abajo se cruzan las dos diagonales, así que se apoya en dos capas de cuerda y su eje queda a `radio + 2,1`: la décima de más es aire, para que la capa de abajo no quede apretada contra la mesa. La especificación no lo escribe: lo dice la plantilla.
 
 El poste es horizontal y va a lo largo de x, con el eje en y = 0. Se apoya sobre la cuerda que pasa por debajo, así que su eje queda a la altura `radio + 1`.
 
@@ -169,7 +169,7 @@ Aquí la delgada cruza una vez por encima de la gruesa. El ejemplo no es de ning
 
 Algunos nudos no se dibujan punto por punto: se generan a partir de unas pocas medidas, como los amarres. Un nudo así lleva `plantilla` y no lleva `segmentos`; sus pasos no llevan `trazado`, `secuencia` ni `resaltar`, sino `hasta`, que dice hasta dónde llega cada uno. La plantilla calcula la cuerda entera y cada paso es su comienzo hasta ese punto, así que cambiar una medida, por ejemplo de 3 a 4 vueltas, regenera todos los pasos.
 
-Hay dos: el amarre cuadrado, sobre una `cruz`, y la cabeza de turco, sobre un `tubo`.
+Hay tres: el amarre cuadrado y el amarre diagonal, sobre una `cruz`, y la cabeza de turco, sobre un `tubo`.
 
 ### Amarre cuadrado
 
@@ -202,6 +202,41 @@ Por ahora el inicio va en el palo de abajo y el cierre en el de arriba, que es e
 En todo el texto del nudo, `{vueltas}` y `{ahorcados}` se reemplazan por el número en letras («tres»). Otra palabra entre llaves es un error. En los nudos sin plantilla las llaves se dejan como están.
 
 En las imágenes se ven los dos extremos de la cuerda, y los dos llevan remate. El paso del ballestrinque de inicio (`inicio-1` o `inicio`) lleva «Firme» en la parte larga y «Chicote» en el extremo corto, como el ballestrinque. Desde la primera vuelta se mueve la parte larga, y los pasos solo llevan «Chicote», en su punta.
+
+### Amarre diagonal
+
+```yaml
+anfitrion: {tipo: cruz, radio: 3.0, largo: 44}
+plantilla:
+  tipo: amarre-diagonal
+  vueltas: 3                              # en cada diagonal
+  ahorcados: 3                            # entre los palos
+  cierre: {poste: arriba, lado: derecha}  # ballestrinque de cierre
+pasos:
+  - {titulo: Haz una vuelta de braza alrededor de los dos palos, texto: …, hasta: inicio}
+  - {titulo: Da la primera vuelta en diagonal, texto: …, hasta: vuelta-1}
+  - {titulo: Completa las {vueltas} vueltas, texto: …, hasta: vueltas}
+  - {titulo: Cambia a la otra diagonal, texto: …, hasta: segunda-1}
+```
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `amarre-diagonal`. |
+| `vueltas` | Vueltas en cada diagonal, de 2 a 4. Las dos diagonales llevan las mismas. |
+| `ahorcados` | Ahorcados entre los palos, alrededor de las vueltas, de 2 a 6. |
+| `cierre` | Dónde va el ballestrinque de cierre, como en el amarre cuadrado. Por ahora va en el palo de arriba (`poste: arriba`), a la `derecha` o a la `izquierda`. |
+
+No lleva `inicio`: empieza siempre con una vuelta de braza alrededor de los dos palos, que al tirar del firme los junta. Su chicote rodea el firme y se enrolla tres veces en su propio tramo, en la cara de delante del palo de arriba, como en la ficha de la vuelta de braza.
+
+Cada vuelta va en diagonal, a 45° de los dos palos. Las de la primera diagonal van una junto a otra, junto a la vuelta de braza. Las de la segunda las cruzan por fuera, por encima del palo de arriba y por debajo del de abajo. Después vienen los ahorcados y el ballestrinque de cierre, como en el amarre cuadrado. Con el cierre a la derecha, la primera diagonal va de delante a la izquierda hacia atrás a la derecha; a la izquierda, todo el amarre es su reflejo, como en las fotos de la fuente.
+
+Cada vuelta tiene que bajar entre los dos palos y no por encima de uno de ellos, así que las de una diagonal tienen que caber en el grosor de los palos. Con palos de radio 3 caben 3 vueltas en cada diagonal y con radio 4 caben 4. Si no caben, construir el nudo falla y lo dice.
+
+`hasta` puede ser, en este orden: `inicio` (la vuelta de braza entera), `vuelta-1` … `vuelta-<n>` (la primera diagonal), `segunda-1` … `segunda-<n>` (la segunda), `ahorcado-1` … `ahorcado-<n>`, `cierre-1` y `cierre`. `vueltas`, `segundas` y `ahorcados` son lo mismo que el último de cada uno. No hay `inicio-1`: la cuerda se calcula desde el chicote, y la vuelta de braza sin las vueltas del chicote no es un comienzo de ella.
+
+En todo el texto del nudo, `{vueltas}` y `{ahorcados}` se reemplazan por el número en letras, como en el amarre cuadrado.
+
+En el paso de la vuelta de braza, la parte larga lleva «Firme» y el extremo corto «Chicote», como en la vuelta de braza. Desde la primera vuelta, los pasos solo llevan «Chicote», en la punta de la parte larga.
 
 ### Cabeza de turco (provisional)
 
@@ -282,7 +317,7 @@ En un nudo de plantilla, el error no son cruces al revés sino una variante del 
 | `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
 | `titulo` | Nombre corto del error. |
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
-| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado tiene `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. |
+| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado y el diagonal tienen `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
 | `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. En la ficha van debajo del error con imagen, como «Otro error común». |
 
@@ -370,7 +405,7 @@ Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la par
 
 ## Versiones
 
-Este es el formato v1.4. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.5. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -389,7 +424,7 @@ Son cambios compatibles que ya se conocen:
 
 - `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
 - Los anfitriones que faltan (argolla, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
-- Las plantillas de la tanda 4: los amarres redondo, diagonal y trípode, el refuerzo de cabo, el adujado y el puño de mono.
+- Las plantillas de la tanda 4 que faltan: los amarres redondo y trípode, el refuerzo de cabo, el adujado y el puño de mono.
 - Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
 
@@ -402,3 +437,4 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) di
 - **v1.2** (12 de noviembre de 2026): el campo `dos_firmes`, para un nudo en medio de la cuerda, como la mariposa alpina (fase 4, tanda 1). Es un cambio compatible: sin él, la cuerda termina en un chicote, como antes, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.3** (14 de noviembre de 2026): el anfitrión `destorcedor`, un cilindro corto parado sobre la mesa, para el nudo aguja (fase 4, tanda 2). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.4** (15 de noviembre de 2026): el anfitrión `estaca`, el mismo cilindro parado que el destorcedor, de madera y más alto, para el tensor ajustable (fase 4, tanda 3). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.5** (16 de noviembre de 2026): la plantilla `amarre-diagonal`, con sus hitos y la variante `ahorcados-por-fuera`, y con ella la cruz con dos capas de cuerda bajo el palo de abajo (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.

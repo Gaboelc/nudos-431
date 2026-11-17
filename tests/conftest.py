@@ -37,3 +37,9 @@ def modelo_vuelta_de_escota():
 def modelo_amarre_cuadrado():
     """El amarre cuadrado, la primera plantilla, construido una sola vez (tarda cerca de un minuto)."""
     return construir(cargar("amarre-cuadrado"))
+
+
+@pytest.fixture(scope="session")
+def modelo_amarre_diagonal():
+    """El amarre diagonal, construido una sola vez (tarda unos dos minutos y medio)."""
+    return construir(cargar("amarre-diagonal"))

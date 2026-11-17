@@ -77,12 +77,15 @@ class Poste:
                 "hasta": self.hasta, "y": 0.0, "z": self.zc}
 
 
+HOLGURA_CAPAS = 0.1   # en la cruz con dos capas bajo el palo de abajo, ver Cruz
+
+
 class Cruz:
     """Dos palos del mismo radio cruzados en ángulo recto en x = y = 0, para los amarres.
 
     El de abajo va a lo largo de y, con el eje en x = 0 y a la altura radio + 1: se apoya en
     la cuerda que pasa por debajo, como el poste. En el amarre diagonal se cruzan dos capas de
-    cuerda bajo él, y su eje queda a radio + 2 (Anfitrion.capas). El de arriba va a lo largo de x, con el eje
+    cuerda bajo él, y su eje queda a radio + 2,1 (Anfitrion.capas). El de arriba va a lo largo de x, con el eje
     en y = 0, y se apoya sobre el de abajo. Cada palo mide `largo` y está centrado en el cruce.
     Alrededor de cada palo, un ángulo se mide en su plano de corte, desde su lado positivo
     (x para el de abajo, y para el de arriba) hacia arriba: 90° es la cara de arriba."""
@@ -90,6 +93,10 @@ class Cruz:
     def __init__(self, a: Anfitrion):
         self.radio, self.largo = a.radio, a.largo
         self.zb = a.radio + 2 * R * a.capas   # eje del palo de abajo, sobre las capas de cuerda
+        if a.capas > 1:
+            # Donde se cruzan dos capas, la de abajo pasa algo por fuera de la otra (en su plano
+            # deja 1,1): un poco de aire, para que no quede apretada contra la mesa.
+            self.zb += HOLGURA_CAPAS
         self.zt = self.zb + 2 * a.radio    # eje del palo de arriba
         self.rb = a.radio + R              # distancia al eje del eje de una cuerda que toca un palo
 

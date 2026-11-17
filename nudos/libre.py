@@ -482,6 +482,8 @@ def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasa
     # Sin anfitrión se alisa toda la cuerda, como siempre; con anfitrión, solo lo que cae.
     # Los extremos de cada cuerda no se alisan: sus vecinos de un lado son de otra.
     alisa = (np.ones(N, bool) if gravedad is None else cae) & interior
+    if quietos is not None:
+        alisa &= ~np.asarray(quietos, bool)
     for it in range(iteraciones):
         tarde = it > iteraciones * 0.75
         g = 0.0 if tarde else 0.003

@@ -1,0 +1,140 @@
+# Amarre diagonal: une dos palos que se cruzan. Es un nudo de plantilla, como el amarre
+# cuadrado: la plantilla calcula la cuerda entera a partir de las medidas
+# (nudos/plantillas/amarre_diagonal.py), y cada paso dice con «hasta» hasta dónde llega. El
+# método es el del diseño en tasks/plan.md («El amarre diagonal (tanda 4)»). Unidades:
+# diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa. El palo de abajo va a lo
+# largo de y y el de arriba, apoyado en él, a lo largo de x.
+slug: amarre-diagonal
+nombre: Amarre diagonal
+familia: Amarres
+# De info.txt, sin confirmar.
+abok: 2115
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+# {vueltas} y {ahorcados} salen en letras. Falta que Gabriel lo revise.
+usos: >-
+  Une dos palos que se cruzan, sobre todo cuando no lo hacen en ángulo recto o tienden a
+  separarse, como las dos diagonales que refuerzan un marco. La vuelta de braza del principio
+  junta los palos aunque haya un hueco entre ellos.
+materiales: >-
+  Dos palos redondos de unos 5 cm de grosor y una cuerda de 6 a 8 mm y unos 5 m de largo.
+  Que la cuerda no sea rígida.
+verificacion:
+  - La vuelta de braza rodea los dos palos y su chicote queda enrollado y apretado.
+  - Hay {vueltas} vueltas en cada diagonal, una junto a otra, sin montarse. Las de la segunda
+    diagonal pasan por fuera de las de la primera.
+  - Los {ahorcados} ahorcados van entre los dos palos y rodean las vueltas apretándolas.
+  - El ballestrinque de cierre está apretado contra su palo.
+  - Si empujas un palo, no se corre ni gira respecto al otro.
+precauciones:
+  - Antes de subirte a una construcción, revisa cada amarre. Si uno se mueve, gira o tiene
+    la cuerda floja, rehazlo.
+  - Revisa también los palos. Que no estén podridos ni rajados y que sean lo bastante
+    gruesos para el peso que van a llevar.
+  - >-
+    Con el uso, la lluvia y el sol, los amarres se aflojan. Si la construcción queda armada
+    varios días, revísalos antes de volver a usarla.
+alternativas:
+  - nudo: Amarre cuadrado
+    cuando: >-
+      Cuando los palos se cruzan en ángulo recto y uno se apoya sobre el otro, como en una
+      mesa o una torre.
+  - nudo: Amarre redondo
+    cuando: Para unir dos palos uno junto al otro, a lo largo, por ejemplo para alargar uno.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+anfitrion:
+  tipo: cruz
+  radio: 3.0      # un palo de unos 5 cm con una cuerda de 8 mm
+  largo: 44
+
+plantilla:
+  tipo: amarre-diagonal
+  vueltas: 3
+  ahorcados: 3
+  cierre: {poste: arriba, lado: derecha}
+
+# Zona que se muestra en todos los pasos, el error y el nudo terminado. Los extremos de la
+# cuerda salen unos 18 diámetros del amarre: en varios pasos su punta queda fuera, y ahí no se
+# ve el nombre «Chicote».
+encuadre:
+  x: [-13.5, 14.0]
+  y: [-14.0, 11.0]
+
+pasos:
+  - titulo: Haz una vuelta de braza alrededor de los dos palos
+    texto: >-
+      Cruza un palo sobre el otro. Rodea los dos con la cuerda, en diagonal, y ata una vuelta
+      de braza como en su ficha. Tira del firme para que los palos se junten.
+    hasta: inicio
+
+  - titulo: Da la primera vuelta en diagonal
+    texto: >-
+      Ahora mueves la parte larga. Rodea otra vez los dos palos en la misma diagonal, junto a
+      la vuelta de braza: por debajo del palo de abajo y por encima del de arriba. Tira fuerte.
+    hasta: vuelta-1
+
+  - titulo: Completa las {vueltas} vueltas
+    texto: >-
+      Da más vueltas por el mismo camino hasta tener {vueltas}, cada una junto a la anterior y
+      sin montarse. Tira fuerte en cada una.
+    hasta: vueltas
+
+  - titulo: Cambia a la otra diagonal
+    texto: >-
+      Baja la cuerda entre los palos por delante, al otro lado del palo de abajo, y rodea los
+      dos palos en la otra diagonal, por fuera de las vueltas que ya diste.
+    hasta: segunda-1
+
+  - titulo: Completa las {vueltas} vueltas de la otra diagonal
+    texto: >-
+      Da más vueltas en esta diagonal hasta tener {vueltas}, una junto a otra. Tira fuerte en
+      cada una.
+    hasta: segundas
+
+  - titulo: Da el primer ahorcado
+    texto: >-
+      Pasa la cuerda entre los palos, por debajo del de arriba y por encima del de abajo,
+      rodeando las vueltas. Es un ahorcado: tira fuerte.
+    hasta: ahorcado-1
+
+  - titulo: Completa los {ahorcados} ahorcados
+    texto: >-
+      Da más ahorcados por el mismo camino, cada uno por fuera del anterior, hasta tener
+      {ahorcados}. Tira fuerte en cada uno.
+    hasta: ahorcados
+
+  - titulo: Empieza el ballestrinque de cierre
+    texto: >-
+      En el palo de arriba, junto a los ahorcados, pasa la cuerda por debajo, dale la vuelta
+      y crúzala en diagonal sobre sí misma, hacia afuera.
+    hasta: cierre-1
+
+  - titulo: Termina el ballestrinque
+    texto: >-
+      Da otra vuelta al palo, por fuera de la primera, y mete el chicote por debajo de la
+      diagonal, entre las dos vueltas. Tira del chicote para apretar.
+    hasta: cierre
+
+# El error con imagen lo construye la plantilla: los ahorcados por encima del palo de
+# arriba, en lugar de entre los palos. Va junto al paso 7, con el mismo encuadre.
+error:
+  paso: 7
+  variante: ahorcados-por-fuera
+  titulo: Los ahorcados por encima del palo de arriba
+  texto: >-
+    Pasaste los ahorcados por encima del palo de arriba, así que no aprietan las vueltas y
+    el amarre queda flojo. Pásalos entre los dos palos: por debajo del de arriba y por
+    encima del de abajo.
+  otros:
+    - titulo: Empezar con un ballestrinque en un solo palo
+      texto: >-
+        Un ballestrinque en un palo no junta los dos palos. Si entre ellos queda un hueco, el
+        amarre no aprieta. Empieza con la vuelta de braza alrededor de los dos y tira del
+        firme.
+    - titulo: La cuerda floja mientras atas
+      texto: >-
+        Si sueltas la cuerda entre una vuelta y otra, el amarre queda flojo y los palos se
+        mueven, aunque esté bien hecho. Mantenla tensa de principio a fin.
