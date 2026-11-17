@@ -1195,6 +1195,7 @@ Después de cada tanda hay un punto de control:
 - **La especificación** (`specs/amarre-diagonal.yaml`) está en `borrador`, con texto propio para que Gabriel lo revise. Pide una cuerda de unos 5 m: la del modelo mide 4,5 m. Se confirma al atarlo.
 - **La ficha no cabe con 9 pasos.** En la página 2, los pasos 7, 8 y 9 llenan la fila, y el par del error baja a otra: sobran unos 91 mm. En el cuadrado cabe porque su único paso de esa página comparte fila con el error. El diseño decía mal que cabían.
 - **Siete pasos (17 de noviembre).** Gabriel eligió pasar a 7 pasos, como el cuadrado, en vez de cambiar la plantilla de la ficha. Las vueltas de la primera diagonal van en un solo paso (`hasta: vueltas`), y el ballestrinque de cierre en otro que remite a su ficha (`hasta: cierre`). El error va junto al paso 6. Así la ficha cabe: 6 pasos en la página 1 y, en la 2, el paso 7 en la misma fila que el error.
+- **Lo que aprobó Gabriel (17 de noviembre).** Las imágenes y el texto de la ficha, y los tres cambios al diseño: palos de radio 3, la primera diagonal reflejada con el cierre a la derecha y la vuelta de braza sin relajar. El amarre pasa a `modelado` y está listo para el filtro 1, con la ficha: falta confirmar con cuerda que alcanzan unos 5 m.
 
 **La estaca del tensor ajustable (tanda 3).** La entrada (`entradas/tensor-ajustable`) es una sola imagen con cuatro dibujos: una estaca clavada, la cuerda que le da la vuelta a ras del suelo y el nudo sobre el firme, a unos diez diámetros de ella.
 

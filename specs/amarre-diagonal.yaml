@@ -11,7 +11,7 @@ familia: Amarres
 abok: 2115
 
 # Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
-# {vueltas} y {ahorcados} salen en letras. Falta que Gabriel lo revise.
+# {vueltas} y {ahorcados} salen en letras. Gabriel lo aprobó el 17 de noviembre de 2026.
 usos: >-
   Une dos palos que se cruzan, sobre todo cuando no lo hacen en ángulo recto o tienden a
   separarse, como las dos diagonales que refuerzan un marco. La vuelta de braza del principio
@@ -43,7 +43,7 @@ alternativas:
     cuando: Para unir dos palos uno junto al otro, a lo largo, por ejemplo para alargar uno.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 anfitrion:
   tipo: cruz
