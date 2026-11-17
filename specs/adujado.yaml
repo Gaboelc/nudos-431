@@ -29,9 +29,9 @@ alternativas:
       Si la cuerda es rígida o se tuerce mucho, deja cada seno cruzado sobre el anterior, en
       forma de ocho, sin girarla. Se termina igual.
 
-# Estado de producción (ver «Estado» en docs/formato-spec.md). Falta que Gabriel revise las
-# imágenes y el texto.
-estado: borrador
+# Estado de producción (ver «Estado» en docs/formato-spec.md). Gabriel aprobó las imágenes y
+# el texto el 17 de noviembre de 2026; falta el filtro 1.
+estado: modelado
 
 plantilla:
   tipo: adujado
