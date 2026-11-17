@@ -31,6 +31,7 @@ POR_DETRAS = {
     "poste": "Por detrás es como lo ves desde el otro lado del poste.",
     "cruz": "Por detrás es como lo ves si volteas los dos palos juntos como la página de un libro.",
     "tubo": "Por detrás es como lo ves si giras el tubo media vuelta.",
+    "cabo": "Por detrás es como lo ves si giras el cabo media vuelta.",
     "destorcedor": "Por detrás es como lo ves si volteas el nudo con el destorcedor como la "
                    "página de un libro.",
     "estaca": "Por detrás es como lo ves si sacas la estaca, volteas el nudo como la página de "

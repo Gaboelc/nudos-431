@@ -27,7 +27,8 @@ import numpy as np
 from .trazo import MESA, TrazoDePaso
 
 # Cuántas vueltas acepta la plantilla por mitad, en letras.
-NUMEROS = {3: "tres", 4: "cuatro", 5: "cinco", 6: "seis", 7: "siete", 8: "ocho"}
+# Con 3 vueltas, el seno no cabe escondido bajo las de encima (Cuerda._escondido).
+NUMEROS = {4: "cuatro", 5: "cinco", 6: "seis", 7: "siete", 8: "ocho"}
 _CAMPOS = {"tipo", "vueltas"}
 
 CABO = 1   # zona: sobre el cabo. Lo que cuelga hasta la mesa va en MESA.
@@ -41,7 +42,7 @@ FIN_VUELTA = 1.2      # cuánto sigue cada vuelta, en arco, después de pasar so
 GIRO = 1.0            # radio de las esquinas en el mapa
 PUNTA = 4.6           # dónde termina la última vuelta: x = -PUNTA
 CURVA_TRAS = 2.5      # cuánto más allá de la última vuelta empieza la curva del seno
-COLA = 3.0            # cuánto sigue la rama que vuelve más allá de las primeras vueltas
+COLA = 4.5            # cuánto sigue la rama que vuelve más allá de las primeras vueltas
 COLA_TIRADA = 4.0     # y cuánto más, a lo más, al tirar del extremo corto
 CORTE = 1.6           # cuánto sale cada punta cortada de las vueltas
 PUNTA_DENTRO = 1.5    # al cortar, cuánto pasa el chicote más allá de la curva, dentro del seno
@@ -369,8 +370,10 @@ class Cuerda:
         La curva es la plana de los pasos anteriores. Su tramo recto, que va alrededor del cabo,
         paralelo a las vueltas, queda justo entre dos vueltas, que pasan por encima de él sin
         cruzarlo: si una vuelta pasara por su mismo lugar, el cruce se formaría y se desharía al
-        relajar. Va lo más cerca de la mitad de las vueltas de encima que se puede, a más de
-        APILA de donde el chicote termina de girar y bajo la última vuelta entera. Devuelve las
+        relajar. Va lo más cerca de las primeras vueltas que se puede, sin que la curva llegue
+        bajo ellas: así la rama que vuelve pasa poco trecho bajo las vueltas de encima y no se
+        estira al relajar. Además, a más de APILA de donde el chicote termina de girar y bajo la
+        última vuelta entera. Con 3 vueltas encima no cabe. Devuelve las
         piezas desde la última vuelta y dónde queda el tramo recto de la curva."""
         n = self.p.vueltas
         uc = self.uc + (2 * n + 1) * self.C - DENTRO_U
@@ -380,14 +383,14 @@ class Cuerda:
         x_entra = x_g - GIRO
         x_ultima = float(self._x_vuelta(self.uc + 2 * n * self.C))
         hi = min(x_entra - APILA - 0.35, x_ultima - 0.3)
-        medio = (self._fin_primeras() + (-PUNTA)) / 2
+        lo = self._libre() + ESQUINA + 0.1
         candidatos = [float(self._x_vuelta(self.uc + k * self.C)) + PASO_VUELTA / 2
                       for k in range(1, 2 * n + 1)]
-        candidatos = [x for x in candidatos if x <= hi]
+        candidatos = [x for x in candidatos if lo <= x <= hi]
         if not candidatos:
             from ..libre import TrazadoError
             raise TrazadoError(f"con {n} vueltas encima del seno no cabe el seno escondido")
-        x_ap = min(candidatos, key=lambda x: abs(x - medio))
+        x_ap = min(candidatos)
         giro = _arco((x_g - GIRO, u_giro), GIRO, 0.0, math.pi / 2)          # hacia -x
         chicote = _unir(giro, _recta(giro[-1], (x_ap - PUNTA_DENTRO, uc)))
         piezas.append(_Pieza("chicote-dentro", "entra", M=chicote))
@@ -497,7 +500,10 @@ class Cuerda:
             na, nb = self._nivel(a), self._nivel(b)
             if na == nb:
                 raise ValueError(f"{a.nombre} y {b.nombre} se cruzan y tienen el mismo nivel")
-            clave = (a.nombre, b.nombre, round(p[0], 1), round(p[1] % self.C, 1))
+            # El mismo cruce en todos los pasos: las mismas dos piezas, en el mismo lugar alrededor
+            # del cabo. A lo largo del cabo puede correrse, como el de la curva con el chicote al
+            # tirar. Una vuelta cruza dos veces la curva del seno, pero en dos lugares alrededor.
+            clave = (a.nombre, b.nombre, round(p[1] % self.C, 1))
             etiqueta = self._etiquetas.setdefault(clave, str(len(self._etiquetas) + 1))
             out.append({"sa": sa, "sb": sb, "seno": seno, "encima": na > nb, "lugar": p,
                         "etiqueta": etiqueta, "piezas": (a.nombre, b.nombre)})

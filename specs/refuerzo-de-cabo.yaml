@@ -11,12 +11,10 @@ abok: 3443
 # Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
 # {vueltas} sale en letras.
 usos: >-
-  Amarra la punta de un cabo con un cordel delgado para que no se deshilache. Sirve en
-  cualquier cuerda, también en las que no se pueden fundir con calor, como las de algodón o
-  de cáñamo.
+  Amarra la punta de un cabo con un cordel delgado para que no se deshilache. Sirve también
+  en las cuerdas que no se pueden fundir, como las de algodón.
 materiales: >-
-  El cabo que quieres reforzar, unos 60 cm de cordel delgado y resistente, de 1 a 2 mm, y algo
-  para cortar las puntas.
+  El cabo, unos 60 cm de cordel delgado y resistente, de 1 a 2 mm, y algo para cortar.
 verificacion:
   - Las vueltas van apretadas, una junto a otra, sin montarse.
   - No se ve ninguna punta del cordel. Las dos quedan bajo las vueltas.
@@ -49,12 +47,20 @@ plantilla:
   tipo: refuerzo-de-cabo
   vueltas: 4      # antes del seno, y otras tantas encima de él
 
+# Zona que se muestra en los pasos y el error, y la del nudo terminado, más cerca.
+encuadre:
+  x: [-19.0, 7.0]
+  y: [-9.0, 5.0]
+terminado:
+  encuadre:
+    x: [-17.0, 1.0]
+    y: [-6.0, 5.0]
+
 pasos:
   - titulo: Da la primera vuelta
     texto: >-
-      Pon el cordel a lo largo del cabo, con el extremo corto hacia la punta y pasándola. A
-      unos dos grosores del cabo de la punta, da una vuelta apretada con el largo, por encima
-      del extremo corto.
+      Pon el cordel a lo largo del cabo, con el extremo corto hacia la punta y pasándola. A dos
+      grosores del cabo de la punta, da una vuelta apretada sobre el extremo corto.
     hasta: vuelta-1
 
   - titulo: Completa las {vueltas} vueltas
@@ -71,8 +77,8 @@ pasos:
 
   - titulo: Da {vueltas} vueltas sobre el seno
     texto: >-
-      Sigue dando vueltas hacia la punta, ahora también por encima de las dos ramas del seno,
-      hasta tener {vueltas} más. Deja fuera la curva del seno.
+      Sigue hacia la punta, ahora también sobre las dos ramas del seno, hasta tener {vueltas}
+      vueltas más. Deja fuera la curva.
     hasta: seno-vueltas
 
   - titulo: Pasa el chicote por el seno
@@ -82,8 +88,8 @@ pasos:
 
   - titulo: Tira del extremo corto
     texto: >-
-      Tira del extremo corto hasta que la curva del seno entre bajo las vueltas y arrastre al
-      chicote con ella. Detente cuando llegue a la mitad de las vueltas de encima.
+      Tira del extremo corto: la curva del seno entra bajo las vueltas y arrastra al chicote.
+      Detente cuando llegue a la mitad de las vueltas de encima.
     hasta: tirar
 
   - titulo: Corta las puntas
@@ -95,6 +101,9 @@ pasos:
 error:
   paso: 5
   variante: por-fuera-del-seno
+  encuadre:       # cerca del cruce de la curva del seno con el chicote
+    x: [-8.0, 4.0]
+    y: [-8.0, 3.0]
   titulo: El chicote por encima del seno
   texto: >-
     Pasaste el chicote por encima de la curva del seno, no por dentro. Al tirar del extremo

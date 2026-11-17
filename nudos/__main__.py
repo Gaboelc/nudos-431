@@ -9,7 +9,7 @@ from pathlib import Path
 from PIL import Image
 
 from . import BUILD, RAIZ
-from .anfitrion import Tubo, solido
+from .anfitrion import Cabo, Tubo, solido
 from .construir import construir, guardar
 from .diagnostico import ampliar, diagnostico, leer_pasos
 from .estado import nudos, probadores, tabla
@@ -249,9 +249,10 @@ def _hoja(slug: str, vista: str, pasos: str = "") -> int:
         datos = {**datos, "pasos": [p for p in datos["pasos"] if p["n"] in elegidos]}
         destino = origen.parent / f"hoja-{vista}-pasos-{pasos.replace(',', '_')}.png"
     imagen = hoja(datos, vista, None if spec.anfitrion is None else solido(spec.anfitrion).datos())
-    if spec.anfitrion is not None and spec.anfitrion.tipo == "tubo":
-        # Sobre el tubo, la hoja lleva además el tubo desenrollado, con cada cruce.
-        abajo = mapa(datos, Tubo(spec.anfitrion), spec.plantilla.senos)
+    if spec.anfitrion is not None and spec.anfitrion.tipo in ("tubo", "cabo"):
+        # Sobre el tubo y el cabo, la hoja lleva además su superficie desenrollada, con cada cruce.
+        abajo = (mapa(datos, Tubo(spec.anfitrion), spec.plantilla.senos)
+                 if spec.anfitrion.tipo == "tubo" else mapa(datos, Cabo(spec.anfitrion)))
         junta = Image.new("RGB", (max(imagen.width, abajo.width), imagen.height + abajo.height), "white")
         junta.paste(imagen, (0, 0))
         junta.paste(abajo, (0, imagen.height))

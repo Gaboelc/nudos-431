@@ -7,8 +7,8 @@ imprimir.
 Sobre el tubo de la cabeza de turco, la vista desde arriba no sirve para revisar decenas de
 cruces: la hoja dibuja además el tubo desenrollado (mapa()), con cada cruce y su etiqueta.
 
-De los anfitriones, la hoja dibuja el destorcedor, en gris, y la estaca, el poste y la cruz,
-color madera. Son parte de la cuerda que se revisa: sin ellos no se ve qué rodea la cuerda.
+De los anfitriones, la hoja dibuja el destorcedor, en gris, la estaca, el poste y la cruz,
+color madera, y el cabo, color crema. Sobre el cabo, además, el cabo desenrollado (mapa()). Son parte de la cuerda que se revisa: sin ellos no se ve qué rodea la cuerda.
 El poste y los palos de la cruz se dibujan solo dentro del encuadre, más un margen. El tubo de
 la cabeza de turco no se dibuja: para eso está el tubo desenrollado.
 """
@@ -124,13 +124,18 @@ def _parado(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray, float] | No
 
 def _palos(anfitrion: dict | None, x0: float, x1: float, y0: float,
            y1: float) -> tuple[np.ndarray, np.ndarray, float] | None:
-    """Puntos sobre la superficie del poste o de los dos palos de la cruz, color madera, para
-    dibujarlos con esferas de RADIO_PALO. Cada palo se corta en el encuadre, más MARGEN_PALO,
+    """Puntos sobre la superficie del poste o de los dos palos de la cruz, color madera, o del
+    cabo, color crema, para dibujarlos con esferas de RADIO_PALO. Cada palo se corta en el encuadre, más MARGEN_PALO,
     y lleva tapa donde termina dentro de ese tramo. None si el nudo no tiene ninguno."""
-    if not anfitrion or anfitrion.get("tipo") not in ("poste", "cruz"):
+    if not anfitrion or anfitrion.get("tipo") not in ("poste", "cruz", "cabo"):
         return None
     r = anfitrion["radio"]
     m = MARGEN_PALO
+    if anfitrion["tipo"] == "cabo":
+        # El cabo, color crema como la cuerda que es, de -largo hasta la punta en x = 0.
+        punto = _palo("x", max(-anfitrion["largo"], x0 - m), 0.0, 0.0, anfitrion["z"], r,
+                      tapas=(-anfitrion["largo"] >= x0 - m, True))
+        return punto, CREMA, RADIO_PALO
     if anfitrion["tipo"] == "poste":
         palos = [("x", anfitrion["desde"], anfitrion["hasta"], x0 - m, x1 + m,
                   anfitrion["y"], anfitrion["z"])]
@@ -303,22 +308,33 @@ def _cuadro(cuerdas, vista, W, H, ppd, centro, luz=(-0.5, 0.6, 1.0), solido=None
 # --------------------------------------------------------------------------
 PPD_MAPA = 22          # píxeles por diámetro en el mapa del tubo
 COLUMNAS_MAPA = 2
+CORTE_CABO = 230.0     # dónde da la vuelta el mapa del cabo, en grados: atrás y abajo
 
 
-def mapa(datos: dict, tubo, senos: int) -> Image.Image:
+def mapa(datos: dict, tubo, senos: int | None = None) -> Image.Image:
     """Un cuadro por paso con el tubo desenrollado: alrededor del tubo hacia la derecha, desde
     el seno A, y a lo largo del eje hacia arriba. Se ve el nudo entero aunque en el paso esté
     girado. Lo que va más lejos del eje se dibuja encima, más oscuro; lo que agrega el paso,
     en ámbar; cada cruce lleva su etiqueta. `tubo` es el sólido (nudos/anfitrion.py, Tubo) y
-    `senos`, los del nudo: el mapa da la vuelta donde la da el lugar de los cruces."""
+    `senos`, los del nudo: el mapa da la vuelta donde la da el lugar de los cruces.
+
+    Sin `senos`, `tubo` es el cabo del refuerzo (Cabo): alrededor del cabo hacia la derecha,
+    con el ángulo creciendo hacia quien ata, y el mapa da la vuelta atrás y abajo (CORTE_CABO),
+    donde no hay cruces. Sus cruces se guardan en la mesa, así que cada etiqueta va en el punto
+    de la cuerda más cercano a ese lugar."""
     C = 2 * math.pi * tubo.rb
-    corte = C / (4 * senos)
+    cabo = senos is None
+    corte = math.radians(CORTE_CABO) * tubo.rb if cabo else C / (4 * senos)
+
+    def sobre(x, r):
+        dentro = (x > -tubo.largo) & (x < 0.0) if cabo else np.abs(x) < tubo.largo / 2
+        return (r < tubo.rb + 1.8) & dentro
+
     todos = []
     for p in datos["pasos"]:
         X = np.asarray(p["puntos"], float)
         x, th, r = tubo.cilindricas(X)
-        en_tubo = (r < tubo.rb + 1.8) & (np.abs(x) < tubo.largo / 2)
-        todos.append(x[en_tubo])
+        todos.append(x[sobre(x, r)])
     xs = np.concatenate(todos)
     x0, x1 = float(xs.min()) - 1.5, float(xs.max()) + 1.5
     W, H = int((C + 2) * PPD_MAPA), int((x1 - x0) * PPD_MAPA)
@@ -328,10 +344,13 @@ def mapa(datos: dict, tubo, senos: int) -> Image.Image:
         d = ImageDraw.Draw(im)
         X = np.asarray(p["puntos"], float)
         x, th, r = tubo.cilindricas(X)
-        u = ((math.radians(p.get("giro") or 0.0) - np.unwrap(th)) * tubo.rb - corte) % C + corte
+        if cabo:
+            u = (th * tubo.rb - corte) % C + corte
+        else:
+            u = ((math.radians(p.get("giro") or 0.0) - np.unwrap(th)) * tubo.rb - corte) % C + corte
         s = np.arange(len(X)) * p["h"]
         hl = p["resaltado"] or [-1, -1]
-        en_tubo = (r < tubo.rb + 1.8) & (np.abs(x) < tubo.largo / 2)
+        en_tubo = sobre(x, r)
 
         def px(ui, xi):
             return ((ui - corte + 1) * PPD_MAPA, (x1 - xi) * PPD_MAPA)
@@ -349,10 +368,16 @@ def mapa(datos: dict, tubo, senos: int) -> Image.Image:
             d.line([px(u[i], x[i]), px(u[i + 1], x[i + 1])], fill=(40, 40, 40), width=int(PPD_MAPA * 0.95))
             d.line([px(u[i], x[i]), px(u[i + 1], x[i + 1])], fill=c, width=int(PPD_MAPA * 0.75))
         for et, (cx, cu) in p.get("cruces", {}).items():
+            if cabo:
+                # En la mesa: el punto de la cuerda sobre el cabo más cercano a ese lugar.
+                d2 = np.where(en_tubo, (X[:, 0] - cx) ** 2 + (X[:, 1] - cu) ** 2, np.inf)
+                i = int(d2.argmin())
+                cx, cu = x[i], u[i]
             a, b = px(cu, cx)
             d.rectangle([a - 9, b - 7, a + 9, b + 7], fill=(255, 255, 255), outline=(60, 60, 60))
             d.text((a - 6 if len(et) > 1 else a - 3, b - 6), et, fill=(150, 20, 20))
-        d.text((10, 8), f"Paso {p['n']} · tubo desenrollado, desde el seno A", fill=(30, 30, 30))
+        titulo = "cabo desenrollado, desde atrás" if cabo else "tubo desenrollado, desde el seno A"
+        d.text((10, 8), f"Paso {p['n']} · {titulo}", fill=(30, 30, 30))
         cuadros.append(im)
     filas = (len(cuadros) + COLUMNAS_MAPA - 1) // COLUMNAS_MAPA
     out = Image.new("RGB", (COLUMNAS_MAPA * W, filas * H), (255, 255, 255))
