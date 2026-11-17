@@ -39,13 +39,17 @@ _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 # Campos de cada tipo de anfitrión, además de «tipo»; todos son medidas en diámetros.
 _MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "largo"),
                       "tubo": ("radio", "largo"), "destorcedor": ("radio", "alto"),
-                      "estaca": ("radio", "alto")}
+                      "estaca": ("radio", "alto"), "palos": ("cantidad", "radio", "largo")}
 TIPOS_ANFITRION = tuple(_MEDIDAS_ANFITRION)
 # Los anfitriones que solo se usan con una plantilla, con la plantilla de ejemplo.
-_SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco"}
+_SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco",
+                       "palos": "amarre-redondo"}
 # Cómo se nombra el anfitrión en los mensajes.
 _DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo",
-                  "destorcedor": "del destorcedor", "estaca": "de la estaca"}
+                  "destorcedor": "del destorcedor", "estaca": "de la estaca",
+                  "palos": "de los palos"}
+# Cuántos palos puede tener el anfitrión «palos».
+CANTIDAD_PALOS = (2, 3)
 # Los anfitriones con los que todo el nudo va sobre la mesa: se construye, se voltea y se
 # aprieta como un nudo libre, y el anfitrión solo empuja la cuerda (nudos/anfitrion.py).
 EN_LA_MESA = ("destorcedor", "estaca")
@@ -114,13 +118,20 @@ class Anfitrion:
     de la mesa y nunca pasa por encima, así que todo el nudo va sobre la mesa (EN_LA_MESA).
 
     Estaca: la del tensor ajustable, clavada en el suelo. Es el mismo cilindro parado que el
-    destorcedor, de madera y más alto."""
+    destorcedor, de madera y más alto.
+
+    Palos: dos o tres palos del mismo radio, acostados uno junto al otro a lo largo de x, para
+    el amarre redondo y el trípode. Están centrados en x = 0 y van a lo largo de y, simétricos
+    alrededor de y = 0, con un hueco entre sus caras por donde pasan los ahorcados. Sus ejes
+    quedan a la altura radio + 2: por debajo del hueco pasan dos capas de cuerda. Cada uno
+    mide `largo` (nudos/anfitrion.py, Palos)."""
     tipo: str
     radio: float
     desde: float | None = None   # poste: extremos a lo largo de x
     hasta: float | None = None
-    largo: float | None = None   # cruz: largo de cada palo; tubo: su largo
+    largo: float | None = None   # cruz y palos: largo de cada palo; tubo: su largo
     alto: float | None = None    # destorcedor y estaca: su alto desde la mesa
+    cantidad: int | None = None  # palos: cuántos son, 2 o 3
 
     @property
     def en_la_mesa(self) -> bool:
@@ -306,6 +317,10 @@ def _plantilla(datos, anfitrion: Anfitrion | None, cuerdas: tuple[Cuerda, ...], 
     plantilla = clase.leer(datos, pf)
     if anfitrion is None or anfitrion.tipo != clase.ANFITRION:
         raise pf(f"la plantilla {clase.tipo} va sobre el anfitrión {clase.ANFITRION}")
+    palos = getattr(clase, "PALOS", None)
+    if palos is not None and anfitrion.cantidad != palos:
+        raise pf(f"la plantilla {clase.tipo} va sobre {palos} palos; el anfitrión tiene "
+                 f"{anfitrion.cantidad}")
     if cuerdas:
         raise pf("por ahora, un nudo de plantilla es de una sola cuerda")
     return plantilla
@@ -572,6 +587,12 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
     numeros = {}
     for clave in _MEDIDAS_ANFITRION[tipo]:
         v = datos.get(clave)
+        if clave == "cantidad":
+            if not isinstance(v, int) or isinstance(v, bool) or v not in CANTIDAD_PALOS:
+                raise af("«cantidad» es cuántos palos van uno junto al otro: "
+                         + " o ".join(map(str, CANTIDAD_PALOS)))
+            numeros[clave] = v
+            continue
         if not isinstance(v, (int, float)) or isinstance(v, bool):
             raise af(f"falta «{clave}», en diámetros de cuerda")
         numeros[clave] = float(v)
@@ -579,7 +600,7 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         raise af(f"el radio {_DEL_ANFITRION[tipo]} es de al menos medio diámetro de cuerda")
     if tipo == "poste" and numeros["desde"] >= numeros["hasta"]:
         raise af("«desde» va antes que «hasta»")
-    if tipo == "cruz" and numeros["largo"] <= 2 * numeros["radio"]:
+    if tipo in ("cruz", "palos") and numeros["largo"] <= 2 * numeros["radio"]:
         raise af("«largo» es el largo de cada palo; tiene que ser mayor que su grosor")
     if tipo == "tubo" and numeros["largo"] <= 2 * numeros["radio"]:
         raise af("«largo» es el largo del tubo; tiene que ser mayor que su grosor")

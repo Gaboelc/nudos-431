@@ -5,7 +5,7 @@ Un nudo de plantilla no lleva segmentos, trazado ni secuencia. Cada paso dice co
 
 Cada plantilla es una clase con:
 - `leer(datos, falla)`: lee y valida sus medidas desde el mapa `plantilla` del YAML;
-- `ANFITRION`: el tipo de anfitrión sobre el que se ata;
+- `ANFITRION`: el tipo de anfitrión sobre el que se ata y, sobre los palos, `PALOS`, cuántos;
 - `hitos()`: los valores que acepta `hasta`, cada uno con su posición en la cuerda;
 - `VARIANTES`: los errores comunes que sabe construir con sus medidas, cada uno con el
   primer hito desde el que se ve;
@@ -16,5 +16,7 @@ Cada plantilla es una clase con:
 """
 from .amarre import AmarreCuadrado
 from .cabeza_turco import CabezaDeTurco
+from .paralelos import AmarreRedondo, AmarreTripode
 
-TIPOS = {"amarre-cuadrado": AmarreCuadrado, "cabeza-de-turco": CabezaDeTurco}
+TIPOS = {"amarre-cuadrado": AmarreCuadrado, "cabeza-de-turco": CabezaDeTurco,
+         "amarre-redondo": AmarreRedondo, "amarre-tripode": AmarreTripode}
