@@ -23,7 +23,7 @@ Desde la raíz del repositorio, con Python 3.11 o más reciente:
 - `/nudo-nuevo <slug>`: la skill de `.claude/skills/nudo-nuevo/` escribe el borrador de un nudo nuevo desde sus entradas y arma su hoja de revisión. El borrador queda en `borrador` hasta que Gabriel lo revisa.
 - `python -m nudos estado`: muestra el estado de producción de los 36 nudos de la edición 1 (`config/edicion-1.yaml`), con lo que le falta a cada uno para el siguiente, y los códigos de los probadores con los nudos que ya conocen. Falla si algún nudo dice un estado que no tiene. Cuando un nudo avanza, actualiza su `estado` en la especificación.
 - `scripts/publicar.sh -m "Co-Authored-By: …"`: publica el sitio en la rama `gh-pages`, que es la que sirve GitHub Pages. Solo corre desde un `main` limpio y ya subido. Esa rama no se toca de otra forma.
-- `python -m pytest`: corre todas las pruebas.
+- `python -m pytest`: corre todas las pruebas, en unos 7 minutos. Con `-n 4 --dist loadfile` (pytest-xdist), en unos 4.
 
 ## Reglas
 

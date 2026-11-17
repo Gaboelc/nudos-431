@@ -1427,6 +1427,23 @@ Después de cada tanda hay un punto de control:
 - **Pasan 577 pruebas y 1 se salta.** La de la cabeza de turco que lista las plantillas ahora las nombra todas.
 - **Las cuatro fichas caben:** el amarre diagonal, el redondo, el trípode y el refuerzo de cabo, en `modelado`. Falta el filtro 1.
 
+**Construir con todos los núcleos (17 de noviembre de 2026).** Construir relajaba cada paso en un solo núcleo, y la suite tardaba 45 minutos. Ahora `nudos/procesos.py` abre un grupo de procesos, uno por hilo de la computadora. `construir` relaja a la vez los pasos y el error común; el reverso y el apretado por delante esperan al último paso, y el apretado por detrás, al reverso. En un nudo de plantilla, la cuerda entera se calcula una vez y cada paso se relaja en su proceso. Lo usan `construir`, `diagnostico`, `imprimir`, `ficha`, `revision`, `sitio` (todos los nudos a la vez) y `mejoras`; `hoja` lee el `modelo.json` que deja `construir`. `NUDOS_PROCESOS=1` vuelve a un solo proceso, y un programa leído de stdin construye en uno solo, porque los procesos nuevos no pueden volver a importarlo. La física (`_largos`, `_colisiones`, `relajar`) no cambió.
+- **Los procesos del grupo arrancan con `OPENBLAS_NUM_THREADS=1`.** Sin eso, cada proceso comprometía 1,5 GB al importar numpy (los búferes de OpenBLAS para 24 hilos), y 28 procesos agotaban la memoria de la computadora: la impresión que corría al lado falló.
+- **Los resultados no cambian.** Antes del código se construyeron e imprimieron desde `main` (e4daa3b) los 26 nudos de `publicados.txt` y los 4 de la tanda 4. Con la rama, los 30 `modelo.json` son iguales byte a byte, y los 30 modelos, construidos en un solo proceso y con el grupo, son idénticos con todos los decimales, también en qué apretado es el mismo objeto que el último paso. De las imágenes, 6 de 3 nudos difirieron en 1 o 2 niveles en 1 a 27 píxeles. El ballestrinque doble sale igual a la referencia impreso solo, y el arnés de hombre y la media llave salen iguales desde `main` y desde la rama, así que la variación era del navegador en la corrida de referencia.
+- **La suite** construye una sola vez, al empezar, todos los nudos de `modelado` o más, en hilos que mandan sus pasos al grupo mientras las demás pruebas siguen (`modelos` en `tests/conftest.py`). `test_sitio.py` y `test_estado.py` comparten esos modelos, en vez de construir otra vez los 22 publicados que no tenían fixture. Con pytest-xdist (`-n 4 --dist loadfile`), el primer proceso que llega construye los nudos y deja cada uno en la carpeta compartida de la corrida en cuanto está; los demás los leen de ahí. Las pruebas no escriben en `build/`: las que dibujan usan `tmp_path`. Con 8 procesos tarda lo mismo que con 4: el límite es el amarre cuadrado y las pruebas de su archivo. `tests/test_procesos.py` comprueba que con procesos y sin ellos da lo mismo.
+- **Tiempos** (la sesión del adujado usaba la computadora al mismo tiempo):
+
+| | Antes | Después |
+|---|---|---|
+| `construir amarre-diagonal` | 68 s | 16 s |
+| `diagnostico as-de-guia --pasos 3` (un paso) | 1,7 s | 1,7 s |
+| `diagnostico as-de-guia` (siete pasos) | 8,0 s | 2,7 s |
+| Construir los 30 nudos de `modelado` o más | 1568 s en un núcleo; 115 s con un proceso por nudo | 90 s |
+| La suite, `python -m pytest` | 45 min 29 s, con otras construcciones al lado | 6 min 47 s a 7 min 15 s |
+| La suite con `-n 4 --dist loadfile` | | 3 min 27 s a 3 min 58 s |
+
+Un paso solo no se reparte: para eso habría que tocar la física, y eso es otra tarea. Pasan 583 pruebas y 1 se salta.
+
 ### Fase 5: libro y primera edición
 
 #### T11: Material inicial del libro
