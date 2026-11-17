@@ -1443,6 +1443,7 @@ Después de cada tanda hay un punto de control:
 | La suite con `-n 4 --dist loadfile` | | 3 min 27 s a 3 min 58 s |
 
 Un paso solo no se reparte: para eso habría que tocar la física, y eso es otra tarea. Pasan 583 pruebas y 1 se salta.
+- **Cómo entró (17 nov, 6a4028e).** Con `merge --no-ff`, sin conflictos. Los 26 publicados, impresos desde `main`, contra `ref-3843a16`: los `modelo.json` iguales byte a byte; tres imágenes difirieron en 1 nivel (16, 4 y 1 píxeles). La mariposa alpina y la media llave salen iguales impresas solas; el paso 2 del tensor ajustable sale igual impreso desde 3843a16 en un worktree aparte, así que la variación era de la referencia. La suite pasa en `main`: 583 pruebas y 1 se salta, en 13 min 28 s, con la sesión del adujado usando la computadora al mismo tiempo. Las cuatro fichas de la tanda 4 se arman y caben.
 
 ### Fase 5: libro y primera edición
 
