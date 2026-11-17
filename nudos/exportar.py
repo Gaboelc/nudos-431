@@ -97,12 +97,18 @@ def _paso_de_plantilla(s, r: Resultado) -> dict:
     «Chicote» donde termina. En los pasos que tienen firme (CON_FIRME de la plantilla, como
     el ballestrinque de inicio del amarre), la cuerda va al revés: desde la parte larga, que
     es su firme, hasta el chicote corto. En los demás va desde el chicote corto hasta la
-    punta de la parte larga, que es la que se mueve, y solo lleva «Chicote» («nombres»)."""
+    punta de la parte larga, que es la que se mueve, y solo lleva «Chicote» («nombres»). Los
+    pasos de SIN_NOMBRES de la plantilla, como el refuerzo de cabo con las puntas cortadas, no
+    llevan ningún nombre; si no se mueve nada, no hay resaltado."""
     hl = _resaltado(r, 0, len(r.puntos) - 1)
-    if s.pasos[r.n - 1].hasta in s.plantilla.CON_FIRME:
+    if hl is not None and hl[0] == hl[1]:
+        hl = None
+    hasta = s.pasos[r.n - 1].hasta
+    if hasta in s.plantilla.CON_FIRME:
         return {"n": r.n, "hl": None if hl is None else [round(1 - hl[1], 4), round(1 - hl[0], 4)],
                 "p": _puntos(r.puntos[::-1])}
-    return {"n": r.n, "hl": hl, "p": _puntos(r.puntos), "nombres": ["chicote"]}
+    nombres = [] if hasta in getattr(s.plantilla, "SIN_NOMBRES", ()) else ["chicote"]
+    return {"n": r.n, "hl": hl, "p": _puntos(r.puntos), "nombres": nombres}
 
 
 def etiqueta(cuerda: Cuerda) -> str:

@@ -1,4 +1,4 @@
-# Formato de especificación de nudo (v1.6)
+# Formato de especificación de nudo (v1.7)
 
 Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.5 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
@@ -58,11 +58,11 @@ Los índices se cuentan sobre el segmento tal como está definido. Dos puntos se
 
 ## Anfitrión
 
-Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres, los palos paralelos, el tubo de la cabeza de turco, el destorcedor y la estaca; los demás (argolla, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
+Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres, los palos paralelos, el tubo de la cabeza de turco, el cabo del refuerzo de cabo, el destorcedor y la estaca; los demás (argolla, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
 
 | Campo | Qué es |
 |---|---|
-| `tipo` | `poste`, `cruz`, `palos`, `tubo`, `destorcedor` o `estaca`. |
+| `tipo` | `poste`, `cruz`, `palos`, `tubo`, `cabo`, `destorcedor` o `estaca`. |
 | `radio` | Radio del poste, en diámetros de cuerda. Un palo de escoba con una cuerda de 8 mm da alrededor de 1,5. |
 | `desde`, `hasta` | Dónde empieza y termina el poste a lo largo de x. |
 
@@ -135,6 +135,20 @@ anfitrion: {tipo: estaca, radio: 1.5, alto: 5}
 
 En las imágenes y en el visor es de madera, como los palos; en la hoja de revisión, color madera. Al encuadrar, su alto no agranda la zona que se muestra: se encuadra su tapa, para que se vea entera sin achicar el nudo.
 
+El cabo es la punta de una cuerda gruesa, para el refuerzo de cabo: la cuerda del nudo es el cordel con que se refuerza, y todas las medidas van en diámetros del cordel. Solo se usa con una `plantilla`.
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `cabo`. |
+| `radio` | Radio del cabo, en diámetros del cordel, de 1,5 a 8. Un cabo de 12 mm con un cordel de 2 mm da 3. |
+| `largo` | Lo que se ve del cabo, desde la punta. La plantilla pide que el refuerzo quepa. |
+
+```yaml
+anfitrion: {tipo: cabo, radio: 3, largo: 30}
+```
+
+Es un sólido, un cilindro horizontal a lo largo de x con el eje en y = 0, como el poste y el tubo, pero se dibuja como una cuerda gruesa, crema y con la trenza de las cuerdas. La punta, cortada, está en x = 0, a la derecha, y el cabo sigue hacia x negativo hasta `-largo`. Se apoya en la mesa sobre las vueltas del cordel, así que su eje queda a la altura `radio + 1`, como el del poste. Más allá de la punta el cordel puede pasar libre, por delante del corte. Alrededor del eje, un ángulo se mide como sobre el poste: 0 arriba, 90 hacia quien ata. En la hoja de revisión es color crema y va además desenrollado, como el tubo.
+
 ## En medio de la cuerda
 
 Algunos nudos se atan en medio de la cuerda, sin usar sus extremos, como la mariposa alpina. Tienen dos firmes y ningún chicote. Se declaran con `dos_firmes: true`, y la cuerda se recorre desde uno de los dos firmes, normalmente el que queda quieto, hasta el otro, que es con el que se trabaja.
@@ -184,7 +198,7 @@ Aquí la delgada cruza una vez por encima de la gruesa. El ejemplo no es de ning
 
 Algunos nudos no se dibujan punto por punto: se generan a partir de unas pocas medidas, como los amarres. Un nudo así lleva `plantilla` y no lleva `segmentos`; sus pasos no llevan `trazado`, `secuencia` ni `resaltar`, sino `hasta`, que dice hasta dónde llega cada uno. La plantilla calcula la cuerda entera y cada paso es su comienzo hasta ese punto, así que cambiar una medida, por ejemplo de 3 a 4 vueltas, regenera todos los pasos.
 
-Hay cinco: el amarre cuadrado y el amarre diagonal, sobre una `cruz`; el amarre redondo y el trípode, sobre los `palos` paralelos, y la cabeza de turco, sobre un `tubo`.
+Hay seis: el amarre cuadrado y el amarre diagonal, sobre una `cruz`; el amarre redondo y el trípode, sobre los `palos` paralelos; la cabeza de turco, sobre un `tubo`, y el refuerzo de cabo, sobre un `cabo`. En el refuerzo de cabo, el seno y el tirar cambian el principio de la cuerda, que es el extremo corto, así que ahí cada paso no es el comienzo de una sola cuerda: la plantilla da la cuerda de cada paso entera, y dice qué tramo se resalta.
 
 ### Amarre cuadrado
 
@@ -345,6 +359,41 @@ Lo que hace la plantilla con esas medidas (`nudos/plantillas/cabeza_turco.py`; v
 - **Cada paso se gira** alrededor del eje para que lo que agrega, o su última media vuelta si es más largo, quede de frente a la cámara de los pasos (40° desde arriba hacia quien ata). En el remate queda de frente lo que se esconde. `modelo.json` guarda el giro de cada paso (`giro`, en grados).
 - **Lo que cae a la mesa.** En cada paso antes del remate, el extremo corto cuelga desde fuera del nudo: si sale por la mitad de arriba del tubo, lo rodea por un costado y cae a la mesa; si sale por la de abajo, sigue a lo largo del tubo mientras baja. El resto de la cuerda se aleja del tubo siguiendo la cuerda, lo rodea por fuera hacia atrás, en el sentido en que se teje, y cae detrás del tubo.
 
+### Refuerzo de cabo
+
+```yaml
+anfitrion: {tipo: cabo, radio: 3, largo: 30}
+plantilla:
+  tipo: refuerzo-de-cabo
+  vueltas: 4
+pasos:
+  - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+  - {titulo: Completa las {vueltas} vueltas, texto: …, hasta: vueltas}
+  - {titulo: Haz un seno con el extremo corto, texto: …, hasta: seno}
+  - {titulo: Da {vueltas} vueltas sobre el seno, texto: …, hasta: seno-vueltas}
+  - {titulo: Pasa el chicote por el seno, texto: …, hasta: por-el-seno}
+  - {titulo: Tira del extremo corto, texto: …, hasta: tirar}
+  - {titulo: Corta las puntas, texto: …, hasta: cortar}
+```
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `refuerzo-de-cabo`. |
+| `vueltas` | Vueltas de cada mitad: las que se dan sobre el extremo corto y otras tantas sobre el seno. De 4 a 8. Hoy construyen sin fallas 4, la del libro, y 8; con 5, 6 y 7 se dobla la cuerda en el paso de cortar, y `construir` lo dice. |
+
+El método es el de la fuente: el cordel va a lo largo del cabo con el extremo corto hacia la punta; con el largo se dan vueltas hacia la punta, sobre el extremo corto; ese extremo se dobla en un seno sobre las vueltas, con la curva hacia la punta; se dan otras tantas vueltas sobre las dos ramas del seno; el chicote pasa por el seno, y al tirar del extremo corto el seno lo arrastra bajo las vueltas. Al final se cortan las puntas.
+
+`hasta` puede ser, en este orden: `colocar` (el cordel a lo largo del cabo, sin vueltas), `vuelta-1` … `vuelta-<n>`, `seno`, `seno-vuelta-1` … `seno-vuelta-<n>`, `por-el-seno`, `tirar` y `cortar`. `vueltas` es lo mismo que `vuelta-<n>` y `seno-vueltas` que `seno-vuelta-<n>`. Cada paso llega más lejos que el anterior y el último llega a `cortar`. En el texto, `{vueltas}` sale en letras.
+
+Lo que hace la plantilla (`nudos/plantillas/refuerzo.py`; ver «El cabo y el refuerzo de cabo» en el plan):
+
+- **Las vueltas** van a 1,1 una de otra, hacia la punta, y por delante del cabo bajan. El seno va de frente a la cámara de los pasos: sus ramas a 7 diámetros de arco una de otra, el extremo corto a 106° y la rama que vuelve a −16°, con una curva plana de esquinas de radio 1,2.
+- **Al pasar el chicote,** la última vuelta pasa otra vez sobre la rama que vuelve y el chicote gira hacia la punta en el medio del seno, pasa bajo su curva y cae a la mesa por delante del corte. Con `n` vueltas son 4n + 2 cruces.
+- **Al tirar,** la curva queda apretada contra el borde de las vueltas, con el chicote enganchado y todavía a la vista; la rama que vuelve sale lo que se acortó el seno.
+- **Al cortar,** el seno queda escondido bajo las vueltas de encima y el chicote, cortado, pasa bajo su curva y termina dentro de él. Es una simplificación, aprobada por Gabriel: en la cuerda real el chicote se dobla alrededor de la curva y vuelve a salir por el borde, donde se corta. Por fuera se ve igual: vueltas y la punta corta de la rama que vuelve.
+- **La altura de cada tramo** sale de lo que tiene debajo: donde pasa sobre otro, va un diámetro más arriba, con subidas y bajadas suaves.
+- **Los nombres:** «Chicote», en la punta del largo, desde el paso 1 hasta el de tirar; ninguno al cortar. Los dos extremos llevan remate.
+
 ## Pasos
 
 | Campo | Qué es |
@@ -381,7 +430,7 @@ En un nudo de plantilla, el error no son cruces al revés sino una variante del 
 | `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
 | `titulo` | Nombre corto del error. |
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
-| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado y el diagonal tienen `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. El amarre redondo y el trípode tienen `sin-ahorcados`: después de las vueltas, la cuerda va directo al ballestrinque de cierre. Se ve desde `cierre-1`; hasta las vueltas es la misma cuerda, y en el error los hitos de los ahorcados son lo mismo que la última vuelta. |
+| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado y el diagonal tienen `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. El amarre redondo y el trípode tienen `sin-ahorcados`: después de las vueltas, la cuerda va directo al ballestrinque de cierre. Se ve desde `cierre-1`; hasta las vueltas es la misma cuerda, y en el error los hitos de los ahorcados son lo mismo que la última vuelta. El refuerzo de cabo tiene `por-fuera-del-seno`: el chicote pasa por encima de la curva del seno en vez de por dentro, así que el seno sale sin arrastrarlo. Se ve desde `por-el-seno` y solo en ese paso. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
 | `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. En la ficha van debajo del error con imagen, como «Otro error común». |
 
@@ -394,6 +443,8 @@ El último paso se muestra por delante y por detrás, apretado (ver «El nudo ap
 Sobre la cruz se voltea el amarre entero, palos y cuerda, como un marco sobre la mesa: media vuelta alrededor del eje y, como una página, hasta apoyarse en lo que queda más abajo. El palo de abajo queda encima y se ven las vueltas que pasaban por debajo de él. Es un giro rígido: la cuerda no se relaja otra vez y, como los cruces se miden respecto a los palos, la secuencia no cambia. Por delante y por detrás se mira como los pasos.
 
 Sobre los palos paralelos es igual que sobre la cruz: los palos y la cuerda se voltean juntos como una página, con media vuelta alrededor del eje y, y se apoyan en lo más bajo. Siguen a lo largo de x y el de delante sigue delante; se ven los ahorcados bajo las vueltas y la parte de atrás de los ballestrinques. La ficha dice: «Por detrás es como lo ves si volteas los palos juntos como la página de un libro».
+
+Sobre el cabo es igual: por delante, el refuerzo cortado, y por detrás el cabo y el cordel girados media vuelta alrededor del eje, como se gira el cabo en la mano, y apoyados otra vez en la mesa. Es un giro rígido y la secuencia no cambia. Por delante y por detrás se mira como los pasos.
 
 Sobre el tubo, por delante es el remate, girado como ese paso, y por detrás el tubo y el nudo girados media vuelta alrededor del eje, como se gira el tubo en la mano. Es un giro rígido: la secuencia no cambia y no se relaja otra vez. Entre las dos vistas se ve el nudo entero, también la parte que en la vista de los pasos queda contra la mesa. Por delante y por detrás se mira como los pasos.
 
@@ -463,7 +514,7 @@ Cada nudo avanza así: `borrador → modelado → cuerda-ok → novato-ok → pu
    - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés. El amarre volteado con sus palos no se construye otra vez: es un giro rígido del último paso.
 6. El nudo terminado apretado, por delante y por detrás, tiene la secuencia del último paso (por detrás, invertida) y cumple los mismos límites. Lo garantiza cómo se elige: entre las rondas que los cumplen (ver «El nudo apretado»).
 
-**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con el destorcedor y la estaca también, porque la cuerda no sale de la mesa. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
+**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con el destorcedor y la estaca también, porque la cuerda no sale de la mesa. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Sobre el tubo y el cabo, igual, en la superficie desenrollada del cilindro. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
 
 Sobre los palos paralelos hay una zona por palo, otra por cada hueco entre dos palos, los costados de los ahorcados y la mesa. En cada palo los cruces se buscan en su superficie desenrollada, como en el poste: ahí van los ballestrinques y los arcos de las vueltas. En cada hueco, en la superficie de un cilindro acostado a lo largo de y, con el eje en el medio de las vueltas (x = 0) a la altura de los ejes de los palos, como la cintura de la cruz acostada: ahí van las rectas de las vueltas que pasan de un palo al otro por encima y por debajo del hueco, y las partes de los ahorcados que pasan sobre y bajo ellas. Encima es lo más lejos del eje. Donde los ahorcados bajan por el hueco, uno junto a otro a lo largo de x, no se buscan cruces: es una zona sin mapa, y ahí solo se comprueba la separación.
 
@@ -473,7 +524,7 @@ Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la par
 
 ## Versiones
 
-Este es el formato v1.6. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.7. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -492,11 +543,11 @@ Son cambios compatibles que ya se conocen:
 
 - `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
 - Los anfitriones que faltan (argolla, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
-- Las plantillas de la tanda 4 que faltan: el refuerzo de cabo, el adujado y el puño de mono.
+- Las plantillas de la tanda 4 que faltan: el adujado y el puño de mono.
 - Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
 
-Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris, y la estaca, el poste, la cruz y los palos paralelos color madera. El poste y los palos se cortan en el encuadre, más un margen. Del tubo de la cabeza de turco dibuja el tubo desenrollado. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
+Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris; la estaca, el poste, la cruz y los palos paralelos color madera, y el cabo color crema. El poste, los palos y el cabo se cortan en el encuadre, más un margen. Del tubo de la cabeza de turco y del cabo del refuerzo dibuja además su superficie desenrollada, con cada cruce. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
 
 ### Registro
 
@@ -507,3 +558,4 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) di
 - **v1.4** (15 de noviembre de 2026): el anfitrión `estaca`, el mismo cilindro parado que el destorcedor, de madera y más alto, para el tensor ajustable (fase 4, tanda 3). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.5** (16 de noviembre de 2026): la plantilla `amarre-diagonal`, con sus hitos y la variante `ahorcados-por-fuera`, y con ella la cruz con dos capas de cuerda bajo el palo de abajo (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.6** (16 de noviembre de 2026; entró a `main` el 17, después del amarre diagonal): el anfitrión `palos`, dos o tres palos paralelos, y las plantillas `amarre-redondo` y `amarre-tripode`, con la variante `sin-ahorcados` (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior los usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.7** (17 de noviembre de 2026; entró a `main` después de los palos paralelos): el anfitrión `cabo` y la plantilla `refuerzo-de-cabo`, con su variante de error `por-fuera-del-seno`, para el refuerzo de cabo (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes. Si otro anfitrión de la tanda 4 entra antes, este pasa a ser el número siguiente.

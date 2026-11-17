@@ -274,7 +274,7 @@ function altoDeEncuadre(modelo, B) {
       }
     }
   }
-  if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos")) alto = Math.max(alto, a.z + a.radio);
+  if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos" || a.tipo === "cabo")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   if (a && a.tipo === "destorcedor") alto = Math.max(alto, a.alto);
   return alto;
@@ -384,6 +384,33 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   // Los palos paralelos del amarre redondo y el trípode: acostados a lo largo de x, uno junto
   // al otro, con los ejes en las «y» y a la altura «z».
   if (a && a.tipo === "palos") for (const y of a.y) palo(a.largo, 0, y, a.z, true);
+  // El cabo del refuerzo de cabo: es un sólido, pero se dibuja como una cuerda gruesa, crema
+  // y con la misma trenza que las cuerdas, a lo largo de x desde -largo hasta la punta
+  // cortada en x = 0, con el eje a la altura «z». Los dos cortes son discos del tono oscuro
+  // de la trenza, para que se vea que es la punta de una cuerda.
+  if (a && a.tipo === "cabo") {
+    const curva = new THREE.LineCurve3(new THREE.Vector3(-a.largo, 0, a.z), new THREE.Vector3(0, 0, a.z));
+    const geo = new THREE.TubeGeometry(curva, 8, a.radio, 96, false);
+    // Sin el hilo de color: a ese grosor se vería como una raya.
+    const [cl, cm, co] = COLORES.crema;
+    const tr = texturasTrenza(renderer, cl, cm, co, cm);
+    const rep = a.largo / (Math.PI * 2 * a.radio);
+    tr.map.repeat.set(rep, 1); tr.bump.repeat.set(rep, 1);
+    const mat = new THREE.MeshStandardMaterial({ map: tr.map, bumpMap: tr.bump, bumpScale: 2.2, roughness: 0.8, metalness: 0 });
+    const cabo = new THREE.Mesh(geo, mat);
+    cabo.castShadow = true; cabo.receiveShadow = true;
+    scene.add(cabo);
+    const corte = new THREE.MeshStandardMaterial({ color: new THREE.Color(...COLORES.crema[1].map((v) => v / 255)).convertSRGBToLinear(),
+      roughness: 0.95, metalness: 0 });
+    for (const [x, giro] of [[0, Math.PI / 2], [-a.largo, -Math.PI / 2]]) {
+      const tapa = new THREE.Mesh(new THREE.CircleGeometry(a.radio, 96), corte);
+      tapa.rotation.y = giro;
+      tapa.position.set(x, 0, a.z);
+      tapa.castShadow = true; tapa.receiveShadow = true;
+      scene.add(tapa);
+    }
+    ejesPalos.push({ a: [-a.largo, 0, a.z], b: [0, 0, a.z], radio: a.radio });
+  }
   // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
   // la mesa en x = y = 0, de la mesa hasta «alto». El destorcedor es corto y gris acero, para
   // no confundirlo con la madera; la estaca es de madera, como los palos.
