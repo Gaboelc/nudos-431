@@ -35,8 +35,9 @@ alternativas:
       En una punta que no importa, evita que se siga deshilachando. Abulta y no pasa por una
       argolla.
 
-# Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+# Estado de producción (ver «Estado» en docs/formato-spec.md). Gabriel aprobó las imágenes y
+# el texto el 17 de noviembre de 2026; falta el filtro 1.
+estado: modelado
 
 anfitrion:
   tipo: cabo
