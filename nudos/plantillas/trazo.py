@@ -32,13 +32,15 @@ class TrazoDePaso:
     """Un paso de una plantilla listo para construir (nudos/plantillas/pasos.py): los puntos de
     control en la mesa, su zona, el índice del punto donde termina el paso y del punto donde
     termina el anterior (None si es el primero), en la cabeza de turco cuánto está girado el
-    nudo, en grados, y en el amarre diagonal qué puntos no se relajan."""
+    nudo, en grados, en el amarre diagonal qué puntos no se relajan y en el puño de mono dónde
+    está su centro y su nudo simple, para buscar los cruces."""
     puntos: np.ndarray
     zonas: np.ndarray
     fin: int
     inicio: int | None
     giro: float | None = None
     quietos: np.ndarray | None = None   # los puntos de control que no se relajan
+    marco: dict | None = None           # en el puño de mono: {"centro": …, "nudo": …}
 
 
 @dataclass

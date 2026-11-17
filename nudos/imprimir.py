@@ -165,6 +165,14 @@ def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> lis
                 Imagen(atras, "Terminado, por detrás",
                        datos_escena(modelo, girado_y(enc), [girado], anfitrion=cabo), 1,
                        VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO)]
+    if s.plantilla is not None and hasattr(s.plantilla, "voltear"):
+        # El puño de mono se mira como los pasos: por detrás, volteado como una página con un giro
+        # rígido, porque sus cruces se miden desde su centro y no desde arriba.
+        volteado = s.plantilla.voltear(final)
+        return [Imagen(frente, "Terminado, por delante", datos_escena(modelo, enc, [final]), 1,
+                       VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO),
+                Imagen(atras, "Terminado, por detrás", datos_escena(modelo, espejo(enc), [volteado]),
+                       1, VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO)]
     if s.anfitrion is not None and s.anfitrion.tipo in ("cruz", "palos"):
         # El amarre se voltea entero, palos y cuerda, como un marco sobre la mesa, y por
         # delante y por detrás se mira desde donde se ata.

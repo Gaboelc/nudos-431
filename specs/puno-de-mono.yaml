@@ -1,0 +1,118 @@
+# Puño de mono: tres juegos de vueltas, cada uno alrededor del anterior, con un nudo simple
+# escondido en el centro. Es un nudo de plantilla sin anfitrión (nudos/plantillas/puno.py): se
+# ata en los dedos, que no se dibujan, y no lleva bola en el centro. La plantilla traza la cuerda
+# de cada paso a partir del número de vueltas de cada juego, y cada paso dice con «hasta» hasta
+# dónde llega. El método es el del diseño de la tanda 4 en tasks/plan.md. Unidades: diámetros de
+# cuerda. Los dedos van parados: el primer juego da vueltas alrededor de z.
+slug: puno-de-mono
+nombre: Puño de mono
+familia: Decorativos
+abok: 2200
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+# {vueltas} sale en letras.
+usos: >-
+  Un remate redondo y con algo de peso en la punta de una cuerda: de tirador, de adorno o para
+  lanzarla más lejos.
+materiales: >-
+  Una cuerda de unos 2 m. Se ata con la punta corta.
+verificacion:
+  - En cada una de las seis caras del puño se ven {vueltas} vueltas que pasan por encima de
+    otras {vueltas}.
+  - No se ven el nudo simple ni la punta del chicote.
+  - El puño queda redondo y firme. Si lo aprietas, no se deforma.
+precauciones:
+  - No le metas una piedra ni nada pesado para lanzarlo más lejos. Un puño pesado puede herir
+    a quien lo recibe.
+  - Nunca lo lances hacia una persona. Lánzalo a un lado de quien lo va a tomar.
+  - Si con el uso se suelta, vuelve a apretar las vueltas desde el centro hasta el firme.
+alternativas:
+  - nudo: Ocho
+    cuando: >-
+      Para un tope rápido en la punta de una cuerda, sin adorno. Se ata en segundos y se
+      desata fácil.
+  - nudo: Simple
+    cuando: >-
+      Para que la punta de un cordón no se salga de un ojal. Abulta poco y no adorna.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+plantilla:
+  tipo: puno-de-mono
+  vueltas: 3      # en cada juego
+
+# Zona que se muestra en los pasos, y la del nudo terminado, más cerca.
+encuadre:
+  x: [-12.0, 16.0]
+  y: [-17.0, 10.0]
+terminado:
+  encuadre:
+    x: [-12.0, 14.0]
+    y: [-12.0, 10.0]
+
+pasos:
+  - titulo: Da {vueltas} vueltas alrededor de dos dedos
+    texto: >-
+      Pon dos dedos hacia arriba, un poco separados. Sujeta el firme contra la palma y da
+      {vueltas} vueltas alrededor de los dedos, de abajo hacia arriba.
+    hasta: juego-1
+
+  - titulo: Pasa el chicote entre los dedos
+    texto: >-
+      Pasa el chicote entre los dedos, por arriba, y da una vuelta alrededor de las primeras,
+      por la mitad: por delante, por debajo y por detrás.
+    hasta: vuelta-2-1
+
+  - titulo: Da {vueltas} vueltas alrededor de las primeras
+    texto: >-
+      Sigue así, una junto a otra, hasta tener {vueltas}. Cuéntalas: son tantas como en el
+      primer juego.
+    hasta: juego-2
+
+  - titulo: Pasa el chicote por dentro de las primeras
+    texto: >-
+      Mete el chicote por dentro de las primeras vueltas, junto a un dedo, y da una vuelta
+      alrededor de las segundas, por dentro de las primeras.
+    hasta: vuelta-3-1
+
+  - titulo: Da {vueltas} vueltas alrededor de las segundas
+    texto: >-
+      Sigue hasta tener {vueltas}, por dentro de las primeras y por fuera de las segundas. Pasa
+      el chicote por el centro del puño y sácalo junto al firme.
+    hasta: juego-3
+
+  - titulo: Haz un nudo simple y mételo en el centro
+    texto: >-
+      Saca los dedos con cuidado. Haz un nudo simple en la punta del chicote y mételo al puño,
+      tirando del chicote desde el otro lado, hasta que quede en el centro.
+    hasta: centro
+
+  - titulo: Aprieta las vueltas
+    texto: >-
+      Aprieta de a poco, siguiendo la cuerda: desde la vuelta que sale del nudo del centro,
+      vuelta por vuelta, hasta el firme. Repite hasta que quede firme y redondo.
+    hasta: apretar
+
+# El error con imagen lo construye la plantilla: el tercer juego por fuera del primero, en vez
+# de por dentro. Va junto al paso 5.
+error:
+  paso: 5
+  variante: tercero-por-fuera
+  encuadre:       # el puño entero, sin lo que cae a la mesa
+    x: [-13.0, 13.0]
+    y: [-12.0, 11.0]
+  titulo: Las últimas vueltas por fuera
+  texto: >-
+    Diste las vueltas del tercer juego por fuera de las primeras, alrededor de todo el puño.
+    Nada las sujeta: al sacar los dedos se corren y el puño se deshace. Pásalas por dentro de
+    las primeras vueltas.
+  otros:
+    - titulo: Contar mal las vueltas
+      texto: >-
+        Si un juego tiene una vuelta de más o de menos, el puño queda chueco y con un lado flojo.
+        Cuenta las vueltas de cada juego.
+    - titulo: Apretar tirando solo del firme
+      texto: >-
+        Si tiras solo del firme, las vueltas de adentro quedan flojas y el puño se deforma.
+        Aprieta vuelta por vuelta, desde el centro hasta el firme.

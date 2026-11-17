@@ -12,6 +12,9 @@ palos paralelos, color madera, y el cabo, color crema. Sobre el cabo, además, e
 desenrollado (mapa()). Son parte de la cuerda que se revisa: sin ellos no se ve qué rodea la
 cuerda. El poste, los palos y el cabo se dibujan solo dentro del encuadre, más un margen. El tubo de
 la cabeza de turco no se dibuja: para eso está el tubo desenrollado.
+
+En el puño de mono, que no tiene anfitrión, la vista desde arriba no muestra la mitad de las
+vueltas: la hoja lleva además el puño desenrollado (mapa_puno()), mirado desde su centro.
 """
 from __future__ import annotations
 
@@ -389,4 +392,66 @@ def mapa(datos: dict, tubo, senos: int | None = None) -> Image.Image:
     out = Image.new("RGB", (COLUMNAS_MAPA * W, filas * H), (255, 255, 255))
     for k, c in enumerate(cuadros):
         out.paste(c, ((k % COLUMNAS_MAPA) * W, (k // COLUMNAS_MAPA) * H))
+    return out
+
+
+# --------------------------------------------------------------------------
+# El puño de mono desenrollado
+# --------------------------------------------------------------------------
+PPD_PUNO = 90           # píxeles por radián en el puño desenrollado
+
+
+def mapa_puno(datos: dict, centros: list, radios: list[tuple[float, float]]) -> Image.Image:
+    """Un cuadro por paso con el puño de mono desenrollado (nudos/plantillas/puno.py): cada punto
+    de las vueltas se mira desde el centro del puño (`centros`, uno por paso) y se dibuja a la
+    distancia del polo que le corresponde, alrededor de él (proyección azimutal equidistante);
+    el borde del cuadro es la esquina opuesta al polo, por donde no pasa nada. Lo que va más lejos
+    del centro se dibuja encima, más oscuro; lo que agrega el paso, en ámbar; cada cruce de las
+    vueltas lleva su etiqueta. Solo se dibuja lo que va sobre las vueltas: entre `radios` (lo
+    más cerca y lo más lejos del centro de cada paso)."""
+    from .plantillas.puno import POLO, _marco_polo, direccion_del_lugar, LEJOS_CARA
+    e1, e2 = _marco_polo()
+    lado = int(2 * math.pi * PPD_PUNO) + 40
+
+    def plano(d):
+        d = np.atleast_2d(d)
+        th = np.arccos(np.clip(d @ POLO, -1, 1))
+        az = np.arctan2(d @ e2, d @ e1)
+        return (lado / 2 + PPD_PUNO * th * np.cos(az), lado / 2 - PPD_PUNO * th * np.sin(az)), th
+
+    cuadros = []
+    for p, centro, (r0, r1) in zip(datos["pasos"], centros, radios):
+        im = Image.new("RGB", (lado, lado), (246, 246, 243))
+        d = ImageDraw.Draw(im)
+        d.ellipse([20, 20, lado - 20, lado - 20], outline=(205, 205, 200))
+        X = np.asarray(p["puntos"], float) - np.asarray(centro, float)
+        r = np.linalg.norm(X, axis=1)
+        D = X / np.maximum(r, 1e-9)[:, None]
+        (u, v), th = plano(D)
+        s = np.arange(len(X)) * p["h"]
+        hl = p["resaltado"] or [-1, -1]
+        sobre = (r > r0 - 0.6) & (r < r1 + 1.6)
+        tramos = [(float(r[i] + r[i + 1]) / 2, i) for i in range(len(X) - 1)
+                  if sobre[i] and sobre[i + 1] and abs(u[i + 1] - u[i]) + abs(v[i + 1] - v[i]) < 40]
+        for alto, i in sorted(tramos):
+            k = float(np.clip((alto - r0) / max(r1 - r0, 1e-6), 0, 1))
+            base = AMBAR if hl[0] <= s[i] <= hl[1] else AZUL
+            color = base * (0.55 + 0.45 * (1 - k)) + (1 - k) * 0.35 * (1 - base)
+            c = tuple(int(255 * x) for x in np.clip(color, 0, 1))
+            d.line([(u[i], v[i]), (u[i + 1], v[i + 1])], fill=(40, 40, 40), width=11)
+            d.line([(u[i], v[i]), (u[i + 1], v[i + 1])], fill=c, width=8)
+        for et, (cx, cy) in p.get("cruces", {}).items():
+            if cx < LEJOS_CARA / 2:
+                continue   # el nudo simple o la mesa
+            (a, b), _ = plano(direccion_del_lugar((cx, cy)))
+            a, b = float(a[0]), float(b[0])
+            d.rectangle([a - 9, b - 7, a + 9, b + 7], fill=(255, 255, 255), outline=(60, 60, 60))
+            d.text((a - 6 if len(et) > 1 else a - 3, b - 6), et, fill=(150, 20, 20))
+        d.text((10, 8), f"Paso {p['n']} · puño desenrollado, desde la esquina de atrás a la derecha, arriba",
+               fill=(30, 30, 30))
+        cuadros.append(im)
+    filas = (len(cuadros) + COLUMNAS_MAPA - 1) // COLUMNAS_MAPA
+    out = Image.new("RGB", (COLUMNAS_MAPA * lado, filas * lado), (255, 255, 255))
+    for k, c in enumerate(cuadros):
+        out.paste(c, ((k % COLUMNAS_MAPA) * lado, (k // COLUMNAS_MAPA) * lado))
     return out

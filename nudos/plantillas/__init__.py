@@ -20,14 +20,23 @@ Y, si los necesita:
 - `SIN_NOMBRES`: los hitos que no llevan ningún nombre, como el refuerzo de cabo con las
   puntas cortadas;
 - `comprobar(anfitrion, falla)`: lo que la plantilla pide de las medidas del anfitrión, como
-  que el refuerzo quepa en el cabo.
+  que el refuerzo quepa en el cabo;
+- `nombres(hito)`: los nombres de la imagen de cada hito, cuando la cuerda va del firme al
+  chicote, como en el puño de mono; sin él, los dice CON_FIRME;
+- `voltear(resultado)`: el nudo terminado por detrás, cuando la plantilla va sin anfitrión y no
+  se voltea como un nudo libre, como el puño de mono.
+
+`ANFITRION = None` quiere decir que la plantilla va sin anfitrión, como el puño de mono: la
+especificación no lleva `anfitrion`.
 """
 from .amarre import AmarreCuadrado
 from .amarre_diagonal import AmarreDiagonal
 from .cabeza_turco import CabezaDeTurco
 from .paralelos import AmarreRedondo, AmarreTripode
+from .puno import PunoDeMono
 from .refuerzo import RefuerzoDeCabo
 
 TIPOS = {"amarre-cuadrado": AmarreCuadrado, "amarre-diagonal": AmarreDiagonal,
          "amarre-redondo": AmarreRedondo, "amarre-tripode": AmarreTripode,
-         "cabeza-de-turco": CabezaDeTurco, "refuerzo-de-cabo": RefuerzoDeCabo}
+         "cabeza-de-turco": CabezaDeTurco, "puno-de-mono": PunoDeMono,
+         "refuerzo-de-cabo": RefuerzoDeCabo}

@@ -61,7 +61,9 @@ def faltantes(modelo: Modelo) -> list[str]:
     """Lo que la especificación todavía no tiene y la ficha necesita."""
     s = modelo.spec
     faltan = faltan_textos(s)
-    if modelo.reverso is None and (s.anfitrion is None or s.anfitrion.en_la_mesa):
+    # Una plantilla que se voltea ella misma, como el puño de mono, no tiene reverso construido.
+    se_voltea = s.plantilla is not None and hasattr(s.plantilla, "voltear")
+    if modelo.reverso is None and not se_voltea and (s.anfitrion is None or s.anfitrion.en_la_mesa):
         faltan.append("el nudo terminado por detrás (no se pudo construir el último paso)")
     return faltan
 
