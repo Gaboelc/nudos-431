@@ -70,16 +70,11 @@ pasos:
       de braza como en su ficha. Tira del firme para que los palos se junten.
     hasta: inicio
 
-  - titulo: Da la primera vuelta en diagonal
+  - titulo: Da {vueltas} vueltas en diagonal
     texto: >-
-      Ahora mueves la parte larga. Rodea otra vez los dos palos en la misma diagonal, junto a
-      la vuelta de braza: por debajo del palo de abajo y por encima del de arriba. Tira fuerte.
-    hasta: vuelta-1
-
-  - titulo: Completa las {vueltas} vueltas
-    texto: >-
-      Da más vueltas por el mismo camino hasta tener {vueltas}, cada una junto a la anterior y
-      sin montarse. Tira fuerte en cada una.
+      Ahora mueves la parte larga. Rodea los dos palos en la misma diagonal, junto a la vuelta
+      de braza: por debajo del palo de abajo y por encima del de arriba. Da {vueltas} vueltas,
+      una junto a otra y sin montarse. Tira fuerte en cada una.
     hasta: vueltas
 
   - titulo: Cambia a la otra diagonal
@@ -106,22 +101,16 @@ pasos:
       {ahorcados}. Tira fuerte en cada uno.
     hasta: ahorcados
 
-  - titulo: Empieza el ballestrinque de cierre
+  - titulo: Cierra con un ballestrinque
     texto: >-
-      En el palo de arriba, junto a los ahorcados, pasa la cuerda por debajo, dale la vuelta
-      y crúzala en diagonal sobre sí misma, hacia afuera.
-    hasta: cierre-1
-
-  - titulo: Termina el ballestrinque
-    texto: >-
-      Da otra vuelta al palo, por fuera de la primera, y mete el chicote por debajo de la
-      diagonal, entre las dos vueltas. Tira del chicote para apretar.
+      En el palo de arriba, junto a los ahorcados, ata un ballestrinque como en su ficha, con
+      la segunda vuelta por fuera de la primera. Tira del chicote para apretar.
     hasta: cierre
 
 # El error con imagen lo construye la plantilla: los ahorcados por encima del palo de
-# arriba, en lugar de entre los palos. Va junto al paso 7, con el mismo encuadre.
+# arriba, en lugar de entre los palos. Va junto al paso 6, con el mismo encuadre.
 error:
-  paso: 7
+  paso: 6
   variante: ahorcados-por-fuera
   titulo: Los ahorcados por encima del palo de arriba
   texto: >-

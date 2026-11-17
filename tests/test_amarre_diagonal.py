@@ -16,14 +16,12 @@ from nudos.spec import Anfitrion, SpecError, desde_datos
 
 PASOS = [
     ("Haz una vuelta de braza alrededor de los dos palos", "inicio"),
-    ("Da la primera vuelta en diagonal", "vuelta-1"),
-    ("Completa las vueltas", "vueltas"),
+    ("Da las vueltas en diagonal", "vueltas"),
     ("Cambia a la otra diagonal", "segunda-1"),
     ("Completa las vueltas de la otra diagonal", "segundas"),
     ("Da el primer ahorcado", "ahorcado-1"),
     ("Completa los ahorcados", "ahorcados"),
-    ("Empieza el ballestrinque de cierre", "cierre-1"),
-    ("Termina el ballestrinque", "cierre"),
+    ("Cierra con un ballestrinque", "cierre"),
 ]
 POR_FUERA = "ahorcados-por-fuera"
 # La vuelta de braza: el chicote se enrolla en su tramo (1 a 5) y rodea el firme (6 y 7), como
@@ -44,7 +42,7 @@ def datos(**cambios):
             "cierre": {"poste": "arriba", "lado": "derecha"},
         },
         "pasos": [{"titulo": t, "texto": "Texto.", "hasta": h} for t, h in PASOS],
-        "error": {"paso": 7, "variante": POR_FUERA, "titulo": "Ahorcados por fuera",
+        "error": {"paso": 6, "variante": POR_FUERA, "titulo": "Ahorcados por fuera",
                   "texto": "Texto."},
     }
     base.update(copy.deepcopy(cambios))
@@ -93,11 +91,11 @@ def test_los_hitos_siguen_la_cuerda():
 
 def test_las_medidas_salen_en_letras():
     d = datos()
-    d["pasos"][2]["titulo"] = "Completa las {vueltas} vueltas"
-    d["pasos"][6]["titulo"] = "Completa los {ahorcados} ahorcados"
+    d["pasos"][1]["titulo"] = "Da {vueltas} vueltas en diagonal"
+    d["pasos"][5]["titulo"] = "Completa los {ahorcados} ahorcados"
     spec = desde_datos(d)
-    assert spec.pasos[2].titulo == "Completa las tres vueltas"
-    assert spec.pasos[6].titulo == "Completa los tres ahorcados"
+    assert spec.pasos[1].titulo == "Da tres vueltas en diagonal"
+    assert spec.pasos[5].titulo == "Completa los tres ahorcados"
 
 
 @pytest.mark.parametrize("cambio, pista", [
@@ -116,7 +114,7 @@ def test_una_plantilla_mal_escrita_se_detecta(cambio, pista):
 def test_un_hito_que_no_existe_con_esas_medidas():
     d = con(vueltas=2)
     desde_datos(d)   # «vueltas» y «segundas» siguen valiendo con 2 vueltas
-    d["pasos"][2]["hasta"] = "vuelta-3"
+    d["pasos"][1]["hasta"] = "vuelta-3"
     with pytest.raises(SpecError, match="«hasta» es uno de"):
         desde_datos(d)
 
@@ -234,8 +232,8 @@ def modelo(modelo_amarre_diagonal):
 
 def test_todos_los_pasos_se_construyen_sin_fallas(modelo):
     assert modelo.fallas == []
-    assert [r.n for r in modelo.pasos] == list(range(1, 10))
-    assert modelo.error is not None and modelo.error.n == 7
+    assert [r.n for r in modelo.pasos] == list(range(1, 8))
+    assert modelo.error is not None and modelo.error.n == 6
 
 
 def test_la_cuerda_no_atraviesa_los_palos_ni_otras_vueltas(modelo):
@@ -288,9 +286,9 @@ def test_firme_solo_en_la_vuelta_de_braza(modelo):
 
 def test_las_imagenes_del_amarre(modelo):
     imgs = imagenes(modelo)
-    assert [i.nombre for i in imgs] == [f"paso-{n}" for n in range(1, 10)] + [
+    assert [i.nombre for i in imgs] == [f"paso-{n}" for n in range(1, 8)] + [
         "error-correcto", "error", "terminado-frente", "terminado-reverso"]
     por_nombre = {i.nombre: i for i in imgs}
-    assert [p["n"] for p in por_nombre["error"].escena["pasos"]] == [7, 7]
+    assert [p["n"] for p in por_nombre["error"].escena["pasos"]] == [6, 6]
     assert por_nombre["terminado-reverso"].escena["anfitrion"] == Cruz(
         desde_datos(datos()).anfitrion).voltear(modelo.pasos[-1])[1]
