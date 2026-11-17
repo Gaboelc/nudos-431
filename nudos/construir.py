@@ -73,13 +73,18 @@ def _construir_plantilla(spec: Spec) -> Modelo:
     """Un nudo de plantilla: cada paso es el comienzo de la cuerda entera que calcula la
     plantilla (nudos/plantillas/pasos.py). La consistencia entre pasos y los cruces que saltan
     se comprueban igual que en los demás nudos, con la secuencia que escribe la plantilla.
-    El error común es la cuerda de una variante del método, construida como un paso más. El
-    nudo terminado por detrás no se construye: es un giro rígido del último paso (Cruz.voltear)."""
-    from .plantillas.pasos import construir_error as error_de_plantilla, construir_pasos
+    El error común es la cuerda de una variante del método, construida como un paso más. Sobre
+    un anfitrión, el nudo terminado por detrás no se construye: es un giro rígido del último paso
+    (Cruz.voltear). Sin anfitrión, como el adujado, se voltea como una página, sin relajar."""
+    from .plantillas.pasos import construir_error as error_de_plantilla, construir_pasos, voltear_sin_relajar
     resultados, fallas_pasos, secuencias = construir_pasos(spec)
     error, fallas_error = error_de_plantilla(spec)
     fallas = consistencia(secuencias) + fallas_pasos + cruces_que_saltan(resultados) + fallas_error
-    return Modelo(spec, resultados, fallas, error)
+    reverso = None
+    if spec.anfitrion is None and resultados and resultados[-1].n == len(spec.pasos):
+        reverso = voltear_sin_relajar(resultados[-1], secuencias[-1][1])
+        fallas.extend(f"Reverso del nudo terminado: {f}" for f in reverso.fallas)
+    return Modelo(spec, resultados, fallas, error, reverso)
 
 
 def cruces_que_saltan(resultados: list[Resultado]) -> list[str]:
