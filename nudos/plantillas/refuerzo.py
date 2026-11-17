@@ -40,13 +40,12 @@ ESQUINA = 1.2         # radio de las dos esquinas de la curva del seno
 FIN_VUELTA = 1.2      # cuánto sigue cada vuelta, en arco, después de pasar sobre el extremo corto
 GIRO = 1.0            # radio de las esquinas en el mapa
 PUNTA = 4.6           # dónde termina la última vuelta: x = -PUNTA
-CURVA_TRAS = 1.0      # cuánto más allá de la última vuelta empieza la curva del seno
+CURVA_TRAS = 2.5      # cuánto más allá de la última vuelta empieza la curva del seno
 COLA = 3.0            # cuánto sigue la rama que vuelve más allá de las primeras vueltas
-COLA_TIRADA = 4.0     # y cuánto más, al tirar del extremo corto
-PASA = 1.0            # cuánto sigue el chicote sobre el cabo después de pasar bajo la curva
-CORTE = 1.0           # cuánto sale cada punta cortada de las vueltas
-U_CHICOTE = 1.15      # al tirar, a cuánto del medio del seno van las dos pasadas del chicote
-MESETA = 0.6          # cuánto más allá del eje de la otra cuerda sigue arriba la de encima
+COLA_TIRADA = 4.0     # y cuánto más, a lo más, al tirar del extremo corto
+CORTE = 1.6           # cuánto sale cada punta cortada de las vueltas
+PUNTA_DENTRO = 1.5    # al cortar, cuánto pasa el chicote más allá de la curva, dentro del seno
+DENTRO_U = 1.75       # y cuánto más cerca de la rama que vuelve que del medio del seno va
 RAMPA = 2.4           # largo de la subida o bajada de una pasada por encima
 APILA = 0.95          # en el mapa, a menos de esto de un tramo más bajo, se va encima de él
 VECINO = 3.0          # a lo largo de la cuerda, lo que está más cerca no se apila
@@ -178,8 +177,8 @@ def _hermite(P0, T0, P1, T1, n: int) -> np.ndarray:
 
 
 def _puentes(crudo, pieza, paso: float) -> np.ndarray:
-    """Entre dos pasadas por encima de una misma pieza que están a menos de PUENTE, la cuerda
-    no baja: sigue a la altura de la más baja de las dos."""
+    """Entre dos pasadas por encima de un mismo tramo (`pieza` dice el de cada punto) que
+    están a menos de PUENTE, la cuerda no baja: sigue a la altura de la más baja de las dos."""
     from scipy.ndimage import maximum_filter1d
     out = crudo.copy()
     w = int(round(PUENTE / paso))
@@ -331,10 +330,12 @@ class Cuerda:
         # El corto, desde que sale de las primeras vueltas, va al nivel del seno: solo pasa bajo
         # las vueltas de encima, y así la curva baja a él sin doblarse.
         x_sale = self._libre()
-        sale = _recta((x_curva, self.u1), (x_sale, self.u1))
-        corto = self._corto_recto(x_sale)
-        return [_Pieza("rama", "rama", M=rama), _Pieza("curva", "curva", M=curva),
-                _Pieza("rama-corto", "rama", M=sale), _Pieza("corto", "corto", M=corto)]
+        piezas = [_Pieza("rama", "rama", M=rama), _Pieza("curva", "curva", M=curva)]
+        if x_curva > x_sale + 0.1:
+            piezas.append(_Pieza("rama-corto", "rama", M=_recta((x_curva, self.u1), (x_sale, self.u1))))
+        else:
+            x_sale = x_curva
+        return piezas + [_Pieza("corto", "corto", M=self._corto_recto(x_sale))]
 
     # --- El chicote -----------------------------------------------------------------
     def _por_el_seno(self) -> list[_Pieza]:
@@ -350,56 +351,47 @@ class Cuerda:
         piezas.append(_Pieza("chicote", "chicote", M=_unir(giro, recto)))
         return piezas
 
-    def _tirado(self) -> tuple[list[_Pieza], float, float]:
-        """Al tirar: la curva del seno entra bajo las vueltas de encima y arrastra al chicote. La
-        última vuelta pasa sobre la rama que vuelve y el chicote entra bajo las vueltas del lado
-        de esa rama (en uc - U_CHICOTE), pasa bajo la curva, da media vuelta dentro del seno,
-        vuelve por encima de la curva del otro lado (en uc + U_CHICOTE) y sale por el borde. La
-        última vuelta no pasa por encima de lo que sale.
-
-        La curva es una media circunferencia de radio ANCHO/2 y la media vuelta del chicote
-        tiene el mismo centro. Las puntas de las dos, donde van de costado, paralelas a las
-        vueltas, quedan entre dos vueltas: si una vuelta pasara justo por ahí, el cruce se
-        formaría y se desharía al relajar. Devuelve las piezas desde la última vuelta, hasta
-        dónde llega la curva y la x del borde por donde sale el chicote."""
+    def _x_apretada(self) -> float:
+        """Al tirar, dónde queda el tramo recto de la curva: apretada contra el borde de las
+        vueltas, a más de APILA de donde el chicote termina de girar hacia la punta."""
         n = self.p.vueltas
-        uc = self.uc + (2 * n + 1) * self.C
-        W, U = ANCHO / 2, U_CHICOTE
-        u_giro = uc - U - GIRO
+        u_giro = self.uc + (2 * n + 1) * self.C - GIRO
+        return float(self._x_vuelta(u_giro)) + GIRO + APILA + 0.35
+
+    def _escondido(self) -> tuple[list[_Pieza], float]:
+        """El refuerzo terminado, con las puntas cortadas: la última vuelta pasa sobre la rama
+        que vuelve y el chicote gira en el medio del seno hacia atrás, bajo las vueltas de
+        encima, pasa bajo la curva del seno y termina dentro de él. Va DENTRO_U más cerca de la
+        rama que vuelve, para que la curva baje despacio hacia la otra. Es una simplificación: en la
+        cuerda real el chicote se dobla alrededor de la curva y vuelve a salir por el borde, donde
+        se corta; por fuera se ve igual, solo vueltas.
+
+        La curva es la plana de los pasos anteriores. Su tramo recto, que va alrededor del cabo,
+        paralelo a las vueltas, queda justo entre dos vueltas, que pasan por encima de él sin
+        cruzarlo: si una vuelta pasara por su mismo lugar, el cruce se formaría y se desharía al
+        relajar. Va lo más cerca de la mitad de las vueltas de encima que se puede, a más de
+        APILA de donde el chicote termina de girar y bajo la última vuelta entera. Devuelve las
+        piezas desde la última vuelta y dónde queda el tramo recto de la curva."""
+        n = self.p.vueltas
+        uc = self.uc + (2 * n + 1) * self.C - DENTRO_U
+        u_giro = uc - GIRO
         piezas = self._vueltas(u_giro)
         x_g = float(self._x_vuelta(u_giro))
-        x_c = self._centro_tirado()
-        giro = _arco((x_g - GIRO, u_giro), GIRO, 0.0, math.pi / 2)          # hacia -x
-        entra = _unir(giro, _recta(giro[-1], (x_c, uc - U)))
-        media = _arco((x_c, uc), U, -math.pi / 2, -3 * math.pi / 2)
-        x_sale = -PUNTA + PASO_VUELTA / 2
-        sale = _recta(media[-1], (0.0, uc + U))
-        piezas.append(_Pieza("entra", "entra", M=_unir(entra, media)))
-        piezas.append(_Pieza("sale", "sale", M=sale))
-        return piezas, x_c + W, x_sale
-
-    def _centro_tirado(self) -> float:
-        """El centro de la curva al tirar (y de la media vuelta del chicote). La punta de la
-        media vuelta queda entre dos vueltas, sin pasar bajo las primeras; el chicote pasa
-        bajo la curva a más de APILA de donde sale de la última vuelta, y la punta de la curva
-        queda bajo las vueltas. Si no cabe, es que las vueltas de encima son pocas."""
-        n = self.p.vueltas
-        W, U = ANCHO / 2, U_CHICOTE
-        u_giro = self.uc + (2 * n + 1) * self.C - U - GIRO
-        x_entra = float(self._x_vuelta(u_giro)) - GIRO
-        cruce = math.sqrt(W * W - U * U)
-        x_ultima = float(self._x_vuelta(self.uc + 2 * n * self.C))   # la última vuelta entera, en uc
-        lo = self._libre() + U
-        hi = min(x_entra - APILA - 0.3 - cruce, x_ultima - 0.3 - W)
-        mejores = [float(self._x_vuelta(self.uc + k * self.C)) + PASO_VUELTA / 2 + U
-                   for k in range(1, 2 * n + 1)]
-        mejores = [x for x in mejores if lo <= x <= hi]
-        if not mejores:
+        x_entra = x_g - GIRO
+        x_ultima = float(self._x_vuelta(self.uc + 2 * n * self.C))
+        hi = min(x_entra - APILA - 0.35, x_ultima - 0.3)
+        medio = (self._fin_primeras() + (-PUNTA)) / 2
+        candidatos = [float(self._x_vuelta(self.uc + k * self.C)) + PASO_VUELTA / 2
+                      for k in range(1, 2 * n + 1)]
+        candidatos = [x for x in candidatos if x <= hi]
+        if not candidatos:
             from ..libre import TrazadoError
-            raise TrazadoError(
-                f"con {n} vueltas encima del seno no cabe el seno al tirar: hacen falta más "
-                "vueltas")
-        return max(mejores)
+            raise TrazadoError(f"con {n} vueltas encima del seno no cabe el seno escondido")
+        x_ap = min(candidatos, key=lambda x: abs(x - medio))
+        giro = _arco((x_g - GIRO, u_giro), GIRO, 0.0, math.pi / 2)          # hacia -x
+        chicote = _unir(giro, _recta(giro[-1], (x_ap - PUNTA_DENTRO, uc)))
+        piezas.append(_Pieza("chicote-dentro", "entra", M=chicote))
+        return piezas, x_ap
 
     # --- Lo que cuelga --------------------------------------------------------------
     def _en(self, x, u, h=0.0) -> np.ndarray:
@@ -442,19 +434,20 @@ class Cuerda:
             piezas = self._seno(self._x_curva(), x_cola) + self._por_el_seno()
             cuelga.update(despues="punta")
             return piezas, cuelga
-        tirado, x_curva, x_sale = self._tirado()
         if hito == "tirar":
-            # La rama que vuelve salió de debajo de las vueltas lo que entró la curva: su cola
-            # sigue por el cabo y cae a la mesa.
-            piezas = self._seno(x_curva, self.x0 - COLA - COLA_TIRADA, redonda=True) + tirado
+            # La curva del seno, apretada contra el borde de las vueltas, engancha al chicote.
+            # La rama que vuelve salió lo que se acortó el seno: su cola sigue por el cabo.
+            x_ap = self._x_apretada()
+            x_cola = self.x0 - COLA - 2 * (self._x_curva() - x_ap)
+            piezas = self._seno(x_ap, x_cola) + self._por_el_seno()
             cuelga.update(despues="punta")
             return piezas, cuelga
-        # Cortar: la rama que vuelve, a CORTE de donde sale de las vueltas de encima, y el
-        # chicote, a CORTE del borde de la punta.
+        # Cortar: el seno, escondido bajo las vueltas de encima, con el chicote, que entra bajo
+        # ellas y pasa bajo su curva. La rama que vuelve, cortada a CORTE de donde sale de las
+        # vueltas de encima.
         x_borde = self._fin_primeras() - PASO_VUELTA / 2
-        piezas = self._seno(x_curva, x_borde - CORTE, redonda=True) + tirado
-        sale = piezas[-1]
-        sale.M = sale.M[sale.M[:, 0] <= x_sale + CORTE]
+        dentro, x_ap = self._escondido()
+        piezas = self._seno(x_ap, x_borde - CORTE) + dentro
         return piezas, cuelga
 
     def _paso(self, hito: str) -> dict:
@@ -541,6 +534,8 @@ class Cuerda:
                 if len(j):
                     debajo[i] = j
         paso = s[1] - s[0]
+        # Los tramos seguidos de un mismo nivel, como la rama que vuelve y la curva del seno.
+        tramos = np.concatenate([[0], np.cumsum(niveles[1:] != niveles[:-1])])
 
         def apilar(base):
             """Desde `base`, cada punto va un diámetro sobre lo que tiene debajo, con las rampas
@@ -551,7 +546,7 @@ class Cuerda:
                 crudo = np.zeros(len(Q))
                 for i, j in debajo.items():
                     crudo[i] = float(h[j].max()) + 1.0
-                crudo = _puentes(crudo, pieza, paso)
+                crudo = _puentes(crudo, tramos, paso)
                 nuevo = np.maximum(base, _rampas(crudo, paso, niveles))
                 if np.allclose(nuevo, h, atol=1e-6):
                     break
