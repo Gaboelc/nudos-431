@@ -81,14 +81,15 @@ class Cruz:
     """Dos palos del mismo radio cruzados en ángulo recto en x = y = 0, para los amarres.
 
     El de abajo va a lo largo de y, con el eje en x = 0 y a la altura radio + 1: se apoya en
-    la cuerda que pasa por debajo, como el poste. El de arriba va a lo largo de x, con el eje
+    la cuerda que pasa por debajo, como el poste. En el amarre diagonal se cruzan dos capas de
+    cuerda bajo él, y su eje queda a radio + 2 (Anfitrion.capas). El de arriba va a lo largo de x, con el eje
     en y = 0, y se apoya sobre el de abajo. Cada palo mide `largo` y está centrado en el cruce.
     Alrededor de cada palo, un ángulo se mide en su plano de corte, desde su lado positivo
     (x para el de abajo, y para el de arriba) hacia arriba: 90° es la cara de arriba."""
 
     def __init__(self, a: Anfitrion):
         self.radio, self.largo = a.radio, a.largo
-        self.zb = a.radio + 2 * R          # eje del palo de abajo
+        self.zb = a.radio + 2 * R * a.capas   # eje del palo de abajo, sobre las capas de cuerda
         self.zt = self.zb + 2 * a.radio    # eje del palo de arriba
         self.rb = a.radio + R              # distancia al eje del eje de una cuerda que toca un palo
 

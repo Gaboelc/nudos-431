@@ -10,11 +10,15 @@ Cada plantilla es una clase con:
 - `VARIANTES`: los errores comunes que sabe construir con sus medidas, cada uno con el
   primer hito desde el que se ve;
 - `medidas()`: las palabras que reemplazan `{vueltas}` y las demás en el texto;
+- `CAPAS_DEBAJO` (opcional, en los amarres): cuántas capas de cuerda pasan bajo el palo
+  de abajo de la cruz, que fija su altura (Anfitrion.capas);
 - `CON_FIRME`: los hitos en que la cuerda tiene firme, que en las imágenes llevan «Firme»
   y «Chicote»; en los demás se mueve la parte larga, y solo llevan «Chicote», en su punta
   (nudos/exportar.py).
 """
 from .amarre import AmarreCuadrado
+from .amarre_diagonal import AmarreDiagonal
 from .cabeza_turco import CabezaDeTurco
 
-TIPOS = {"amarre-cuadrado": AmarreCuadrado, "cabeza-de-turco": CabezaDeTurco}
+TIPOS = {"amarre-cuadrado": AmarreCuadrado, "amarre-diagonal": AmarreDiagonal,
+         "cabeza-de-turco": CabezaDeTurco}

@@ -451,7 +451,7 @@ def _limitar_curva(X, h, libre, rmin=1.0, ganancia=0.5, grosor=None, interior=No
 
 
 def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasadas_largo=None,
-            reparto: Reparto | None = None):
+            reparto: Reparto | None = None, quietos=None):
     """Relajación por posiciones. Las anclas en xy imitan el roce con la mesa; son
     débiles para que la cuerda se deslice y dé el largo que cuesta subir sobre otro
     tramo. La gravedad asienta cada tramo de encima sobre el de abajo. Con un
@@ -463,7 +463,9 @@ def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasa
     Con varias cuerdas (`reparto`), los primeros puntos de cada firme quedan fijos y cada
     cuerda se apoya en la mesa según su radio. También hacen falta más correcciones de
     largo: una cuerda gruesa empuja hacia arriba a la que pasa encima, y con las de
-    siempre esa cuerda se estiraba hasta su firme."""
+    siempre esa cuerda se estiraba hasta su firme. `quietos` dice qué puntos no se mueven,
+    además de los extremos: una plantilla los usa para lo que ya va trazado tenso y la
+    relajación deshace, como la vuelta de braza del amarre diagonal."""
     X = X.copy()
     ancla = X[:, :2].copy()
     N = len(X)
@@ -474,6 +476,8 @@ def relajar(X, h, iteraciones=1000, fijos=3, anfitrion=None, gravedad=None, pasa
     libre = np.ones(N, bool)
     for i in rep.inicios:
         libre[i:i + fijos] = False
+    if quietos is not None:
+        libre &= ~np.asarray(quietos, bool)
     cae = libre if gravedad is None else libre & gravedad
     # Sin anfitrión se alisa toda la cuerda, como siempre; con anfitrión, solo lo que cae.
     # Los extremos de cada cuerda no se alisan: sus vecinos de un lado son de otra.

@@ -121,6 +121,9 @@ class Anfitrion:
     hasta: float | None = None
     largo: float | None = None   # cruz: largo de cada palo; tubo: su largo
     alto: float | None = None    # destorcedor y estaca: su alto desde la mesa
+    # Cruz: cuántas capas de cuerda pasan bajo el palo de abajo, donde se cruzan. No se
+    # escribe en la especificación: lo dice la plantilla (CAPAS_DEBAJO), al cargarla.
+    capas: int = 1
 
     @property
     def en_la_mesa(self) -> bool:
@@ -251,6 +254,8 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         # Se agrega con el primer nudo de varias cuerdas que se ate sobre un anfitrión.
         raise falla("por ahora, un nudo de varias cuerdas no lleva anfitrión")
     plantilla = _plantilla(datos.get("plantilla"), anfitrion, cuerdas, falla)
+    if plantilla is not None and getattr(plantilla, "CAPAS_DEBAJO", 1) != anfitrion.capas:
+        anfitrion = replace(anfitrion, capas=plantilla.CAPAS_DEBAJO)
     pasos = datos.get("pasos")
     if not isinstance(pasos, list) or not pasos:
         raise falla("falta la lista de pasos")

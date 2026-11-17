@@ -135,6 +135,7 @@ class Cuerda:
     restos: dict[str, np.ndarray]
     secuencias: dict[str, tuple[str, ...]]
     alias: dict[str, str]   # «vueltas» y «ahorcados»: el hito al que equivalen
+    quietos: np.ndarray | None = None   # los puntos que no se relajan (amarre diagonal)
 
 
 class _Palos:
@@ -320,15 +321,7 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
     F = firme.puntos()
 
     # --- Alturas de los ahorcados ---
-    # Cada ahorcado pasa bajo el palo de arriba cerca de su cara de abajo y sobre el de abajo
-    # cerca de su cara de arriba; entre los dos sube y baja suave. Cada uno va un poco más
-    # alto que el anterior, así que en el mapa de la cintura no se cruzan. En el error van al
-    # revés, cada uno más bajo: así cada ahorcado pasa por debajo de donde los anteriores suben
-    # al palo de arriba, y no por fuera de ellos. Con j = 0, un poco más alto que el primero.
-    def alto(j, ang):
-        u = (m - j if por_fuera else j - 1) / (m - 1)
-        bajo, alto_ = zt - rb - 0.9 + 0.8 * u, zb + rb - 0.4 + 0.8 * u
-        return bajo + (alto_ - bajo) * math.sin(ang) ** 2
+    alto = alturas_de_ahorcados(m, por_fuera, cruz)
 
     # Delante a la derecha, las esquinas que suben a la vuelta siguiente pasan por fuera del
     # firme más arriba de los ahorcados. Ahí el firme ya va en la zona del palo de arriba:
@@ -389,6 +382,85 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
             t.puntos(esq[k, 4].puntos(), CINTURA)
             esquinas.append((esq[k, 4], esq[k, 4].puntos()))
 
+    # --- Ahorcados y ballestrinque de cierre ---
+    # El último tramo de la última vuelta sube un poco por la cara del palo de abajo, se aparta
+    # de él y va a pasar bajo el palo de arriba, donde empieza el primer ahorcado. Mientras
+    # pasa junto al ballestrinque de inicio va en la zona del palo de abajo, sin acercarse a él
+    # a lo largo del palo; cuando ya se apartó del firme, en la del de arriba.
+    def salida(planos, pasa_ar, punto):
+        P0 = np.array([rb, -Bd[n], z_baja])
+        Q = np.array([rb + 1.2, -Bd[n] + 0.4, z_baja + 1.0])
+        va = _unit(np.array([0.5, 1.0, 0.0]))
+        zj = alto(1, 0.0)
+        E0 = np.array([planos["der"], -pasa_ar(zj, 1), zj])
+        llega_e0 = np.array([0.0, 1.0, 0.0])
+        if por_fuera:
+            # Llega a E0, más alto que el primer ahorcado, hacia donde sigue: la cara de delante
+            # del palo de arriba.
+            E0 = punto(planos["der"], -pasa_ar(zj, 1), 0)
+            llega_e0 = _unit(pal.arriba(E0[0], _tangente(pal.centro_ar, rb, E0[[1, 2]], -1)) - E0)
+        t.puntos(_vertical(pal.abajo(-Bd[n], 0.0), P0[2]), ABAJO)
+        t.puntos(_hermite(P0, Q, sube_z, va), ABAJO)
+        t.puntos(_hermite(Q, E0, va, llega_e0), ARRIBA)
+
+    ahorcados_y_cierre(t, pal, m, por_fuera, alto, esquinas, {"der": A[n], "izq": A[n]}, salida)
+
+    X, Z, hitos = t.muestrear(RADIO_ESQUINA)
+    # El trazo lleva el inicio delante y el cierre a la derecha; los otros lados son su reflejo.
+    espejo = np.array([-1.0 if p.cierre.lado == "izquierda" else 1.0,
+                       -1.0 if p.inicio.lado == "detras" else 1.0, 1.0])
+    X = X * espejo
+    restos = {}
+    for nombre, i in hitos.items():
+        if nombre != "cierre":
+            sale = SALIDAS[nombre] if nombre in SALIDAS else SALIDAS[nombre.split("-")[0]]
+            restos[nombre] = _resto(X[i], _unit(X[i] - X[max(i - 3, 0)]),
+                                    _unit(np.array([*sale, 0.0]) * espejo))
+    alias = {"vueltas": f"vuelta-{n}", "ahorcados": f"ahorcado-{m}"}
+    # Dónde cruza cada esquina al primer ahorcado: da el orden en que los ahorcados las recorren.
+    donde = []
+    for e, P in esquinas:
+        dz = np.abs(P[:, 2] - np.array([alto(1, x) for x in ang(P)]))
+        if e is firme:
+            dz[P[:, 2] > z_firme] = np.inf
+        donde.append(((*P[int(dz.argmin()), :2],), e.sube))
+    return Cuerda(X, Z, hitos, restos, _secuencias(p, donde, bajan=por_fuera), alias)
+
+
+def alturas_de_ahorcados(m: int, por_fuera: bool, cruz):
+    """La altura del ahorcado j en el ángulo ang alrededor del cruce, alto(j, ang).
+
+    Cada ahorcado pasa bajo el palo de arriba cerca de su cara de abajo y sobre el de abajo
+    cerca de su cara de arriba; entre los dos sube y baja suave. Cada uno va un poco más alto
+    que el anterior, así que en el mapa de la cintura no se cruzan. En el error (`por_fuera`)
+    van al revés, cada uno más bajo: así cada ahorcado pasa por debajo de donde los anteriores
+    suben al palo de arriba, y no por fuera de ellos. Con j = 0, un poco más alto que el
+    primero."""
+    rb, zb, zt = cruz.rb, cruz.zb, cruz.zt
+
+    def alto(j, ang):
+        u = (m - j if por_fuera else j - 1) / (m - 1)
+        bajo, alto_ = zt - rb - 0.9 + 0.8 * u, zb + rb - 0.4 + 0.8 * u
+        return bajo + (alto_ - bajo) * math.sin(ang) ** 2
+    return alto
+
+
+def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, encima: dict,
+                       salida) -> None:
+    """Los ahorcados y el ballestrinque de cierre de un amarre sobre la cruz, trazados en `t`
+    después de las vueltas. Los usan el amarre cuadrado y el diagonal.
+
+    `alto(j, ang)` es la altura del ahorcado j en el ángulo ang alrededor del cruce;
+    `esquinas`, lo que cada ahorcado rodea por fuera, en el orden de la cuerda: pares
+    (esquina, puntos), donde la esquina dice su `cuadrante`. `encima` dice hasta dónde llegan
+    las vueltas sobre el palo de arriba, a la derecha («der») y a la izquierda («izq»), a lo
+    largo de x: en el error (`por_fuera`), los ahorcados pasan por encima de él más afuera. `salida(planos, pasa_ar, punto)` traza la
+    salida de la última vuelta hasta donde el primer ahorcado pasa bajo el palo de arriba, a
+    la derecha y por delante. El cierre queda a la derecha; los otros lados son su reflejo."""
+    from .trazo import ABAJO, ARRIBA, CINTURA, MESA, Plano, _densa
+    rb, zt = pal.rb, pal.zt
+    ang = lambda P: np.arctan2(P[..., 1], P[..., 0])
+
     # --- Ahorcados: vueltas tensas entre los palos, por fuera de todo lo que ya está ---
     def cerca(j, cuadrante, extra=()):
         """Lo que tiene que dejar por fuera un ahorcado en un cuadrante: los puntos de la cuerda
@@ -426,7 +498,7 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
     if por_fuera:
         # Por encima del palo de arriba, los ahorcados pasan por fuera de las vueltas.
         for lado in ("der", "izq"):
-            planos[lado] = max(planos[lado], A[n] + SEPARA_ENCIMA)
+            planos[lado] = max(planos[lado], encima[lado] + SEPARA_ENCIMA)
     x_cierre = None
     pasa_ab = lambda z: pal.ancho_abajo(z) + 0.5   # lo que se aparta del eje del palo al pasar
     if por_fuera:
@@ -480,24 +552,7 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
     llega = ("ultima",) if por_fuera else ()
     sale = ("primera",) if por_fuera else ()
 
-    # El último tramo de la última vuelta sube un poco por la cara del palo de abajo, se aparta
-    # de él y va a pasar bajo el palo de arriba, donde empieza el primer ahorcado. Mientras
-    # pasa junto al ballestrinque de inicio va en la zona del palo de abajo, sin acercarse a él
-    # a lo largo del palo; cuando ya se apartó del firme, en la del de arriba.
-    P0 = np.array([rb, -Bd[n], z_baja])
-    Q = np.array([rb + 1.2, -Bd[n] + 0.4, z_baja + 1.0])
-    va = _unit(np.array([0.5, 1.0, 0.0]))
-    zj = alto(1, 0.0)
-    E0 = np.array([planos["der"], -pasa_ar(zj, 1), zj])
-    llega_e0 = np.array([0.0, 1.0, 0.0])
-    if por_fuera:
-        # Llega a E0, más alto que el primer ahorcado, hacia donde sigue: la cara de delante
-        # del palo de arriba.
-        E0 = punto(planos["der"], -pasa_ar(zj, 1), 0)
-        llega_e0 = _unit(pal.arriba(E0[0], _tangente(pal.centro_ar, rb, E0[[1, 2]], -1)) - E0)
-    t.puntos(_vertical(pal.abajo(-Bd[n], 0.0), P0[2]), ABAJO)
-    t.puntos(_hermite(P0, Q, sube_z, va), ABAJO)
-    t.puntos(_hermite(Q, E0, va, llega_e0), ARRIBA)
+    salida(planos, pasa_ar, punto)
     # En el error, por encima del palo de arriba van más separados: así cada uno baja de él
     # lejos de donde baja el anterior, y no tiene que rodearlo ahí mismo.
     paso_ar = SEPARA_ENCIMA if por_fuera else PASO_VUELTAS
@@ -562,27 +617,6 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
     a = math.radians(bal[-1][1])     # el chicote sale un poco del palo, tangente
     t.ir(t.fin + 1.5 * np.array([0.0, -math.sin(a), math.cos(a)]), MESA)
     t.marcar("cierre")
-
-    X, Z, hitos = t.muestrear(RADIO_ESQUINA)
-    # El trazo lleva el inicio delante y el cierre a la derecha; los otros lados son su reflejo.
-    espejo = np.array([-1.0 if p.cierre.lado == "izquierda" else 1.0,
-                       -1.0 if p.inicio.lado == "detras" else 1.0, 1.0])
-    X = X * espejo
-    restos = {}
-    for nombre, i in hitos.items():
-        if nombre != "cierre":
-            sale = SALIDAS[nombre] if nombre in SALIDAS else SALIDAS[nombre.split("-")[0]]
-            restos[nombre] = _resto(X[i], _unit(X[i] - X[max(i - 3, 0)]),
-                                    _unit(np.array([*sale, 0.0]) * espejo))
-    alias = {"vueltas": f"vuelta-{n}", "ahorcados": f"ahorcado-{m}"}
-    # Dónde cruza cada esquina al primer ahorcado: da el orden en que los ahorcados las recorren.
-    donde = []
-    for e, P in esquinas:
-        dz = np.abs(P[:, 2] - np.array([alto(1, x) for x in ang(P)]))
-        if e is firme:
-            dz[P[:, 2] > z_firme] = np.inf
-        donde.append(((*P[int(dz.argmin()), :2],), e.sube))
-    return Cuerda(X, Z, hitos, restos, _secuencias(p, donde, bajan=por_fuera), alias)
 
 
 def _cadena(S, E, centros, radios, lados=40) -> np.ndarray:

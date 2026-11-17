@@ -23,13 +23,14 @@ NOMBRES_ZONA = {MESA: "mesa", ABAJO: "palo de abajo", ARRIBA: "palo de arriba", 
 class TrazoDePaso:
     """Un paso de una plantilla listo para construir (nudos/plantillas/pasos.py): los puntos de
     control en la mesa, su zona, el índice del punto donde termina el paso y del punto donde
-    termina el anterior (None si es el primero), y en la cabeza de turco cuánto está girado el
-    nudo, en grados."""
+    termina el anterior (None si es el primero), en la cabeza de turco cuánto está girado el
+    nudo, en grados, y en el amarre diagonal qué puntos no se relajan."""
     puntos: np.ndarray
     zonas: np.ndarray
     fin: int
     inicio: int | None
     giro: float | None = None
+    quietos: np.ndarray | None = None   # los puntos de control que no se relajan
 
 
 @dataclass

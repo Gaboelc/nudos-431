@@ -29,6 +29,7 @@ from ..cruces import Cruce, cruces_2d, emparejar
 from ..libre import Resultado, TrazadoError, _resultado, catmull_rom, relajar, remuestrear
 from ..spec import Spec
 from .amarre import AmarreCuadrado, cuerda
+from .amarre_diagonal import AmarreDiagonal, cuerda as cuerda_diagonal
 from .trazo import ABAJO, ARRIBA, CINTURA, MESA, TrazoDePaso
 
 RADIO_CINTURA = 6.0   # radio con que se desenrolla la cintura; solo cambia la escala del mapa
@@ -36,20 +37,22 @@ RADIO_CINTURA = 6.0   # radio con que se desenrolla la cintura; solo cambia la e
 
 def geometria(spec: Spec):
     """Lo propio de la plantilla del nudo: su sólido, su cuerda y cómo buscar sus cruces."""
-    if isinstance(spec.plantilla, AmarreCuadrado):
+    if isinstance(spec.plantilla, (AmarreCuadrado, AmarreDiagonal)):
         return _Amarre(spec)
     return _CabezaDeTurco(spec)
 
 
 class _Amarre:
-    """El amarre cuadrado sobre la cruz. `penetracion` es la clave de la medida y dónde entra."""
+    """Un amarre (cuadrado o diagonal) sobre la cruz. `penetracion` es la clave de la medida y
+    dónde entra."""
     penetracion = ("penetracion_palos", "en un palo")
 
     def __init__(self, spec: Spec):
         self.plantilla, self.solido = spec.plantilla, Cruz(spec.anfitrion)
 
     def cuerda(self, variante: str | None = None):
-        return _CuerdaDeAmarre(cuerda(self.plantilla, self.solido, variante))
+        f = cuerda_diagonal if isinstance(self.plantilla, AmarreDiagonal) else cuerda
+        return _CuerdaDeAmarre(f(self.plantilla, self.solido, variante))
 
     def buscar(self, X, h, zonas, trazo: TrazoDePaso):
         return buscar(X, h, zonas, self.solido)
@@ -69,7 +72,10 @@ class _CuerdaDeAmarre:
         resto = c.restos.get(hito)
         P = c.puntos[:i + 1] if resto is None else np.vstack([c.puntos[:i + 1], resto])
         Z = c.zonas[:i + 1] if resto is None else np.concatenate([c.zonas[:i + 1], np.full(len(resto), MESA)])
-        return TrazoDePaso(P, Z, i, None if previo is None else c.hitos[previo])
+        q = None
+        if c.quietos is not None:
+            q = c.quietos[:i + 1] if resto is None else np.concatenate([c.quietos[:i + 1], np.zeros(len(resto), bool)])
+        return TrazoDePaso(P, Z, i, None if previo is None else c.hitos[previo], quietos=q)
 
 
 class _CabezaDeTurco:
@@ -160,7 +166,11 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None) -> Resultado:
     s_ini = 0.0 if t.inicio is None else float(s_ctrl[t.inicio])
     # La cuerda va tensa, como cuando se ata, y lo que cae ya está trazado sobre la mesa: no
     # cae nada. Si cayera, tiraría del nudo y lo estiraría.
-    Xr = relajar(X, h, anfitrion=g.solido, gravedad=np.zeros(len(X), bool), pasadas_largo=PASADAS_LARGO)
+    # Lo que la plantilla ya traza tenso y la relajación deshace no se mueve: los puntos que
+    # caen entre dos puntos de control quietos.
+    quietos = None if t.quietos is None else t.quietos[tramo] & t.quietos[siguiente]
+    Xr = relajar(X, h, anfitrion=g.solido, gravedad=np.zeros(len(X), bool), pasadas_largo=PASADAS_LARGO,
+                 quietos=quietos)
     clave, donde = g.penetracion
 
     def medir(Y):
