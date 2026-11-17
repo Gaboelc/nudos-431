@@ -10,9 +10,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from . import RAIZ, SPECS, URL_BASE
-from .construir import Modelo, construir
+from .construir import Modelo
 from .anfitrion import solido
 from .libre import Resultado
+from .procesos import construir_varios
 from .spec import Cuerda, Encuadre, cargar
 
 SITIO = RAIZ / "sitio"
@@ -264,7 +265,7 @@ def construir_sitio(destino: Path, modelos: list[Modelo] | None = None,
     if publicados is None:
         publicados = leer_publicados()
     if modelos is None:
-        modelos = [construir(cargar(s)) for s in nudos_del_sitio(publicados, con)]
+        modelos = construir_varios([cargar(s) for s in nudos_del_sitio(publicados, con)])
 
     problemas = [f"{m.spec.slug}: {f}" for m in modelos for f in m.fallas]
     if problemas:

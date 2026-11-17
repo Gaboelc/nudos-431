@@ -21,6 +21,7 @@ from scipy.spatial import cKDTree
 
 from . import SPECS
 from .libre import LIMITES, Reparto, Resultado, TrazadoError, construir_paso
+from .procesos import mapa
 from .spec import Spec, _ref
 
 # Radio mínimo del trazado antes de relajar que pide la skill nudo-nuevo, en diámetros.
@@ -244,9 +245,10 @@ def diagnostico(spec: Spec, pasos: list[int], todo: bool = False, ruta: Path | N
     # redondea, así que su radio no dice nada: ahí cuenta solo la curvatura relajada.
     en_la_mesa = spec.anfitrion is None or spec.anfitrion.en_la_mesa
     antes: dict[str, tuple[float, float]] = {}
-    for paso in spec.pasos:
-        if paso.n not in pasos:
-            continue
+    # Los pasos elegidos se relajan a la vez, cada uno en un proceso (nudos/procesos.py).
+    elegidos = [paso for paso in spec.pasos if paso.n in pasos]
+    futuros = mapa(construir_paso, [(paso, spec.anfitrion, spec.cuerdas) for paso in elegidos])
+    for paso, futuro in zip(elegidos, futuros):
         X0, h0, ctrl_s, rep0 = trazado(spec, paso)
         cruces = len(paso.secuencia) // 2
         out.append(f"Paso {paso.n}: {len(paso.puntos)} puntos de control, "
@@ -255,7 +257,7 @@ def diagnostico(spec: Spec, pasos: list[int], todo: bool = False, ruta: Path | N
             out += lineas_trazado(X0, h0, rep0 or Reparto.una(len(X0)),
                                   Nombres(X0, h0, ctrl_s, nombres.get(paso.n)))
         try:
-            r = construir_paso(paso, spec.anfitrion, spec.cuerdas)
+            r = futuro.result()
         except TrazadoError as e:
             out.append(f"!!{str(e).split(': ', 1)[-1]}")
             continue

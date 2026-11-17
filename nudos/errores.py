@@ -33,6 +33,13 @@ def construir_error(spec: Spec, correcto: Resultado | None) -> tuple[Resultado |
 
     Las dos secuencias que se comparan son las obtenidas después de relajar, así que
     la comprobación cubre la geometría de los dos modelos, no solo lo declarado."""
+    r, fallas = solo_el_error(spec)
+    return comparar_error(spec, r, fallas, correcto)
+
+
+def solo_el_error(spec: Spec) -> tuple[Resultado | None, list[str]]:
+    """El error común construido, todavía sin compararlo con el paso correcto: no depende
+    de él, así que se construye a la vez que los pasos (nudos/construir.py)."""
     e = spec.error
     if e is None:
         return None, []
@@ -42,9 +49,16 @@ def construir_error(spec: Spec, correcto: Resultado | None) -> tuple[Resultado |
                            spec.anfitrion, spec.cuerdas)
     except TrazadoError as err:
         return None, [f"Error común: {err}"]
-    fallas = [f"Error común: {f}" for f in r.fallas]
-    if correcto is None:
+    return r, [f"Error común: {f}" for f in r.fallas]
+
+
+def comparar_error(spec: Spec, r: Resultado | None, fallas: list[str],
+                   correcto: Resultado | None) -> tuple[Resultado | None, list[str]]:
+    """Compara el error común ya construido (`r`, con sus `fallas`) con el paso correcto."""
+    e = spec.error
+    if r is None or correcto is None:
         return r, fallas
+    paso = spec.pasos[e.paso - 1]
     # Las obtenidas vienen numeradas en orden de aparición; se traducen las etiquetas declaradas.
     numeros = dict(zip((etiqueta(t) for t in paso.secuencia),
                        (etiqueta(t) for t in numerada(paso.secuencia))))

@@ -118,18 +118,54 @@ def apretado(spec: Spec, final: Resultado, reverso: Resultado | None = None,
     plantilla, que no se aprieta, los dos son None."""
     if spec.plantilla is not None:
         return None, None
+    # Por delante y por detrás no dependen uno del otro: se aprietan a la vez, cada uno en un
+    # proceso (nudos/procesos.py).
+    from .procesos import ejecutor
+    ex = ejecutor(1 if reverso is None else 2)
+    f_delante = ex.submit(en_otro_proceso, apretado_delante, spec, final, rondas)
+    f_detras = None if reverso is None else ex.submit(en_otro_proceso, apretado_detras, spec,
+                                                       reverso, rondas)
+    return (de_otro_proceso(f_delante.result(), final),
+            None if f_detras is None else de_otro_proceso(f_detras.result(), reverso))
+
+
+def en_otro_proceso(fn, spec: Spec, base: Resultado | None, *args):
+    """fn(spec, base, *args), para hacerlo en otro proceso. Si fn devuelve `base` tal cual
+    (no se pudo apretar), lo dice en vez de mandarlo: de vuelta llegaría una copia, y quien
+    lo usa distingue «es el mismo» con `is`. de_otro_proceso() lo deshace."""
+    r = fn(spec, base, *args)
+    return (True, None) if r is base and r is not None else (False, r)
+
+
+def de_otro_proceso(respuesta, base):
+    mismo, r = respuesta
+    return base if mismo else r
+
+
+def apretado_delante(spec: Spec, final: Resultado, rondas: int = RONDAS) -> Resultado:
+    """El nudo terminado apretado, por delante (lo primero de apretado())."""
     paso: Paso = spec.pasos[-1]
     if spec.anfitrion is not None and not spec.anfitrion.en_la_mesa:
         from .anfitrion import apretar_paso
-        return apretar_paso(paso, spec.anfitrion, final, rondas), None
-    mesa = {}
-    if spec.anfitrion is not None:
-        from .anfitrion import en_la_mesa
-        mesa = en_la_mesa(spec.anfitrion, paso.n)
-    delante = apretar(final, paso.secuencia, paso.pasadas, rondas=rondas, **mesa)
-    detras = None if reverso is None else apretar(reverso, invertida(paso.secuencia),
-                                                  paso.pasadas, rondas=rondas, **mesa)
-    return delante, detras
+        return apretar_paso(paso, spec.anfitrion, final, rondas)
+    return apretar(final, paso.secuencia, paso.pasadas, rondas=rondas, **_mesa(spec, paso))
+
+
+def apretado_detras(spec: Spec, reverso: Resultado | None, rondas: int = RONDAS) -> Resultado | None:
+    """El nudo terminado apretado, por detrás (lo segundo de apretado()). Sobre un poste, o
+    sin reverso, None."""
+    paso: Paso = spec.pasos[-1]
+    if reverso is None or (spec.anfitrion is not None and not spec.anfitrion.en_la_mesa):
+        return None
+    return apretar(reverso, invertida(paso.secuencia), paso.pasadas, rondas=rondas,
+                   **_mesa(spec, paso))
+
+
+def _mesa(spec: Spec, paso: Paso) -> dict:
+    if spec.anfitrion is None:
+        return {}
+    from .anfitrion import en_la_mesa
+    return en_la_mesa(spec.anfitrion, paso.n)
 
 
 def invertida(secuencia) -> tuple[str, ...]:

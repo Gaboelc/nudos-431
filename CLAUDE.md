@@ -23,7 +23,7 @@ Desde la raíz del repositorio, con Python 3.11 o más reciente:
 - `/nudo-nuevo <slug>`: la skill de `.claude/skills/nudo-nuevo/` escribe el borrador de un nudo nuevo desde sus entradas y arma su hoja de revisión. El borrador queda en `borrador` hasta que Gabriel lo revisa.
 - `python -m nudos estado`: muestra el estado de producción de los 36 nudos de la edición 1 (`config/edicion-1.yaml`), con lo que le falta a cada uno para el siguiente, y los códigos de los probadores con los nudos que ya conocen. Falla si algún nudo dice un estado que no tiene. Cuando un nudo avanza, actualiza su `estado` en la especificación.
 - `scripts/publicar.sh -m "Co-Authored-By: …"`: publica el sitio en la rama `gh-pages`, que es la que sirve GitHub Pages. Solo corre desde un `main` limpio y ya subido. Esa rama no se toca de otra forma.
-- `python -m pytest`: corre todas las pruebas.
+- `python -m pytest`: corre todas las pruebas, en unos 7 minutos. Con `-n 4 --dist loadfile` (pytest-xdist), en unos 4.
 
 ## Reglas
 
@@ -45,6 +45,7 @@ El trabajo se hace desde la pestaña Code de la app de Claude, en la computadora
 - **Los commits** van con el autor `Gabriel León <29740351+Gaboelc@users.noreply.github.com>`, ya configurado en el clon.
 - **El venv** es `.venv/`, en la raíz del repositorio. Los comandos se corren desde ahí con `.venv/Scripts/python -m …`. Si cambian las dependencias de `pyproject.toml`, se reinstala con `.venv/Scripts/python -m pip install -e .[dev]`. Si falta (por ejemplo, en un clon nuevo), se crea con `python -m venv .venv` y esa misma instalación.
 - **Esta computadora no tiene Chrome:** `imprimir`, `ficha` y las pruebas que dibujan usan Edge con `NUDOS_CHROME="C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"`. Con `PYTHONUTF8=1`, la salida de `construir` no falla en Windows.
+- **Construir usa todos los núcleos:** los pasos de un nudo, su error, su reverso y su apretado se relajan a la vez en procesos (`nudos/procesos.py`), con resultados idénticos byte a byte. `NUDOS_PROCESOS=1` vuelve a un solo proceso; `NUDOS_PROCESOS=n`, a n. Un script que construya nudos protege su punto de entrada con `if __name__ == "__main__":`, porque en Windows los procesos arrancan con spawn; un script leído desde stdin construye en un solo proceso. La suite construye una sola vez, al empezar, todos los nudos de `modelado` o más (`modelos` en `tests/conftest.py`).
 - **Las sesiones de borrador arrancan con esfuerzo medio** (Gabriel, 15 nov), para gastar menos tokens. Las de código siguen con el esfuerzo de siempre. `.claude/settings.json` apaga en este proyecto los plugins que no usa (datos, diseño, gestión de plugins y agent-skills).
 - **Una sola sesión a la vez trabaja en la carpeta de A:.** Una sesión en paralelo trabaja en su propio worktree de git, con el venv de A: (`A:/Scouts/06 Identidad/Diseños Propios/Libro Nudos/.venv/Scripts/python`) y desde la raíz de su worktree, para que importe su copia de `nudos`. Sus cambios llegan a `main` con un merge o un rebase.
 - **Google Drive respalda la unidad A: entera**, también `.git/` y `.venv/`. Si git no puede escribir un archivo porque Drive lo tiene abierto, se reintenta. Si el clon se daña, se vuelve a clonar desde GitHub: todo lo que importa está subido.

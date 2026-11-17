@@ -7,24 +7,16 @@ import re
 import pytest
 
 from nudos import URL_BASE
-from nudos.construir import construir
 from nudos.exportar import (EXTENSIONES, SitioError, archivos_no_permitidos, construir_sitio,
                             datos_visor, leer_publicados, nudos_del_sitio)
-from nudos.spec import cargar
 
 
 @pytest.fixture(scope="module")
-def sitio(tmp_path_factory, request):
-    """El sitio con todos los nudos de publicados.txt. Los que tienen su modelo en
-    conftest.py no se construyen otra vez."""
-    modelos = []
-    for slug in leer_publicados():
-        try:
-            modelos.append(request.getfixturevalue(f"modelo_{slug.replace('-', '_')}"))
-        except pytest.FixtureLookupError:
-            modelos.append(construir(cargar(slug)))
+def sitio(tmp_path_factory, modelos):
+    """El sitio con todos los nudos de publicados.txt, con los modelos de conftest.py: cada
+    nudo se construye una sola vez en toda la corrida."""
     destino = tmp_path_factory.mktemp("sitio") / "sitio"
-    return destino, construir_sitio(destino, modelos=modelos)
+    return destino, construir_sitio(destino, modelos=[modelos[s] for s in leer_publicados()])
 
 
 def test_cada_nudo_publicado_tiene_su_pagina(sitio):

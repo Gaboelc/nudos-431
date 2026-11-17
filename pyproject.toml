@@ -10,8 +10,9 @@ requires-python = ">=3.11"
 dependencies = ["numpy>=1.26", "scipy>=1.11", "pyyaml>=6", "pillow>=10", "segno>=1.5"]
 
 [project.optional-dependencies]
-# Playwright dibuja las imágenes de impresión con el Chrome instalado; zxing-cpp lee el QR en las pruebas.
-dev = ["pytest>=8", "playwright>=1.40", "zxing-cpp>=2.2"]
+# Playwright dibuja las imágenes de impresión con el Chrome instalado; zxing-cpp lee el QR en las pruebas;
+# pytest-xdist reparte las pruebas en varios procesos (python -m pytest -n 4 --dist loadfile).
+dev = ["pytest>=8", "playwright>=1.40", "zxing-cpp>=2.2", "pytest-xdist>=3.6"]
 
 [tool.setuptools]
 packages = ["nudos", "nudos.plantillas"]

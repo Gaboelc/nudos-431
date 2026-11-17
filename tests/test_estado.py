@@ -7,7 +7,6 @@ import yaml
 
 from nudos import SPECS
 from nudos.__main__ import main
-from nudos.construir import construir
 from nudos.estado import (SIN_ESPECIFICACION, faltan_para, leer_edicion, nudo, nudos,
                           probadores, ultimo_filtro)
 from nudos.exportar import leer_publicados
@@ -138,16 +137,12 @@ def test_los_probadores_y_los_nudos_que_conocen():
 # --- Construye sin fallas ------------------------------------------------------
 
 @pytest.mark.parametrize("slug", sorted(p.stem for p in SPECS.glob("*.yaml")))
-def test_los_nudos_modelados_construyen_sin_fallas(slug, request):
+def test_los_nudos_modelados_construyen_sin_fallas(slug, modelos):
     spec = cargar(slug)
     if ESTADOS.index(spec.estado) < ESTADOS.index("modelado"):
         pytest.skip(f"{slug} es un borrador")
-    # Los nudos que ya tienen su modelo en conftest.py no se construyen otra vez.
-    try:
-        modelo = request.getfixturevalue(f"modelo_{slug.replace('-', '_')}")
-    except pytest.FixtureLookupError:
-        modelo = construir(spec)
-    assert modelo.fallas == []
+    # Los modelos de conftest.py: cada nudo se construye una sola vez en toda la corrida.
+    assert modelos[slug].fallas == []
 
 
 # --- La orden -----------------------------------------------------------------
