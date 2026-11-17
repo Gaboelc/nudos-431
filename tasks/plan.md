@@ -1422,6 +1422,11 @@ Después de cada tanda hay un punto de control:
 
 **Los tres borradores en `main` (16 de noviembre de 2026).** Gabriel revisó las hojas del ballestrinque doble, la vuelta de braza y el tensor ajustable y los aprobó el 16 nov. Entraron a `main` con la estaca (formato v1.4) y la hoja de revisión que encuadra el reverso volteado, y pasaron a `modelado`. Los 16 `modelo.json` publicados son iguales byte a byte a la referencia de 74e1b1b, y sus imágenes también; dos de la vuelta de escota variaron en 1 nivel en la corrida con todos y salen iguales impresas solas. Pasan 446 pruebas y 1 se salta. Las tres fichas caben y están listas para el filtro 1. Las dudas que se revisan con cuerda: en la vuelta de braza, los cruces 1, 3, 4 y 6; en el tensor ajustable, el cruce 8.
 
+**Las tres ramas de la tanda 4 en `main` (17 de noviembre de 2026; Gabriel pidió integrarlas).** Entraron de a una, con un merge cada una: el amarre diagonal (v1.5) sin conflictos, porque salía de `main`; los palos paralelos (v1.6, ed80a80) y el cabo (v1.7, bab9c59) con conflictos en las listas de anfitriones y plantillas, la hoja, la impresión del nudo por detrás, la escena, el formato y el plan, donde quedaron los dos lados. Cada rama decía ser la v1.5, así que los palos pasaron a v1.6 y el cabo a v1.7.
+- **Los 26 publicados no cambian:** sus `modelo.json` son iguales byte a byte a la referencia (la de 74e1b1b para los 16 primeros y la de 3843a16 para los diez de la tanda 3), y sus imágenes, iguales en RGB. Dos difirieron en la corrida con todos: el prusik salió igual impreso solo, y el tensor ajustable, en 4 píxeles de 1 nivel, sale igual al de `main` impreso otra vez desde 3843a16 en un worktree aparte, así que la variación era de la referencia.
+- **Pasan 577 pruebas y 1 se salta.** La de la cabeza de turco que lista las plantillas ahora las nombra todas.
+- **Las cuatro fichas caben:** el amarre diagonal, el redondo, el trípode y el refuerzo de cabo, en `modelado`. Falta el filtro 1.
+
 ### Fase 5: libro y primera edición
 
 #### T11: Material inicial del libro

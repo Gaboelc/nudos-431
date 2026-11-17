@@ -190,10 +190,10 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
   - [x] Revisión con Gabriel (16 nov: cerró el punto de control y aprobó la propuesta de la tanda 4, que está en el plan)
 
 ### Tanda 4: plantillas
-- [ ] Amarre redondo
-- [ ] Amarre diagonal (17 nov: plantilla `amarre-diagonal` y formato v1.5 en la rama `claude/tanda4-amarre-diagonal-065be5`; 9 pasos y el error sin fallas, 75 cruces; los 26 publicados iguales. 17 nov: Gabriel eligió 7 pasos y la ficha cabe. 17 nov: Gabriel aprobó imágenes, texto y los cambios al diseño; en `modelado`. Falta el filtro 1, con la ficha; ver «Cómo se hizo» del amarre diagonal en el plan)
-- [ ] Amarre trípode
-- [ ] Refuerzo de cabo
+- [ ] Amarre redondo (17 nov: anfitrión `palos` y plantilla `amarre-redondo`, formato v1.6; 6 vueltas y 2 ahorcados, 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha)
+- [ ] Amarre diagonal (17 nov: plantilla `amarre-diagonal` y formato v1.5 en la rama `claude/tanda4-amarre-diagonal-065be5`; 9 pasos y el error sin fallas, 75 cruces; los 26 publicados iguales. 17 nov: Gabriel eligió 7 pasos y la ficha cabe. 17 nov: Gabriel aprobó imágenes, texto y los cambios al diseño; en `modelado`. Falta el filtro 1, con la ficha; ver «Cómo se hizo» del amarre diagonal en el plan. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa.)
+- [ ] Amarre trípode (17 nov: plantilla `amarre-tripode` sobre tres `palos`, formato v1.6; 6 vueltas y 2 ahorcados por hueco, 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha)
+- [ ] Refuerzo de cabo (17 nov: anfitrión `cabo` y plantilla `refuerzo-de-cabo`, formato v1.7; 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha)
 - [ ] Adujado
 - [ ] Puño de mono
 - [ ] Punto de control de la tanda 4
