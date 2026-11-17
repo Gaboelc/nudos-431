@@ -1,0 +1,117 @@
+# Amarre trípode: une tres palos por una punta para pararlos como un trípode. Es un nudo de
+# plantilla: la plantilla calcula la cuerda entera a partir de las medidas
+# (nudos/plantillas/paralelos.py), y cada paso dice con «hasta» hasta dónde llega. El método es
+# el del diseño de «Los palos paralelos» (tanda 4) en tasks/plan.md: las vueltas alrededor de
+# los tres palos, como el método principal del manual de la Tropa. Unidades: diámetros de
+# cuerda. x a la derecha, y hacia el fondo de la mesa. Los tres palos van acostados a lo largo
+# de x, uno junto al otro; el de delante es el que queda hacia quien ata. La ficha lo muestra
+# cerrado, sobre la mesa, y cómo se abren las patas va en el texto.
+slug: amarre-tripode
+nombre: Amarre trípode
+familia: Amarres
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+# {vueltas} y {ahorcados} salen en letras. La cuerda del modelo mide 4,1 m con una de 8 mm, sin
+# lo que se deja para manejarla; los 5 m se confirman al atarlo.
+usos: >-
+  Une tres palos por una punta para pararlos como un trípode. Sirve de base para mesas,
+  fogones elevados y otras construcciones.
+materiales: >-
+  Tres palos redondos de unos 4 cm de grosor y una cuerda de 6 a 8 mm y unos 5 m de largo.
+  Que la cuerda no sea rígida.
+verificacion:
+  - Las {vueltas} vueltas van una junto a otra, sin montarse, alrededor de los tres palos.
+  - En cada hueco entre dos palos, {ahorcados} ahorcados aprietan las vueltas.
+  - Cada ballestrinque está apretado contra su palo.
+  - Con las patas abiertas, el trípode se para solo y los palos no resbalan en el amarre.
+precauciones:
+  - Antes de cargarlo o de subirte a lo que sostiene, revisa el amarre y que las patas
+    apoyen en suelo firme. Si el suelo es blando o liso, entierra o traba sus puntas.
+  - Revisa también los palos. Que no estén podridos ni rajados y que sean lo bastante
+    gruesos para el peso que van a llevar.
+  - >-
+    Con el uso, la lluvia y el sol, los amarres se aflojan. Si la construcción queda armada
+    varios días, revísalos antes de volver a usarla.
+alternativas:
+  - nudo: Amarre redondo
+    cuando: Para unir dos palos uno junto al otro, a lo largo, por ejemplo para alargar uno.
+  - nudo: Amarre cuadrado
+    cuando: Para unir dos palos que se cruzan en ángulo recto, o casi.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: modelado
+
+anfitrion:
+  tipo: palos
+  cantidad: 3
+  radio: 2.5      # un palo de 4 cm con una cuerda de 8 mm
+  largo: 30
+
+plantilla:
+  tipo: amarre-tripode
+  vueltas: 6
+  ahorcados: 2    # en cada hueco
+
+# Zona que se muestra en todos los pasos, el error y el nudo terminado.
+encuadre:
+  x: [-12.0, 12.5]
+  y: [-12.0, 11.0]
+
+pasos:
+  - titulo: Haz un ballestrinque en un palo
+    texto: >-
+      Pon los tres palos juntos, con las puntas parejas. En el de delante, cerca de las
+      puntas, ata un ballestrinque como en su ficha. Deja el chicote corto.
+    hasta: inicio
+
+  - titulo: Da la primera vuelta
+    texto: >-
+      Ahora mueves la parte larga. Pásala por encima de los tres palos, por detrás del de
+      atrás, por debajo de los tres y por delante del de delante.
+    hasta: vuelta-1
+
+  - titulo: Completa las {vueltas} vueltas
+    texto: >-
+      Da más vueltas por el mismo camino, cada una a la derecha de la anterior, hasta tener
+      {vueltas}. Tíralas firmes, sin exagerar: el trípode tiene que poder abrirse.
+    hasta: vueltas
+
+  - titulo: Ahorca el hueco de atrás
+    texto: >-
+      Baja la cuerda entre el palo del medio y el de atrás, a la derecha de las vueltas;
+      pásala por debajo, súbela por la izquierda y vuelve por encima. Da {ahorcados} así.
+    hasta: hueco-1
+
+  - titulo: Ahorca el hueco de delante
+    texto: >-
+      Pasa la cuerda por encima del palo del medio, a la derecha de los ahorcados, y ahorca
+      igual el hueco de delante, con {ahorcados} ahorcados.
+    hasta: ahorcados
+
+  - titulo: Empieza el ballestrinque de cierre
+    texto: >-
+      A la derecha de los ahorcados, pasa la cuerda por encima del palo de delante, hacia
+      ti, y por debajo, y crúzala en diagonal sobre sí misma, hacia la derecha.
+    hasta: cierre-1
+
+  - titulo: Termina el ballestrinque y abre las patas
+    texto: >-
+      Da otra vuelta al palo, a la derecha de la primera, y mete el chicote por debajo de la
+      diagonal. Tira para apretar. Para pararlo, cruza las dos patas de afuera y abre la del
+      medio hacia el otro lado.
+    hasta: cierre
+
+# El error con imagen lo construye la plantilla: la cuerda va directo al ballestrinque de
+# cierre, sin ahorcados. Va junto al paso 6, con el mismo encuadre.
+error:
+  paso: 6
+  variante: sin-ahorcados
+  titulo: Sin ahorcados
+  texto: >-
+    Fuiste directo al ballestrinque de cierre, así que nada aprieta las vueltas y las patas
+    resbalan. Antes de cerrar, ahorca los dos huecos, alrededor de las vueltas.
+  otros:
+    - titulo: Las vueltas demasiado apretadas
+      texto: >-
+        Si aprietas mucho las vueltas, después no puedes abrir las patas, o la cuerda se
+        fuerza al abrirlas. Tíralas firmes, sin exagerar, y prueba a abrirlo antes de cerrar.

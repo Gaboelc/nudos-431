@@ -274,7 +274,7 @@ function altoDeEncuadre(modelo, B) {
       }
     }
   }
-  if (a && (a.tipo === "poste" || a.tipo === "tubo")) alto = Math.max(alto, a.z + a.radio);
+  if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   if (a && a.tipo === "destorcedor") alto = Math.max(alto, a.alto);
   return alto;
@@ -354,7 +354,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   scene.add(mesa);
 
   // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x, la
-  // cruz de los amarres o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
+  // cruz de los amarres, los palos paralelos o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
   // three.js va a lo largo de y. El destorcedor, de metal, y la estaca van más abajo.
   const a = modelo.anfitrion;
   const madera = () => new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 });
@@ -381,6 +381,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     palo(a.largo, 0, 0, a.z_abajo, false);
     palo(a.largo, 0, 0, a.z_arriba, true);
   }
+  // Los palos paralelos del amarre redondo y el trípode: acostados a lo largo de x, uno junto
+  // al otro, con los ejes en las «y» y a la altura «z».
+  if (a && a.tipo === "palos") for (const y of a.y) palo(a.largo, 0, y, a.z, true);
   // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
   // la mesa en x = y = 0, de la mesa hasta «alto». El destorcedor es corto y gris acero, para
   // no confundirlo con la madera; la estaca es de madera, como los palos.

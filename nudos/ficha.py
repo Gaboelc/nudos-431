@@ -30,6 +30,7 @@ POR_DETRAS = {
     None: "Por detrás es como lo ves si lo volteas como la página de un libro.",
     "poste": "Por detrás es como lo ves desde el otro lado del poste.",
     "cruz": "Por detrás es como lo ves si volteas los dos palos juntos como la página de un libro.",
+    "palos": "Por detrás es como lo ves si volteas los palos juntos como la página de un libro.",
     "tubo": "Por detrás es como lo ves si giras el tubo media vuelta.",
     "destorcedor": "Por detrás es como lo ves si volteas el nudo con el destorcedor como la "
                    "página de un libro.",

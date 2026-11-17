@@ -16,7 +16,15 @@ PASO = 0.3   # cada cuánto se toma un punto de una recta o un arco, en diámetr
 
 # Zonas: dónde va cada tramo de la cuerda.
 MESA, ABAJO, ARRIBA, CINTURA = 0, 1, 2, 3
-NOMBRES_ZONA = {MESA: "mesa", ABAJO: "palo de abajo", ARRIBA: "palo de arriba", CINTURA: "cintura"}
+# En los palos paralelos (nudos/plantillas/paralelos.py): cada palo, de delante hacia atrás;
+# cada hueco entre dos palos, y los costados de los ahorcados, que bajan por el hueco junto a
+# las vueltas y no tienen mapa.
+PALO = (4, 5, 6)
+HUECO = (7, 8)
+COSTADO = 9
+NOMBRES_ZONA = {MESA: "mesa", ABAJO: "palo de abajo", ARRIBA: "palo de arriba", CINTURA: "cintura",
+                **{z: f"palo {i + 1}" for i, z in enumerate(PALO)},
+                **{z: f"hueco {i + 1}" for i, z in enumerate(HUECO)}, COSTADO: "costado"}
 
 
 @dataclass

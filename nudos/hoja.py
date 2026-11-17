@@ -7,9 +7,9 @@ imprimir.
 Sobre el tubo de la cabeza de turco, la vista desde arriba no sirve para revisar decenas de
 cruces: la hoja dibuja además el tubo desenrollado (mapa()), con cada cruce y su etiqueta.
 
-De los anfitriones, la hoja dibuja el destorcedor, en gris, y la estaca, el poste y la cruz,
-color madera. Son parte de la cuerda que se revisa: sin ellos no se ve qué rodea la cuerda.
-El poste y los palos de la cruz se dibujan solo dentro del encuadre, más un margen. El tubo de
+De los anfitriones, la hoja dibuja el destorcedor, en gris, y la estaca, el poste, la cruz y
+los palos paralelos, color madera. Son parte de la cuerda que se revisa: sin ellos no se ve qué
+rodea la cuerda. El poste y los palos se dibujan solo dentro del encuadre, más un margen. El tubo de
 la cabeza de turco no se dibuja: para eso está el tubo desenrollado.
 """
 from __future__ import annotations
@@ -124,16 +124,21 @@ def _parado(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray, float] | No
 
 def _palos(anfitrion: dict | None, x0: float, x1: float, y0: float,
            y1: float) -> tuple[np.ndarray, np.ndarray, float] | None:
-    """Puntos sobre la superficie del poste o de los dos palos de la cruz, color madera, para
+    """Puntos sobre la superficie del poste, de los dos palos de la cruz o de los palos
+    paralelos, color madera, para
     dibujarlos con esferas de RADIO_PALO. Cada palo se corta en el encuadre, más MARGEN_PALO,
     y lleva tapa donde termina dentro de ese tramo. None si el nudo no tiene ninguno."""
-    if not anfitrion or anfitrion.get("tipo") not in ("poste", "cruz"):
+    if not anfitrion or anfitrion.get("tipo") not in ("poste", "cruz", "palos"):
         return None
     r = anfitrion["radio"]
     m = MARGEN_PALO
     if anfitrion["tipo"] == "poste":
         palos = [("x", anfitrion["desde"], anfitrion["hasta"], x0 - m, x1 + m,
                   anfitrion["y"], anfitrion["z"])]
+    elif anfitrion["tipo"] == "palos":
+        # uno junto al otro, a lo largo de x, cada uno en su y
+        mitad = anfitrion["largo"] / 2
+        palos = [("x", -mitad, mitad, x0 - m, x1 + m, y, anfitrion["z"]) for y in anfitrion["y"]]
     else:
         mitad = anfitrion["largo"] / 2
         # el de abajo va a lo largo de y, en x = 0; el de arriba, a lo largo de x, en y = 0

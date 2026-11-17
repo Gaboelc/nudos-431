@@ -1,6 +1,6 @@
-# Formato de especificación de nudo (v1.5)
+# Formato de especificación de nudo (v1.6)
 
-Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.4 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
+Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.5 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
 Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo, con una cuerda sobre la mesa; `specs/ballestrinque.yaml`, sobre un poste; `specs/vuelta-de-escota.yaml`, con dos cuerdas, y `specs/amarre-cuadrado.yaml`, con una plantilla.
 
@@ -58,11 +58,11 @@ Los índices se cuentan sobre el segmento tal como está definido. Dos puntos se
 
 ## Anfitrión
 
-Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres, el tubo de la cabeza de turco, el destorcedor y la estaca; los demás (argolla, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
+Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres, los palos paralelos, el tubo de la cabeza de turco, el destorcedor y la estaca; los demás (argolla, tablón, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
 
 | Campo | Qué es |
 |---|---|
-| `tipo` | `poste`, `cruz`, `tubo`, `destorcedor` o `estaca`. |
+| `tipo` | `poste`, `cruz`, `palos`, `tubo`, `destorcedor` o `estaca`. |
 | `radio` | Radio del poste, en diámetros de cuerda. Un palo de escoba con una cuerda de 8 mm da alrededor de 1,5. |
 | `desde`, `hasta` | Dónde empieza y termina el poste a lo largo de x. |
 
@@ -75,6 +75,21 @@ La cruz son dos palos del mismo grosor, cruzados en ángulo recto sobre la mesa,
 | `largo` | Largo de cada palo. Los dos están centrados en el cruce. |
 
 Los palos se cruzan en x = y = 0. El de abajo va a lo largo de y, hacia el fondo de la mesa, y se apoya en la cuerda que pasa por debajo: su eje queda a la altura `radio + 1`, como el del poste. El de arriba va a lo largo de x y se apoya sobre el de abajo. Con el amarre diagonal, bajo el palo de abajo se cruzan las dos diagonales, así que se apoya en dos capas de cuerda y su eje queda a `radio + 2,1`: la décima de más es aire, para que la capa de abajo no quede apretada contra la mesa. La especificación no lo escribe: lo dice la plantilla.
+
+Los palos paralelos son dos o tres palos del mismo grosor, acostados uno junto al otro, para el amarre redondo y el trípode. Solo se usan con una `plantilla`.
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `palos`. |
+| `cantidad` | Cuántos palos: 2 (el amarre redondo) o 3 (el trípode). Cada plantilla pide los suyos. |
+| `radio` | Radio de los palos, en diámetros de cuerda. Un palo de 4 cm con una cuerda de 8 mm da 2,5. |
+| `largo` | Largo de cada palo. Están centrados en x = 0. |
+
+```yaml
+anfitrion: {tipo: palos, cantidad: 2, radio: 2.5, largo: 30}
+```
+
+Van a lo largo de x, uno junto al otro a lo largo de y y simétricos alrededor de y = 0, con un hueco de 1,1 diámetros entre sus caras: por ahí bajan los ahorcados, que en la cuerda real apartan los palos lo mismo. El de delante es el de y negativa, hacia quien ata. Sus ejes quedan a la altura `radio + 2,1`: por debajo del hueco pasan dos capas de cuerda, la vuelta y el ahorcado que la rodea, con algo de holgura. Así ninguna cuerda baja de la mesa, pero los palos quedan un poco sobre ella en todos los pasos.
 
 El poste es horizontal y va a lo largo de x, con el eje en y = 0. Se apoya sobre la cuerda que pasa por debajo, así que su eje queda a la altura `radio + 1`.
 
@@ -169,7 +184,7 @@ Aquí la delgada cruza una vez por encima de la gruesa. El ejemplo no es de ning
 
 Algunos nudos no se dibujan punto por punto: se generan a partir de unas pocas medidas, como los amarres. Un nudo así lleva `plantilla` y no lleva `segmentos`; sus pasos no llevan `trazado`, `secuencia` ni `resaltar`, sino `hasta`, que dice hasta dónde llega cada uno. La plantilla calcula la cuerda entera y cada paso es su comienzo hasta ese punto, así que cambiar una medida, por ejemplo de 3 a 4 vueltas, regenera todos los pasos.
 
-Hay tres: el amarre cuadrado y el amarre diagonal, sobre una `cruz`, y la cabeza de turco, sobre un `tubo`.
+Hay cinco: el amarre cuadrado y el amarre diagonal, sobre una `cruz`; el amarre redondo y el trípode, sobre los `palos` paralelos, y la cabeza de turco, sobre un `tubo`.
 
 ### Amarre cuadrado
 
@@ -237,6 +252,55 @@ Cada vuelta tiene que bajar entre los dos palos y no por encima de uno de ellos,
 En todo el texto del nudo, `{vueltas}` y `{ahorcados}` se reemplazan por el número en letras, como en el amarre cuadrado.
 
 En el paso de la vuelta de braza, la parte larga lleva «Firme» y el extremo corto «Chicote», como en la vuelta de braza. Desde la primera vuelta, los pasos solo llevan «Chicote», en la punta de la parte larga.
+
+### Amarre redondo
+
+```yaml
+anfitrion: {tipo: palos, cantidad: 2, radio: 2.5, largo: 30}
+plantilla:
+  tipo: amarre-redondo
+  vueltas: 6
+  ahorcados: 2
+pasos:
+  - {titulo: Haz un ballestrinque en un palo, texto: …, hasta: inicio}
+  - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+  - {titulo: Completa las {vueltas} vueltas, texto: …, hasta: vueltas}
+  - {titulo: Da el primer ahorcado, texto: …, hasta: ahorcado-1}
+  - {titulo: Completa los {ahorcados} ahorcados, texto: …, hasta: ahorcados}
+  - {titulo: Empieza el ballestrinque de cierre, texto: …, hasta: cierre-1}
+  - {titulo: Termina el ballestrinque, texto: …, hasta: cierre}
+```
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `amarre-redondo`. Va sobre dos `palos`. |
+| `vueltas` | Vueltas alrededor de los dos palos, de 2 a 6. |
+| `ahorcados` | Ahorcados en el hueco entre los palos, alrededor de las vueltas, 2 o 3. Van uno junto a otro por encima y por debajo de las vueltas; con más, se saldrían del hueco. |
+
+El método: un ballestrinque en el palo de delante, a la izquierda; las vueltas alrededor de los dos palos, de izquierda a derecha y una junto a otra (por encima, por detrás del de atrás, por debajo y por delante del de delante); los ahorcados, que bajan por el hueco a la derecha de las vueltas, pasan por debajo, suben a la izquierda y pasan por encima, cada uno junto al anterior, y un ballestrinque de cierre en el palo de delante, a la derecha de los ahorcados. No lleva `inicio` ni `cierre`: el método los pone siempre ahí.
+
+`hasta` puede ser, en este orden, lo mismo que en el amarre cuadrado: `inicio-1`, `inicio`, `vuelta-1` … `vuelta-<n>`, `ahorcado-1` … `ahorcado-<n>`, `cierre-1` y `cierre`, con `vueltas` y `ahorcados` como la última vuelta y el último ahorcado. En el texto, `{vueltas}` y `{ahorcados}` salen en letras, y los nombres en las imágenes son los del amarre cuadrado: «Firme» y «Chicote» en el paso del ballestrinque de inicio, y desde la primera vuelta solo «Chicote», en la punta de la parte larga.
+
+Cada ahorcado pasa por encima de cada vuelta, por debajo y por encima de ellas, salvo por encima de la primera: ahí la vuelta es el firme que sale del ballestrinque, a la izquierda de los ahorcados. Con `n` vueltas y `m` ahorcados son `m × (2n − 1) + 4` cruces, 26 con 6 y 2.
+
+### Amarre trípode
+
+Es el amarre redondo con tres palos: `tipo: amarre-tripode`, sobre tres `palos`, con las mismas medidas. `ahorcados` es cuántos van en cada hueco. Las vueltas van alrededor de los tres palos. Primero se ahorca el hueco de atrás, entre el palo del medio y el de atrás, y después el de delante; la cuerda pasa de uno al otro por encima del palo del medio, a la derecha de los ahorcados, y el cierre va en el palo de delante, como en el redondo.
+
+Los ahorcados se numeran a lo largo de la cuerda, de `ahorcado-1` hasta el doble de `ahorcados`: primero los del hueco de atrás. `hueco-1` es lo mismo que el último del hueco de atrás, y `ahorcados`, que el último de todos:
+
+```yaml
+pasos:
+  - {titulo: Haz un ballestrinque en un palo de afuera, texto: …, hasta: inicio}
+  - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+  - {titulo: Completa las {vueltas} vueltas, texto: …, hasta: vueltas}
+  - {titulo: Ahorca el hueco de atrás, texto: …, hasta: hueco-1}
+  - {titulo: Ahorca el hueco de delante, texto: …, hasta: ahorcados}
+  - {titulo: Empieza el ballestrinque de cierre, texto: …, hasta: cierre-1}
+  - {titulo: Termina el ballestrinque, texto: …, hasta: cierre}
+```
+
+En el hueco de delante, cada ahorcado pasa además por encima de la cuerda que va de la última vuelta al hueco de atrás. Con `n` vueltas y `m` ahorcados por hueco son `m × (4n − 1) + 4` cruces, 50 con 6 y 2. La ficha muestra el trípode cerrado, sobre la mesa, como se ata; cómo se abren las patas va en el texto.
 
 ### Cabeza de turco (provisional)
 
@@ -317,7 +381,7 @@ En un nudo de plantilla, el error no son cruces al revés sino una variante del 
 | `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
 | `titulo` | Nombre corto del error. |
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
-| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado y el diagonal tienen `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. |
+| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado y el diagonal tienen `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. El amarre redondo y el trípode tienen `sin-ahorcados`: después de las vueltas, la cuerda va directo al ballestrinque de cierre. Se ve desde `cierre-1`; hasta las vueltas es la misma cuerda, y en el error los hitos de los ahorcados son lo mismo que la última vuelta. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
 | `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. En la ficha van debajo del error con imagen, como «Otro error común». |
 
@@ -328,6 +392,8 @@ Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el r
 El último paso se muestra por delante y por detrás, apretado (ver «El nudo apretado», abajo). Sin anfitrión, la vista de detrás se obtiene volteando la cuerda sobre el eje y, como una página, y dejándola asentarse otra vez en la mesa. Al voltear, todos los cruces quedan al revés. Con el destorcedor es igual: se voltea con el nudo y, como está en x = 0, queda en el mismo lugar. Con la estaca también, como si la sacaras, voltearas el nudo y la volvieras a clavar. Sobre un poste el nudo no se voltea: se mira desde el otro lado de la mesa.
 
 Sobre la cruz se voltea el amarre entero, palos y cuerda, como un marco sobre la mesa: media vuelta alrededor del eje y, como una página, hasta apoyarse en lo que queda más abajo. El palo de abajo queda encima y se ven las vueltas que pasaban por debajo de él. Es un giro rígido: la cuerda no se relaja otra vez y, como los cruces se miden respecto a los palos, la secuencia no cambia. Por delante y por detrás se mira como los pasos.
+
+Sobre los palos paralelos es igual que sobre la cruz: los palos y la cuerda se voltean juntos como una página, con media vuelta alrededor del eje y, y se apoyan en lo más bajo. Siguen a lo largo de x y el de delante sigue delante; se ven los ahorcados bajo las vueltas y la parte de atrás de los ballestrinques. La ficha dice: «Por detrás es como lo ves si volteas los palos juntos como la página de un libro».
 
 Sobre el tubo, por delante es el remate, girado como ese paso, y por detrás el tubo y el nudo girados media vuelta alrededor del eje, como se gira el tubo en la mano. Es un giro rígido: la secuencia no cambia y no se relaja otra vez. Entre las dos vistas se ve el nudo entero, también la parte que en la vista de los pasos queda contra la mesa. Por delante y por detrás se mira como los pasos.
 
@@ -399,13 +465,15 @@ Cada nudo avanza así: `borrador → modelado → cuerda-ok → novato-ok → pu
 
 **Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. Con el destorcedor y la estaca también, porque la cuerda no sale de la mesa. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
 
+Sobre los palos paralelos hay una zona por palo, otra por cada hueco entre dos palos, los costados de los ahorcados y la mesa. En cada palo los cruces se buscan en su superficie desenrollada, como en el poste: ahí van los ballestrinques y los arcos de las vueltas. En cada hueco, en la superficie de un cilindro acostado a lo largo de y, con el eje en el medio de las vueltas (x = 0) a la altura de los ejes de los palos, como la cintura de la cruz acostada: ahí van las rectas de las vueltas que pasan de un palo al otro por encima y por debajo del hueco, y las partes de los ahorcados que pasan sobre y bajo ellas. Encima es lo más lejos del eje. Donde los ahorcados bajan por el hueco, uno junto a otro a lo largo de x, no se buscan cruces: es una zona sin mapa, y ahí solo se comprueba la separación.
+
 Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la parte tejida, y la mesa, con el extremo corto que cuelga y el resto hasta que llegan al nudo. Los cruces del tubo se buscan en su superficie desenrollada, y cada uno guarda su lugar en el mapa del nudo (a lo largo del tubo y alrededor, desde el seno A) y no en la mesa: como el nudo se gira entre pasos, en la mesa un mismo cruce se movería. Alrededor del tubo, ese lugar da la vuelta a mitad de camino entre dos cruces, donde no hay ninguno. Dos pasadas de una misma cuerda a menos de 3 diámetros a lo largo de ella no cuentan como cruce: ahí la cuerda no puede volver sobre sí misma, y vista desde arriba, donde cae casi vertical al costado del tubo, se pliega sobre sí misma al relajar.
 
 **Lo que no se comprueba es si la secuencia corresponde al nudo correcto.** Un cruce mal leído que se repite igual en todos los pasos pasa todas las pruebas. Para eso está el filtro 1: atar cada paso con cuerda real antes de publicar.
 
 ## Versiones
 
-Este es el formato v1.5. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.6. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -424,11 +492,11 @@ Son cambios compatibles que ya se conocen:
 
 - `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
 - Los anfitriones que faltan (argolla, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
-- Las plantillas de la tanda 4 que faltan: los amarres redondo y trípode, el refuerzo de cabo, el adujado y el puño de mono.
+- Las plantillas de la tanda 4 que faltan: el refuerzo de cabo, el adujado y el puño de mono.
 - Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
 
-Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris, y la estaca, el poste y la cruz color madera. El poste y los palos de la cruz se cortan en el encuadre, más un margen. Del tubo de la cabeza de turco dibuja el tubo desenrollado. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
+Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris, y la estaca, el poste, la cruz y los palos paralelos color madera. El poste y los palos se cortan en el encuadre, más un margen. Del tubo de la cabeza de turco dibuja el tubo desenrollado. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
 
 ### Registro
 
@@ -438,3 +506,4 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) di
 - **v1.3** (14 de noviembre de 2026): el anfitrión `destorcedor`, un cilindro corto parado sobre la mesa, para el nudo aguja (fase 4, tanda 2). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.4** (15 de noviembre de 2026): el anfitrión `estaca`, el mismo cilindro parado que el destorcedor, de madera y más alto, para el tensor ajustable (fase 4, tanda 3). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.5** (16 de noviembre de 2026): la plantilla `amarre-diagonal`, con sus hitos y la variante `ahorcados-por-fuera`, y con ella la cruz con dos capas de cuerda bajo el palo de abajo (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.6** (16 de noviembre de 2026; entró a `main` el 17, después del amarre diagonal): el anfitrión `palos`, dos o tres palos paralelos, y las plantillas `amarre-redondo` y `amarre-tripode`, con la variante `sin-ahorcados` (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior los usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.

@@ -1,6 +1,7 @@
 """Nudos sobre un anfitrión rígido: el poste, un cilindro horizontal, la cruz, los dos
-palos de los amarres, el tubo de la cabeza de turco, y el destorcedor y la estaca, dos
-cilindros parados sobre la mesa. Los pasos sobre la cruz y el tubo los construye su plantilla
+palos del amarre cuadrado, los palos paralelos del redondo y el trípode, el tubo de la cabeza
+de turco, y el destorcedor y la estaca, dos cilindros parados sobre la mesa. Los pasos sobre
+la cruz, los palos y el tubo los construye su plantilla
 (nudos/plantillas/pasos.py), y los del destorcedor y la estaca, el generador libre
 (nudos/libre.py), porque todo el nudo va sobre la mesa; aquí están solo como sólidos.
 
@@ -159,6 +160,85 @@ class Cruz:
         return volteado, {**self.datos(), "z_abajo": alto - self.zb, "z_arriba": alto - self.zt}
 
 
+HUECO = 1.1   # entre las caras de dos palos vecinos: ahí pasan los ahorcados, de a uno
+DEBAJO = 2.1  # de la mesa al eje de los palos, más su radio: dos capas de cuerda y algo de holgura
+
+
+class Palos:
+    """Dos o tres palos del mismo radio, acostados uno junto al otro a lo largo de x, para el
+    amarre redondo y el trípode. Están centrados en x = 0, miden `largo` y van a lo largo de y,
+    simétricos alrededor de y = 0, con HUECO entre sus caras. El de delante es el de y
+    negativa, hacia quien ata. Sus ejes están a la altura radio + DEBAJO: por debajo del hueco
+    pasan dos capas de cuerda, la vuelta y el ahorcado que la rodea, y así ninguna baja de la
+    mesa. Los ahorcados las rodean con un poco de holgura, porque la relajación no deja que la
+    cuerda se doble con menos de 1,1 de radio.
+
+    Alrededor de cada palo, un ángulo se mide en su plano de corte (y, z), desde +y (hacia el
+    fondo de la mesa) hacia arriba: 90° es la cara de arriba y 180° la de delante."""
+
+    def __init__(self, a: Anfitrion, z: float | None = None):
+        self.radio, self.largo, self.cantidad = a.radio, a.largo, a.cantidad
+        self.zc = a.radio + DEBAJO if z is None else z   # altura de los ejes
+        self.rb = a.radio + R                           # distancia al eje de una cuerda que toca un palo
+        paso = 2 * a.radio + HUECO
+        self.ys = tuple(paso * (i - (a.cantidad - 1) / 2) for i in range(a.cantidad))
+        # El centro de cada hueco, de delante hacia atrás.
+        self.huecos = tuple((u + v) / 2 for u, v in zip(self.ys, self.ys[1:]))
+
+    def punto(self, i: int, x, grados, r=None) -> np.ndarray:
+        """De [x, ángulo] alrededor del palo i (0 es el de delante) a [x, y, z]."""
+        th = np.radians(grados)
+        r = self.rb if r is None else r
+        return np.stack([np.asarray(x, float) + 0 * th, self.ys[i] + r * np.cos(th),
+                         self.zc + r * np.sin(th)], axis=-1)
+
+    def cilindricas(self, i: int, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Respecto al palo i: x, ángulo en radianes y distancia al eje."""
+        dy, dz = X[:, 1] - self.ys[i], X[:, 2] - self.zc
+        return X[:, 0], np.arctan2(dz, dy), np.hypot(dy, dz)
+
+    def empujar(self, X, libre) -> None:
+        """Saca de cada palo los puntos que entraron, en dirección radial."""
+        dentro = np.abs(X[:, 0]) < self.largo / 2
+        for y in self.ys:
+            dy, dz = X[:, 1] - y, X[:, 2] - self.zc
+            d = np.hypot(dy, dz)
+            m = libre & dentro & (d < self.rb)
+            if m.any():
+                k = self.rb / np.maximum(d[m], 1e-9)
+                X[m, 1] = y + dy[m] * k
+                X[m, 2] = self.zc + dz[m] * k
+
+    def penetracion(self, X) -> float:
+        """Cuánto entra la cuerda en el palo donde más entra (0 si no entra)."""
+        m = np.abs(X[:, 0]) < self.largo / 2
+        if not m.any():
+            return 0.0
+        d = np.min([np.hypot(X[m, 1] - y, X[m, 2] - self.zc) for y in self.ys], axis=0)
+        return float(max(0.0, (self.rb - d).max()))
+
+    def datos(self) -> dict:
+        """Lo que necesita render/escena.js para dibujarlos: la «y» de cada eje y su altura «z»."""
+        return {"tipo": "palos", "radio": self.radio, "largo": self.largo,
+                "y": [float(y) for y in self.ys], "z": self.zc}
+
+    def voltear(self, r: Resultado) -> tuple[Resultado, dict]:
+        """El amarre terminado, visto por detrás: los palos y la cuerda, juntos, se voltean como
+        una página, con media vuelta alrededor del eje y, y se apoyan en lo que queda más abajo.
+        Los palos siguen a lo largo de x y el de delante sigue delante.
+
+        Es un giro rígido, como el de la cruz: la cuerda no se relaja otra vez y, como los
+        cruces se miden respecto a los palos, la secuencia no cambia. Devuelve el paso volteado
+        y los datos de los palos volteados para render/escena.js."""
+        X = r.puntos
+        alto = max(float((X[:, 2] + R).max()), self.zc + self.radio)
+        Y = np.column_stack([-X[:, 0], X[:, 1], alto - X[:, 2]])
+        volteado = replace(r, puntos=Y, resaltado=None,
+                           cruces={et: (-x, y) for et, (x, y) in r.cruces.items()},
+                           medidas={**r.medidas, "altura_max": float(Y[:, 2].max())})
+        return volteado, {**self.datos(), "z": alto - self.zc}
+
+
 class Tubo:
     """El tubo de la cabeza de turco: un cilindro horizontal a lo largo de x, centrado en x = 0
     y con el eje en y = 0. El nudo lo rodea entero y se apoya sobre él: debajo de cada cruce
@@ -265,9 +345,9 @@ class Estaca(Parado):
     MEDIDA = ("penetracion_estaca", "en la estaca")
 
 
-def solido(a: Anfitrion) -> Poste | Cruz | Tubo | Parado:
+def solido(a: Anfitrion) -> Poste | Cruz | Palos | Tubo | Parado:
     """El anfitrión de la especificación como sólido."""
-    return {"cruz": Cruz, "tubo": Tubo, "destorcedor": Destorcedor,
+    return {"cruz": Cruz, "palos": Palos, "tubo": Tubo, "destorcedor": Destorcedor,
             "estaca": Estaca}.get(a.tipo, Poste)(a)
 
 

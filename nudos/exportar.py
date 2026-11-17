@@ -47,7 +47,8 @@ def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado]
                  anfitrion: dict | None = None) -> dict:
     """Lo que necesita render/escena.js para dibujar estos resultados del nudo con este
     encuadre. El encuadre se ajusta a la cuerda de todos los resultados juntos. «anfitrion»
-    reemplaza al de la especificación: es la cruz volteada del amarre visto por detrás.
+    reemplaza al de la especificación: es la cruz o los palos volteados del amarre visto por
+    detrás.
 
     Con una cuerda, cada paso lleva sus puntos («p») y su tramo resaltado («hl»). Con
     varias, la lista de cuerdas va aparte y cada paso lleva los puntos y el resaltado de

@@ -13,6 +13,8 @@ sus cruces.
 2. Los cruces se buscan zona por zona, cada una en su mapa: la superficie desenrollada de su
    cilindro, donde encima es lo más lejos del eje, y en la mesa la proyección de siempre. Entre
    zonas no se buscan; ahí la comprobación es solo de separación.
+   En los palos paralelos, cada palo, cada hueco entre dos palos, sus costados (sin mapa) o la
+   mesa.
 3. La cuerda entera ya pasa por encima donde debe. Aquí solo se comprueba que los cruces de la
    cuerda son los del método.
 4. Se relaja sin gravedad, como si la cuerda estuviera tensa, con choques entre tramos y sin
@@ -24,12 +26,13 @@ import math
 
 import numpy as np
 
-from ..anfitrion import PASADAS_LARGO, PENETRACION_MAX, Cruz, Tubo
+from ..anfitrion import PASADAS_LARGO, PENETRACION_MAX, Cruz, Palos, Tubo
 from ..cruces import Cruce, cruces_2d, emparejar
 from ..libre import Resultado, TrazadoError, _resultado, catmull_rom, relajar, remuestrear
 from ..spec import Spec
 from .amarre import AmarreCuadrado, cuerda
 from .amarre_diagonal import AmarreDiagonal, cuerda as cuerda_diagonal
+from .paralelos import _Paralelos
 from .trazo import ABAJO, ARRIBA, CINTURA, MESA, TrazoDePaso
 
 RADIO_CINTURA = 6.0   # radio con que se desenrolla la cintura; solo cambia la escala del mapa
@@ -39,6 +42,8 @@ def geometria(spec: Spec):
     """Lo propio de la plantilla del nudo: su sólido, su cuerda y cómo buscar sus cruces."""
     if isinstance(spec.plantilla, (AmarreCuadrado, AmarreDiagonal)):
         return _Amarre(spec)
+    if isinstance(spec.plantilla, _Paralelos):
+        return _AmarreParalelo(spec)
     return _CabezaDeTurco(spec)
 
 
@@ -56,6 +61,23 @@ class _Amarre:
 
     def buscar(self, X, h, zonas, trazo: TrazoDePaso):
         return buscar(X, h, zonas, self.solido)
+
+
+class _AmarreParalelo:
+    """El amarre redondo o el trípode, sobre los palos paralelos (nudos/plantillas/paralelos.py).
+    Sus cuerdas tienen la forma de la del amarre cuadrado."""
+    penetracion = ("penetracion_palos", "en un palo")
+
+    def __init__(self, spec: Spec):
+        self.plantilla, self.solido = spec.plantilla, Palos(spec.anfitrion)
+
+    def cuerda(self, variante: str | None = None):
+        from .paralelos import cuerda as de_los_palos
+        return _CuerdaDeAmarre(de_los_palos(self.plantilla, self.solido, variante))
+
+    def buscar(self, X, h, zonas, trazo: TrazoDePaso):
+        from .paralelos import buscar as en_los_palos
+        return en_los_palos(X, h, zonas, self.solido)
 
 
 class _CuerdaDeAmarre:

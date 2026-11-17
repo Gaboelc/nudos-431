@@ -30,7 +30,7 @@ from pathlib import Path
 from PIL import Image, ImageOps
 
 from . import RAIZ
-from .anfitrion import Cruz, Tubo
+from .anfitrion import Cruz, Palos, Tubo
 from .construir import Modelo
 from .exportar import ESCENA, SITIO, datos_escena
 from .spec import Encuadre
@@ -42,7 +42,8 @@ CELDA_MM = (58.0, 64.0)
 VISTA_PASOS = "3d"         # la vista de quien ata sentado a la mesa
 VISTA_TERMINADO = "arriba"
 # Sobre un poste el nudo no se voltea: se mira por delante y desde el otro lado. Sobre la
-# cruz de un amarre se voltea con los palos y se mira, las dos veces, como los pasos.
+# cruz de un amarre o los palos paralelos se voltea con los palos y se mira, las dos veces,
+# como los pasos.
 VISTAS_TERMINADO_ANFITRION = ("3d", "detras")
 ESQUINA_PASO = (11.0, 11.0)    # el número del paso (libro/ficha.css, .num)
 ESQUINA_SELLO = (26.0, 7.0)    # «Bien», «Así no», «Por delante», «Por detrás» (.sello)
@@ -138,8 +139,8 @@ def imagenes(modelo: Modelo) -> list[Imagen]:
 
 def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> list[Imagen]:
     """Las dos vistas del nudo terminado: `final` por delante y `reverso` por detrás. Sobre un
-    poste no hay reverso (se mira `final` desde el otro lado), sobre la cruz se voltea
-    `final` con los palos y sobre el tubo se gira `final` media vuelta con el tubo. Con el
+    poste no hay reverso (se mira `final` desde el otro lado), sobre la cruz o los palos
+    paralelos se voltea `final` con los palos y sobre el tubo se gira `final` media vuelta con el tubo. Con el
     destorcedor o la estaca se mira como sin anfitrión: el reverso es el nudo volteado con él. Se llaman
     <prefijo>-frente y <prefijo>-reverso."""
     s = modelo.spec
@@ -154,10 +155,11 @@ def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> lis
                        VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO),
                 Imagen(atras, "Terminado, por detrás", datos_escena(modelo, girado_y(enc), [girado]),
                        1, VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO)]
-    if s.anfitrion is not None and s.anfitrion.tipo == "cruz":
+    if s.anfitrion is not None and s.anfitrion.tipo in ("cruz", "palos"):
         # El amarre se voltea entero, palos y cuerda, como un marco sobre la mesa, y por
         # delante y por detrás se mira desde donde se ata.
-        volteado, cruz = Cruz(s.anfitrion).voltear(final)
+        solido = Cruz(s.anfitrion) if s.anfitrion.tipo == "cruz" else Palos(s.anfitrion)
+        volteado, cruz = solido.voltear(final)
         return [Imagen(frente, "Terminado, por delante", datos_escena(modelo, enc, [final]), 1,
                        VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO),
                 Imagen(atras, "Terminado, por detrás",
