@@ -13,8 +13,16 @@ Cada plantilla es una clase con:
 - `CON_FIRME`: los hitos en que la cuerda tiene firme, que en las imágenes llevan «Firme»
   y «Chicote»; en los demás se mueve la parte larga, y solo llevan «Chicote», en su punta
   (nudos/exportar.py).
+
+Y, si los necesita:
+- `SIN_NOMBRES`: los hitos que no llevan ningún nombre, como el refuerzo de cabo con las
+  puntas cortadas;
+- `comprobar(anfitrion, falla)`: lo que la plantilla pide de las medidas del anfitrión, como
+  que el refuerzo quepa en el cabo.
 """
 from .amarre import AmarreCuadrado
 from .cabeza_turco import CabezaDeTurco
+from .refuerzo import RefuerzoDeCabo
 
-TIPOS = {"amarre-cuadrado": AmarreCuadrado, "cabeza-de-turco": CabezaDeTurco}
+TIPOS = {"amarre-cuadrado": AmarreCuadrado, "cabeza-de-turco": CabezaDeTurco,
+         "refuerzo-de-cabo": RefuerzoDeCabo}

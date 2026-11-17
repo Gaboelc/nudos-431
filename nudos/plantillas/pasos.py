@@ -24,11 +24,12 @@ import math
 
 import numpy as np
 
-from ..anfitrion import PASADAS_LARGO, PENETRACION_MAX, Cruz, Tubo
+from ..anfitrion import PASADAS_LARGO, PENETRACION_MAX, Cabo, Cruz, Tubo
 from ..cruces import Cruce, cruces_2d, emparejar
 from ..libre import Resultado, TrazadoError, _resultado, catmull_rom, relajar, remuestrear
 from ..spec import Spec
 from .amarre import AmarreCuadrado, cuerda
+from .refuerzo import RefuerzoDeCabo
 from .trazo import ABAJO, ARRIBA, CINTURA, MESA, TrazoDePaso
 
 RADIO_CINTURA = 6.0   # radio con que se desenrolla la cintura; solo cambia la escala del mapa
@@ -38,6 +39,8 @@ def geometria(spec: Spec):
     """Lo propio de la plantilla del nudo: su sólido, su cuerda y cómo buscar sus cruces."""
     if isinstance(spec.plantilla, AmarreCuadrado):
         return _Amarre(spec)
+    if isinstance(spec.plantilla, RefuerzoDeCabo):
+        return _Refuerzo(spec)
     return _CabezaDeTurco(spec)
 
 
@@ -70,6 +73,27 @@ class _CuerdaDeAmarre:
         P = c.puntos[:i + 1] if resto is None else np.vstack([c.puntos[:i + 1], resto])
         Z = c.zonas[:i + 1] if resto is None else np.concatenate([c.zonas[:i + 1], np.full(len(resto), MESA)])
         return TrazoDePaso(P, Z, i, None if previo is None else c.hitos[previo])
+
+
+class _Refuerzo:
+    """El refuerzo de cabo sobre la punta del cabo. La plantilla da la cuerda de cada hito
+    entera (nudos/plantillas/refuerzo.py); los cruces se buscan como en el tubo, en la
+    superficie desenrollada del cabo, y en la mesa."""
+    penetracion = ("penetracion_cabo", "en el cabo")
+
+    def __init__(self, spec: Spec):
+        self.plantilla, self.solido = spec.plantilla, Cabo(spec.anfitrion)
+        self._cuerdas = {}
+
+    def cuerda(self, variante: str | None = None):
+        from .refuerzo import Cuerda
+        if variante not in self._cuerdas:
+            self._cuerdas[variante] = Cuerda(self.plantilla, self.solido, variante)
+        return self._cuerdas[variante]
+
+    def buscar(self, X, h, zonas, trazo: TrazoDePaso):
+        from .refuerzo import buscar_en_el_cabo
+        return buscar_en_el_cabo(X, h, zonas, self.solido)
 
 
 class _CabezaDeTurco:

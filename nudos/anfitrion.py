@@ -207,6 +207,73 @@ class Tubo:
                        medidas={**r.medidas, "altura_max": float(Y[:, 2].max())})
 
 
+class Cabo:
+    """La punta de un cabo, para el refuerzo de cabo: un cilindro horizontal a lo largo de x,
+    con el eje en y = 0, que es un sólido aunque se dibuja como cuerda. La punta, cortada, está
+    en x = 0, y el cabo sigue hacia x negativo hasta -largo. Se apoya en la mesa sobre las
+    vueltas del cordel, que pasan por debajo, así que su eje queda a la altura radio + 1, como
+    el poste. Más allá de la punta no empuja: el cordel puede pasar por delante del corte.
+
+    Alrededor del eje, un ángulo se mide como sobre el poste: 0 arriba, 90 hacia quien ata."""
+    MEDIDA = ("penetracion_cabo", "en el cabo")
+
+    def __init__(self, a: Anfitrion):
+        self.radio, self.largo = a.radio, a.largo
+        self.zc = a.radio + 2 * R    # altura del eje
+        self.rb = a.radio + R        # distancia al eje del eje de una cuerda que toca el cabo
+
+    def punto(self, x, grados, r=None) -> np.ndarray:
+        """De [x, ángulo] alrededor del cabo a [x, y, z]."""
+        th = np.radians(grados)
+        r = self.rb if r is None else r
+        return np.stack([np.asarray(x, float) + 0 * th, -r * np.sin(th), self.zc + r * np.cos(th)], axis=-1)
+
+    def cilindricas(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """x, ángulo en radianes (entre -π y π) y distancia al eje."""
+        dy, dz = X[:, 1], X[:, 2] - self.zc
+        return X[:, 0], np.arctan2(-dy, dz), np.hypot(dy, dz)
+
+    def _dentro(self, x) -> np.ndarray:
+        return (x > -self.largo) & (x < 0.0)
+
+    def empujar(self, X, libre) -> None:
+        """Saca del cabo los puntos que entraron, en dirección radial."""
+        dy, dz = X[:, 1], X[:, 2] - self.zc
+        d = np.hypot(dy, dz)
+        m = libre & (d < self.rb) & self._dentro(X[:, 0])
+        if m.any():
+            k = self.rb / np.maximum(d[m], 1e-9)
+            X[m, 1] = dy[m] * k
+            X[m, 2] = self.zc + dz[m] * k
+
+    def penetracion(self, X) -> float:
+        """Cuánto entra el cordel en el cabo (0 si no entra)."""
+        x, _, r = self.cilindricas(X)
+        m = self._dentro(x)
+        return float(max(0.0, (self.rb - r[m]).max())) if m.any() else 0.0
+
+    def datos(self) -> dict:
+        """Lo que necesita render/escena.js para dibujarlo: el cabo va de -largo a 0 a lo
+        largo de x, con el eje a la altura z."""
+        return {"tipo": "cabo", "radio": self.radio, "largo": self.largo, "z": self.zc}
+
+    def voltear(self, r: Resultado) -> tuple[Resultado, dict]:
+        """El refuerzo terminado, visto por detrás: el cabo y el cordel girados media vuelta
+        alrededor del eje, como se gira el cabo en la mano, y apoyados en lo que queda más
+        abajo. Es un giro rígido: el cordel no se relaja otra vez y, como los cruces se miden
+        respecto al cabo, la secuencia no cambia. Devuelve el paso girado y los datos del cabo
+        girado para render/escena.js."""
+        X = r.puntos
+        Y = np.column_stack([X[:, 0], -X[:, 1], 2 * self.zc - X[:, 2]])
+        # Lo más bajo, el cordel o el cabo, queda sobre la mesa.
+        bajar = min(float(Y[:, 2].min()) - R, self.zc - self.radio)
+        Y[:, 2] -= bajar
+        volteado = replace(r, puntos=Y, resaltado=None,
+                           cruces={et: (x, -y) for et, (x, y) in r.cruces.items()},
+                           medidas={**r.medidas, "altura_max": float(Y[:, 2].max())})
+        return volteado, {**self.datos(), "z": self.zc - bajar}
+
+
 class Parado:
     """Un cilindro parado sobre la mesa, con el eje vertical en x = y = 0, de la mesa hasta
     `alto`: el destorcedor y la estaca. La cuerda le da la vuelta a ras de la mesa y nunca
@@ -257,9 +324,9 @@ class Estaca(Parado):
     MEDIDA = ("penetracion_estaca", "en la estaca")
 
 
-def solido(a: Anfitrion) -> Poste | Cruz | Tubo | Parado:
+def solido(a: Anfitrion) -> Poste | Cruz | Tubo | Cabo | Parado:
     """El anfitrión de la especificación como sólido."""
-    return {"cruz": Cruz, "tubo": Tubo, "destorcedor": Destorcedor,
+    return {"cruz": Cruz, "tubo": Tubo, "cabo": Cabo, "destorcedor": Destorcedor,
             "estaca": Estaca}.get(a.tipo, Poste)(a)
 
 

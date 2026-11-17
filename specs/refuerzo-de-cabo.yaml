@@ -1,0 +1,110 @@
+# Refuerzo de cabo: amarra la punta de un cabo con un cordel para que no se deshilache. Es un
+# nudo de plantilla (nudos/plantillas/refuerzo.py): la plantilla traza la cuerda de cada paso a
+# partir del número de vueltas, y cada paso dice con «hasta» hasta dónde llega. El método es el
+# del diseño de la tanda 4 en tasks/plan.md. Unidades: diámetros del cordel. El cabo va a lo
+# largo de x, con la punta cortada en x = 0, a la derecha.
+slug: refuerzo-de-cabo
+nombre: Refuerzo de cabo
+familia: Cuidado de la cuerda
+abok: 3443
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+# {vueltas} sale en letras.
+usos: >-
+  Amarra la punta de un cabo con un cordel delgado para que no se deshilache. Sirve en
+  cualquier cuerda, también en las que no se pueden fundir con calor, como las de algodón o
+  de cáñamo.
+materiales: >-
+  El cabo que quieres reforzar, unos 60 cm de cordel delgado y resistente, de 1 a 2 mm, y algo
+  para cortar las puntas.
+verificacion:
+  - Las vueltas van apretadas, una junto a otra, sin montarse.
+  - No se ve ninguna punta del cordel. Las dos quedan bajo las vueltas.
+  - Si empujas el refuerzo hacia la punta, no se corre.
+precauciones:
+  - Si la punta del cabo ya se abre, ponle antes un poco de cinta para que no se deshilache
+    mientras atas, y córtala al terminar.
+  - Si una vuelta se corta o se engancha, el refuerzo se suelta entero. Revisa las puntas de
+    tus cuerdas de vez en cuando y rehazlo si está gastado.
+  - Al cortar las puntas del cordel, cuida de no cortar las vueltas.
+alternativas:
+  - nudo: Constrictor
+    cuando: >-
+      Como refuerzo rápido y provisional, mientras no tengas tiempo de hacer este. Átalo muy
+      apretado cerca de la punta.
+  - nudo: Nudo simple
+    cuando: >-
+      En una punta que no importa, evita que se siga deshilachando. Abulta y no pasa por una
+      argolla.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
+
+anfitrion:
+  tipo: cabo
+  radio: 3        # un cabo de 12 mm con un cordel de 2 mm
+  largo: 30
+
+plantilla:
+  tipo: refuerzo-de-cabo
+  vueltas: 4      # antes del seno, y otras tantas encima de él
+
+pasos:
+  - titulo: Da la primera vuelta
+    texto: >-
+      Pon el cordel a lo largo del cabo, con el extremo corto hacia la punta y pasándola. A
+      unos dos grosores del cabo de la punta, da una vuelta apretada con el largo, por encima
+      del extremo corto.
+    hasta: vuelta-1
+
+  - titulo: Completa las {vueltas} vueltas
+    texto: >-
+      Sigue dando vueltas hacia la punta, apretadas y una junto a otra, por encima del extremo
+      corto, hasta tener {vueltas}.
+    hasta: vueltas
+
+  - titulo: Haz un seno con el extremo corto
+    texto: >-
+      Dobla el extremo corto hacia atrás, sobre las vueltas, de modo que quede un seno con la
+      curva hacia la punta.
+    hasta: seno
+
+  - titulo: Da {vueltas} vueltas sobre el seno
+    texto: >-
+      Sigue dando vueltas hacia la punta, ahora también por encima de las dos ramas del seno,
+      hasta tener {vueltas} más. Deja fuera la curva del seno.
+    hasta: seno-vueltas
+
+  - titulo: Pasa el chicote por el seno
+    texto: >-
+      Da una última vuelta y pasa el chicote por dentro de la curva del seno, hacia la punta.
+    hasta: por-el-seno
+
+  - titulo: Tira del extremo corto
+    texto: >-
+      Tira del extremo corto hasta que la curva del seno entre bajo las vueltas y arrastre al
+      chicote con ella. Detente cuando llegue a la mitad de las vueltas de encima.
+    hasta: tirar
+
+  - titulo: Corta las puntas
+    texto: Corta las dos puntas del cordel al ras de las vueltas.
+    hasta: cortar
+
+# El error con imagen lo construye la plantilla: el chicote por encima de la curva del seno, en
+# vez de por dentro. Va junto al paso 5, con el mismo encuadre.
+error:
+  paso: 5
+  variante: por-fuera-del-seno
+  titulo: El chicote por encima del seno
+  texto: >-
+    Pasaste el chicote por encima de la curva del seno, no por dentro. Al tirar del extremo
+    corto, el seno sale solo y el refuerzo se deshace. Mete el chicote por dentro de la curva.
+  otros:
+    - titulo: Tirar de más
+      texto: >-
+        Si tiras del extremo corto hasta que el seno sale por el otro lado de las vueltas de
+        encima, el chicote queda suelto y el refuerzo se deshace. Detente a la mitad.
+    - titulo: Las vueltas flojas
+      texto: >-
+        Si las vueltas quedan flojas o separadas, el refuerzo se corre hacia la punta y se sale
+        por ella. Aprieta cada una contra la anterior.

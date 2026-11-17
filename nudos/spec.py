@@ -38,17 +38,21 @@ _CAMPOS_TERMINADO = {"encuadre"}
 _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 # Campos de cada tipo de anfitrión, además de «tipo»; todos son medidas en diámetros.
 _MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "largo"),
-                      "tubo": ("radio", "largo"), "destorcedor": ("radio", "alto"),
-                      "estaca": ("radio", "alto")}
+                      "tubo": ("radio", "largo"), "cabo": ("radio", "largo"),
+                      "destorcedor": ("radio", "alto"), "estaca": ("radio", "alto")}
 TIPOS_ANFITRION = tuple(_MEDIDAS_ANFITRION)
 # Los anfitriones que solo se usan con una plantilla, con la plantilla de ejemplo.
-_SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco"}
+_SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco",
+                       "cabo": "refuerzo-de-cabo"}
 # Cómo se nombra el anfitrión en los mensajes.
-_DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo",
+_DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo", "cabo": "del cabo",
                   "destorcedor": "del destorcedor", "estaca": "de la estaca"}
 # Los anfitriones con los que todo el nudo va sobre la mesa: se construye, se voltea y se
 # aprieta como un nudo libre, y el anfitrión solo empuja la cuerda (nudos/anfitrion.py).
 EN_LA_MESA = ("destorcedor", "estaca")
+# El radio que acepta el cabo, en diámetros de cordel: con menos, el cordel no lo rodea bien;
+# con más, el cordel se ve muy delgado en la ficha.
+RADIO_CABO = (1.5, 8.0)
 # Una medida de la plantilla dentro del texto, como {vueltas}.
 _MEDIDA = re.compile(r"\{([^{}]*)\}")
 _CAMPOS_CUERDA = {"nombre", "grosor", "color"}
@@ -308,6 +312,8 @@ def _plantilla(datos, anfitrion: Anfitrion | None, cuerdas: tuple[Cuerda, ...], 
         raise pf(f"la plantilla {clase.tipo} va sobre el anfitrión {clase.ANFITRION}")
     if cuerdas:
         raise pf("por ahora, un nudo de plantilla es de una sola cuerda")
+    if hasattr(plantilla, "comprobar"):
+        plantilla.comprobar(anfitrion, pf)
     return plantilla
 
 
@@ -583,6 +589,10 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         raise af("«largo» es el largo de cada palo; tiene que ser mayor que su grosor")
     if tipo == "tubo" and numeros["largo"] <= 2 * numeros["radio"]:
         raise af("«largo» es el largo del tubo; tiene que ser mayor que su grosor")
+    if tipo == "cabo" and not RADIO_CABO[0] <= numeros["radio"] <= RADIO_CABO[1]:
+        raise af(f"el radio del cabo va de {RADIO_CABO[0]:g} a {RADIO_CABO[1]:g} diámetros de cordel")
+    if tipo == "cabo" and numeros["largo"] <= 2 * numeros["radio"]:
+        raise af("«largo» es el largo del cabo desde la punta; tiene que ser mayor que su grosor")
     if tipo in EN_LA_MESA and numeros["alto"] <= 1:
         raise af(f"«alto» es el alto {_DEL_ANFITRION[tipo]} desde la mesa; tiene que ser mayor "
                  "que 1, el grosor de la cuerda que le da la vuelta")
