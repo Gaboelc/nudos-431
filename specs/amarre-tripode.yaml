@@ -39,7 +39,7 @@ alternativas:
     cuando: Para unir dos palos que se cruzan en ángulo recto, o casi.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 anfitrion:
   tipo: palos

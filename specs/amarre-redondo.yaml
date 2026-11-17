@@ -37,7 +37,7 @@ alternativas:
     cuando: Para unir tres palos por una punta y abrirlos como un trípode.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
 
 anfitrion:
   tipo: palos

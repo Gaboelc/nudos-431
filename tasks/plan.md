@@ -1192,7 +1192,7 @@ Después de cada tanda hay un punto de control:
 - **Sin número ABOK:** Animated Knots compara el redondo con el 2103 y el trípode con el 2111, pero dice que no son el mismo método. Queda para confirmar.
 - **El encuadre** es x de −12 a 12,5 en los dos, e y de −9 a 8 en el redondo y de −12 a 11 en el trípode. Los extremos de la cuerda salen del cuadro en la mayoría de los pasos.
 - **Las fichas caben** después de acortar los usos y los pasos que ocupaban 6 o 7 líneas. Las dos están en `build/<slug>/ficha.pdf`.
-- **Falta:** que Gabriel revise las imágenes y el texto (pasan a `modelado`) y los ate (filtro 1).
+- **Gabriel aprobó las imágenes y el texto de los dos el 17 de noviembre** («Apruebo todo»), y pasaron a `modelado`. Falta el filtro 1.
 
 **La estaca del tensor ajustable (tanda 3).** La entrada (`entradas/tensor-ajustable`) es una sola imagen con cuatro dibujos: una estaca clavada, la cuerda que le da la vuelta a ras del suelo y el nudo sobre el firme, a unos diez diámetros de ella.
 
