@@ -26,10 +26,11 @@ from PIL import Image, ImageOps
 
 from . import BUILD
 from .apretar import RONDAS, apretado
-from .construir import Modelo, construir
+from .construir import Modelo
 from .exportar import SITIO
 from .imprimir import (CELDA_MM, MEJORAS, ImpresionError, Imagen, _guardar, chrome, dibujar,
                        imagenes, terminado)
+from .procesos import construir_varios
 from .spec import cargar
 
 DESTINO = BUILD / "mejoras"
@@ -120,8 +121,8 @@ def _cuanto(antes, despues, rondas: int) -> str:
 def construir_muestras() -> dict[str, Modelo]:
     """Construye los nudos de las muestras. Ninguno puede tener fallas."""
     modelos = {}
-    for slug in dict.fromkeys([s for s, _ in MUESTRAS] + list(APRETADOS)):
-        m = construir(cargar(slug))
+    slugs = list(dict.fromkeys([s for s, _ in MUESTRAS] + list(APRETADOS)))
+    for slug, m in zip(slugs, construir_varios([cargar(s) for s in slugs])):
         if m.fallas:
             raise ImpresionError(f"{slug} tiene fallas; no se arma la página de prueba:\n"
                                  + "\n".join(f"  - {f}" for f in m.fallas))

@@ -29,6 +29,7 @@ import numpy as np
 from ..anfitrion import PASADAS_LARGO, PENETRACION_MAX, Cabo, Cruz, Palos, Tubo
 from ..cruces import Cruce, cruces_2d, emparejar
 from ..libre import Resultado, TrazadoError, _resultado, catmull_rom, relajar, remuestrear
+from ..procesos import ejecutor
 from ..spec import Spec
 from .amarre import AmarreCuadrado, cuerda
 from .amarre_diagonal import AmarreDiagonal, cuerda as cuerda_diagonal
@@ -142,26 +143,33 @@ class _CabezaDeTurco:
         return buscar_en_el_tubo(X, h, zonas, self.solido, trazo.giro, self.plantilla.senos)
 
 
-def construir_pasos(spec: Spec) -> tuple[list[Resultado], list[str], list[tuple[int, tuple[str, ...]]]]:
+def construir_pasos(spec: Spec, ex=None) -> tuple[list[Resultado], list[str], list[tuple[int, tuple[str, ...]]]]:
     """Construye los pasos de un nudo de plantilla. Devuelve los resultados, las fallas de
-    cada paso en orden y la secuencia del método en cada paso."""
+    cada paso en orden y la secuencia del método en cada paso. La cuerda entera se calcula
+    aquí una vez; cada paso se relaja en su propio proceso (`ex`, por omisión el grupo de
+    nudos/procesos.py), que recibe una copia de la geometría y de la cuerda."""
     try:
         g = geometria(spec)
     except TrazadoError as e:
         return [], [str(e)], []
     c = g.cuerda()
-    resultados, fallas, secuencias, previo = [], [], [], None
+    if ex is None:
+        ex = ejecutor(len(spec.pasos))
+    futuros, secuencias, previo = [], [], None
     for paso in spec.pasos:
         hito = paso.hasta
         secuencias.append((paso.n, c.secuencias[hito]))
+        futuros.append(ex.submit(construir_paso, paso.n, g, c, hito, previo))
+        previo = hito
+    resultados, fallas = [], []
+    for f in futuros:
         try:
-            r = construir_paso(paso.n, g, c, hito, previo)
+            r = f.result()
         except TrazadoError as e:
             fallas.append(str(e))
         else:
             resultados.append(r)
             fallas.extend(r.fallas)
-        previo = hito
     return resultados, fallas, secuencias
 
 
