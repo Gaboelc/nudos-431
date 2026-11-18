@@ -195,7 +195,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [ ] Amarre trípode (17 nov: plantilla `amarre-tripode` sobre tres `palos`, formato v1.6; 6 vueltas y 2 ahorcados por hueco, 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha)
 - [ ] Refuerzo de cabo (17 nov: anfitrión `cabo` y plantilla `refuerzo-de-cabo`, formato v1.7; 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha)
 - [ ] Adujado
-- [ ] Puño de mono (17 nov: Gabriel aprobó el diseño. Plantilla `puno-de-mono` sin anfitrión, formato v1.8, en la rama `claude/puno-de-mono-368ca9`; 3 vueltas por juego, 7 pasos y el error sin fallas, 57 cruces; los 30 publicados y de la tanda 4 iguales; la ficha cabe. En `borrador`: falta que Gabriel revise imágenes y texto; ver «Cómo se hizo» del puño de mono en el plan)
+- [ ] Puño de mono (17 nov: Gabriel aprobó el diseño. Plantilla `puno-de-mono` sin anfitrión, formato v1.8, en la rama `claude/puno-de-mono-368ca9`; 3 vueltas por juego, 7 pasos y el error sin fallas, 57 cruces; los 30 publicados y de la tanda 4 iguales; la ficha cabe. 17 nov: Gabriel pidió los dedos dibujados y sin el paso del nudo simple: 6 pasos en dos dedos, sin fallas. En `borrador`: falta que Gabriel revise imágenes y texto; ver «Cómo se hizo» del puño de mono en el plan)
 - [ ] Punto de control de la tanda 4
 
 ### Tanda 5: anfitriones especiales

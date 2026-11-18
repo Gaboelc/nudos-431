@@ -1,5 +1,5 @@
-"""El puño de mono: la plantilla sin anfitrión, con los tres juegos de vueltas y el nudo simple
-escondido en el centro (nudos/plantillas/puno.py)."""
+"""El puño de mono: la plantilla sin anfitrión, con los tres juegos de vueltas en dos dedos y el
+nudo simple escondido en el centro (nudos/plantillas/puno.py)."""
 import copy
 import math
 
@@ -13,9 +13,9 @@ from nudos.hoja import mapa_puno
 from nudos.imprimir import imagenes
 from nudos.libre import LIMITES
 from nudos.plantillas.pasos import geometria
-from nudos.plantillas.puno import (CAPA, ENCIMA, K0, K1, K2, K3, LEJOS_CARA, POLO, Cuerda, Forma,
-                                   PunoDeMono, direccion_del_lugar, lugar_en_la_cara,
-                                   mapa_del_puno)
+from nudos.plantillas.puno import (CAPA, DEDO_RADIO, ENCIMA, K0, K1, K2, K3, LEJOS_CARA, POLO,
+                                   Cuerda, Dedos, Forma, FormaDedos, PunoDeMono,
+                                   direccion_del_lugar, lugar_en_la_cara, mapa_del_puno)
 from nudos.spec import SpecError, desde_datos
 
 PASOS = [
@@ -24,8 +24,7 @@ PASOS = [
     ("Da las demás", "juego-2"),
     ("Pasa el chicote por dentro de las primeras", "vuelta-3-1"),
     ("Da las demás", "juego-3"),
-    ("Haz un nudo simple y mételo en el centro", "centro"),
-    ("Aprieta", "apretar"),
+    ("Esconde el chicote y aprieta", "apretar"),
 ]
 
 
@@ -57,8 +56,7 @@ def test_los_hitos_van_en_el_orden_del_metodo():
     alias = {f"juego-{j}": f"vuelta-{j}-3" for j in (1, 2, 3)}
     assert all(hitos[a] == hitos[h] for a, h in alias.items())
     orden = sorted((h for h in hitos if h not in alias), key=hitos.get)
-    assert orden == [f"vuelta-{j}-{k}" for j in (1, 2, 3) for k in (1, 2, 3)] + [
-        "nudo", "centro", "apretar"]
+    assert orden == [f"vuelta-{j}-{k}" for j in (1, 2, 3) for k in (1, 2, 3)] + ["apretar"]
 
 
 @pytest.mark.parametrize("cambio, pista", [
@@ -134,6 +132,39 @@ def test_cada_juego_empieza_donde_termino_el_anterior():
         assert abs(K @ POLO) < 0.9
 
 
+def test_en_los_dedos_cada_juego_rodea_lo_que_debe():
+    """Suelto, el primer juego rodea los dos dedos; el segundo, al primero por la mitad, entre
+    los dedos, y el tercero, al segundo, entre los dedos y por dentro del primero. Cada juego va
+    lejos del que tapa."""
+    f = FormaDedos(3)
+    total = 2 * math.pi * 3
+    t = np.linspace(0.0, total, 4000)
+    A, B, C = (f.en(j, t) for j in "ABC")
+    # El primero, por fuera de los dedos; el segundo y el tercero, entre ellos.
+    assert np.abs(A[:, 0]).max() > f.dedo_x + DEDO_RADIO + 1.0
+    assert np.abs(B[:, 0]).max() < f.dedo_x - DEDO_RADIO - 1.0
+    assert np.abs(C[:, 0]).max() <= f.dedo_x - DEDO_RADIO - 1.0 + 1e-9   # medio diámetro de aire
+    # El segundo, por fuera del primero a los costados (±y); el tercero, sobre el segundo
+    # arriba y abajo (±z), y por dentro del primero a los costados (|y| menor).
+    assert np.abs(B[:, 1]).max() > np.abs(A[:, 1]).max() + 1.0
+    assert np.abs(C[:, 2]).max() > np.abs(B[:, 2]).max() + 1.0
+    assert np.abs(C[:, 1]).max() + 1.0 < np.abs(A[:, 1]).max()
+    # Ningún juego entra en los dedos.
+    dedos = Dedos(f.dedo_x, DEDO_RADIO, 30.0)
+    for P in (A, B, C):
+        assert dedos.penetracion(P + [0.0, 0.0, 10.0]) == 0.0
+
+
+def test_los_dedos_empujan_la_cuerda_hacia_afuera():
+    dedos = Dedos(5.0, 1.0, 10.0)
+    X = np.array([[5.2, 0.3, 4.0], [-5.0, 0.0, 9.8], [0.0, 0.0, 4.0]])
+    assert dedos.penetracion(X) > 1.0
+    dedos.empujar(X, np.ones(3, bool))
+    assert dedos.penetracion(X) == pytest.approx(0.0, abs=1e-9)
+    assert X[1, 2] > 9.8                            # sobre la punta, sale hacia arriba
+    assert np.allclose(X[2], [0.0, 0.0, 4.0])       # entre los dedos, no se mueve
+
+
 def test_el_mapa_del_puno_no_tiene_costura():
     """El mapa (proyección desde la esquina opuesta al polo) es continuo en todas las caras, y
     el lugar de un cruce en su cara se puede volver a leer."""
@@ -167,8 +198,7 @@ def test_los_cruces_del_metodo(cuerda):
         assert cuantos[f"vuelta-1-{k}"] == 0
         assert cuantos[f"vuelta-2-{k}"] == 2 * n * k
         assert cuantos[f"vuelta-3-{k}"] == 2 * n * n + 4 * n * k
-    for h in ("nudo", "centro", "apretar"):
-        assert cuantos[h] == 6 * n * n + 3
+    assert cuantos["apretar"] == 6 * n * n + 3
 
 
 def test_encima_va_el_juego_que_dice_el_metodo(cuerda):
@@ -193,6 +223,10 @@ def test_todos_los_pasos_se_construyen_sin_fallas(modelo):
         assert r.medidas["separacion_min"] >= LIMITES["separacion_min"]
         assert r.medidas["curvatura_min"] >= LIMITES["curvatura_min"]
         assert r.medidas["estiramiento_max"] <= LIMITES["estiramiento_max"]
+    # En las vueltas, la cuerda no entra en los dedos; al apretar ya no están.
+    for r in modelo.pasos[:5]:
+        assert r.medidas["penetracion_dedos"] <= 0.05
+    assert "penetracion_dedos" not in modelo.pasos[5].medidas
 
 
 def test_con_cuatro_vueltas_tambien():
@@ -202,18 +236,16 @@ def test_con_cuatro_vueltas_tambien():
     assert len(c.secuencias["apretar"]) // 2 == 6 * 16 + 3
 
 
-def test_los_cruces_conservan_su_etiqueta_al_apretar_y_al_meter_el_nudo(cuerda):
-    """Los cruces de las vueltas son los mismos sueltos y apretados, en el mismo lugar de su
-    cara; los del nudo simple, los mismos en la mesa y en el centro."""
+def test_los_cruces_conservan_su_etiqueta_al_apretar(cuerda):
+    """Los cruces de las vueltas son los mismos en los dedos y apretados, en el mismo lugar de
+    su cara. Al apretar se agregan los tres del nudo simple."""
     def etiquetas(hito):
         return {e: (k, c.xy) for e, k, c in cuerda.paso(hito)["cruces"]}
-    suelto, apretado, mesa = etiquetas("centro"), etiquetas("apretar"), etiquetas("nudo")
-    assert suelto.keys() == apretado.keys() == mesa.keys()
+    suelto, apretado = etiquetas("juego-3"), etiquetas("apretar")
+    assert len(apretado) == len(suelto) + 3 and suelto.keys() <= apretado.keys()
     for e in suelto:
         assert suelto[e][0] == apretado[e][0]
         assert np.hypot(*np.subtract(suelto[e][1], apretado[e][1])) < 2.5
-        assert np.hypot(*np.subtract(mesa[e][1], suelto[e][1])) < 2.5
-    assert cuerda.secuencias["centro"] == cuerda.secuencias["apretar"] == cuerda.secuencias["nudo"]
 
 
 def test_el_error_es_el_tercer_juego_por_fuera_del_primero(modelo, cuerda):
@@ -243,12 +275,15 @@ def test_el_error_es_el_tercer_juego_por_fuera_del_primero(modelo, cuerda):
     assert modelo.error is not None and modelo.error.n == 5
 
 
-def test_los_nombres(modelo):
+def test_los_nombres_y_los_dedos(modelo):
     pasos = datos_visor(modelo)["pasos"]
     assert all(p["nombres"] == ["firme", "chicote"] for p in pasos[:5])
-    assert pasos[5]["nombres"] == pasos[6]["nombres"] == ["firme"]
+    assert pasos[5]["nombres"] == ["firme"]
     assert pasos[-1]["hl"] is None
     assert datos_visor(modelo).get("anfitrion") is None
+    # Los dedos van en los pasos de las vueltas y no al apretar.
+    assert all(p["dedos"]["x"][0] < 0 < p["dedos"]["x"][1] for p in pasos[:5])
+    assert "dedos" not in pasos[5]
 
 
 def test_por_detras_el_puno_se_voltea_como_una_pagina(modelo):
@@ -268,16 +303,19 @@ def test_por_detras_el_puno_se_voltea_como_una_pagina(modelo):
 
 def test_las_imagenes_del_puno(modelo):
     imgs = imagenes(modelo)
-    assert [i.nombre for i in imgs] == [f"paso-{n}" for n in range(1, 8)] + [
+    assert [i.nombre for i in imgs] == [f"paso-{n}" for n in range(1, 7)] + [
         "error-correcto", "error", "terminado-frente", "terminado-reverso"]
     assert {i.vista for i in imgs} == {"3d"}
+    # El error y su paso bien hecho van sin dedos: el tercer juego del error pasaría por ellos.
+    error = next(i for i in imgs if i.nombre == "error")
+    assert all("dedos" not in p for p in error.escena["pasos"])
 
 
 def test_la_hoja_lleva_el_puno_desenrollado(modelo, cuerda):
     d = datos_json(modelo)
     d = {**d, "pasos": d["pasos"][-2:]}
-    centros = [cuerda.paso(h)["centro"] for h in ("centro", "apretar")]
-    plano = mapa_puno(d, centros, [(5.0, 9.0), (5.5, 6.6)])
+    centros = [cuerda.paso(h)["centro"] for h in ("juego-3", "apretar")]
+    plano = mapa_puno(d, centros, [(2.0, 12.0), (5.5, 6.6)])
     assert plano.width > 0 and plano.height > 0
     imagen = np.asarray(plano.convert("RGB")).astype(float) / 255
     assert (np.abs(imagen - [0.10, 0.25, 0.75]).sum(-1) < 0.6).mean() > 0.01   # hay cuerda

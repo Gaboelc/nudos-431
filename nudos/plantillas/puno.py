@@ -42,7 +42,14 @@ PASO_VUELTA = 1.1      # entre dos vueltas vecinas de un juego
 CAPA = 1.05            # cuánto más lejos del centro va una vuelta donde pasa por encima
 HOLGURA = 0.9          # más allá de la vuelta de afuera del otro juego, la cara sigue entera
 RADIO = {3: 5.5, 4: 6.5}           # apretado: la distancia del centro a la capa de adentro
+# Suelto, en los dedos: cada juego es una vuelta redondeada alrededor de lo que rodea.
+ESQUINA = 2.5          # radio de las esquinas de las vueltas del segundo y el tercer juego
+HOLGURA_A = 3.0        # del tercer juego a los costados del primero, entre los dedos
+DEDO_RADIO = 1.3       # el radio de un dedo, en diámetros de cuerda
+DEDO_LUZ = 1.0         # del eje de la cuerda del tercer juego a un dedo
+DEDO_SOBRE = 2.5       # cuánto sobresalen los dedos por encima del puño
 CAMBIO = math.radians(30)          # cuánto se prolongan los dos juegos en un cambio de juego
+CAMBIO_DEDOS = (math.radians(30), math.radians(50))   # en los dedos: el que termina y el que empieza
 ARCO = 1.5                         # radio con que la cuerda deja una vuelta para salir o entrar
 RECTA_MIN = 0.6                    # lo menos que va derecho el chicote antes del nudo del centro
 SUELTO = (1.55, 1.33, 1.1)         # suelto: los semiejes, en veces el radio apretado
@@ -51,7 +58,6 @@ PASO_CONTROL = 0.3     # cada cuánto se toma un punto de control
 R_MAPA = 3.0           # escala del puño desenrollado
 R_CARA = 6.0           # el radio con que se mide dónde está un cruce en su cara
 LEJOS_CARA = 100.0     # cuánto se corren unas de otras las caras al guardar dónde está un cruce
-ENTRA = 2.0            # a qué distancia del centro llega derecho el chicote que entra por una esquina
 SALE = 2.5             # cuánto se aleja del puño lo que sale de él antes de caer a la mesa
 CAE = 3.0              # cuánto avanza hacia afuera mientras cae a la mesa
 SOBRE_LA_MESA = 6.0    # cuánto sigue por la mesa
@@ -63,7 +69,6 @@ NUDO_ABRE = 0.7        # medio ángulo, en radianes, del tramo del trébol que s
 NUDO_CURVA = 1.4       # radio con que las dos patas salen del nudo
 NUDO_ENTRA = 2.0       # el largo de la pata que entra, derecha
 NUDO_COLA = 1.0        # el largo de la punta, derecha
-NUDO_LEJOS = 0.5       # en la mesa, del pie del chicote al nudo
 
 # Los juegos: su eje e, la dirección de las caras donde va encima (u) y donde va debajo (v).
 _X, _Y, _Z = np.eye(3)
@@ -82,9 +87,9 @@ POLO = np.array([1.0, 1.0, 1.0]) * _s3
 # φ se mide desde u hacia v. Así cada juego empieza en la esquina donde terminó el anterior.
 INICIO = {"A": (-1, -math.pi / 4, -1), "B": (+1, 3 * math.pi / 4, -1), "C": (-1, -math.pi / 4, -1)}
 
-# Hacia dónde van por la mesa el firme y el chicote que sale junto a él.
-FIRME_HACIA = np.array([0.7, 0.7])
-CHICOTE_HACIA = (0.5, -1.0)
+# Hacia dónde van por la mesa el firme y lo que sigue de cada juego.
+FIRME_HACIA = np.array([0.7, -0.7])
+SIGUE_HACIA = {"A": (0.0, -1.0), "B": None, "C": (-0.4, 1.0)}
 
 
 @dataclass(frozen=True)
@@ -100,7 +105,7 @@ class PunoDeMono:
     # qué nombres lleva cada paso.
     CON_FIRME: tuple[str, ...] = ()
     # Los hitos en que el chicote está escondido en el centro: solo llevan «Firme».
-    SOLO_FIRME = ("centro", "apretar")
+    SOLO_FIRME = ("apretar",)
 
     @classmethod
     def leer(cls, datos: dict, falla) -> PunoDeMono:
@@ -120,9 +125,7 @@ class PunoDeMono:
                 k += 1
                 out[f"vuelta-{j}-{i}"] = k
             out[f"juego-{j}"] = k
-        for nombre in ("nudo", "centro", "apretar"):
-            k += 1
-            out[nombre] = k
+        out["apretar"] = k + 1
         return out
 
     def medidas(self) -> dict[str, str]:
@@ -135,6 +138,11 @@ class PunoDeMono:
     def voltear(self, r):
         """El puño terminado, visto por detrás (nudos/imprimir.py): ver voltear()."""
         return voltear(self, r)
+
+    def dedos(self, hito: str) -> dict | None:
+        """Los dedos del hito para render/escena.js, o None: van en las vueltas y no al apretar,
+        porque antes se sacan."""
+        return None if hito == "apretar" else _dedos(self.vueltas).datos()
 
 
 # --------------------------------------------------------------------------
@@ -183,6 +191,7 @@ class Forma:
         rho = RADIO[n]
         self.n, self.variante = n, variante
         self.S = np.full(3, rho) if apretado else rho * np.array(SUELTO)
+        self.prolonga = (CAMBIO, CAMBIO)
 
     def radio(self, d) -> np.ndarray:
         """La distancia del centro a la capa de adentro en las direcciones unitarias d."""
@@ -249,7 +258,8 @@ class Forma:
         largo = float(np.linalg.norm(self.en(j1, 0.0)[0] - self.en(j0, total)[0])) * 2
         s = np.linspace(0.0, 1.0, max(8, int(math.ceil(largo / PASO)) + 1))[1:-1]
         w = _suave(s)[:, None]
-        return (1 - w) * self.en(j0, total + CAMBIO * s) + w * self.en(j1, -CAMBIO * (1 - s))
+        a, b = self.prolonga
+        return (1 - w) * self.en(j0, total + a * s) + w * self.en(j1, -b * (1 - s))
 
     def salida(self, j: str, t: float, adentro: bool = False) -> tuple[np.ndarray, np.ndarray]:
         """La cuerda que termina en el ángulo t del juego j, entre dos caras, se dobla hacia afuera
@@ -257,6 +267,106 @@ class Forma:
         bajo nada. Devuelve el arco (sin su primer punto) y hacia dónde sigue derecha."""
         E, E2 = self.en(j, [t, t + 0.01])
         return _doblar(E, _unit(E2 - E), _unit(E) * (-1.0 if adentro else 1.0))
+
+
+def _polar(phi, a: float, b: float, rc: float) -> np.ndarray:
+    """La distancia del centro al borde de un rectángulo de medios lados a (a lo largo de u) y
+    b (de v) con las esquinas redondeadas con radio rc, en la dirección φ (desde u hacia v)."""
+    c, s = np.abs(np.cos(phi)), np.abs(np.sin(phi))
+    pa, pb = a - rc, b - rc                 # el centro de la esquina
+    t_lado = np.where(c > 1e-12, a / np.maximum(c, 1e-12), np.inf)
+    t_arriba = np.where(s > 1e-12, b / np.maximum(s, 1e-12), np.inf)
+    dp = c * pa + s * pb
+    t_esq = dp + np.sqrt(np.maximum(dp ** 2 - pa ** 2 - pb ** 2 + rc ** 2, 0.0))
+    return np.where(t_lado * s <= pb, t_lado, np.where(t_arriba * c <= pa, t_arriba, t_esq))
+
+
+class FormaDedos(Forma):
+    """El puño suelto, en los dedos, que van parados en x = ±dedo_x. Cada juego es una vuelta
+    redondeada en su plano, alrededor de lo que rodea, y sus vueltas avanzan 1,1 a lo largo de
+    su eje: el primero rodea los dos dedos (un óvalo de radio ra); el segundo abraza al primero
+    por la mitad, entre los dedos, ESQUINA más afuera que sus vueltas; el tercero abraza al
+    segundo por arriba y por abajo, entre los dedos y por dentro del primero. Los cruces son los
+    mismos que en el puño apretado, cada juego encima en sus dos caras, porque cada vuelta va
+    lejos de la que tapa."""
+
+    def __init__(self, n: int, variante: str | None = None):
+        self.n, self.variante = n, variante
+        m = self.m = n / 2 * PASO_VUELTA     # lo más lejos que va una vuelta del medio de su banda
+        ra = m + HOLGURA_A
+        self.dedo_x = _dedo_x(n)
+        ax = self.dedo_x + ra
+        # (medio lado a lo largo de u, a lo largo de v, radio de las esquinas)
+        self.formas = {"A": (ax, ra, ra), "B": (ra + ESQUINA, m + ESQUINA, ESQUINA),
+                       "C": (m + 2 * ESQUINA, m + ESQUINA, ESQUINA)}
+        if variante == "tercero-por-fuera":
+            # El tercero, por fuera del primero: alrededor de sus puntas, en x = ±ax.
+            self.formas["C"] = (m + 2 * ESQUINA, ax + ESQUINA, ESQUINA)
+        self.S = np.array([ax, ra + ESQUINA, m + 2 * ESQUINA])
+        self.prolonga = CAMBIO_DEDOS
+
+    def en(self, j: str, t) -> np.ndarray:
+        signo, phi0, sigma = INICIO[j]
+        e, u, v = EJES[j]
+        t = np.atleast_1d(np.asarray(t, float))
+        phi = phi0 + sigma * t
+        avance = signo * self.m - signo * 2 * self.m * t / (2 * math.pi * self.n)
+        r = _polar(phi, *self.formas[j])
+        return ((r * np.cos(phi))[:, None] * u + (r * np.sin(phi))[:, None] * v
+                + avance[:, None] * e)
+
+    def salida(self, j: str, t: float, adentro: bool = False) -> tuple[np.ndarray, np.ndarray]:
+        """Como en el puño apretado, pero el tercer juego, que termina cada vuelta bajando junto a
+        un dedo, sale hacia atrás, a lo largo de su eje, por donde todavía no hay vueltas."""
+        E, E2 = self.en(j, [t, t + 0.01])
+        hacia = np.array([0.0, 1.0, 0.0]) if j == "C" and not adentro else _unit(E)
+        return _doblar(E, _unit(E2 - E), hacia * (-1.0 if adentro else 1.0))
+
+
+def _dedo_x(n: int) -> float:
+    """Dónde van los dedos, en x = ±_dedo_x: a DEDO_LUZ del tercer juego, que pasa entre ellos."""
+    return n / 2 * PASO_VUELTA + ESQUINA + DEDO_LUZ + DEDO_RADIO
+
+
+def _dedos(n: int) -> "Dedos":
+    """Los dos dedos, parados sobre la mesa, más altos que el puño suelto."""
+    m = n / 2 * PASO_VUELTA
+    alto = 0.5 + 2 * (m + 2 * ESQUINA) + DEDO_SOBRE
+    return Dedos(_dedo_x(n), DEDO_RADIO, alto)
+
+
+@dataclass(frozen=True)
+class Dedos:
+    """Los dos dedos en que se ata el puño: dos cilindros parados sobre la mesa en x = ±x,
+    y = 0, de la mesa hasta `alto`, con la punta redonda. La cuerda no puede entrar en ellos."""
+    x: float
+    radio: float
+    alto: float
+
+    def _distancia(self, X) -> tuple[np.ndarray, np.ndarray]:
+        """La distancia de cada punto al eje de su dedo más cercano y hacia dónde salir."""
+        lado = np.where(X[:, 0] >= 0, 1.0, -1.0)
+        tope = self.alto - self.radio
+        z = np.clip(X[:, 2], 0.0, tope)
+        eje = np.column_stack([lado * self.x, np.zeros(len(X)), z])
+        d = X - eje
+        return np.linalg.norm(d, axis=1), d
+
+    def empujar(self, X, libre) -> None:
+        r = self.radio + 0.5
+        dist, d = self._distancia(X)
+        m = libre & (dist < r)
+        if m.any():
+            u = d[m] / np.maximum(dist[m], 1e-9)[:, None]
+            X[m] = X[m] - d[m] + u * r
+
+    def penetracion(self, X) -> float:
+        dist, _ = self._distancia(X)
+        return float(max(0.0, (self.radio + 0.5 - dist).max()))
+
+    def datos(self) -> dict:
+        """Lo que necesita render/escena.js para dibujarlos."""
+        return {"x": [-self.x, self.x], "y": 0.0, "radio": self.radio, "alto": self.alto}
 
 
 # --------------------------------------------------------------------------
@@ -372,7 +482,9 @@ class Cuerda:
 
     # --- Las vueltas --------------------------------------------------------------------
     def _forma(self, hito: str) -> Forma:
-        return Forma(self.p.vueltas, hito == "apretar", self.variante)
+        if hito == "apretar":
+            return Forma(self.p.vueltas, True, self.variante)
+        return FormaDedos(self.p.vueltas, self.variante)
 
     def _puno(self, hito: str, f: Forma) -> _Rope:
         """Las vueltas del hito, relativas al centro, desde la primera hasta la última del hito,
@@ -407,44 +519,32 @@ class Cuerda:
         else:
             j_fin, k_fin = 3, n
         t_fin = 2 * math.pi * k_fin
-        cierra = j_fin == 3 and k_fin == n
-        dentro = hito in ("centro", "apretar")
+        dentro = hito == "apretar"
         nudo = None
-        if cierra:
+        if dentro:
             # Después del tercer juego, el chicote entra al centro donde termina la última vuelta,
-            # entre dos caras, donde no tiene nada debajo.
-            if dentro:
-                # El nudo simple en el centro, con la pata que entra a lo largo de esa dirección:
-                # el nudo se corre de lado lo necesario.
-                entrada, trebol, cola, u = _nudo_simple()
-                arco, D = f.salida("C", t_fin, adentro=True)
-                c.agregar(arco, FUERA, "chicote")
-                # Dentro del puño, la pata que entra es solo su arco: la recta es el chicote.
-                entrada = entrada[-int(math.ceil(math.pi / 2 * NUDO_CURVA / PASO)):]
-                G = _giro_hacia(u, -D)
-                S = G @ entrada[0]
-                A = c.fin
-                # El nudo, lo más cerca del centro, con al menos RECTA_MIN de chicote derecho.
-                lam = max(float((S - A) @ D), RECTA_MIN)
-                O = A + lam * D - S
-                c.agregar(_recta(A, S + O), FUERA, "chicote")
-                c.agregar(entrada[1:] @ G.T + O, FUERA, "chicote")
-                c.marcar("nudo-inicio")
-                c.agregar(trebol @ G.T + O, CENTRO, "nudo")
-                c.marcar("nudo-fin")
-                # Dentro del puño, la punta es solo medio arco: así no asoma entre las vueltas.
-                cola = cola[:int(math.ceil(math.pi / 4 * NUDO_CURVA / PASO))]
-                c.agregar(cola @ G.T + O, FUERA, "cola")
-                nudo = (O, G)
-            else:
-                # Cruza el centro y sale por la esquina K0, junto al firme, hasta afuera del puño.
-                arco, D = f.salida("C", t_fin, adentro=True)
-                c.agregar(arco, FUERA, "chicote")
-                # Por dentro, una sola curva suave hasta la esquina K0, y derecho hacia afuera.
-                r0 = float(f.radio(K0)[0]) + CAPA + SALE
-                K = K0 * (float(f.radio(K0)[0]) - ENTRA)
-                c.agregar(_hermite(c.fin, D, K, K0), FUERA, "chicote")
-                c.agregar(_recta(K, K0 * r0), FUERA, "chicote")
+            # entre dos caras, donde no tiene nada debajo. El nudo simple va en el centro, con la
+            # pata que entra a lo largo de esa dirección: el nudo se corre de lado lo necesario.
+            entrada, trebol, cola, u = _nudo_simple()
+            arco, D = f.salida("C", t_fin, adentro=True)
+            c.agregar(arco, FUERA, "chicote")
+            # Dentro del puño, la pata que entra es solo su arco: la recta es el chicote.
+            entrada = entrada[-int(math.ceil(math.pi / 2 * NUDO_CURVA / PASO)):]
+            G = _giro_hacia(u, -D)
+            S = G @ entrada[0]
+            A = c.fin
+            # El nudo, lo más cerca del centro, con al menos RECTA_MIN de chicote derecho.
+            lam = max(float((S - A) @ D), RECTA_MIN)
+            O = A + lam * D - S
+            c.agregar(_recta(A, S + O), FUERA, "chicote")
+            c.agregar(entrada[1:] @ G.T + O, FUERA, "chicote")
+            c.marcar("nudo-inicio")
+            c.agregar(trebol @ G.T + O, CENTRO, "nudo")
+            c.marcar("nudo-fin")
+            # Dentro del puño, la punta es solo medio arco: así no asoma entre las vueltas.
+            cola = cola[:int(math.ceil(math.pi / 4 * NUDO_CURVA / PASO))]
+            c.agregar(cola @ G.T + O, FUERA, "cola")
+            nudo = (O, G)
         else:
             # Lo que sigue sale del puño donde termina la vuelta, entre dos caras.
             arco, D = f.salida(LETRA[j_fin], t_fin)
@@ -456,46 +556,26 @@ class Cuerda:
         # El puño se apoya en la mesa por lo que queda más abajo.
         centro = np.array([0.0, 0.0, 0.5 - float(rel[:, 2].min())])
         X = rel + centro
-        # El firme: llega por la mesa desde atrás, a la derecha, y sube a la primera vuelta
-        # siguiendo la dirección en que ella sigue.
-        firme = _firme(X[0], _unit(X[1] - X[0]))
+        # El firme: llega por la mesa por delante, a la derecha, y sube a la primera vuelta,
+        # donde empieza, entre dos caras.
+        firme = _firme(X[0], _unit(X[1] - X[0]), centro, f)
         partes = [(firme, _en_la_mesa(firme), _nombres("firme", len(firme))), (X, Zp, piezap)]
         marcas = {k: v + len(firme) for k, v in marcas.items()}
         marco = None if nudo is None else (centro + nudo[0], nudo[1])
         fin, T = X[-1], _unit(X[-1] - X[-2])
-        if not cierra:
+        if not dentro:
             # Ya fuera del puño, se aleja por encima de él y cae a la mesa.
-            sigue = _alejar(fin, T, centro, f)
+            sigue = _alejar(fin, T, centro, f, hacia=SIGUE_HACIA[LETRA[j_fin]])
             partes.append((sigue, _en_la_mesa(sigue), _nombres("resto", len(sigue))))
-        elif not dentro:
-            # Al terminar el tercer juego y al hacer el nudo simple, el chicote, ya fuera del puño,
-            # cae a la mesa por delante, a la derecha.
-            hacia = _unit(np.array(CHICOTE_HACIA))
-            sigue = _caer(fin, T, hacia, NUDO_LEJOS if hito == "nudo" else SOBRE_LA_MESA)
-            partes.append((sigue, _en_la_mesa(sigue), _nombres("chicote", len(sigue))))
-            if hito == "nudo":
-                # El nudo simple en la mesa, con la pata que entra hacia el puño.
-                entrada, trebol, cola, u = _nudo_simple()
-                G = _giro_z(math.atan2(-hacia[1], -hacia[0]) - math.atan2(u[1], u[0]))
-                S = G @ entrada[0]
-                # Apoyado en la mesa por lo más bajo, con su pata y su punta.
-                bajo = float((np.vstack([entrada, trebol, cola]) @ G.T)[:, 2].min())
-                O = np.r_[sigue[-1][:2] + 3.0 * hacia[:2] - S[:2], 0.5 - bajo]
-                llega = _hermite(sigue[-1], np.r_[hacia[:2], 0.0], S + O, -(G @ u))
-                entra = np.vstack([llega, entrada[1:] @ G.T + O])
-                base = sum(len(q[0]) for q in partes) + len(entra)
-                marcas["nudo-inicio"] = base - 1
-                marcas["nudo-fin"] = base + len(trebol) - 1
-                for q, nombre in ((entra, "chicote"), (trebol @ G.T + O, "nudo"), (cola @ G.T + O, "cola")):
-                    partes.append((q, np.full(len(q), MESA), _nombres(nombre, len(q))))
-                marco = (O, G)
         P = np.vstack([q[0] for q in partes])
         Z = np.concatenate([q[1] for q in partes])
         pieza = np.concatenate([q[2] for q in partes])
         cruces, _ = buscar(P, PASO, Z, centro, marco)
         secuencia, etiquetados = self._secuencia(P, pieza, cruces, centro)
+        # Los dedos, en las vueltas; en el error no, porque el tercer juego pasaría por ellos.
+        dedos = None if dentro or self.variante is not None else _dedos(n)
         return {"P": P, "Z": Z, "pieza": pieza, "marcas": marcas, "centro": centro,
-                "nudo": marco, "cruces": etiquetados, "secuencia": secuencia}
+                "nudo": marco, "cruces": etiquetados, "secuencia": secuencia, "dedos": dedos}
 
     # --- Los cruces -------------------------------------------------------------------
     def _secuencia(self, P, pieza, cruces, centro):
@@ -550,17 +630,14 @@ class Cuerda:
                               | set(cambia.tolist()) | set((cambia + 1).tolist())))
         en = {m: int(np.searchsorted(idx, i)) for m, i in marcas.items()}
         a, b = self._resaltado(hito, previo, en)
-        return TrazoDePaso(P[idx], Z[idx], b, a, marco={"centro": d["centro"], "nudo": d["nudo"]})
+        return TrazoDePaso(P[idx], Z[idx], b, a, marco={"centro": d["centro"], "nudo": d["nudo"],
+                                                        "solido": d["dedos"]})
 
     def _resaltado(self, hito, previo, en) -> tuple[int | None, int]:
         """Los puntos de control donde empieza y termina el resaltado."""
         n = self.p.vueltas
         if hito == "apretar":
             return 0, 0
-        if hito == "nudo":
-            return en["nudo-inicio"], en["nudo-fin"]
-        if hito == "centro":
-            return en[f"C{n}"], en["nudo-fin"]
         j, k = (int(x) for x in hito.split("-")[1:])
         fin = en[f"{LETRA[j]}{k}"]
         if previo is None or not previo.startswith("vuelta-"):
@@ -581,29 +658,6 @@ def _nombres(nombre: str, n: int) -> np.ndarray:
     return np.array([nombre] * n, dtype=object)
 
 
-def _firme(P0, T) -> np.ndarray:
-    """El firme hasta P0, donde empieza la primera vuelta yendo en T: llega por la mesa y sube
-    derecho, en la dirección de T, sin rodear el puño. No incluye P0."""
-    atras = _unit(np.r_[-T[:2], 0.0])
-    Q1 = P0 + 1.0 * atras
-    Q2 = np.r_[Q1[:2] + _avance(Q1[2]) * atras[:2], 0.5]
-    camino = [_recta(P0, Q1)]
-    if P0[2] > 0.6:
-        camino.append(_hermite(Q1, atras, Q2, atras))
-    else:
-        Q2 = Q1
-    camino.append(_recta(Q2, Q2 + FIRME_MESA * atras))
-    return np.vstack(camino)[::-1]
-
-
-def _caer(P0, T, hacia, largo: float) -> np.ndarray:
-    """Desde P0, ya fuera del puño y yendo en T, la cuerda cae a la mesa hacia `hacia` y sigue
-    por ella `largo`. No incluye P0."""
-    hacia = _unit(np.r_[np.asarray(hacia, float)[:2], 0.0])
-    Q2 = np.r_[P0[:2] + _avance(P0[2]) * hacia[:2], 0.5]
-    return np.vstack([_hermite(P0, T, Q2, hacia), _recta(Q2, Q2 + largo * hacia)])
-
-
 def _avance(z: float) -> float:
     """Cuánto avanza hacia afuera la cuerda que cae a la mesa desde la altura z: CAE, o más si
     cae de alto, para no doblarse."""
@@ -616,6 +670,19 @@ def _doblar(E, T, hacia) -> tuple[np.ndarray, np.ndarray]:
     nn = _unit(hacia - (hacia @ T) * T)
     phi = np.linspace(0.0, math.pi / 2, int(math.ceil(math.pi / 2 * ARCO / PASO)) + 1)[1:, None]
     return E + ARCO * nn - ARCO * (nn * np.cos(phi) - T * np.sin(phi)), nn
+
+
+def _firme(P0, T, centro, forma: Forma) -> np.ndarray:
+    """El firme hasta P0, donde empieza la primera vuelta yendo en T: visto desde P0 hacia atrás,
+    se dobla hacia afuera del puño, sale derecho, cae a la mesa y sigue por ella hacia
+    FIRME_HACIA. No incluye P0."""
+    afuera = _unit(np.r_[(P0 - centro)[:2], 0.0])
+    arco, D = _doblar(P0, -T, afuera)
+    A = arco[-1]
+    lejos = float(forma.radio(D)[0]) + CAPA + SALE
+    recta = _recta(A, A + max(lejos - float((A - centro) @ D), 1.0) * D)
+    resto = _alejar(recta[-1], D, centro, forma, hacia=FIRME_HACIA, largo=FIRME_MESA)
+    return np.vstack([arco, recta, resto])[::-1]
 
 
 def _en_la_mesa(P) -> np.ndarray:

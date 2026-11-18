@@ -127,6 +127,10 @@ def imagenes(modelo: Modelo) -> list[Imagen]:
         e = s.error
         correcto = next(r for r in modelo.pasos if r.n == e.paso)
         par = datos_escena(modelo, e.encuadre or s.encuadre, [correcto, modelo.error])
+        # En el error del puño de mono, el tercer juego pasa por donde van los dedos: el paso
+        # bien hecho y el error se muestran sin ellos.
+        for p in par["pasos"]:
+            p.pop("dedos", None)
         firmes = nombres(modelo, chicote=False)
         out.append(Imagen("error-correcto", f"Paso {e.paso}, bien", par, 1, VISTA_PASOS, True,
                           firmes, ESQUINA_SELLO))

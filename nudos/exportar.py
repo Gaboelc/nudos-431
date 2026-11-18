@@ -102,13 +102,19 @@ def _paso_de_plantilla(s, r: Resultado) -> dict:
     pasos de SIN_NOMBRES de la plantilla, como el refuerzo de cabo con las puntas cortadas, no
     llevan ningún nombre; si no se mueve nada, no hay resaltado. Si la plantilla dice ella misma
     los nombres de cada paso (nombres(hito), como el puño de mono, cuya cuerda va del firme al
-    chicote), la cuerda va como está y lleva esos."""
+    chicote), la cuerda va como está y lleva esos, y el paso lleva los dedos en que se ata, si
+    la plantilla los dibuja («dedos»)."""
     hl = _resaltado(r, 0, len(r.puntos) - 1)
     if hl is not None and hl[0] == hl[1]:
         hl = None
     hasta = s.pasos[r.n - 1].hasta
     if hasattr(s.plantilla, "nombres"):
-        return {"n": r.n, "hl": hl, "p": _puntos(r.puntos), "nombres": s.plantilla.nombres(hasta)}
+        paso = {"n": r.n, "hl": hl, "p": _puntos(r.puntos), "nombres": s.plantilla.nombres(hasta)}
+        # Los dedos en que se ata el puño de mono, en los pasos que los tienen.
+        dedos = s.plantilla.dedos(hasta) if hasattr(s.plantilla, "dedos") else None
+        if dedos is not None:
+            paso["dedos"] = dedos
+        return paso
     if hasta in s.plantilla.CON_FIRME:
         return {"n": r.n, "hl": None if hl is None else [round(1 - hl[1], 4), round(1 - hl[0], 4)],
                 "p": _puntos(r.puntos[::-1])}

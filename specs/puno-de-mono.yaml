@@ -1,6 +1,7 @@
 # Puño de mono: tres juegos de vueltas, cada uno alrededor del anterior, con un nudo simple
 # escondido en el centro. Es un nudo de plantilla sin anfitrión (nudos/plantillas/puno.py): se
-# ata en los dedos, que no se dibujan, y no lleva bola en el centro. La plantilla traza la cuerda
+# ata en dos dedos, que la plantilla dibuja en los pasos de las vueltas, y no lleva bola en el
+# centro. La plantilla traza la cuerda
 # de cada paso a partir del número de vueltas de cada juego, y cada paso dice con «hasta» hasta
 # dónde llega. El método es el del diseño de la tanda 4 en tasks/plan.md. Unidades: diámetros de
 # cuerda. Los dedos van parados: el primer juego da vueltas alrededor de z.
@@ -44,8 +45,8 @@ plantilla:
 
 # Zona que se muestra en los pasos, y la del nudo terminado, más cerca.
 encuadre:
-  x: [-12.0, 16.0]
-  y: [-17.0, 10.0]
+  x: [-14.0, 15.0]
+  y: [-15.0, 11.0]
 terminado:
   encuadre:
     x: [-12.0, 14.0]
@@ -78,20 +79,15 @@ pasos:
 
   - titulo: Da {vueltas} vueltas alrededor de las segundas
     texto: >-
-      Sigue hasta tener {vueltas}, por dentro de las primeras y por fuera de las segundas. Pasa
-      el chicote por el centro del puño y sácalo junto al firme.
+      Sigue hasta tener {vueltas}, siempre por dentro de las primeras y por fuera de las
+      segundas.
     hasta: juego-3
 
-  - titulo: Haz un nudo simple y mételo en el centro
+  - titulo: Esconde el chicote y aprieta
     texto: >-
-      Saca los dedos con cuidado. Haz un nudo simple en la punta del chicote y mételo al puño,
-      tirando del chicote desde el otro lado, hasta que quede en el centro.
-    hasta: centro
-
-  - titulo: Aprieta las vueltas
-    texto: >-
-      Aprieta de a poco, siguiendo la cuerda: desde la vuelta que sale del nudo del centro,
-      vuelta por vuelta, hasta el firme. Repite hasta que quede firme y redondo.
+      Saca los dedos con cuidado. Haz un nudo simple en la punta del chicote y mételo al centro
+      del puño. Aprieta de a poco, vuelta por vuelta, desde el nudo del centro hasta el firme,
+      hasta que quede firme y redondo.
     hasta: apretar
 
 # El error con imagen lo construye la plantilla: el tercer juego por fuera del primero, en vez
@@ -100,8 +96,8 @@ error:
   paso: 5
   variante: tercero-por-fuera
   encuadre:       # el puño entero, sin lo que cae a la mesa
-    x: [-13.0, 13.0]
-    y: [-12.0, 11.0]
+    x: [-14.0, 14.0]
+    y: [-11.0, 11.0]
   titulo: Las últimas vueltas por fuera
   texto: >-
     Diste las vueltas del tercer juego por fuera de las primeras, alrededor de todo el puño.

@@ -225,7 +225,7 @@ def _construir(slug: str) -> int:
 def mapa_del_puno_de_mono(datos: dict, spec):
     """El puño de mono desenrollado de los pasos de `datos` (hoja.mapa_puno): el centro y el
     tamaño de cada paso los da la plantilla."""
-    from .plantillas.puno import CAPA, Cuerda
+    from .plantillas.puno import CAPA, Cuerda, FormaDedos
     c = Cuerda(spec.plantilla)
     hitos = {p.n: p.hasta for p in spec.pasos}
     centros, radios = [], []
@@ -233,7 +233,10 @@ def mapa_del_puno_de_mono(datos: dict, spec):
         d = c.paso(hitos[p["n"]])
         forma = c._forma(c.alias.get(hitos[p["n"]], hitos[p["n"]]))
         centros.append(d["centro"])
-        radios.append((float(forma.S.min()), float(forma.S.max()) + CAPA))
+        # En los dedos, el tercer juego pasa cerca del centro: se dibuja todo lo que no es el
+        # firme ni lo que sigue.
+        cerca = 1.0 if isinstance(forma, FormaDedos) else float(forma.S.min())
+        radios.append((cerca, float(forma.S.max()) + CAPA))
     return mapa_puno(datos, centros, radios)
 
 

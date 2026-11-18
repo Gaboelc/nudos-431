@@ -263,7 +263,10 @@ function cajaDeEncuadre(modelo) {
    la caja y el del anfitrión. */
 function altoDeEncuadre(modelo, B) {
   const a = modelo.anfitrion;
-  if (!a && !modelo.cuerdas) return ALTO;
+  // El puño de mono no tiene anfitrión, pero es alto y se ata en dos dedos: se encuadra entero.
+  const dedos = modelo.pasos.filter((s) => s.dedos).map((s) => s.dedos);
+  const puno = !a && modelo.dos_remates;
+  if (!a && !modelo.cuerdas && !puno) return ALTO;
   let alto = ALTO;
   for (const s of modelo.pasos) {
     for (const c of cuerdasDe(modelo, s)) {
@@ -277,6 +280,7 @@ function altoDeEncuadre(modelo, B) {
   if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos" || a.tipo === "cabo")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   if (a && a.tipo === "destorcedor") alto = Math.max(alto, a.alto);
+  for (const d of dedos) alto = Math.max(alto, d.alto);
   return alto;
 }
 
@@ -484,9 +488,29 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     return c;
   }));
 
+  // Los dedos en que se ata el puño de mono, en los pasos que los tienen: dos cilindros
+  // parados sobre la mesa, color piel y con la punta redonda.
+  const matDedo = new THREE.MeshStandardMaterial({ color: 0xe2b896, roughness: 0.7, metalness: 0 });
+  function dedos(d, grupo) {
+    const ejes = [];
+    for (const x of d.x) {
+      const largo = d.alto - d.radio;
+      const cil = new THREE.Mesh(new THREE.CylinderGeometry(d.radio, d.radio, largo, 48, 1, true), matDedo);
+      cil.rotation.x = Math.PI / 2;
+      cil.position.set(x, d.y, largo / 2);
+      const punta = new THREE.Mesh(new THREE.SphereGeometry(d.radio, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2), matDedo);
+      punta.rotation.x = Math.PI / 2;
+      punta.position.set(x, d.y, largo);
+      for (const m of [cil, punta]) { m.castShadow = true; m.receiveShadow = true; grupo.add(m); }
+      ejes.push({ a: [x, d.y, 0], b: [x, d.y, largo], radio: d.radio });
+    }
+    return ejes;
+  }
+
   function construirPaso(paso) {
     const grupo = new THREE.Group();
     const tubos = [], todos = [], nombres = {}, geos = [];
+    const ejesDedos = paso.dedos ? dedos(paso.dedos, grupo) : [];
     let chicote = null;
     cuerdasDe(modelo, paso).forEach((c, n) => {
       const pts = puntos(c);
@@ -549,7 +573,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       }
     });
     if (chicote) nombres.chicote = chicote;
-    if (vertexColors) sombraDeContacto(geos, ejesPalos);
+    if (vertexColors) sombraDeContacto(geos, ejesDedos.length ? ejesPalos.concat(ejesDedos) : ejesPalos);
     return { grupo, tubos, pts: todos, nombres };
   }
 

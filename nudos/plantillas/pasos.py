@@ -249,14 +249,18 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None) -> Resultado:
     # Lo que la plantilla ya traza tenso y la relajación deshace no se mueve: los puntos que
     # caen entre dos puntos de control quietos.
     quietos = None if t.quietos is None else t.quietos[tramo] & t.quietos[siguiente]
-    Xr = relajar(X, h, anfitrion=g.solido, gravedad=np.zeros(len(X), bool), pasadas_largo=PASADAS_LARGO,
+    # El sólido es el de la plantilla; en el puño de mono, los dedos del paso, si los tiene.
+    solido, penetracion = g.solido, g.penetracion
+    if t.marco is not None and t.marco.get("solido") is not None:
+        solido, penetracion = t.marco["solido"], ("penetracion_dedos", "en un dedo")
+    Xr = relajar(X, h, anfitrion=solido, gravedad=np.zeros(len(X), bool), pasadas_largo=PASADAS_LARGO,
                  quietos=quietos)
     medir = None
-    if g.penetracion is not None:
-        clave, donde = g.penetracion
+    if penetracion is not None:
+        clave, donde = penetracion
 
         def medir(Y):
-            pen = g.solido.penetracion(Y)
+            pen = solido.penetracion(Y)
             f = [] if pen <= PENETRACION_MAX else [
                 f"Paso {n}: la cuerda entra {pen:.2f} diámetros {donde}; el máximo es "
                 f"{PENETRACION_MAX}."]
