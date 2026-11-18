@@ -326,9 +326,9 @@ def _plantilla(datos, anfitrion: Anfitrion | None, cuerdas: tuple[Cuerda, ...], 
         raise pf(f"«tipo» es uno de: {', '.join(TIPOS_PLANTILLA)}")
     plantilla = clase.leer(datos, pf)
     if clase.ANFITRION is None:
-        # Una plantilla libre sobre la mesa, como el adujado.
+        # Una plantilla sin anfitrión, como el adujado y el puño de mono.
         if anfitrion is not None:
-            raise pf(f"la plantilla {clase.tipo} va libre sobre la mesa: no lleva «anfitrion»")
+            raise pf(f"la plantilla {clase.tipo} va sin anfitrión, libre sobre la mesa: no lleva «anfitrion»")
     elif anfitrion is None or anfitrion.tipo != clase.ANFITRION:
         raise pf(f"la plantilla {clase.tipo} va sobre el anfitrión {clase.ANFITRION}")
     palos = getattr(clase, "PALOS", None)

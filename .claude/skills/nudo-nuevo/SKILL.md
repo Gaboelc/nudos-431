@@ -47,6 +47,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 | Amarre redondo o trípode: vueltas y ahorcados sobre dos o tres palos uno junto al otro | `plantilla: {tipo: amarre-redondo}` o `{tipo: amarre-tripode}`, con `anfitrion: {tipo: palos}` | `amarre-cuadrado` |
 | Refuerzo de cabo: vueltas de cordel sobre la punta de un cabo | `plantilla: {tipo: refuerzo-de-cabo}` | `refuerzo-de-cabo` |
 | Adujado: una cuerda enrollada en senos y atada con vueltas, libre sobre la mesa | `plantilla: {tipo: adujado}`, sin `anfitrion` | `adujado` |
+| Puño de mono: tres juegos de vueltas, uno alrededor del otro, con un nudo simple en el centro | `plantilla: {tipo: puno-de-mono}`, sin anfitrión | `puno-de-mono` |
 
 Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una cornamusa, un barril u otra cuerda; otra plantilla, o varias cuerdas sobre un anfitrión), detente y no lo fuerces con lo que hay. Di en tu informe qué haría falta: es una tarea de código, como fueron T5 y T7.
 

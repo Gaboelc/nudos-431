@@ -104,7 +104,10 @@ def _construir_plantilla(spec: Spec) -> Modelo:
     error, fallas_error = f_error.result()
     fallas = consistencia(secuencias) + fallas_pasos + cruces_que_saltan(resultados) + fallas_error
     reverso = None
-    if spec.anfitrion is None and resultados and resultados[-1].n == len(spec.pasos):
+    # Una plantilla que se voltea ella misma, como el puño de mono, no lo lleva en el modelo
+    # (nudos/imprimir.py).
+    if (spec.anfitrion is None and not hasattr(spec.plantilla, "voltear") and resultados
+            and resultados[-1].n == len(spec.pasos)):
         reverso = voltear_sin_relajar(resultados[-1], secuencias[-1][1])
         fallas.extend(f"Reverso del nudo terminado: {f}" for f in reverso.fallas)
     return Modelo(spec, resultados, fallas, error, reverso)

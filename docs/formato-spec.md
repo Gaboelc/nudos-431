@@ -1,4 +1,4 @@
-# Formato de especificación de nudo (v1.8)
+# Formato de especificación de nudo (v1.9)
 
 Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.5 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
@@ -198,7 +198,7 @@ Aquí la delgada cruza una vez por encima de la gruesa. El ejemplo no es de ning
 
 Algunos nudos no se dibujan punto por punto: se generan a partir de unas pocas medidas, como los amarres. Un nudo así lleva `plantilla` y no lleva `segmentos`; sus pasos no llevan `trazado`, `secuencia` ni `resaltar`, sino `hasta`, que dice hasta dónde llega cada uno. La plantilla calcula la cuerda entera y cada paso es su comienzo hasta ese punto, así que cambiar una medida, por ejemplo de 3 a 4 vueltas, regenera todos los pasos.
 
-Hay siete: el amarre cuadrado y el amarre diagonal, sobre una `cruz`; el amarre redondo y el trípode, sobre los `palos` paralelos; la cabeza de turco, sobre un `tubo`; el refuerzo de cabo, sobre un `cabo`, y el adujado, sin anfitrión, libre sobre la mesa. En el refuerzo de cabo, el seno y el tirar cambian el principio de la cuerda, que es el extremo corto, así que ahí cada paso no es el comienzo de una sola cuerda: la plantilla da la cuerda de cada paso entera, y dice qué tramo se resalta. En el adujado, igual, porque juntar la aduja cambia el principio de la cuerda.
+Hay ocho: el amarre cuadrado y el amarre diagonal, sobre una `cruz`; el amarre redondo y el trípode, sobre los `palos` paralelos; la cabeza de turco, sobre un `tubo`; el refuerzo de cabo, sobre un `cabo`; el adujado, sin anfitrión, libre sobre la mesa, y el puño de mono, sin anfitrión. Una plantilla sin anfitrión no lleva `anfitrion`: si lo lleva, es un error al cargar. En el refuerzo de cabo, el seno y el tirar cambian el principio de la cuerda, que es el extremo corto, así que ahí cada paso no es el comienzo de una sola cuerda: la plantilla da la cuerda de cada paso entera, y dice qué tramo se resalta. En el adujado, igual, porque juntar la aduja cambia el principio de la cuerda, y en el puño de mono también, porque meter el nudo y apretar cambian el puño entero.
 
 ### Amarre cuadrado
 
@@ -409,6 +409,20 @@ pasos:
   - {titulo: Pasa un seno por el ojo, texto: …, hasta: por-el-ojo}
   - {titulo: Pasa el seno por encima de la punta, texto: …, hasta: por-encima}
   - {titulo: Tira del chicote, texto: …, hasta: tirar}
+
+### Puño de mono
+
+```yaml
+plantilla:
+  tipo: puno-de-mono
+  vueltas: 3
+pasos:
+  - {titulo: Da {vueltas} vueltas alrededor de dos dedos, texto: …, hasta: juego-1}
+  - {titulo: Pasa el chicote entre los dedos, texto: …, hasta: vuelta-2-1}
+  - {titulo: Da {vueltas} vueltas alrededor de las primeras, texto: …, hasta: juego-2}
+  - {titulo: Pasa el chicote por dentro de las primeras, texto: …, hasta: vuelta-3-1}
+  - {titulo: Da {vueltas} vueltas alrededor de las segundas, texto: …, hasta: juego-3}
+  - {titulo: Esconde el chicote y aprieta, texto: …, hasta: apretar}
 ```
 
 | Campo | Qué es |
@@ -427,6 +441,23 @@ Lo que hace la plantilla (`nudos/plantillas/adujado.py`; ver «El adujado» en e
 - **La cuerda de cada paso se traza entera,** porque juntar la aduja cambia el principio de la cuerda, y la plantilla dice qué tramo se resalta. La altura de cada tramo sale de lo que tiene debajo, con subidas y bajadas suaves. La cuerda no se relaja: ya va trazada sin que nada se toque ni se doble de más.
 - **Los cruces:** con `n` senos y `m` vueltas, `seno-<k>` tiene k; `juntar`, n; `vuelta-<j>`, n + 4nj; `por-el-ojo`, 5n + 4nm, y `por-encima` y `tirar`, 7n + 4nm + 1.
 - **Los nombres:** «Chicote», en la punta de la cuerda, en todos los pasos. Los dos extremos llevan remate.
+
+| `tipo` | `puno-de-mono`. No lleva `anfitrion`. |
+| `vueltas` | Vueltas de cada juego. 3 o 4. |
+
+El método es el de la fuente, en los dedos y sin bola en el centro: con el chicote se dan las vueltas alrededor de dos dedos parados (el primer juego); el chicote pasa entre los dedos y da otras tantas alrededor de las primeras, por la mitad (el segundo); después pasa por dentro de las primeras y da otras tantas alrededor de las segundas (el tercero). Se sacan los dedos, se hace un nudo simple en el chicote, se mete en el centro y se aprieta. Hacer el nudo simple no tiene imagen: va en el texto del último paso, y su imagen es el puño apretado.
+
+`hasta` puede ser, en este orden: `vuelta-1-1` … `vuelta-1-<n>`, `vuelta-2-1` … `vuelta-2-<n>`, `vuelta-3-1` … `vuelta-3-<n>` y `apretar`. `juego-<j>` es lo mismo que `vuelta-<j>-<n>`. Cada paso llega más lejos que el anterior y el último llega a `apretar`. En el texto, `{vueltas}` sale en letras.
+
+Lo que hace la plantilla (`nudos/plantillas/puno.py`; ver «El puño de mono» en el plan):
+
+- **Los juegos** van alrededor de z (el primero, con las vueltas una sobre otra, acostado en la mesa), de x (el segundo) y de y (el tercero). Cada juego va encima de otro en dos caras opuestas y debajo del tercero en otras dos: el segundo sobre el primero en ±y, el tercero sobre el segundo en ±z y el primero sobre el tercero en ±x. Donde va encima, una vuelta va 1,05 más lejos del centro. Las vueltas de un juego van a 1,1 una de otra.
+- **En los dedos.** En los pasos de las vueltas, el puño se ata en dos dedos parados sobre la mesa, que se dibujan: el primer juego los rodea a los dos; el segundo abraza al primero por la mitad, entre los dedos, y el tercero abraza al segundo por arriba y por abajo, entre los dedos y por dentro del primero. Cada juego es una vuelta de esquinas redondeadas alrededor de lo que rodea. Al apretar, los dedos ya no están y el puño es una esfera, con el nudo simple en el centro.
+- **Los cambios de juego** van por las esquinas, donde no pasa ninguna vuelta, y no cruzan nada. Lo que sigue de cada paso sale del puño donde termina la vuelta y cae a la mesa: el del tercer juego, hacia atrás, porque junto a esa vuelta está un dedo. Al apretar, el chicote entra al centro donde termina la última vuelta, entre dos caras.
+- **El nudo simple** es un trébol abierto, con sus dos puntas dobladas hacia afuera, y queda dentro del puño apretado.
+- **Los cruces:** con `n` vueltas, `vuelta-1-<k>` no tiene; `vuelta-2-<k>`, 2nk; `vuelta-3-<k>`, 2n² + 4nk, y `apretar`, 6n² + 3.
+- **Los nombres:** «Firme» en todos los pasos y «Chicote» hasta el tercer juego. Al apretar, el chicote está escondido en el centro y solo va «Firme». Los dos extremos llevan remate.
+- **La escena** dibuja los dedos en los pasos que los llevan (`dedos` del paso, de la plantilla): dos cilindros color piel, con la punta redonda. El error y su paso bien hecho van sin dedos, porque en el error el tercer juego pasaría por ellos.
 
 ## Pasos
 
@@ -464,7 +495,7 @@ En un nudo de plantilla, el error no son cruces al revés sino una variante del 
 | `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
 | `titulo` | Nombre corto del error. |
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
-| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado y el diagonal tienen `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. El amarre redondo y el trípode tienen `sin-ahorcados`: después de las vueltas, la cuerda va directo al ballestrinque de cierre. Se ve desde `cierre-1`; hasta las vueltas es la misma cuerda, y en el error los hitos de los ahorcados son lo mismo que la última vuelta. El refuerzo de cabo tiene `por-fuera-del-seno`: el chicote pasa por encima de la curva del seno en vez de por dentro, así que el seno sale sin arrastrarlo. Se ve desde `por-el-seno` y solo en ese paso. El adujado tiene `sin-alternar`: todos los senos se cierran por encima del extremo, así que el cruce del segundo queda al revés. Se ve desde `seno-2` y solo en los pasos de los senos. |
+| `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado y el diagonal tienen `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. El amarre redondo y el trípode tienen `sin-ahorcados`: después de las vueltas, la cuerda va directo al ballestrinque de cierre. Se ve desde `cierre-1`; hasta las vueltas es la misma cuerda, y en el error los hitos de los ahorcados son lo mismo que la última vuelta. El refuerzo de cabo tiene `por-fuera-del-seno`: el chicote pasa por encima de la curva del seno en vez de por dentro, así que el seno sale sin arrastrarlo. Se ve desde `por-el-seno` y solo en ese paso. El adujado tiene `sin-alternar`: todos los senos se cierran por encima del extremo, así que el cruce del segundo queda al revés. Se ve desde `seno-2` y solo en los pasos de los senos. El puño de mono tiene `tercero-por-fuera`: el tercer juego pasa por fuera del primero, alrededor de todo el puño, en vez de por dentro, así que sus 2n² cruces con el primero quedan al revés. Se ve desde `vuelta-3-1` y solo en el tercer juego, sin los dedos. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
 | `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. En la ficha van debajo del error con imagen, como «Otro error común». |
 
@@ -481,6 +512,8 @@ Sobre los palos paralelos es igual que sobre la cruz: los palos y la cuerda se v
 Sobre el cabo es igual: por delante, el refuerzo cortado, y por detrás el cabo y el cordel girados media vuelta alrededor del eje, como se gira el cabo en la mano, y apoyados otra vez en la mesa. Es un giro rígido y la secuencia no cambia. Por delante y por detrás se mira como los pasos.
 
 El adujado, sin anfitrión, se voltea como una página, como los nudos libres, pero sin asentarse otra vez: es un giro rígido, porque su plantilla no relaja la cuerda. Todos los cruces quedan al revés.
+
+En el puño de mono, que no tiene anfitrión, el nudo tampoco se voltea como un nudo libre: sus cruces se miden desde el centro del puño, así que voltearlo como una página, con media vuelta alrededor del eje y, es un giro rígido y la secuencia no cambia. El puño se apoya en lo más bajo, y el firme sale de él hacia afuera y cae a la mesa hacia atrás. Por delante y por detrás se mira como los pasos. La ficha dice la frase de los nudos sin anfitrión: «Por detrás es como lo ves si lo volteas como la página de un libro».
 
 Sobre el tubo, por delante es el remate, girado como ese paso, y por detrás el tubo y el nudo girados media vuelta alrededor del eje, como se gira el tubo en la mano. Es un giro rígido: la secuencia no cambia y no se relaja otra vez. Entre las dos vistas se ve el nudo entero, también la parte que en la vista de los pasos queda contra la mesa. Por delante y por detrás se mira como los pasos.
 
@@ -556,11 +589,13 @@ Sobre los palos paralelos hay una zona por palo, otra por cada hueco entre dos p
 
 Sobre el tubo de la cabeza de turco es igual: hay dos zonas, el tubo, con la parte tejida, y la mesa, con el extremo corto que cuelga y el resto hasta que llegan al nudo. Los cruces del tubo se buscan en su superficie desenrollada, y cada uno guarda su lugar en el mapa del nudo (a lo largo del tubo y alrededor, desde el seno A) y no en la mesa: como el nudo se gira entre pasos, en la mesa un mismo cruce se movería. Alrededor del tubo, ese lugar da la vuelta a mitad de camino entre dos cruces, donde no hay ninguno. Dos pasadas de una misma cuerda a menos de 3 diámetros a lo largo de ella no cuentan como cruce: ahí la cuerda no puede volver sobre sí misma, y vista desde arriba, donde cae casi vertical al costado del tubo, se pliega sobre sí misma al relajar.
 
+En el puño de mono, sin anfitrión, hay tres zonas. Las vueltas se buscan en el puño desenrollado: cada punto se mira desde el centro del puño, y su dirección se proyecta desde la esquina opuesta al polo (proyección estereográfica). El polo va por dos esquinas opuestas del puño por donde no pasa nada, así que el mapa no tiene costura. Encima es lo más lejos del centro. El nudo simple, dentro del puño, se busca mirándolo desde su cara de arriba, y la mesa, desde arriba, como siempre. Lo que va de una zona a otra, como el chicote que entra al centro o lo que sale del puño y cae, no entra en ningún mapa. Cada cruce de las vueltas guarda su lugar en la cara del puño más cercana, en diámetros, y los del nudo simple, en el marco del nudo, así que un cruce queda en el mismo lugar en los dedos y con el puño apretado.
+
 **Lo que no se comprueba es si la secuencia corresponde al nudo correcto.** Un cruce mal leído que se repite igual en todos los pasos pasa todas las pruebas. Para eso está el filtro 1: atar cada paso con cuerda real antes de publicar.
 
 ## Versiones
 
-Este es el formato v1.8. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.9. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -579,11 +614,10 @@ Son cambios compatibles que ya se conocen:
 
 - `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
 - Los anfitriones que faltan (argolla, tablón, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
-- La plantilla de la tanda 4 que falta: el puño de mono.
 - Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
 
-Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris; la estaca, el poste, la cruz y los palos paralelos color madera, y el cabo color crema. El poste, los palos y el cabo se cortan en el encuadre, más un margen. Del tubo de la cabeza de turco y del cabo del refuerzo dibuja además su superficie desenrollada, con cada cruce, y del adujado, la aduja vista desde abajo. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
+Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris; la estaca, el poste, la cruz y los palos paralelos color madera, y el cabo color crema. El poste, los palos y el cabo se cortan en el encuadre, más un margen. Del tubo de la cabeza de turco y del cabo del refuerzo dibuja además su superficie desenrollada, con cada cruce, del adujado, la aduja vista desde abajo, y del puño de mono, el puño desenrollado mirado desde su centro. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
 
 ### Registro
 
@@ -595,4 +629,5 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) di
 - **v1.5** (16 de noviembre de 2026): la plantilla `amarre-diagonal`, con sus hitos y la variante `ahorcados-por-fuera`, y con ella la cruz con dos capas de cuerda bajo el palo de abajo (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.6** (16 de noviembre de 2026; entró a `main` el 17, después del amarre diagonal): el anfitrión `palos`, dos o tres palos paralelos, y las plantillas `amarre-redondo` y `amarre-tripode`, con la variante `sin-ahorcados` (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior los usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.7** (17 de noviembre de 2026; entró a `main` después de los palos paralelos): el anfitrión `cabo` y la plantilla `refuerzo-de-cabo`, con su variante de error `por-fuera-del-seno`, para el refuerzo de cabo (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes. Si otro anfitrión de la tanda 4 entra antes, este pasa a ser el número siguiente.
-- **v1.8** (17 de noviembre de 2026): la plantilla `adujado`, la primera sin anfitrión, con su variante de error `sin-alternar`, para el adujado (fase 4, tanda 4). Una plantilla puede ir sin anfitrión (`ANFITRION = None`), libre sobre la mesa. Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes. Si otra plantilla de la tanda 4 entra antes, este pasa a ser el número siguiente.
+- **v1.8** (17 de noviembre de 2026): la plantilla `adujado`, la primera sin anfitrión, con su variante de error `sin-alternar`, para el adujado (fase 4, tanda 4). Una plantilla puede ir sin anfitrión (`ANFITRION = None`), libre sobre la mesa. Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.9** (17 de noviembre de 2026; entró a `main` después del adujado): la plantilla `puno-de-mono`, con su variante de error `tercero-por-fuera`, para el puño de mono (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.

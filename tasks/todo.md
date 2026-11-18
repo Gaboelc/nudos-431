@@ -196,7 +196,7 @@ Cada nudo cumple la definición de terminado: pruebas automáticas, error común
 - [ ] Refuerzo de cabo (17 nov: anfitrión `cabo` y plantilla `refuerzo-de-cabo`, formato v1.7; 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha)
 - [x] Construir con todos los núcleos (17 nov: `nudos/procesos.py` relaja a la vez los pasos, el error, el reverso y el apretado, y la suite construye una sola vez todos los nudos de `modelado` o más; con pytest-xdist, `-n 4 --dist loadfile`. En `main` (6a4028e): los 26 `modelo.json` publicados iguales byte a byte; tres imágenes difirieron en 1 nivel, dos salen iguales impresas solas y la del tensor ajustable sale igual desde 3843a16, así que la variación era de la referencia. La suite pasa: 583 pruebas y 1 se salta, en 13 min 28 s con otra sesión usando la computadora; las cuatro fichas de la tanda 4 se arman. Ver «Construir con todos los núcleos» en el plan)
 - [ ] Adujado
-- [ ] Puño de mono
+- [ ] Puño de mono (17 nov: Gabriel aprobó el diseño. Plantilla `puno-de-mono` sin anfitrión, formato v1.8, en la rama `claude/puno-de-mono-368ca9`; 3 vueltas por juego, 7 pasos y el error sin fallas, 57 cruces; los 30 publicados y de la tanda 4 iguales; la ficha cabe. 17 nov: Gabriel pidió los dedos dibujados y sin el paso del nudo simple: 6 pasos en dos dedos, sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. Falta el filtro 1, con la ficha; ver «Cómo se hizo» del puño de mono en el plan)
 - [ ] Punto de control de la tanda 4
 
 ### Tanda 5: anfitriones especiales

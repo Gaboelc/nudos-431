@@ -34,6 +34,7 @@ from ..spec import Spec
 from .amarre import AmarreCuadrado, cuerda
 from .amarre_diagonal import AmarreDiagonal, cuerda as cuerda_diagonal
 from .paralelos import _Paralelos
+from .puno import PunoDeMono
 from .refuerzo import RefuerzoDeCabo
 from .trazo import ABAJO, ARRIBA, CINTURA, MESA, TrazoDePaso
 
@@ -51,6 +52,8 @@ def geometria(spec: Spec):
         return _AmarreParalelo(spec)
     if isinstance(spec.plantilla, RefuerzoDeCabo):
         return _Refuerzo(spec)
+    if isinstance(spec.plantilla, PunoDeMono):
+        return _Puno(spec)
     return _CabezaDeTurco(spec)
 
 
@@ -147,6 +150,29 @@ class _Adujado:
     def buscar(self, X, h, zonas, trazo: TrazoDePaso):
         from .adujado import buscar_en_la_mesa
         return buscar_en_la_mesa(X, h)
+
+
+class _Puno:
+    """El puño de mono, sin anfitrión (nudos/plantillas/puno.py). La plantilla da la cuerda de
+    cada hito entera, como el refuerzo de cabo; los cruces de las vueltas se buscan en el puño
+    desenrollado, mirado desde su centro, y los del nudo simple y la mesa, desde arriba. No hay
+    sólido, así que no se mide la penetración."""
+    penetracion = None
+    solido = None
+
+    def __init__(self, spec: Spec):
+        self.plantilla = spec.plantilla
+        self._cuerdas = {}
+
+    def cuerda(self, variante: str | None = None):
+        from .puno import Cuerda
+        if variante not in self._cuerdas:
+            self._cuerdas[variante] = Cuerda(self.plantilla, variante)
+        return self._cuerdas[variante]
+
+    def buscar(self, X, h, zonas, trazo: TrazoDePaso):
+        from .puno import buscar as en_el_puno
+        return en_el_puno(X, h, zonas, trazo.marco["centro"], trazo.marco["nudo"])
 
 
 class _CabezaDeTurco:
@@ -247,27 +273,29 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None) -> Resultado:
     # Lo que la plantilla ya traza tenso y la relajación deshace no se mueve: los puntos que
     # caen entre dos puntos de control quietos.
     quietos = None if t.quietos is None else t.quietos[tramo] & t.quietos[siguiente]
+    # El sólido es el de la plantilla; en el puño de mono, los dedos del paso, si los tiene.
+    # Sin anfitrión, como el adujado, no hay sólido en el que entrar.
+    solido, penetracion = g.solido, g.penetracion
+    if t.marco is not None and t.marco.get("solido") is not None:
+        solido, penetracion = t.marco["solido"], ("penetracion_dedos", "en un dedo")
     if quietos is not None and quietos.all():
         # Nada se relaja, como en el adujado; solo se apoya en la mesa lo que la curva suave
         # dejó apenas por debajo.
         Xr = X.copy()
         Xr[:, 2] = np.maximum(Xr[:, 2], R)
     else:
-        Xr = relajar(X, h, anfitrion=g.solido, gravedad=np.zeros(len(X), bool),
+        Xr = relajar(X, h, anfitrion=solido, gravedad=np.zeros(len(X), bool),
                      pasadas_largo=PASADAS_LARGO, quietos=quietos)
-    if g.solido is None:
-        # Libre sobre la mesa: no hay sólido en el que entrar.
-        r = _resultado(n, Xr, h, secuencia, (s_ini, s_fin), buscar=lambda Y: g.buscar(Y, h, zonas, t))
-        r.giro = t.giro
-        return r
-    clave, donde = g.penetracion
+    medir = None
+    if penetracion is not None:
+        clave, donde = penetracion
 
-    def medir(Y):
-        pen = g.solido.penetracion(Y)
-        f = [] if pen <= PENETRACION_MAX else [
-            f"Paso {n}: la cuerda entra {pen:.2f} diámetros {donde}; el máximo es "
-            f"{PENETRACION_MAX}."]
-        return {clave: pen}, f
+        def medir(Y):
+            pen = solido.penetracion(Y)
+            f = [] if pen <= PENETRACION_MAX else [
+                f"Paso {n}: la cuerda entra {pen:.2f} diámetros {donde}; el máximo es "
+                f"{PENETRACION_MAX}."]
+            return {clave: pen}, f
 
     r = _resultado(n, Xr, h, secuencia, (s_ini, s_fin),
                    buscar=lambda Y: g.buscar(Y, h, zonas, t), medir=medir)

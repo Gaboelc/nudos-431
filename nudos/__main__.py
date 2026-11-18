@@ -15,7 +15,8 @@ from .diagnostico import ampliar, diagnostico, leer_pasos
 from .estado import nudos, probadores, tabla
 from .exportar import SitioError, construir_sitio
 from .ficha import FichaError, ficha, url_visor
-from .hoja import ANCHO, desde_abajo, hoja, mapa
+from .hoja import ANCHO, desde_abajo, hoja, mapa, mapa_puno
+from .plantillas.puno import PunoDeMono
 from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pagina_prueba,
                        px)
 from .libre import LIMITES
@@ -221,6 +222,24 @@ def _construir(slug: str) -> int:
     return 0
 
 
+def mapa_del_puno_de_mono(datos: dict, spec):
+    """El puño de mono desenrollado de los pasos de `datos` (hoja.mapa_puno): el centro y el
+    tamaño de cada paso los da la plantilla."""
+    from .plantillas.puno import CAPA, Cuerda, FormaDedos
+    c = Cuerda(spec.plantilla)
+    hitos = {p.n: p.hasta for p in spec.pasos}
+    centros, radios = [], []
+    for p in datos["pasos"]:
+        d = c.paso(hitos[p["n"]])
+        forma = c._forma(c.alias.get(hitos[p["n"]], hitos[p["n"]]))
+        centros.append(d["centro"])
+        # En los dedos, el tercer juego pasa cerca del centro: se dibuja todo lo que no es el
+        # firme ni lo que sigue.
+        cerca = 1.0 if isinstance(forma, FormaDedos) else float(forma.S.min())
+        radios.append((cerca, float(forma.S.max()) + CAPA))
+    return mapa_puno(datos, centros, radios)
+
+
 def _hoja(slug: str, vista: str, pasos: str = "") -> int:
     origen = BUILD / slug / "modelo.json"
     if not origen.exists():
@@ -249,10 +268,15 @@ def _hoja(slug: str, vista: str, pasos: str = "") -> int:
         datos = {**datos, "pasos": [p for p in datos["pasos"] if p["n"] in elegidos]}
         destino = origen.parent / f"hoja-{vista}-pasos-{pasos.replace(',', '_')}.png"
     imagen = hoja(datos, vista, None if spec.anfitrion is None else solido(spec.anfitrion).datos())
+    abajo = None
     if spec.anfitrion is not None and spec.anfitrion.tipo in ("tubo", "cabo"):
         # Sobre el tubo y el cabo, la hoja lleva además su superficie desenrollada, con cada cruce.
         abajo = (mapa(datos, Tubo(spec.anfitrion), spec.plantilla.senos)
                  if spec.anfitrion.tipo == "tubo" else mapa(datos, Cabo(spec.anfitrion)))
+    elif isinstance(spec.plantilla, PunoDeMono):
+        # El puño de mono, desenrollado y mirado desde su centro, con cada cruce de las vueltas.
+        abajo = mapa_del_puno_de_mono(datos, spec)
+    if abajo is not None:
         junta = Image.new("RGB", (max(imagen.width, abajo.width), imagen.height + abajo.height), "white")
         junta.paste(imagen, (0, 0))
         junta.paste(abajo, (0, imagen.height))
