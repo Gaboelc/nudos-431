@@ -36,8 +36,9 @@ alternativas:
     cuando: >-
       Para que la punta de un cordón no se salga de un ojal. Abulta poco y no adorna.
 
-# Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+# Estado de producción (ver «Estado» en docs/formato-spec.md). Gabriel aprobó las imágenes y
+# el texto el 17 de noviembre de 2026; falta el filtro 1.
+estado: modelado
 
 plantilla:
   tipo: puno-de-mono
