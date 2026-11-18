@@ -103,7 +103,7 @@ def test_una_medida_que_no_existe_en_el_texto():
 
 
 @pytest.mark.parametrize("cambio, pista", [
-    ({"tipo": "amarre-que-no-existe"}, "«tipo» es uno de: amarre-cuadrado"),
+    ({"tipo": "amarre-que-no-existe"}, "«tipo» es uno de: adujado, amarre-cuadrado"),
     ({"vueltas": 1}, "«vueltas» es un número entero de 2 a 6"),
     ({"ahorcados": 3.0}, "«ahorcados» es un número entero"),
     ({"vueltas": True}, "«vueltas» es un número entero"),

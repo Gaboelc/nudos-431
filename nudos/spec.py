@@ -269,7 +269,8 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         # Se agrega con el primer nudo de varias cuerdas que se ate sobre un anfitrión.
         raise falla("por ahora, un nudo de varias cuerdas no lleva anfitrión")
     plantilla = _plantilla(datos.get("plantilla"), anfitrion, cuerdas, falla)
-    if plantilla is not None and getattr(plantilla, "CAPAS_DEBAJO", 1) != anfitrion.capas:
+    if (plantilla is not None and anfitrion is not None
+            and getattr(plantilla, "CAPAS_DEBAJO", 1) != anfitrion.capas):
         anfitrion = replace(anfitrion, capas=plantilla.CAPAS_DEBAJO)
     pasos = datos.get("pasos")
     if not isinstance(pasos, list) or not pasos:
@@ -324,7 +325,11 @@ def _plantilla(datos, anfitrion: Anfitrion | None, cuerdas: tuple[Cuerda, ...], 
     if clase is None:
         raise pf(f"«tipo» es uno de: {', '.join(TIPOS_PLANTILLA)}")
     plantilla = clase.leer(datos, pf)
-    if anfitrion is None or anfitrion.tipo != clase.ANFITRION:
+    if clase.ANFITRION is None:
+        # Una plantilla libre sobre la mesa, como el adujado.
+        if anfitrion is not None:
+            raise pf(f"la plantilla {clase.tipo} va libre sobre la mesa: no lleva «anfitrion»")
+    elif anfitrion is None or anfitrion.tipo != clase.ANFITRION:
         raise pf(f"la plantilla {clase.tipo} va sobre el anfitrión {clase.ANFITRION}")
     palos = getattr(clase, "PALOS", None)
     if palos is not None and anfitrion.cantidad != palos:

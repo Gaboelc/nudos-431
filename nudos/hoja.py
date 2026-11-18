@@ -12,6 +12,9 @@ palos paralelos, color madera, y el cabo, color crema. Sobre el cabo, además, e
 desenrollado (mapa()). Son parte de la cuerda que se revisa: sin ellos no se ve qué rodea la
 cuerda. El poste, los palos y el cabo se dibujan solo dentro del encuadre, más un margen. El tubo de
 la cabeza de turco no se dibuja: para eso está el tubo desenrollado.
+
+El adujado, sin anfitrión, lleva además la aduja vista desde abajo (desde_abajo()): desde arriba
+no se ve la cara de abajo de las vueltas ni del seno que la rodea.
 """
 from __future__ import annotations
 
@@ -77,6 +80,23 @@ def _altura(datos: dict, x0: float, x1: float, y0: float, y1: float) -> float:
     X = np.vstack([np.asarray(p["puntos"], float) for p in datos["pasos"]])
     dentro = (X[:, 0] >= x0) & (X[:, 0] <= x1) & (X[:, 1] >= y0) & (X[:, 1] <= y1)
     return float(np.median(X[dentro, 2])) if dentro.any() else 0.0
+
+
+def desde_abajo(datos: dict) -> dict:
+    """Los mismos pasos girados media vuelta sobre el eje x, como se da vuelta la aduja hacia
+    quien la mira: lo de abajo queda arriba y lo de delante, atrás. Se dibujan con hoja() como
+    cualquier otro paso. El giro es rígido y la cuerda queda apoyada en la mesa."""
+    def girar(p: dict) -> dict:
+        X = np.asarray(p["puntos"], float).copy()
+        X[:, 1] *= -1
+        X[:, 2] = X[:, 2].max() + R - X[:, 2]
+        return {**p, "puntos": X.tolist()}
+
+    out = {**datos, "pasos": [girar(p) for p in datos["pasos"]]}
+    if datos.get("encuadre"):
+        y0, y1 = datos["encuadre"]["y"]
+        out["encuadre"] = {"x": datos["encuadre"]["x"], "y": [-y1, -y0]}
+    return out
 
 
 def _encuadre(datos: dict) -> tuple[float, float, float, float]:

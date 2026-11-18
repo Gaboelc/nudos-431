@@ -1,0 +1,108 @@
+# Adujado: guarda una cuerda larga enrollada y atada, lista para soltarla sin enredos. Es un
+# nudo de plantilla sin anfitrión (nudos/plantillas/adujado.py): la plantilla traza la cuerda de
+# cada paso a partir del número de senos y de vueltas, y cada paso dice con «hasta» hasta dónde
+# llega. El método es el del diseño de la tanda 4 en tasks/plan.md («El adujado»). Unidades:
+# diámetros de la cuerda. El extremo sale por la izquierda y las vueltas avanzan hacia la
+# derecha.
+slug: adujado
+nombre: Adujado
+familia: Cuidado de la cuerda
+abok: 3089
+
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+# {senos} y {vueltas} salen en letras.
+usos: >-
+  Guarda una cuerda larga enrollada y atada, para que no se enrede y la puedas soltar rápido
+  cuando la necesites.
+materiales: Una cuerda de 5 a 10 m.
+verificacion:
+  - Los senos quedan parejos y la cuerda no tiene torceduras.
+  - Las vueltas van apretadas, una junto a otra, alrededor de la mitad de la aduja.
+  - El seno abraza la aduja junto a las vueltas. Si sacudes la aduja, no se suelta.
+precauciones:
+  - Para usar la cuerda, saca el seno de la punta, deshaz las vueltas y deja la aduja en el
+    suelo con el extremo del principio abajo. Así la cuerda sale sin enredarse.
+  - Guarda la cuerda seca. Si está mojada, déjala secar suelta antes de adujarla.
+alternativas:
+  - nudo: Adujado en ocho
+    cuando: >-
+      Si la cuerda es rígida o se tuerce mucho, deja cada seno cruzado sobre el anterior, en
+      forma de ocho, sin girarla. Se termina igual.
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md). Gabriel aprobó las imágenes y
+# el texto el 17 de noviembre de 2026; falta el filtro 1.
+estado: modelado
+
+plantilla:
+  tipo: adujado
+  senos: 4
+  vueltas: 4
+
+# Zona que se muestra en los pasos y el error.
+encuadre:
+  x: [-29.0, 25.0]
+  y: [-14.0, 14.0]
+
+pasos:
+  - titulo: Haz los dos primeros senos
+    texto: >-
+      Deja el extremo un poco más largo que la aduja, hacia la izquierda. Haz un seno que se
+      cierre por encima del extremo, y otro por fuera de él que se cierre por debajo.
+    hasta: seno-2
+
+  - titulo: Haz los demás senos
+    texto: >-
+      Sigue haciendo senos del mismo tamaño, uno por encima del extremo y el siguiente por
+      debajo, hasta tener {senos}.
+    hasta: senos
+
+  - titulo: Junta la aduja y da la primera vuelta
+    texto: >-
+      Aprieta la aduja por la mitad para que quede larga y angosta. Con la cuerda que sobra, da
+      una vuelta apretada alrededor de la mitad.
+    hasta: vuelta-1
+
+  - titulo: Da las demás vueltas
+    texto: >-
+      Sigue dando vueltas hacia la derecha, apretadas y una junto a otra, hasta tener
+      {vueltas}.
+    hasta: vueltas
+
+  - titulo: Pasa un seno por el ojo
+    texto: >-
+      Pasa la cuerda por encima de la aduja hasta el ojo de la derecha y mete por él un seno,
+      de arriba abajo, hasta que salga por debajo de la punta.
+    hasta: por-el-ojo
+
+  - titulo: Pasa el seno por encima de la punta
+    texto: >-
+      Abre el seno y pásalo por encima de la punta de la aduja, hasta que la abrace junto a las
+      vueltas.
+    hasta: por-encima
+
+  - titulo: Tira del chicote
+    texto: Tira del chicote hasta que el seno quede apretado contra las vueltas.
+    hasta: tirar
+
+# El error con imagen lo construye la plantilla: todos los senos por encima del extremo, en vez
+# de alternar. Va junto al paso 1, más cerca, para que se vea el cruce del segundo seno.
+error:
+  paso: 1
+  variante: sin-alternar
+  encuadre:       # cerca de donde los senos se cierran sobre el extremo
+    x: [-28.0, -7.0]
+    y: [-9.0, 9.0]
+  titulo: Los senos sin alternar
+  texto: >-
+    Cerraste el segundo seno por encima del extremo, igual que el primero. Cada seno tuerce un
+    poco la cuerda, y al soltar la aduja salen cocas y se enreda. Ciérralos uno por encima y
+    otro por debajo.
+  otros:
+    - titulo: El seno sin pasar por la punta
+      texto: >-
+        Si tiras del chicote sin pasar el seno por encima de la punta, el seno se sale del ojo
+        y las vueltas se sueltan.
+    - titulo: El extremo dentro de la aduja
+      texto: >-
+        Si empiezas con el extremo dentro de la aduja, al soltarla la cuerda sale enredada.
+        Déjalo por fuera.

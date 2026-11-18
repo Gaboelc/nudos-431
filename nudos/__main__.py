@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from . import BUILD, RAIZ
 from .anfitrion import Cabo, Tubo, solido
@@ -15,7 +15,7 @@ from .diagnostico import ampliar, diagnostico, leer_pasos
 from .estado import nudos, probadores, tabla
 from .exportar import SitioError, construir_sitio
 from .ficha import FichaError, ficha, url_visor
-from .hoja import hoja, mapa
+from .hoja import ANCHO, desde_abajo, hoja, mapa
 from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pagina_prueba,
                        px)
 from .libre import LIMITES
@@ -254,6 +254,14 @@ def _hoja(slug: str, vista: str, pasos: str = "") -> int:
         abajo = (mapa(datos, Tubo(spec.anfitrion), spec.plantilla.senos)
                  if spec.anfitrion.tipo == "tubo" else mapa(datos, Cabo(spec.anfitrion)))
         junta = Image.new("RGB", (max(imagen.width, abajo.width), imagen.height + abajo.height), "white")
+        junta.paste(imagen, (0, 0))
+        junta.paste(abajo, (0, imagen.height))
+        imagen = junta
+    elif spec.anfitrion is None and spec.plantilla is not None:
+        # El adujado: además, la aduja vista desde abajo.
+        abajo = hoja(desde_abajo(datos), vista)
+        ImageDraw.Draw(abajo).text((ANCHO - 150, 10), "Vista desde abajo", fill=(30, 30, 30))
+        junta = Image.new("RGB", (imagen.width, imagen.height + abajo.height), "white")
         junta.paste(imagen, (0, 0))
         junta.paste(abajo, (0, imagen.height))
         imagen = junta

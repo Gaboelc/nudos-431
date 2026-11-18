@@ -28,7 +28,7 @@ import numpy as np
 
 from ..anfitrion import PASADAS_LARGO, PENETRACION_MAX, Cabo, Cruz, Palos, Tubo
 from ..cruces import Cruce, cruces_2d, emparejar
-from ..libre import Resultado, TrazadoError, _resultado, catmull_rom, relajar, remuestrear
+from ..libre import R, Resultado, TrazadoError, _resultado, catmull_rom, relajar, remuestrear
 from ..procesos import ejecutor
 from ..spec import Spec
 from .amarre import AmarreCuadrado, cuerda
@@ -42,6 +42,9 @@ RADIO_CINTURA = 6.0   # radio con que se desenrolla la cintura; solo cambia la e
 
 def geometria(spec: Spec):
     """Lo propio de la plantilla del nudo: su sólido, su cuerda y cómo buscar sus cruces."""
+    from .adujado import Adujado
+    if isinstance(spec.plantilla, Adujado):
+        return _Adujado(spec)
     if isinstance(spec.plantilla, (AmarreCuadrado, AmarreDiagonal)):
         return _Amarre(spec)
     if isinstance(spec.plantilla, _Paralelos):
@@ -123,6 +126,27 @@ class _Refuerzo:
     def buscar(self, X, h, zonas, trazo: TrazoDePaso):
         from .refuerzo import buscar_en_el_cabo
         return buscar_en_el_cabo(X, h, zonas, self.solido)
+
+
+class _Adujado:
+    """El adujado, libre sobre la mesa (nudos/plantillas/adujado.py): no tiene sólido, y sus
+    cruces se buscan desde arriba, como en un nudo libre."""
+    penetracion = None
+    solido = None
+
+    def __init__(self, spec: Spec):
+        self.plantilla = spec.plantilla
+        self._cuerdas = {}
+
+    def cuerda(self, variante: str | None = None):
+        from .adujado import Cuerda
+        if variante not in self._cuerdas:
+            self._cuerdas[variante] = Cuerda(self.plantilla, variante)
+        return self._cuerdas[variante]
+
+    def buscar(self, X, h, zonas, trazo: TrazoDePaso):
+        from .adujado import buscar_en_la_mesa
+        return buscar_en_la_mesa(X, h)
 
 
 class _CabezaDeTurco:
@@ -223,8 +247,19 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None) -> Resultado:
     # Lo que la plantilla ya traza tenso y la relajación deshace no se mueve: los puntos que
     # caen entre dos puntos de control quietos.
     quietos = None if t.quietos is None else t.quietos[tramo] & t.quietos[siguiente]
-    Xr = relajar(X, h, anfitrion=g.solido, gravedad=np.zeros(len(X), bool), pasadas_largo=PASADAS_LARGO,
-                 quietos=quietos)
+    if quietos is not None and quietos.all():
+        # Nada se relaja, como en el adujado; solo se apoya en la mesa lo que la curva suave
+        # dejó apenas por debajo.
+        Xr = X.copy()
+        Xr[:, 2] = np.maximum(Xr[:, 2], R)
+    else:
+        Xr = relajar(X, h, anfitrion=g.solido, gravedad=np.zeros(len(X), bool),
+                     pasadas_largo=PASADAS_LARGO, quietos=quietos)
+    if g.solido is None:
+        # Libre sobre la mesa: no hay sólido en el que entrar.
+        r = _resultado(n, Xr, h, secuencia, (s_ini, s_fin), buscar=lambda Y: g.buscar(Y, h, zonas, t))
+        r.giro = t.giro
+        return r
     clave, donde = g.penetracion
 
     def medir(Y):
@@ -238,6 +273,20 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None) -> Resultado:
                    buscar=lambda Y: g.buscar(Y, h, zonas, t), medir=medir)
     r.giro = t.giro
     return r
+
+
+def voltear_sin_relajar(r: Resultado, secuencia) -> Resultado:
+    """El paso visto por detrás, en un nudo de plantilla sin anfitrión: la cuerda se voltea
+    sobre el eje y, como una página, y queda apoyada en la mesa. Es un giro rígido y no se relaja,
+    porque la plantilla ya la traza sin relajar; cada cruce queda al revés."""
+    from ..cruces import encima
+    from .adujado import buscar_en_la_mesa
+    X = r.puntos.copy()
+    X[:, 0] *= -1
+    X[:, 2] = (X[:, 2] + 0.5).max() - X[:, 2]
+    X[:, 2] += 0.5 - X[:, 2].min()
+    invertida = tuple(tk[:-1] + ("U" if encima(tk) else "O") for tk in secuencia)
+    return _resultado(r.n, X, r.h, invertida, None, buscar=lambda Y: buscar_en_la_mesa(Y, r.h))
 
 
 def mapas(X, cruz: Cruz) -> dict[int, tuple[np.ndarray, np.ndarray, float | None]]:
