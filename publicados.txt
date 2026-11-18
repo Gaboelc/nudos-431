@@ -28,3 +28,9 @@ tensor
 constrictor
 presilla-de-alondra
 prusik
+amarre-diagonal
+amarre-redondo
+amarre-tripode
+refuerzo-de-cabo
+adujado
+puno-de-mono

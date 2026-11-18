@@ -37,8 +37,15 @@ alternativas:
       Para que la punta de un cordón no se salga de un ojal. Abulta poco y no adorna.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md). Gabriel aprobó las imágenes y
-# el texto el 17 de noviembre de 2026; falta el filtro 1.
-estado: modelado
+# el texto el 17 de noviembre de 2026, y el nudo pasó el filtro 1 ese mismo día.
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-17
+    resultado: aprobado
+    ficha: 126d0ec
 
 plantilla:
   tipo: puno-de-mono

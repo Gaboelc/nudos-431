@@ -43,7 +43,14 @@ alternativas:
     cuando: Para unir dos palos uno junto al otro, a lo largo, por ejemplo para alargar uno.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-17
+    resultado: aprobado
+    ficha: 24d7d39
 
 anfitrion:
   tipo: cruz
