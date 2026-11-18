@@ -263,7 +263,10 @@ function cajaDeEncuadre(modelo) {
    la caja y el del anfitrión. */
 function altoDeEncuadre(modelo, B) {
   const a = modelo.anfitrion;
-  if (!a && !modelo.cuerdas) return ALTO;
+  // El puño de mono no tiene anfitrión, pero es alto y se ata en dos dedos: se encuadra entero.
+  const dedos = modelo.pasos.filter((s) => s.dedos).map((s) => s.dedos);
+  const puno = !a && modelo.dos_remates;
+  if (!a && !modelo.cuerdas && !puno) return ALTO;
   let alto = ALTO;
   for (const s of modelo.pasos) {
     for (const c of cuerdasDe(modelo, s)) {
@@ -274,9 +277,10 @@ function altoDeEncuadre(modelo, B) {
       }
     }
   }
-  if (a && (a.tipo === "poste" || a.tipo === "tubo")) alto = Math.max(alto, a.z + a.radio);
+  if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos" || a.tipo === "cabo")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   if (a && a.tipo === "destorcedor") alto = Math.max(alto, a.alto);
+  for (const d of dedos) alto = Math.max(alto, d.alto);
   return alto;
 }
 
@@ -354,7 +358,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   scene.add(mesa);
 
   // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x, la
-  // cruz de los amarres o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
+  // cruz de los amarres, los palos paralelos o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
   // three.js va a lo largo de y. El destorcedor, de metal, y la estaca van más abajo.
   const a = modelo.anfitrion;
   const madera = () => new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 });
@@ -380,6 +384,36 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   if (a && a.tipo === "cruz") {
     palo(a.largo, 0, 0, a.z_abajo, false);
     palo(a.largo, 0, 0, a.z_arriba, true);
+  }
+  // Los palos paralelos del amarre redondo y el trípode: acostados a lo largo de x, uno junto
+  // al otro, con los ejes en las «y» y a la altura «z».
+  if (a && a.tipo === "palos") for (const y of a.y) palo(a.largo, 0, y, a.z, true);
+  // El cabo del refuerzo de cabo: es un sólido, pero se dibuja como una cuerda gruesa, crema
+  // y con la misma trenza que las cuerdas, a lo largo de x desde -largo hasta la punta
+  // cortada en x = 0, con el eje a la altura «z». Los dos cortes son discos del tono oscuro
+  // de la trenza, para que se vea que es la punta de una cuerda.
+  if (a && a.tipo === "cabo") {
+    const curva = new THREE.LineCurve3(new THREE.Vector3(-a.largo, 0, a.z), new THREE.Vector3(0, 0, a.z));
+    const geo = new THREE.TubeGeometry(curva, 8, a.radio, 96, false);
+    // Sin el hilo de color: a ese grosor se vería como una raya.
+    const [cl, cm, co] = COLORES.crema;
+    const tr = texturasTrenza(renderer, cl, cm, co, cm);
+    const rep = a.largo / (Math.PI * 2 * a.radio);
+    tr.map.repeat.set(rep, 1); tr.bump.repeat.set(rep, 1);
+    const mat = new THREE.MeshStandardMaterial({ map: tr.map, bumpMap: tr.bump, bumpScale: 2.2, roughness: 0.8, metalness: 0 });
+    const cabo = new THREE.Mesh(geo, mat);
+    cabo.castShadow = true; cabo.receiveShadow = true;
+    scene.add(cabo);
+    const corte = new THREE.MeshStandardMaterial({ color: new THREE.Color(...COLORES.crema[1].map((v) => v / 255)).convertSRGBToLinear(),
+      roughness: 0.95, metalness: 0 });
+    for (const [x, giro] of [[0, Math.PI / 2], [-a.largo, -Math.PI / 2]]) {
+      const tapa = new THREE.Mesh(new THREE.CircleGeometry(a.radio, 96), corte);
+      tapa.rotation.y = giro;
+      tapa.position.set(x, 0, a.z);
+      tapa.castShadow = true; tapa.receiveShadow = true;
+      scene.add(tapa);
+    }
+    ejesPalos.push({ a: [-a.largo, 0, a.z], b: [0, 0, a.z], radio: a.radio });
   }
   // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
   // la mesa en x = y = 0, de la mesa hasta «alto». El destorcedor es corto y gris acero, para
@@ -454,9 +488,29 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     return c;
   }));
 
+  // Los dedos en que se ata el puño de mono, en los pasos que los tienen: dos cilindros
+  // parados sobre la mesa, color piel y con la punta redonda.
+  const matDedo = new THREE.MeshStandardMaterial({ color: 0xe2b896, roughness: 0.7, metalness: 0 });
+  function dedos(d, grupo) {
+    const ejes = [];
+    for (const x of d.x) {
+      const largo = d.alto - d.radio;
+      const cil = new THREE.Mesh(new THREE.CylinderGeometry(d.radio, d.radio, largo, 48, 1, true), matDedo);
+      cil.rotation.x = Math.PI / 2;
+      cil.position.set(x, d.y, largo / 2);
+      const punta = new THREE.Mesh(new THREE.SphereGeometry(d.radio, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2), matDedo);
+      punta.rotation.x = Math.PI / 2;
+      punta.position.set(x, d.y, largo);
+      for (const m of [cil, punta]) { m.castShadow = true; m.receiveShadow = true; grupo.add(m); }
+      ejes.push({ a: [x, d.y, 0], b: [x, d.y, largo], radio: d.radio });
+    }
+    return ejes;
+  }
+
   function construirPaso(paso) {
     const grupo = new THREE.Group();
     const tubos = [], todos = [], nombres = {}, geos = [];
+    const ejesDedos = paso.dedos ? dedos(paso.dedos, grupo) : [];
     let chicote = null;
     cuerdasDe(modelo, paso).forEach((c, n) => {
       const pts = puntos(c);
@@ -519,7 +573,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       }
     });
     if (chicote) nombres.chicote = chicote;
-    if (vertexColors) sombraDeContacto(geos, ejesPalos);
+    if (vertexColors) sombraDeContacto(geos, ejesDedos.length ? ejesPalos.concat(ejesDedos) : ejesPalos);
     return { grupo, tubos, pts: todos, nombres };
   }
 
