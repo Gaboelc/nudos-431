@@ -1,5 +1,5 @@
-"""El barril: un cilindro parado, con los bordes redondeados, para la eslinga de barril
-(formato v1.13).
+"""El barril: una cubeta parada, que se angosta hacia la base y tiene arriba una banda y la
+tapa, con los bordes redondeados, para la eslinga de barril (formato v1.13).
 
 El nudo de prueba no es del libro: el firme llega por delante y pasa por debajo del barril,
 sube por el costado y cruza la tapa por detrás. En el paso 2 baja por la derecha, rodea el
@@ -10,11 +10,12 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from nudos.anfitrion import BORDE, COSTADO, MESA, PENETRACION_MAX, TAPA, Barril, _curva, solido, sobre_superficie
+from nudos.anfitrion import (BORDE, COSTADO, FONDO_CUBETA, MESA, PENETRACION_MAX, TAPA, TAPA_CUBETA, Barril,
+                             _curva, solido, sobre_superficie)
 from nudos.construir import construir, datos_json
 from nudos.exportar import datos_escena
 from nudos.ficha import POR_DETRAS
-from nudos.hoja import MADERA, hoja, mapa
+from nudos.hoja import hoja, mapa
 from nudos.imprimir import imagenes
 from nudos.spec import BASE_BARRIL, CANTO_BARRIL, Anfitrion, SpecError, desde_datos
 
@@ -103,25 +104,31 @@ def test_de_la_tapa_a_la_mesa_se_baja_por_el_costado():
 
 
 # --- El sólido --------------------------------------------------------------
-def test_se_apoya_en_la_cuerda_y_su_costado_es_como_el_del_destorcedor():
+def test_es_una_cubeta_que_se_apoya_en_la_cuerda():
     b = barril()
     assert b.rb == pytest.approx(6.5) and b.ztapa == pytest.approx(BASE_BARRIL + 10 + 0.5)
     assert b.zb == pytest.approx(BASE_BARRIL + CANTO_BARRIL)
-    # 0 hacia quien ata, 90 a la derecha
-    assert np.allclose(b.costado([0.0, 90.0], [3.0, 5.0]), [[0, -6.5, 3], [6.5, 0, 5]], atol=1e-12)
+    # 0 hacia quien ata, 90 a la derecha. En la banda, la cuerda va a radio + 0,5 del eje; más
+    # abajo, se angosta hacia la base.
+    assert np.allclose(b.costado(90.0, 10.0), [6.5, 0, 10], atol=1e-12)
+    x, y, z = b.costado(0.0, 3.0)
+    assert x == pytest.approx(0, abs=1e-12) and y < 0 and z == 3.0
+    r = -b.costado(0.0, np.array([2.0, 5.0, 7.0]))[:, 1]
+    assert (np.diff(r) > 0).all() and r[0] < 6.5 - 0.5
+    assert b.fondo == pytest.approx(FONDO_CUBETA * 6)
 
 
 def test_empujar_saca_por_el_costado_la_tapa_la_base_y_el_borde():
     b = barril()
-    X = np.array([[0.0, -5.0, 6.0],     # dentro, cerca del costado de delante
+    X = np.array([[0.0, -6.0, 10.0],    # dentro, cerca de la banda de delante
                   [1.0, 1.0, 10.8],     # dentro, cerca de la tapa
                   [0.0, 0.0, 0.5],      # bajo la base, justo tocándola
                   [5.9, 0.0, 10.9],     # en el borde de la tapa
                   [0.0, 0.0, 15.0]])    # lejos, arriba
-    assert b.penetracion(X) > 1
+    assert b.penetracion(X) > 0.4
     b.empujar(X, np.ones(len(X), bool))
     assert b.penetracion(X) == pytest.approx(0, abs=1e-9)
-    assert X[0].tolist() == pytest.approx([0.0, -6.5, 6.0])
+    assert X[0].tolist() == pytest.approx([0.0, -6.5, 10.0])
     assert X[1].tolist() == pytest.approx([1.0, 1.0, 11.5])
     assert X[2].tolist() == pytest.approx([0.0, 0.0, 0.5])
     assert np.hypot(X[3, 0] - b.rc, X[3, 2] - b.zt) == pytest.approx(b.e0)
@@ -130,7 +137,7 @@ def test_empujar_saca_por_el_costado_la_tapa_la_base_y_el_borde():
 
 def test_la_distancia_al_eje_mide_desde_la_superficie():
     b = barril()
-    _, th, r = b.cilindricas(np.array([[9.5, 0.0, 6.0], [0.0, 0.0, 14.5], [0.0, -6.5, 6.0]]))
+    _, th, r = b.cilindricas(np.array([[9.5, 0.0, 10.0], [0.0, 0.0, 14.5], [0.0, -6.5, 10.0]]))
     assert r.tolist() == pytest.approx([9.5, 6.5 + 3, 6.5])
     assert np.degrees(th[0]) == pytest.approx(90) and np.degrees(th[2]) == pytest.approx(0, abs=1e-9)
 
@@ -141,7 +148,7 @@ def test_la_curva_rodea_los_bordes_en_el_angulo_del_costado():
     assert type(b) is Barril and type(solido(s.anfitrion)) is Barril
     X, h, ctrl_s, zona = _curva(s.pasos[0], b)
     assert set(zona.tolist()) == {MESA, COSTADO, TAPA, BORDE}
-    assert b.penetracion(X) < 0.05
+    assert b.penetracion(X) < 0.1   # casi no entra; al relajar sale del todo
     # Lo que rodea el borde de la base, sale debajo del barril en el ángulo de la subida (240°).
     borde = X[zona == BORDE]
     abajo = borde[borde[:, 2] < 5]
@@ -176,24 +183,31 @@ def test_como_sobre_el_poste_no_hay_reverso_y_se_mira_desde_el_otro_lado(modelo)
     imgs = {i.nombre: i for i in imagenes(modelo)}
     assert imgs["terminado-reverso"].vista == "detras"
     assert imgs["terminado-frente"].escena["anfitrion"]["tipo"] == "barril"
-    e = datos_escena(modelo, None, modelo.pasos)
-    assert e["anfitrion"] == {"tipo": "barril", "radio": 6.0, "alto": 10.0, "canto": CANTO_BARRIL,
-                              "base": BASE_BARRIL}
+    a = datos_escena(modelo, None, modelo.pasos)["anfitrion"]
+    assert {k: a[k] for k in ("tipo", "radio", "alto", "base", "tapa")} == {
+        "tipo": "barril", "radio": 6.0, "alto": 10.0, "base": BASE_BARRIL,
+        "tapa": BASE_BARRIL + 10 - TAPA_CUBETA}
+    # El perfil va del centro de la base al de la tapa, por fuera de la cubeta.
+    perfil = np.array(a["perfil"])
+    assert perfil[0].tolist() == pytest.approx([0, BASE_BARRIL]) and perfil[-1].tolist() == pytest.approx([0, 11])
+    assert perfil[:, 0].max() == pytest.approx(6.0)
 
 
 def test_la_ficha_dice_como_se_mira_por_detras():
     assert "barril" in POR_DETRAS["barril"]
 
 
-def test_la_hoja_lo_dibuja_de_madera_y_desenrolla_su_costado(modelo):
+def test_la_hoja_la_dibuja_amarilla_y_desenrolla_su_costado(modelo):
     d = datos_json(modelo)
     d1 = {**d, "pasos": d["pasos"][:1]}
     sin = np.asarray(hoja(d1, "arriba"), float) / 255
     con = np.asarray(hoja(d1, "arriba", solido(modelo.spec.anfitrion).datos()), float) / 255
 
-    def madera(im):
-        return int((np.abs(im - MADERA).max(axis=2) < 0.12).sum())
-    assert madera(con) > madera(sin) + 1000
+    def amarillo(im):
+        # Con la luz de la hoja, el amarillo cambia de tono: se cuenta lo amarillento.
+        r, g, b = im[..., 0], im[..., 1], im[..., 2]
+        return int(((r - b > 0.25) & (g - b > 0.15)).sum())
+    assert amarillo(con) > amarillo(sin) + 1000
     im = mapa(d, Barril(modelo.spec.anfitrion))
     assert im.width > 0 and im.height > 0
 

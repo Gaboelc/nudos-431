@@ -634,105 +634,208 @@ class Cornamusa:
 
 # Las zonas de la cuerda sobre el barril: dónde se buscan sus cruces (Barril.cruces).
 MESA, COSTADO, TAPA, BORDE = 0, 1, 2, 3
+# La forma de la cubeta, en proporción a su radio (el de la banda de arriba) y a su alto. Va
+# fija en el código, como los cantos del tablón.
+FONDO_CUBETA = 0.86     # el radio de la base, del de arriba: se angosta hacia abajo
+BANDA_CUBETA = 0.22     # el alto de la banda de arriba, del alto
+ESCALON_CUBETA = 0.05   # cuánto sobresale la banda del costado, del radio
+TAPA_CUBETA = 0.7       # el grosor de la tapa, en diámetros: solo cambia su color
+RANURAS_CUBETA = (0.3, 0.62)   # dónde van las dos ranuras de la banda, de abajo hacia arriba
+RANURA = (0.12, 0.3)    # su hondura y su ancho, en diámetros: van hacia dentro, y la cuerda no entra
 
 
 class Barril:
-    """El barril de la eslinga de barril: un cilindro parado, con el eje vertical en x = y = 0,
-    de `radio` y `alto`, con los bordes de la tapa y de la base redondeados con radio
-    CANTO_BARRIL. Se apoya sobre la cuerda que pasa por debajo, así que su base queda a la
-    altura BASE_BARRIL, como el poste.
+    """El barril de la eslinga de barril, con forma de cubeta: parado, con el eje vertical en
+    x = y = 0, se angosta hacia la base (FONDO_CUBETA) y arriba tiene una banda algo más ancha
+    (ESCALON_CUBETA) y la tapa. `radio` es el de la banda y `alto` va de la base a la tapa. Los
+    bordes van redondeados con radio CANTO_BARRIL. Se apoya sobre la cuerda que pasa por debajo,
+    así que su base queda a la altura BASE_BARRIL, como el poste.
+
+    La forma es la de su núcleo, un perfil en el plano (distancia al eje, altura) que se gira
+    alrededor del eje: la superficie de la cubeta está a CANTO_BARRIL de él, y el eje de una
+    cuerda que la toca, a e0 = CANTO_BARRIL + R. Ese contorno de la cuerda, el meridiano, va del
+    centro de la base al de la tapa, y cada punto suyo es de una zona: la mesa bajo la base, un
+    borde, el costado (también el escalón de la banda) o la tapa.
 
     La cuerda le pasa por debajo, sobre la mesa, [x, y]; por el costado, [ángulo, altura], con
     el ángulo alrededor del eje (0 hacia quien ata, 90 a la derecha, 180 al fondo) y la altura
     del eje de la cuerda, y por la tapa, [x, y]. Al pasar del costado a la tapa, o de debajo
-    del barril al costado, la cuerda rodea el borde sola, en el ángulo del punto del costado
-    (`curva`). Se construye por el camino del poste, con lo que depende de la forma aquí:
-    la curva, cómo se separa la cuerda en un cruce (`separar`) y los cruces, que se buscan en
-    tres zonas (`cruces`): el costado desenrollado, donde encima es lo más lejos del eje, y la
-    tapa y la mesa, desde arriba. Entre una zona y otra, y en los bordes, no se buscan."""
+    de la cubeta al costado, la cuerda sigue el meridiano, en el ángulo del punto del costado
+    (`curva`). Se construye por el camino del poste, con lo que depende de la forma aquí: la
+    curva, cómo se separa la cuerda en un cruce (`separar`) y los cruces, que se buscan en tres
+    zonas (`cruces`): el costado desenrollado, donde encima es lo más lejos de la superficie, y
+    la tapa y la mesa, desde arriba. Entre una zona y otra, y en los bordes, no se buscan."""
     MEDIDA = ("penetracion_barril", "en el barril")
 
     def __init__(self, a: Anfitrion):
         self.radio, self.alto = a.radio, a.alto
-        self.rc = a.radio - CANTO_BARRIL                 # radio del núcleo, sin los bordes
-        self.zb = BASE_BARRIL + CANTO_BARRIL             # el núcleo va de zb a zt
-        self.zt = BASE_BARRIL + a.alto - CANTO_BARRIL
-        self.e0 = CANTO_BARRIL + R                       # del núcleo al eje de una cuerda que lo toca
-        self.rb = a.radio + R                            # del eje del barril al de una cuerda en el costado
+        c = CANTO_BARRIL
+        self.rc = a.radio - c                            # radio del núcleo en la banda
+        self.zb = BASE_BARRIL + c                        # el núcleo va de zb a zt
+        self.zt = BASE_BARRIL + a.alto - c
+        self.e0 = c + R                                  # del núcleo al eje de una cuerda que lo toca
+        self.rb = a.radio + R                            # para desenrollar el costado
         self.ztapa = BASE_BARRIL + a.alto + R            # altura de una cuerda sobre la tapa
+        self.fondo = FONDO_CUBETA * a.radio              # radio de la base, por fuera
+        esc = ESCALON_CUBETA * a.radio
+        zbanda = self.zt - BANDA_CUBETA * a.alto
+        self.zbanda = zbanda
+        # El núcleo, del centro de la base al de la tapa: la base, el costado que se abre hacia
+        # arriba, el escalón de la banda, la banda y la tapa.
+        self._perfil = np.array([[0.0, self.zb], [self.fondo - c, self.zb],
+                                 [self.rc - esc, zbanda - esc], [self.rc, zbanda],
+                                 [self.rc, self.zt], [0.0, self.zt]])
+        self.m, mr, mz, self.mzona = self._contorno(self.e0)
+        self.mr, self.mz = mr, mz
+        lado = self.mzona == COSTADO
+        self._m_lado, self._z_lado = self.m[lado], mz[lado]
+        self.m_fondo = float(self.m[self.mzona == MESA].max())
+        self.m_tapa = float(self.m[self.mzona == TAPA].min())
+
+    # El perfil --------------------------------------------------------------------------
+    def _contorno(self, e: float, paso: float = 0.05):
+        """El contorno a `e` del núcleo, del centro de la base al de la tapa, cada `paso`: su
+        largo acumulado, la distancia al eje, la altura y la zona de cada punto. En un vértice
+        hacia afuera es un arco; en uno hacia dentro, como bajo el escalón, una esquina."""
+        P = self._perfil
+        d = np.diff(P, axis=0)
+        largo = np.linalg.norm(d, axis=1)
+        t = d / largo[:, None]
+        n = np.column_stack([t[:, 1], -t[:, 0]])          # hacia afuera
+        ini, fin = P[:-1] + e * n, P[1:] + e * n
+        arcos = {}
+        for v in range(1, len(P) - 1):
+            giro = t[v - 1, 0] * t[v, 1] - t[v - 1, 1] * t[v, 0]
+            if giro > 0:
+                arcos[v] = True
+            else:
+                # Hacia dentro: los dos lados desplazados se cortan, y ahí termina cada uno.
+                M = np.column_stack([t[v - 1], -t[v]])
+                k = np.linalg.solve(M, ini[v] - ini[v - 1])
+                corte = ini[v - 1] + t[v - 1] * k[0]
+                fin[v - 1], ini[v] = corte, corte
+        zona_cara = {0: MESA, len(P) - 2: TAPA}
+        zona_vertice = {1: BORDE, len(P) - 2: BORDE}
+        puntos, zonas = [], []
+        for k in range(len(P) - 1):
+            if k > 0 and arcos.get(k):
+                a0 = math.atan2(n[k - 1, 1], n[k - 1, 0])
+                a1 = math.atan2(n[k, 1], n[k, 0])
+                a1 = a0 + (a1 - a0) % (2 * math.pi)
+                m = max(2, int(math.ceil((a1 - a0) * e / paso)))
+                f = np.linspace(a0, a1, m + 1)[1:-1]
+                puntos.append(P[k] + e * np.column_stack([np.cos(f), np.sin(f)]))
+                zonas += [zona_vertice.get(k, COSTADO)] * len(f)
+            m = max(1, int(math.ceil(np.linalg.norm(fin[k] - ini[k]) / paso)))
+            s = np.linspace(0, 1, m + 1)[:, None]
+            puntos.append(ini[k] + (fin[k] - ini[k]) * s)
+            zonas += [zona_cara.get(k, COSTADO)] * (m + 1)
+        X = np.vstack(puntos)
+        zonas = np.array(zonas)
+        # Sin puntos repetidos, como en las esquinas de dos tramos seguidos.
+        bien = np.concatenate([[True], np.linalg.norm(np.diff(X, axis=0), axis=1) > 1e-9])
+        X, zonas = X[bien], zonas[bien]
+        m = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(X, axis=0), axis=1))])
+        return m, X[:, 0], X[:, 1], zonas
+
+    def _m_de(self, z):
+        """Dónde está, a lo largo del meridiano, la altura z del costado."""
+        return np.interp(z, self._z_lado, self._m_lado)
+
+    def _en(self, m):
+        """La distancia al eje y la altura del meridiano en m."""
+        return np.interp(m, self.m, self.mr), np.interp(m, self.m, self.mz)
+
+    def perfil_visible(self) -> np.ndarray:
+        """La superficie de la cubeta, del centro de la base al de la tapa, como [distancia al
+        eje, altura]: el núcleo más CANTO_BARRIL, con las dos ranuras de la banda."""
+        _, r, z, _ = self._contorno(CANTO_BARRIL, paso=0.08)
+        banda = (r >= self.radio - 1e-6) & (z > self.zbanda) & (z < self.zt)
+        alto_banda = self.zt - self.zbanda
+        for f in RANURAS_CUBETA:
+            zr = self.zbanda + f * alto_banda
+            k = np.clip(1 - np.abs(z - zr) / (RANURA[1] / 2), 0, 1)
+            r = np.where(banda, r - RANURA[0] * np.sin(k * math.pi / 2), r)
+        return np.column_stack([r, z])
 
     # Puntos sobre la superficie --------------------------------------------------------
-    def costado(self, grados, z, r=None) -> np.ndarray:
-        """De [ángulo, altura] sobre el costado a [x, y, z]. `r` es la distancia al eje."""
-        th, z, r = np.broadcast_arrays(np.radians(grados), np.asarray(z, float),
-                                       self.rb if r is None else np.asarray(r, float))
+    def costado(self, grados, z) -> np.ndarray:
+        """De [ángulo, altura] sobre el costado a [x, y, z]."""
+        th, z = np.broadcast_arrays(np.radians(grados), np.asarray(z, float))
+        r, _ = self._en(self._m_de(z))
         return np.stack([r * np.sin(th), -r * np.cos(th), z], axis=-1)
 
-    def _borde(self, grados: float, desde: float, hasta: float, arriba: bool) -> np.ndarray:
-        """Puntos sobre el borde redondeado de la tapa (`arriba`) o de la base, en el ángulo
-        `grados`, desde el ángulo del borde `desde` hasta `hasta` (0 es el costado, 90 la tapa
-        y -90 la base), sin el primero."""
-        n = max(2, int(math.ceil(abs(math.radians(hasta - desde)) * self.e0 / ARCO_DENSO)))
-        psi = np.radians(np.linspace(desde, hasta, n + 1)[1:])
-        zc = self.zt if arriba else self.zb
-        return self.costado(grados, zc + self.e0 * np.sin(psi), self.rc + self.e0 * np.cos(psi))
-
-    def _subir(self, grados: float, z0: float, z1: float) -> np.ndarray:
-        """Puntos sobre el costado, en el ángulo `grados`, de la altura z0 a z1, sin el primero."""
-        n = int(math.ceil(abs(z1 - z0) / ARCO_DENSO))
-        if n == 0:
-            return np.zeros((0, 3))
-        return self.costado(grados, np.linspace(z0, z1, n + 1)[1:])
+    def _meridiano(self, grados: float, m0: float, m1: float, ultima: int):
+        """Puntos sobre el meridiano en el ángulo `grados`, de m0 a m1 sin el primero, y la
+        zona de cada uno; el último es de la zona `ultima`."""
+        k = max(1, int(math.ceil(abs(m1 - m0) / ARCO_DENSO)))
+        m = np.linspace(m0, m1, k + 1)[1:]
+        r, z = self._en(m)
+        th = math.radians(grados)
+        X = np.column_stack([r * math.sin(th), -r * math.cos(th), z])
+        zonas = self.mzona[np.clip(np.searchsorted(self.m, m), 0, len(self.m) - 1)].copy()
+        zonas[-1] = ultima
+        return X, zonas
 
     # El sólido --------------------------------------------------------------------------
     def _nucleo(self, X):
-        """El punto más cercano del núcleo (el barril sin los bordes redondeados), la normal
-        hacia afuera y la distancia con signo, negativa dentro del núcleo."""
+        """El punto más cercano del núcleo, la normal hacia afuera y la distancia con signo,
+        negativa dentro del núcleo."""
         rho = np.hypot(X[:, 0], X[:, 1])
         lejos = rho > 1e-9
         ux = np.where(lejos, X[:, 0] / np.where(lejos, rho, 1.0), 0.0)
         uy = np.where(lejos, X[:, 1] / np.where(lejos, rho, 1.0), -1.0)
-        qr, qz = np.minimum(rho, self.rc), np.clip(X[:, 2], self.zb, self.zt)
-        vr, vz = rho - qr, X[:, 2] - qz
-        d = np.hypot(vr, vz)
-        fuera = d > 1e-12
-        div = np.where(fuera, d, 1.0)
-        nr, nz = np.where(fuera, vr / div, 0.0), np.where(fuera, vz / div, 0.0)
-        # Dentro del núcleo, la cara más cercana: el costado, la tapa o la base.
-        caras = np.column_stack([self.rc - rho, self.zt - X[:, 2], X[:, 2] - self.zb])
-        c = np.argmin(caras, axis=1)
-        dentro = ~fuera
-        nr = np.where(dentro & (c == 0), 1.0, nr)
-        nz = np.where(dentro & (c == 1), 1.0, np.where(dentro & (c == 2), -1.0, nz))
-        qr = np.where(dentro & (c == 0), self.rc, qr)
-        qz = np.where(dentro & (c == 1), self.zt, np.where(dentro & (c == 2), self.zb, qz))
-        d = np.where(dentro, -caras[np.arange(len(X)), c], d)
-        Q = np.column_stack([qr * ux, qr * uy, qz])
-        N = np.column_stack([nr * ux, nr * uy, nz])
-        return Q, N, d
+        p = np.column_stack([rho, X[:, 2]])
+        P = self._perfil
+        A, B = P[:-1], P[1:]
+        dAB = B - A
+        t = np.clip(((p[:, None, :] - A[None]) * dAB[None]).sum(-1) / (dAB ** 2).sum(-1)[None], 0, 1)
+        Q = A[None] + t[..., None] * dAB[None]
+        dist = np.linalg.norm(p[:, None, :] - Q, axis=-1)
+        k = np.argmin(dist, axis=1)
+        i = np.arange(len(p))
+        q, dmin = Q[i, k], dist[i, k]
+        # Dentro: el polígono cerrado por el eje, con un rayo hacia +ρ.
+        Pc = np.vstack([P, P[:1]])
+        a, b = Pc[:-1], Pc[1:]
+        z = p[:, 1:2]
+        cruza = (a[None, :, 1] > z) != (b[None, :, 1] > z)
+        x_corte = a[None, :, 0] + (z - a[None, :, 1]) * (b[None, :, 0] - a[None, :, 0]) / np.where(
+            b[None, :, 1] == a[None, :, 1], 1.0, b[None, :, 1] - a[None, :, 1])
+        dentro = (cruza & (x_corte > p[:, :1])).sum(axis=1) % 2 == 1
+        v = p - q
+        tan = dAB / np.linalg.norm(dAB, axis=1)[:, None]
+        n_seg = np.column_stack([tan[:, 1], -tan[:, 0]])[k]
+        sobre = dmin < 1e-12
+        nv = np.where(sobre[:, None], n_seg, v / np.where(sobre, 1.0, dmin)[:, None])
+        nv = np.where((dentro & ~sobre)[:, None], -nv, nv)
+        d = np.where(dentro, -dmin, dmin)
+        Qx = np.column_stack([q[:, 0] * ux, q[:, 0] * uy, q[:, 1]])
+        N = np.column_stack([nv[:, 0] * ux, nv[:, 0] * uy, nv[:, 1]])
+        return Qx, N, d
 
     def cilindricas(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """La altura, el ángulo alrededor del eje en radianes (0 hacia quien ata, entre -π y
         π) y la «distancia al eje»: rb más lo que el punto se aleja de la superficie que sigue
-        el eje de una cuerda que toca el barril (de eso depende dónde no hay gravedad)."""
+        el eje de una cuerda que toca la cubeta (de eso depende dónde no hay gravedad)."""
         _, _, d = self._nucleo(X)
         return X[:, 2], np.arctan2(X[:, 0], -X[:, 1]), self.rb + (d - self.e0)
 
     def empujar(self, X, libre) -> None:
-        """Saca del barril los puntos que entraron, por la cara o el borde más cercano."""
+        """Saca de la cubeta los puntos que entraron, por la cara o el borde más cercano."""
         Q, N, d = self._nucleo(X)
         m = libre & (d < self.e0)
         if m.any():
             X[m] = Q[m] + N[m] * self.e0
 
     def penetracion(self, X) -> float:
-        """Cuánto entra la cuerda en el barril (0 si no entra)."""
+        """Cuánto entra la cuerda en la cubeta (0 si no entra)."""
         _, _, d = self._nucleo(X)
         return float(max(0.0, (self.e0 - d).max()))
 
     def separar(self, X, zona, extra) -> np.ndarray:
         """El tramo de encima de cada cruce, separado del de abajo: sobre la mesa, hacia
-        arriba; sobre el barril, hacia afuera de su superficie."""
+        arriba; sobre la cubeta, hacia afuera de su superficie."""
         X = X.copy()
         mesa = zona == MESA
         X[mesa, 2] += extra[mesa]
@@ -746,10 +849,10 @@ class Barril:
         punto de control y la zona de cada punto (MESA, COSTADO, TAPA o BORDE).
 
         Lo que va por el costado se densifica sobre él, como sobre el poste. Entre el costado
-        y la tapa, la cuerda sube por el costado en el ángulo de su punto más cercano hasta el
-        borde, lo rodea y sigue por la tapa; entre el costado y la mesa, si el punto de la mesa
-        está debajo del barril, rodea igual el borde de la base. Lo que rodea un borde no es de
-        ninguna zona."""
+        y la tapa, la cuerda sigue el meridiano en el ángulo de su punto del costado más
+        cercano: sube por el costado, rodea el borde y sigue por la tapa. Entre el costado y la
+        mesa, si el punto de la mesa está debajo de la cubeta, rodea igual el borde de la base.
+        Lo que rodea un borde no es de ninguna zona."""
         P = paso.puntos
         n = len(P)
         sobre = np.zeros(n, bool) if paso.sobre is None else paso.sobre
@@ -762,11 +865,7 @@ class Barril:
         def poner(puntos, zona):
             puntos = np.atleast_2d(puntos)
             aumentados.extend(puntos)
-            zonas.extend([zona] * len(puntos))
-
-        def de_lado(i):
-            """Del punto del costado i, su ángulo y su altura."""
-            return float(P[i, 0]), float(P[i, 1])
+            zonas.extend(np.broadcast_to(zona, len(puntos)).tolist())
 
         i = 0
         while i < n:
@@ -774,7 +873,7 @@ class Barril:
             while j + 1 < n and cara[j + 1] == cara[i]:
                 j += 1
             if i > 0:
-                self._rodear(P, cara, i - 1, i, poner, de_lado)
+                self._rodear(P, cara, i - 1, i, poner)
             if cara[i] == COSTADO:
                 Q = np.column_stack([np.radians(P[i:j + 1, 0]) * self.rb, P[i:j + 1, 1]])
                 D, ctrl = (Q, [0]) if len(Q) == 1 else catmull_rom(Q)
@@ -804,43 +903,35 @@ class Barril:
         zona = np.where(zonas[tramo] == zonas[siguiente], zonas[tramo], BORDE)
         return X, h, s_aug[origen], zona
 
-    def _rodear(self, P, cara, a: int, b: int, poner, de_lado) -> None:
+    def _rodear(self, P, cara, a: int, b: int, poner) -> None:
         """Lo que la cuerda rodea entre el punto de control a, de una cara, y el b, de otra."""
         ca, cb = int(cara[a]), int(cara[b])
         if COSTADO not in (ca, cb):
             return
         lado, otro = (a, b) if ca == COSTADO else (b, a)
-        grados, z = de_lado(lado)
+        grados, z = float(P[lado, 0]), float(P[lado, 1])
+        m0 = float(self._m_de(z))
         if TAPA in (ca, cb):
-            subir = self._subir(grados, z, self.zt)
-            borde = self._borde(grados, 0.0, 90.0, arriba=True)
-            alto = [(subir, COSTADO), (borde[:-1], BORDE), (borde[-1:], TAPA)]
-        elif np.hypot(P[otro, 0], P[otro, 1]) < self.radio:
-            # Debajo del barril: la cuerda sale por el borde de la base.
-            subir = self._subir(grados, z, self.zb)
-            borde = self._borde(grados, 0.0, -90.0, arriba=False)
-            alto = [(subir, COSTADO), (borde[:-1], BORDE), (borde[-1:], MESA)]
+            m1, ultima = self.m_tapa, TAPA
+        elif np.hypot(P[otro, 0], P[otro, 1]) < self.fondo:
+            m1, ultima = self.m_fondo, MESA   # debajo de la cubeta: sale por el borde de la base
         else:
-            return   # desde la mesa, fuera del barril, la cuerda sube sola
-        if ca == COSTADO:
-            for puntos, zona in alto:
-                if len(puntos):
-                    poner(puntos, zona)
-        else:
-            for puntos, zona in reversed(alto):
-                if len(puntos):
-                    poner(puntos[::-1], zona)
+            return   # desde la mesa, fuera de la cubeta, la cuerda sube sola
+        X, zonas = self._meridiano(grados, m0, m1, ultima)
+        # Desde la tapa o la mesa hacia el costado, el mismo camino al revés.
+        poner(X, zonas) if ca == COSTADO else poner(X[::-1], zonas[::-1])
 
     # Los cruces -------------------------------------------------------------------------
     def cruces(self, X, h, zona) -> tuple[list[Cruce], list[tuple[float, float]]]:
         """Los cruces y la «altura» de sus dos pasadas, en tres zonas: el costado, en su
         superficie desenrollada (la altura y el arco alrededor del eje), donde encima es lo
-        más lejos del eje, y la tapa y la mesa, desde arriba, donde encima es lo más alto."""
+        más lejos de la superficie, y la tapa y la mesa, desde arriba, donde encima es lo más
+        alto."""
         s = np.arange(len(X)) * h
         u = np.unwrap(np.arctan2(X[:, 0], -X[:, 1])) * self.rb
-        rho = np.hypot(X[:, 0], X[:, 1])
+        _, _, lejos = self.cilindricas(X)
         mapas = [(cruces_2d(np.column_stack([X[:, 2], u]), (zona[:-1] == COSTADO) & (zona[1:] == COSTADO),
-                            h, periodo=2 * math.pi * self.rb), rho)]
+                            h, periodo=2 * math.pi * self.rb), lejos)]
         for z in (TAPA, MESA):
             mapas.append((cruces_2d(X[:, :2], (zona[:-1] == z) & (zona[1:] == z), h), X[:, 2]))
         cruces, alturas = [], []
@@ -853,10 +944,13 @@ class Barril:
         return [cruces[k] for k in orden], [alturas[k] for k in orden]
 
     def datos(self) -> dict:
-        """Lo que necesita render/escena.js para dibujarlo: el barril va de «base» a «base» +
-        «alto», con los bordes redondeados con radio «canto»."""
-        return {"tipo": "barril", "radio": self.radio, "alto": self.alto, "canto": CANTO_BARRIL,
-                "base": BASE_BARRIL}
+        """Lo que necesita render/escena.js para dibujarla: «perfil» es su superficie, del
+        centro de la base al de la tapa, como [distancia al eje, altura], y desde «tapa» hacia
+        arriba es la tapa, de otro color."""
+        perfil = self.perfil_visible()
+        return {"tipo": "barril", "radio": self.radio, "alto": self.alto, "base": BASE_BARRIL,
+                "tapa": BASE_BARRIL + self.alto - TAPA_CUBETA,
+                "perfil": [[round(float(r), 4), round(float(z), 4)] for r, z in perfil]}
 
 
 class Parado:

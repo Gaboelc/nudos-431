@@ -37,7 +37,8 @@ AMBAR = np.array([0.95, 0.55, 0.12])
 REMATE = np.array([0.35, 0.06, 0.06])
 GRIS = np.array([0.62, 0.64, 0.67])   # el destorcedor
 MADERA = np.array([0.78, 0.64, 0.48])  # la estaca, como los palos de render/escena.js
-COLOR_PARADO = {"destorcedor": GRIS, "estaca": MADERA, "barril": MADERA}
+AMARILLO = np.array([0.93, 0.80, 0.30])   # la cubeta de la eslinga de barril
+COLOR_PARADO = {"destorcedor": GRIS, "estaca": MADERA, "barril": AMARILLO}
 RADIO_SUPERFICIE = 0.25   # las esferas con que se dibuja la superficie del anfitrión parado
 RADIO_PALO, PASO_PALO = 0.7, 0.2   # las del poste y la cruz, más grandes: son más largos
 MARGEN_PALO = 2.0         # diámetros de palo que se dibujan fuera del encuadre
@@ -129,17 +130,30 @@ def _cuerdas(datos: dict, p: dict) -> list[tuple[np.ndarray, float, np.ndarray, 
 
 
 def _parado(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray, float] | None:
-    """Puntos sobre la superficie del destorcedor, la estaca o el barril, para dibujarla con
-    esferas de RADIO_SUPERFICIE: el costado, en anillos, y la tapa, en anillos concéntricos, con
-    su color y el radio de esas esferas. El barril empieza en su «base», sobre la cuerda que le
-    pasa por debajo. None si el nudo no tiene ninguno de los tres."""
+    """Puntos sobre la superficie del destorcedor, la estaca o la cubeta del barril, para
+    dibujarla con esferas de RADIO_SUPERFICIE: el costado, en anillos, y la tapa, en anillos
+    concéntricos, con su color y el radio de esas esferas. La cubeta se dibuja por su «perfil»,
+    en anillos. None si el nudo no tiene ninguno de los tres."""
     if not anfitrion or anfitrion.get("tipo") not in COLOR_PARADO:
         return None
     rs, paso = RADIO_SUPERFICIE, 0.12
-    base = anfitrion.get("base", 0.0)
-    r, alto = anfitrion["radio"] - rs, base + anfitrion["alto"] - rs
+    if "perfil" in anfitrion:
+        perfil = np.asarray(anfitrion["perfil"], float)
+        largo = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(perfil, axis=0), axis=1))])
+        # Cada esfera, RADIO_SUPERFICIE hacia dentro de la superficie.
+        t = np.gradient(perfil, axis=0)
+        t /= np.maximum(np.linalg.norm(t, axis=1), 1e-12)[:, None]
+        dentro = perfil - rs * np.column_stack([t[:, 1], -t[:, 0]])
+        puntos = []
+        for s in np.arange(0, largo[-1] + 1e-9, paso):
+            ri = max(float(np.interp(s, largo, dentro[:, 0])), 0.0)
+            z = float(np.interp(s, largo, dentro[:, 1]))
+            a = np.linspace(0, 2 * math.pi, max(6, int(2 * math.pi * ri / paso)), endpoint=False)
+            puntos.append(np.column_stack([ri * np.cos(a), ri * np.sin(a), np.full(len(a), z)]))
+        return np.vstack(puntos), COLOR_PARADO[anfitrion["tipo"]], RADIO_SUPERFICIE
+    r, alto = anfitrion["radio"] - rs, anfitrion["alto"] - rs
     puntos = []
-    for z in np.arange(base + rs, alto + 1e-9, paso):
+    for z in np.arange(rs, alto + 1e-9, paso):
         a = np.linspace(0, 2 * math.pi, max(12, int(2 * math.pi * r / paso)), endpoint=False)
         puntos.append(np.column_stack([r * np.cos(a), r * np.sin(a), np.full(len(a), z)]))
     for ri in np.arange(r, 0, -paso):

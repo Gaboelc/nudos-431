@@ -44,7 +44,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 | Atado a una estaca clavada en el suelo, con una gaza que le da la vuelta a ras del suelo | libre con `anfitrion: {tipo: estaca}` | `tensor-ajustable` |
 | Alrededor de una tabla, como la eslinga de andamio | libre con `anfitrion: {tipo: tablon}` y segmentos `{tablon: [[x, ángulo], ...]}`, como sobre el poste | `ballestrinque` |
 | Sobre una cornamusa, como la vuelta de cornamusa | libre con `anfitrion: {tipo: cornamusa}` y segmentos `{cornamusa: [[x, ángulo], ...]}` sobre la barra; bajo los cuernos, `[x, y]` sobre la mesa | `ballestrinque` |
-| Alrededor de un barril parado, como la eslinga de barril | libre con `anfitrion: {tipo: barril}` y segmentos `{barril: [[ángulo, altura], ...]}` por el costado y `{tapa: [[x, y], ...]}` por la tapa | `ballestrinque` |
+| Alrededor de un barril o una cubeta parada, como la eslinga de barril | libre con `anfitrion: {tipo: barril}` y segmentos `{barril: [[ángulo, altura], ...]}` por el costado y `{tapa: [[x, y], ...]}` por la tapa | `ballestrinque` |
 | Amarre cuadrado: vueltas y ahorcados regulares sobre dos palos | `plantilla: {tipo: amarre-cuadrado}` | `amarre-cuadrado` |
 | Amarre diagonal: vuelta de braza, vueltas en las dos diagonales y ahorcados sobre dos palos | `plantilla: {tipo: amarre-diagonal}` | `amarre-cuadrado` |
 | Amarre redondo o trípode: vueltas y ahorcados sobre dos o tres palos uno junto al otro | `plantilla: {tipo: amarre-redondo}` o `{tipo: amarre-tripode}`, con `anfitrion: {tipo: palos}` | `amarre-cuadrado` |

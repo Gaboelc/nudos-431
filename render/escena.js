@@ -473,24 +473,34 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     const h = a.largo / 2 - a.radio;
     ejesPalos.push({ a: [-h, 0, a.z], b: [h, 0, a.z], radio: a.radio });
   }
-  // El barril de la eslinga de barril, de madera: un cilindro parado en x = y = 0, de «base» a
-  // «base» + «alto», con los bordes de la tapa y de la base redondeados con radio «canto». Su
-  // perfil, del centro de la base al de la tapa por el costado, se gira alrededor del eje: la
-  // LatheGeometry gira alrededor de y, que se lleva a z.
+  // El barril de la eslinga de barril, con forma de cubeta de plástico: amarilla, con la tapa
+  // crema. Roja, en gris, se oscurecía tanto como la cuerda azul. «perfil» es su superficie,
+  // del centro de la base al de la tapa, como [distancia al eje, altura] (nudos/anfitrion.py,
+  // Barril), y se gira alrededor del eje: la LatheGeometry gira alrededor de y, que se lleva a
+  // z. Desde la altura «tapa» hacia arriba es la tapa.
   if (a && a.tipo === "barril") {
-    const c = a.canto, rc = a.radio - c, perfil = [new THREE.Vector2(0, 0)];
-    for (const [z0, f0] of [[c, -Math.PI / 2], [a.alto - c, 0]]) {
-      for (let k = 0; k <= 8; k++) {
-        const f = f0 + (k / 8) * (Math.PI / 2);
-        perfil.push(new THREE.Vector2(rc + c * Math.cos(f), z0 + c * Math.sin(f)));
+    const cuerpo = [], tapa = [];
+    for (let k = 0; k < a.perfil.length; k++) {
+      const [r, z] = a.perfil[k];
+      if (z < a.tapa) cuerpo.push(new THREE.Vector2(r, z));
+      else {
+        if (!tapa.length && k > 0) {
+          // El corte exacto, para que el cuerpo y la tapa no dejen rendija.
+          const [r0, z0] = a.perfil[k - 1];
+          const p = new THREE.Vector2(r0 + ((a.tapa - z0) / (z - z0)) * (r - r0), a.tapa);
+          cuerpo.push(p.clone());
+          tapa.push(p);
+        }
+        tapa.push(new THREE.Vector2(r, z));
       }
     }
-    perfil.push(new THREE.Vector2(0, a.alto));
-    const m = new THREE.Mesh(new THREE.LatheGeometry(perfil, 96), madera());
-    m.rotation.x = Math.PI / 2;
-    m.position.set(0, 0, a.base);
-    m.castShadow = true; m.receiveShadow = true;
-    scene.add(m);
+    const plastico = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0 });
+    for (const [perfil, color] of [[cuerpo, 0xf7d64a], [tapa, 0xf2ecdc]]) {
+      const m = new THREE.Mesh(new THREE.LatheGeometry(perfil, 96), plastico(color));
+      m.rotation.x = Math.PI / 2;
+      m.castShadow = true; m.receiveShadow = true;
+      scene.add(m);
+    }
     ejesPalos.push({ a: [0, 0, a.base], b: [0, 0, a.base + a.alto], radio: a.radio });
   }
   // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
