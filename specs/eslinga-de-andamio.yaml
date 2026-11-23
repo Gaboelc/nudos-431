@@ -15,8 +15,8 @@ usos: >-
 materiales: >-
   Dos cuerdas de 2 a 3 m, una por punta, y una tabla de unos 10 cm de ancho.
 verificacion:
-  - Por arriba, el seno pasa sobre dos pasadas juntas y paralelas, cerca de la punta.
-  - El seno da la vuelta a la punta y queda por debajo del tablón.
+  - Por arriba ves solo dos pasadas, juntas y paralelas; ninguna cuerda pasa por la punta.
+  - El seno rodea el tablón junto a ellas y las abraza por delante y por detrás.
   - Al tirar de los dos extremos hacia arriba, el tablón queda horizontal y no gira.
 precauciones:
   - Antes de soltar el tablón, aprieta la eslinga tirando de los dos extremos a la vez.
@@ -62,14 +62,16 @@ segmentos:
   # El chicote cae por detrás, sobre la mesa.
   chicote: [[-5, 9.5], [-5, 12.5], [-5, 16]]
 
-  # Paso 2: la 1 pasa por encima de la 2 y queda entre la 2 y la 3, en x = -6.5. Cruza a
-  # la 2 por arriba, cerca del canto de delante (cruce 1), y por la cara de atrás (cruce 2).
+  # Paso 2: la 1 pasa por encima de la 2 y queda entre la 2 y la 3, en x = -6.5, con el
+  # firme, que sube derecho junto a ella, como en la foto. Cruza a la 2 por la parte baja de
+  # la cara de atrás (cruce 1), con la 1 por encima.
+  firme-b: [[-6.5, -16], [-6.5, -12.5], [-6.5, -9.5]]
   vuelta-1b:
-    tablon: [[-11, 100], [-10.9, 80], [-10.4, 66], [-9.4, 56], [-8, 48], [-7.1, 41],
-             [-6.6, 32], [-6.5, 20], [-6.5, 0], [-6.5, -20], [-6.5, -40], [-6.5, -60],
-             [-7, -74], [-8, -90], [-9, -106], [-9.5, -120]]
+    tablon: [[-6.5, 100], [-6.5, 80], [-6.5, 60], [-6.5, 40], [-6.5, 20],
+             [-6.5, 0], [-6.5, -20], [-6.5, -40], [-6.5, -55], [-6.5, -70], [-6.6, -80],
+             [-7.2, -92], [-8, -102], [-8.8, -112], [-9.3, -122], [-9.5, -132]]
   abajo-1b:
-    tablon: [[-9.25, -140], [-9, -160], [-8.75, -180], [-8.5, -200], [-8.25, -220]]
+    tablon: [[-9.3, -150], [-9.05, -170], [-8.8, -190], [-8.5, -210], [-8.2, -228]]
 
   # Paso 3: el seno de la 2 sale hacia la punta por encima de la 1 y la 3, en dos ramas, y
   # queda sobre la mesa, más allá de la punta.
@@ -81,14 +83,27 @@ segmentos:
     tablon: [[-1.5, -380], [-3, -381], [-4.5, -382], [-6, -384], [-6.8, -387], [-7.5, -392],
              [-7.9, -400], [-8, -410], [-8, -420]]
 
-  # Paso 4: el seno da la vuelta a la punta y queda por debajo del tablón, justo bajo la
-  # punta. Cruza el seno por debajo de las vueltas no cabe: el tablón se apoya a un diámetro
-  # de la mesa y debajo cabe una sola capa de cuerda.
-  punta-a: [[1.0, -2.7]]
-  seno-abajo:
-    tablon: [[-0.8, 140], [-2.6, 145], [-3.9, 160], [-4.4, 180], [-3.9, 200], [-2.6, 215],
-             [-0.8, 220]]
-  punta-b: [[1.0, 2.7]]
+  # Paso 4: el seno pasa por encima de la punta y se desliza por debajo del tablón hasta las
+  # vueltas. Queda como un anillo alrededor del tablón, junto a la 3: sube por delante, corre
+  # hacia la punta por la cara de delante, por encima de la 1 y la 3 (cruces 6 y 7), pasa por
+  # debajo, sube por detrás y vuelve por la cara de atrás, por encima de la 3 y la 1 (cruces 8
+  # y 9). Abraza la 1 y la 3 por los costados, como en la foto del nudo apretado. Debajo del
+  # tablón no cruza nada: ahí cabe una sola capa de cuerda. Los ángulos siguen sin saltos
+  # desde abajo-1b, así que la 3 lleva aquí otros números que en los pasos 1 a 3.
+  sube-2d:
+    tablon: [[-8.3, -240], [-8.5, -252], [-8.4, -264], [-7.9, -272], [-7.2, -275]]
+  anillo:
+    tablon: [[-6.5, -275], [-5.75, -275], [-5, -275], [-4.3, -274], [-3.7, -268],
+             [-3.5, -258], [-3.5, -240], [-3.5, -220], [-3.5, -200], [-3.5, -180],
+             [-3.5, -160], [-3.5, -140], [-3.5, -120], [-3.5, -100], [-3.6, -86], [-4.1, -76],
+             [-4.8, -72], [-5.5, -72], [-6.5, -72], [-7.6, -73], [-8.3, -79], [-8.5, -90]]
+  baja-2d:
+    tablon: [[-8.5, -105], [-8.4, -120]]
+  abajo-2d:
+    tablon: [[-8, -140], [-7.4, -160], [-6.8, -180], [-6.2, -200], [-5.6, -220]]
+  vuelta-3d:
+    tablon: [[-5, -240], [-5, -260], [-5, -280], [-5, -300], [-5, -320], [-5, -340],
+             [-5, -360], [-5, -380], [-5, -400], [-5, -420], [-5, -440], [-5, -460]]
 
 pasos:
   - titulo: Da dos vueltas y media
@@ -103,36 +118,34 @@ pasos:
   - titulo: Pasa la 1 por encima de la 2
     texto: >-
       Lleva la 1 por encima de la 2 y déjala entre la 2 y la 3.
-    trazado: [firme, vuelta-1b, abajo-1b, sube-2, arriba-2, baja-2, abajo-2, vuelta-3, chicote]
-    secuencia: "1O 2O 1U 2U"
+    trazado: [firme-b, vuelta-1b, abajo-1b, sube-2, arriba-2, baja-2, abajo-2, vuelta-3, chicote]
+    secuencia: "1O 1U"
     resaltar: {desde: "vuelta-1b[0]", hasta: "vuelta-1b[-1]"}
 
   - titulo: Pasa la 2 por encima de la 1 y la 3
     texto: >-
       Tira de la 2 hacia la punta formando un seno, por encima de la 1 y la 3, y déjalo
       más allá de la punta.
-    trazado: [firme, vuelta-1b, abajo-1b, sube-2, rama-a, seno-mesa, rama-b, baja-2, abajo-2,
+    trazado: [firme-b, vuelta-1b, abajo-1b, sube-2, rama-a, seno-mesa, rama-b, baja-2, abajo-2,
               vuelta-3, chicote]
-    secuencia: "1O 3U 6U 2O 1U 3O 4O 5O 6O 2U 4U 5U"
+    secuencia: "2U 5U 1O 2O 3O 4O 5O 1U 3U 4U"
     resaltar: {desde: "rama-a[0]", hasta: "rama-b[-1]"}
 
-  - titulo: Mete el seno por debajo
+  - titulo: Desliza el seno por debajo
     texto: >-
-      Pasa el seno por la punta y déjalo bajo el tablón. Tira de los dos extremos. Para
-      colgarlo, sube los extremos y únelos con un as de guía (mira su ficha). Ata otra
-      eslinga igual en la otra punta.
-    trazado: [firme, vuelta-1b, abajo-1b, sube-2, rama-a, punta-a, seno-abajo, punta-b, rama-b,
-              baja-2, abajo-2, vuelta-3, chicote]
-    secuencia: "1O 3U 6U 2O 1U 3O 4O 5O 6O 2U 4U 5U"
-    resaltar: {desde: "rama-a[-1]", hasta: "rama-b[0]"}
+      Pasa el seno por la punta y deslízalo bajo el tablón hasta que abrace la 1 y la 3.
+      Tira de los extremos y únelos con un as de guía (mira su ficha).
+    trazado: [firme-b, vuelta-1b, abajo-1b, sube-2d, anillo, baja-2d, abajo-2d, vuelta-3d, chicote]
+    secuencia: "6U 9U 1O 6O 7O 8O 9O 1U 7U 8U"
+    resaltar: {desde: "anillo[0]", hasta: "anillo[-1]"}
 
 # El error más común: el seno pasa por debajo de la 1 y la 3, no por encima.
 error:
   paso: 3
-  invierte: [3, 4, 5, 6]
+  invierte: [2, 3, 4, 5]
   titulo: El seno por debajo
   texto: >-
-    El seno pasó por debajo de la 1 y la 3: no las aprieta y el tablón se voltea.
+    El seno pasó por debajo de la 1 y la 3: no las abraza y el tablón se voltea.
     Pásalo por encima de las dos.
   otros:
     - titulo: Las vueltas lejos de la punta
