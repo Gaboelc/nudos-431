@@ -46,7 +46,7 @@ filtros:
 
 cuerdas:
   - {nombre: gruesa, grosor: 1.5, color: azul}
-  - {nombre: cordino, grosor: 1, color: crema}
+  - {nombre: cordino, grosor: 1, color: crema, dos_firmes: true}
 
 encuadre:
   x: [-10.0, 5.0]

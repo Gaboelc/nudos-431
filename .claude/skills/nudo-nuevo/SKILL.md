@@ -54,7 +54,7 @@ Si el nudo necesita algo que no existe (otro anfitrión, como una argolla, una c
 Tres casos que sí caben en lo que hay:
 
 - **Un nudo que la fuente ata en la mano,** como la mariposa alpina: la mano no es un anfitrión. Dibújalo sobre la mesa, con la forma que tiene armado en la foto y en el orden de las vueltas que da la fuente, y dilo en las dudas.
-- **Un nudo en medio de la cuerda, sin chicote libre,** como la mariposa: pon `dos_firmes: true` y recórrelo desde el firme que queda quieto hasta el otro, que es con el que se trabaja. En las imágenes, los dos llevan «Firme». En el texto, el otro nunca se llama «chicote»: llámalo «el otro firme» o, por ejemplo, «el firme de la izquierda» (ver «En medio de la cuerda» en el formato).
+- **Un nudo en medio de la cuerda, sin chicote libre,** como la mariposa: pon `dos_firmes: true` y recórrelo desde el firme que queda quieto hasta el otro, que es con el que se trabaja. En las imágenes, los dos llevan «Firme». En el texto, el otro nunca se llama «chicote»: llámalo «el otro firme» o, por ejemplo, «el firme de la izquierda» (ver «En medio de la cuerda» en el formato). Con varias cuerdas, la que termina en otro firme, como el cordino cerrado del prusik, lleva `dos_firmes: true` dentro de `cuerdas`.
 - **Un nudo atado con la cuerda doblada,** como el ocho doble: escribe cada tramo doble dos veces, la ida hacia el seno y el regreso, a medio diámetro a cada lado de la línea central. Cada cruce de la cuerda doble son cuatro cruces de la cuerda. El apretado casi no aprieta la cuerda doble: mira el terminado apretado en la hoja.
 
 ## 3. Decide los pasos

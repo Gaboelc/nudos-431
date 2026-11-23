@@ -32,7 +32,7 @@ from PIL import Image, ImageOps
 from . import RAIZ
 from .anfitrion import Cabo, Cruz, Palos, Tubo
 from .construir import Modelo
-from .exportar import ESCENA, SITIO, datos_escena
+from .exportar import ESCENA, SITIO, cuerda_chicote, cuerda_que_se_mueve, datos_escena
 from .spec import Encuadre
 
 PPP = 300
@@ -108,10 +108,16 @@ def nombres(modelo: Modelo, chicote: bool = True) -> tuple[str, ...]:
     """Los nombres que llevan las imágenes, como claves de render/escena.js: «Firme» y
     «Chicote» con una cuerda; con varias, el de cada cuerda junto a su firme y «Chicote». Un
     nudo en medio de la cuerda (`dos_firmes`) lleva «Firme» en los dos extremos y nunca
-    «Chicote». Con `chicote` en falso, como en el error común, solo los firmes."""
-    if modelo.spec.dos_firmes:
+    «Chicote». Con varias cuerdas, «Chicote» va solo si alguna de las que se mueven termina en
+    un chicote, y no en otro firme (`dos_firmes` de la cuerda, como el cordino del prusik).
+    Con `chicote` en falso, como en el error común, solo los firmes."""
+    s = modelo.spec
+    if s.dos_firmes:
         return ("firme", "otro-firme")
-    firmes = tuple(f"cuerda-{c.nombre}" for c in modelo.spec.cuerdas) or ("firme",)
+    if s.cuerdas and s.plantilla is None:
+        mueve = cuerda_que_se_mueve(modelo.pasos)
+        chicote = chicote and any(cuerda_chicote(s, r, mueve) is not None for r in modelo.pasos)
+    firmes = tuple(f"cuerda-{c.nombre}" for c in s.cuerdas) or ("firme",)
     return firmes + (("chicote",) if chicote else ())
 
 

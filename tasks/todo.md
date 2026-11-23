@@ -33,12 +33,13 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 
 Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos con el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado del piloto). A todos les falta el filtro 2.
 
-- [ ] Prusik: el otro tramo del cordino dice «Chicote» (tarea de código)
-- [ ] Punto de control de la tanda 4
 
 ### Tanda 5: anfitriones especiales
 - [x] Propuesta de diseño de los tres anfitriones, en el plan (23 nov)
-- [ ] Gabriel revisa la propuesta y responde sus ocho preguntas
+- [x] Gabriel revisa la propuesta y responde sus ocho preguntas (23 nov: aprobada)
+- [ ] El tablón (v1.11), en una sola sesión de código con la cornamusa y el barril
+- [ ] La cornamusa (v1.12)
+- [ ] El barril (v1.13)
 - [ ] Eslinga de barril
 - [ ] Eslinga de andamio (requiere D1)
 - [ ] Vuelta de cornamusa (*cleat hitch*, sobre una cornamusa)

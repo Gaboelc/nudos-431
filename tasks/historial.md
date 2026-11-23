@@ -1424,6 +1424,16 @@ Un paso solo no se reparte: para eso habría que tocar la física, y eso es otra
 - **Filtro 1 y publicación:** Gabriel ató los seis con cuerda real y los aprobó el 17 nov, con las fichas de los commits en que entraron a `modelado` (24d7d39, e8db8af, 413c3c8, eac11dd y 126d0ec). Pasaron a `cuerda-ok` y a `publicados.txt`; el sitio se publicó el 18 nov. El filtro 2 sigue en pausa.
 
 
+**Punto de control de la tanda 4 (23 de noviembre de 2026; Gabriel lo cerró el mismo día):**
+- **Los seis nudos están en el sitio** desde el 18 nov y en `cuerda-ok`, con su filtro 1. El sitio tiene 32 nudos; ninguno llega a `publicado`, porque el filtro 2 sigue en pausa.
+- **La suite pasa** (639 pruebas el 22 nov, con `referencia` y `comparar`), y los modelos de los 26 anteriores siguen iguales byte a byte.
+- **Lo que cambió en la forma de trabajar:** construir con todos los núcleos, el plan sin historia, `referencia` y `comparar`, y el modelo y el esfuerzo por tipo de sesión (ver la entrada siguiente).
+- **Lo que sigue:** la tanda 5, con su propuesta escrita en la rama `claude/tanda-5-propuesta-7431fd` (e00dd78), que Gabriel revisa.
+
+**El cordino del prusik sin «Chicote» (23 de noviembre de 2026; Gabriel pidió hacerlo en la sesión gestora).** El cordino es un anillo: sus dos tramos van al pescador doble que lo cierra, así que el extremo de su recorrido no es un chicote. `dos_firmes` solo valía para un nudo de una sola cuerda.
+- **Cómo se hizo:** `dos_firmes: true` puede ir en una cuerda, dentro de `cuerdas` (formato v1.10, un cambio compatible). Esa cuerda lleva su nombre junto a su firme, como las demás, y el otro extremo no lleva nombre: los dos tramos van juntos y dos «Cordino» se pisarían. En los pasos donde se mueve esa cuerda, `chicote` es null (`cuerda_chicote` en `nudos/exportar.py`), y las imágenes no piden el nombre «Chicote» si ningún paso lo lleva (`nombres` en `nudos/imprimir.py`). El remate del final no cambia: queda en el borde de la imagen.
+- **Comprobación:** con `referencia` y `comparar` contra la de 22 nov (Edge 158.0.4370.33), 31 de 32 nudos iguales, modelos e imágenes. Del prusik, el `modelo.json` es igual y solo cambian sus 11 imágenes, donde ya no va «Chicote». Los cruces no cambian, así que su filtro 1 sigue valiendo.
+
 **Gastar menos tokens, segunda parte (22 de noviembre de 2026; Gabriel pidió las seis medidas).** El plan pesaba 292 KB y la lista 38 KB, casi todo historia de tareas cerradas, y cada sesión los leía enteros.
 - **El plan y la lista, solo con lo vigente:** lo cerrado pasó, sin cambiar una línea, a este historial; el plan quedó en unos 25 KB y la lista en unos 4. Las referencias del código y del formato a los diseños apuntan aquí.
 - **`python -m nudos referencia` y `comparar`** (`nudos/referencia.py`) reemplazan los scripts que cada sesión escribía para construir, imprimir y comparar los nudos hechos. Imprimen fuera de `build/`, borran aunque Drive deje archivos de solo lectura, comparan `modelo.json` en bytes y no pickles, y corren con `python -m`, así que los procesos pueden volver a importar el programa. Los 32 nudos: construir, 83 s; imprimir con 8 navegadores, 188 s.

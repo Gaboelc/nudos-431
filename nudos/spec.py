@@ -59,7 +59,7 @@ EN_LA_MESA = ("destorcedor", "estaca")
 RADIO_CABO = (1.5, 8.0)
 # Una medida de la plantilla dentro del texto, como {vueltas}.
 _MEDIDA = re.compile(r"\{([^{}]*)\}")
-_CAMPOS_CUERDA = {"nombre", "grosor", "color"}
+_CAMPOS_CUERDA = {"nombre", "grosor", "color", "dos_firmes"}
 # Colores de cuerda de render/escena.js. El ámbar no está: es el del tramo que se mueve.
 # Azul y crema siguen distinguiéndose en gris (oscuro y claro, con el ámbar en medio).
 COLORES = ("azul", "crema")
@@ -96,6 +96,9 @@ class Cuerda:
     nombre: str
     grosor: float   # diámetro, relativo al de la cuerda de siempre, que mide 1
     color: str      # uno de COLORES
+    # Una cuerda que termina en otro firme y no en un chicote, como el cordino del prusik, cuyos
+    # dos tramos van al pescador doble que lo cierra: ningún extremo lleva «Chicote».
+    dos_firmes: bool = False
 
 
 @dataclass(frozen=True)
@@ -469,8 +472,8 @@ def _dos_firmes(datos, cuerdas: tuple[Cuerda, ...], plantilla, falla) -> bool:
     if not isinstance(datos, bool):
         raise falla("«dos_firmes» es true o false")
     if datos and cuerdas:
-        raise falla("por ahora, «dos_firmes» es de un nudo de una sola cuerda: con varias, "
-                    "cada cuerda lleva su nombre junto a su firme")
+        raise falla("con varias cuerdas, «dos_firmes» va en la cuerda que termina en otro "
+                    "firme, dentro de «cuerdas»")
     if datos and plantilla is not None:
         raise falla("«dos_firmes» no va en un nudo de plantilla: la plantilla dice qué "
                     "nombres lleva cada paso")
@@ -658,7 +661,10 @@ def _cuerdas(datos, falla) -> tuple[Cuerda, ...]:
             raise cf(f"«color» es uno de: {', '.join(COLORES)}")
         if any(o.color == color for o in out):
             raise cf(f"la cuerda {nombre} tiene el mismo color que otra; cada cuerda lleva el suyo")
-        out.append(Cuerda(nombre, float(grosor), color))
+        dos_firmes = c.get("dos_firmes", False)
+        if not isinstance(dos_firmes, bool):
+            raise cf("«dos_firmes» es true o false")
+        out.append(Cuerda(nombre, float(grosor), color, dos_firmes))
     return tuple(out)
 
 

@@ -173,7 +173,7 @@ El detalle de cada tarea cerrada (diseño, «Cómo se hizo», ramas y commits) e
 - **Fase 1, el as de guía de principio a fin (T1 a T4; puntos de control 1 y A):** la especificación v0, la escena 3D compartida y el visor publicado, las imágenes de impresión con el error común y las vistas finales, y la ficha con QR.
 - **Fase 2, piloto por tipo de nudo (T5 a T7c; puntos de control 2 y B, 11 nov):** el anfitrión con el ballestrinque sobre el poste (T5), dos cuerdas con la vuelta de escota (T6), alternativas y precauciones (T6b), la plantilla del amarre cuadrado sobre la cruz (T7), las mejoras del render (T7b) y el nudo terminado apretado (T7c). T8, la cabeza de turco sobre el tubo, quedó provisional: Gabriel la deja para el final, y nada nuevo usa su tubo ni su plantilla.
 - **Fase 3 (T9 y T10; punto de control C):** la skill `nudo-nuevo`, con su corrida dorada a ciegas, y `python -m nudos estado`, con el registro de filtros.
-- **Fase 4, tandas 1 a 4 (12 a 18 nov):** 32 nudos en el sitio, en `cuerda-ok` y con el filtro 1. Entraron los anfitriones destorcedor, estaca, palos y cabo, las plantillas del amarre diagonal, el redondo, el trípode, el refuerzo de cabo, el adujado y el puño de mono, y el formato llegó a la v1.9. Desde el 17 nov, construir usa todos los núcleos (`nudos/procesos.py`), y desde el 22 nov `referencia` y `comparar` comprueban en una línea que un cambio no mueve los nudos hechos.
+- **Fase 4, tandas 1 a 4 (12 a 18 nov):** 32 nudos en el sitio, en `cuerda-ok` y con el filtro 1. Entraron los anfitriones destorcedor, estaca, palos y cabo, las plantillas del amarre diagonal, el redondo, el trípode, el refuerzo de cabo, el adujado y el puño de mono, y el formato llegó a la v1.9 (la v1.10, el 23 nov, es `dos_firmes` en una cuerda, para el cordino del prusik). Gabriel cerró el punto de control de la tanda 4 el 23 nov. Desde el 17 nov, construir usa todos los núcleos (`nudos/procesos.py`), y desde el 22 nov `referencia` y `comparar` comprueban en una línea que un cambio no mueve los nudos hechos.
 - **Gastar menos tokens (15 y 22 nov):** los borradores van con esfuerzo medio y usan `diagnostico` y `ampliar` en vez de scripts propios; el plan se separó del historial. Las reglas que siguen vigentes están en `CLAUDE.md`.
 
 ### Fase 4: producción de los 30 nudos restantes
@@ -246,11 +246,10 @@ Después de cada tanda hay un punto de control:
 - **Después, en los dos casos:** Gabriel hace el filtro 1 con la ficha impresa. El nudo pasa a `cuerda-ok`, con su bloque `filtros` (como en `specs/rizo.yaml`), entra a `publicados.txt` y se publica el sitio. Al cerrar el diseño y el «Cómo se hizo» de una tarea, su bloque pasa a `tasks/historial.md`.
 
 **Lo pendiente de la fase 4.**
-- **El punto de control de la tanda 4.** Los seis nudos están en el sitio desde el 18 nov.
-- **La tanda 5, anfitriones especiales:** la eslinga de barril, la eslinga de andamio (requiere D1) y la vuelta de cornamusa, sobre una cornamusa. Su propuesta está abajo y espera a que Gabriel la revise.
+- **La tanda 5, anfitriones especiales:** la eslinga de barril, la eslinga de andamio (requiere D1) y la vuelta de cornamusa, sobre una cornamusa. Su propuesta está abajo; Gabriel la aprobó el 23 nov, y el código empieza por el tablón.
 - **T8, la cabeza de turco,** al final del plan: ver qué no se entiende en las imágenes antes de tocar la geometría (ver T8 en el historial).
 
-**Propuesta de la tanda 5: anfitriones especiales (23 nov; falta que Gabriel la revise).** Son tres nudos, y cada uno necesita un anfitrión nuevo: el barril, el tablón y la cornamusa. Ninguno necesita plantilla: los tres se dibujan con segmentos, como el ballestrinque sobre el poste, y su borrador lo escribe la skill `nudo-nuevo` cuando su anfitrión esté en `main`. Cada anfitrión es una tarea de código con la forma de T5 y del destorcedor: Gabriel aprueba su diseño, se programa, se comprueba con `referencia` y `comparar` que los 32 nudos hechos no cambian, y después se dibuja el nudo. Las medidas van en diámetros de cuerda y se ajustan al dibujar, como el radio del destorcedor.
+**Propuesta de la tanda 5: anfitriones especiales (23 nov; Gabriel la aprobó el mismo día, con las respuestas que están al final).** Son tres nudos, y cada uno necesita un anfitrión nuevo: el barril, el tablón y la cornamusa. Ninguno necesita plantilla: los tres se dibujan con segmentos, como el ballestrinque sobre el poste, y su borrador lo escribe la skill `nudo-nuevo` cuando su anfitrión esté en `main`. Cada anfitrión es una tarea de código con la forma de T5 y del destorcedor: Gabriel aprueba su diseño, se programa, se comprueba con `referencia` y `comparar` que los 32 nudos hechos no cambian, y después se dibuja el nudo. Las medidas van en diámetros de cuerda y se ajustan al dibujar, como el radio del destorcedor.
 
 Lo común a los tres:
 - **La cuerda va pegada al sólido, no solo sobre la mesa.** El poste ya lo resuelve para un cilindro acostado: puntos `[x, ángulo]` que se densifican sobre su superficie, relajación sin gravedad a menos de 2,5 diámetros de él, cruces en su superficie desenrollada y el apretado con la penetración en cada ronda. El tablón es ese mismo camino con otro perfil, y la cornamusa y el barril lo reusan con otra forma. Por eso el primero que se programe separa del poste lo que depende de la forma (`punto`, la superficie desenrollada, `empujar` y `penetracion`) de lo que no (densificar, elevar en los cruces, relajar y comprobar), y los otros dos se apoyan en eso. Los nudos del poste tienen que quedar iguales byte a byte.
@@ -354,6 +353,12 @@ El orden: primero el tablón, que es el poste con otro perfil (ahí se separa lo
 6. **Andamio, D1:** ¿confirmas que la ficha dice que no se usa ni como andamio ni como columpio para personas, y que se practica sin carga o con un objeto?
 7. **Cornamusa:** ¿a lo largo de x, con el firme desde la izquierda, y con dos diagonales antes del cote, como en las fotos?
 8. **Sesiones:** ¿una sola sesión de código para los tres anfitriones, en el orden de arriba?
+
+**Las respuestas de Gabriel (23 nov):**
+- Las preguntas 1, 2, 3, 6, 7 y 8 van como se recomienda: el método del manual, «Eslinga de barril» con el ABOK 2176, el as de guía sin dibujar, la seguridad del andamio tal como está, la cornamusa a lo largo de x con dos diagonales antes del cote, y una sola sesión de código, empezando por el tablón.
+- Pregunta 4: las dos eslingas llevan «Firme» y «Chicote».
+- Pregunta 5: no habrá fotos de la eslinga de andamio. La sesión deduce la cara de abajo del tablón, y Gabriel la revisa en la hoja y en el filtro 1.
+- La v1.10 del formato ya es `dos_firmes` por cuerda, para el prusik, así que los anfitriones son la v1.11 (el tablón), la v1.12 (la cornamusa) y la v1.13 (el barril).
 
 
 ### Fase 5: libro y primera edición
