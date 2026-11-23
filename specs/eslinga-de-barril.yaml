@@ -1,0 +1,137 @@
+# Eslinga de barril: una cubeta parada sobre la cuerda, con los dos extremos cruzados en un
+# medio nudo sobre la tapa y bajados por el borde hasta abrazarla cerca de arriba.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# El barril está parado en x = y = 0. Por el costado, los puntos son [ángulo, altura]:
+# 0° hacia quien ata, 90° a la derecha, 180° al fondo y 270° a la izquierda. Por la tapa, [x, y].
+# La cuerda se recorre desde el firme. Al cruzar la tapa, cada extremo pasa al otro lado:
+# desde el paso 2, el firme sale por la derecha y el chicote por la izquierda.
+slug: eslinga-de-barril
+nombre: Eslinga de barril
+familia: De sujeción
+abok: 2176
+
+usos: >-
+  Levanta o baja un barril, un balde o una lata parados, con una sola cuerda, aunque estén
+  abiertos y llenos de agua. Sirve para subir una cubeta a una plataforma o sacarla de un
+  pozo sin inclinarla.
+materiales: >-
+  Una cuerda de 3 a 5 m y un balde o una lata con tapa.
+verificacion:
+  - La cuerda pasa por debajo del centro de la base.
+  - El anillo abraza el costado cerca de arriba, parejo, por encima de la mitad del barril.
+  - A cada lado, el extremo que sube queda enganchado con el anillo, no solo apoyado.
+  - Al levantar despacio, el barril sube derecho y el anillo no se corre.
+# Texto propio. Pendiente: que Gabriel lo revise.
+precauciones:
+  - >-
+    Nadie se pone debajo de la carga. Levanta despacio y parejo, sin tirones, y bájala de la
+    misma forma.
+  - >-
+    Si el barril se inclina al despegarse del suelo, bájalo y revisa que la cuerda pase por el
+    centro de la base y que el anillo esté parejo.
+  - "Con la cuerda floja, el anillo se afloja: no la sueltes hasta que el barril esté en el suelo."
+alternativas:
+  - nudo: Presilla de alondra
+    cuando: >-
+      Cuando el barril va acostado: dos vueltas lo abrazan por los extremos y no se
+      derrama si está cerrado.
+
+anfitrion: {tipo: barril, radio: 6, alto: 10}
+
+# Zona que se muestra en todos los pasos.
+encuadre:
+  x: [-16.0, 16.0]
+  y: [-10.0, 10.0]
+
+segmentos:
+  # Paso 1: la cuerda en línea recta sobre la mesa, por debajo del centro de la base.
+  firme-1: [[-24, -0.9], [-18, -0.8], [-12, -0.7], [-8, -0.7]]
+  bajo: [[-3.5, -0.6], [0, 0], [3.5, 0.6]]
+  chicote-1: [[8, 0.7], [12, 0.7], [18, 0.8], [24, 0.9]]
+
+  # Paso 2: el medio nudo sobre la tapa. El firme llega por la derecha, sube por delante,
+  # cruza la tapa por el fondo y baja por la izquierda, por delante.
+  firme-2: [[24, -3.0], [18, -3.4], [13, -3.6], [9.5, -3.0]]
+  sube-f2: {barril: [[70, 3], [70, 6], [70, 9.4]]}
+  tapa-f: {tapa: [[4.2, -1.3], [3.6, 0.1], [2.8, 1.6], [1.0, 2.3], [-1.0, 2.3], [-2.8, 1.6],
+                  [-3.6, -0.1], [-4.2, -1.3]]}
+  baja-f2: {barril: [[290, 9.4], [290, 6], [290, 2.5]]}
+  # Después de pasar por debajo, el chicote sube por la derecha, por detrás, cruza la tapa
+  # por delante y baja por la izquierda, por detrás.
+  sube-c2: {barril: [[110, 2.5], [110, 6], [110, 9.4]]}
+  tapa-c: {tapa: [[4.2, 1.3], [3.6, -0.1], [2.8, -1.6], [1.0, -2.3], [-1.0, -2.3], [-2.8, -1.6],
+                  [-3.6, 0.1], [-4.2, 1.3]]}
+  baja-c2: {barril: [[250, 9.4], [250, 6], [250, 3]]}
+  chicote-2: [[-9.5, 3.0], [-13, 3.6], [-18, 3.4], [-24, 3.0]]
+
+  # Paso 3: las asas bajan por el borde y abrazan el costado. El firme sube por delante a
+  # la derecha, pasa por debajo del chicote que sube y sigue por el fondo.
+  firme-3: [[24, -4.5], [18, -5.0], [13, -4.8], [9.5, -3.8]]
+  sube-f3: {barril: [[60, 3], [70, 4.3], [80, 5.6], [100, 7.0], [112, 8.3], [124, 9.1]]}
+  atras: {barril: [[140, 9.3], [165, 9.3], [190, 9.3], [215, 9.3], [240, 9.3], [256, 9.2]]}
+  # Baja por la izquierda, por delante, hasta pasar por debajo de la base.
+  baja-f3: {barril: [[268, 8.8], [276, 8.0], [280, 7.0], [280, 5.0], [280, 2.5]]}
+  # El chicote sube por la derecha, por detrás, y dobla hacia delante sobre el firme.
+  sube-c3: {barril: [[100, 2.5], [100, 5.0], [100, 7.0], [96, 8.0], [88, 8.8], [76, 9.2]]}
+  delante: {barril: [[60, 9.3], [35, 9.3], [10, 9.3], [-15, 9.3], [-40, 9.3], [-56, 9.1]]}
+  # A la izquierda pasa por debajo del firme que baja y sale por detrás.
+  baja-c3: {barril: [[-68, 8.3], [-80, 7.0], [-100, 5.6], [-110, 4.3], [-120, 3]]}
+  chicote-3: [[-9.5, 3.8], [-13, 4.8], [-18, 5.0], [-24, 4.5]]
+
+pasos:
+  - titulo: Pon el barril sobre la cuerda
+    texto: >-
+      Estira la cuerda en el suelo y para el barril encima, con la cuerda justo por debajo del
+      centro de la base. El firme queda a la izquierda y el chicote a la derecha, los dos
+      igual de largos.
+    trazado: [firme-1, bajo, chicote-1]
+    secuencia: ""
+
+  - titulo: Cruza los extremos sobre la tapa
+    texto: >-
+      Sube el firme por la izquierda y el chicote por la derecha, y crúzalos sobre la tapa
+      como el primer cruce de un nudo de rizo: el firme pasa por el fondo y baja por la
+      derecha, y el chicote pasa por delante y baja por la izquierda. Déjalo flojo.
+    trazado: [firme-2, sube-f2, tapa-f, baja-f2, bajo, sube-c2, tapa-c, baja-c2, chicote-2]
+    secuencia: "1U 2O 1O 2U"
+    resaltar: {desde: "sube-f2[0]", hasta: "baja-c2[-1]"}
+
+  - titulo: Baja las asas por el borde
+    texto: >-
+      Abre el cruce y baja por el borde la parte del fondo y la de delante, hasta que abracen
+      el costado un poco por debajo de la tapa. A cada lado, el extremo que sube queda
+      enganchado con el anillo. Une el firme y el chicote con un as de guía por encima del
+      barril y levanta despacio.
+    trazado: [firme-3, sube-f3, atras, baja-f3, bajo, sube-c3, delante, baja-c3, chicote-3]
+    secuencia: "3U 4O 3O 4U"
+    resaltar: {desde: "atras[0]", hasta: "delante[-1]"}
+
+# El error más común: un cruce al revés, y los extremos no se enganchan con el anillo.
+error:
+  paso: 3
+  invierte: [4]
+  titulo: Las asas sin enganchar
+  encuadre:
+    x: [-13.0, 13.0]
+    y: [-7.0, 6.0]
+  texto: >-
+    Si a un lado el extremo que sube pasa por debajo del anillo en vez de por encima, no
+    queda enganchado: solo se apoya. Al levantar, el anillo se abre y el barril se cae.
+    Vuelve a cruzar los extremos sobre la tapa, como en el paso 2.
+  otros:
+    - titulo: El anillo muy abajo o muy arriba
+      texto: >-
+        Por debajo de la mitad del barril, se voltea al levantarlo; justo en el borde, el
+        anillo se sale por arriba. Déjalo un poco por debajo de la tapa.
+    - titulo: La cuerda fuera del centro de la base
+      texto: >-
+        Si la cuerda no pasa por el centro de la base, el barril se inclina hacia un lado al
+        despegarse. Bájalo y corre la cuerda.
+
+terminado:
+  encuadre:
+    x: [-12.0, 12.0]
+    y: [-10.0, 10.0]
+
+# Estado de producción (ver «Estado» en docs/formato-spec.md).
+estado: borrador
