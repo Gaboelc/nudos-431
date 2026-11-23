@@ -1,6 +1,6 @@
 """Plantilla del amarre diagonal, sobre la cruz del amarre cuadrado (anfitrión «cruz»).
 
-El método es el del diseño en tasks/plan.md («El amarre diagonal (tanda 4)»): una vuelta de
+El método es el del diseño en tasks/historial.md («El amarre diagonal (tanda 4)»): una vuelta de
 braza alrededor de los dos palos, vueltas en una diagonal, vueltas en la otra, ahorcados entre
 los palos y un ballestrinque de cierre en el palo de arriba. Los ahorcados y el cierre son los
 del amarre cuadrado (amarre.ahorcados_y_cierre).

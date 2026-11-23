@@ -12,7 +12,7 @@ from nudos.spec import cargar
 
 DORADOS = Path(__file__).parent / "dorados"
 # Diferencias que Gabriel aceptó porque el borrador es el mismo nudo leído de otra manera
-# (T9 del plan, «La corrida dorada»). En la vuelta de escota, donde se tapan las tres
+# (T9 en tasks/historial.md, «La corrida dorada»). En la vuelta de escota, donde se tapan las tres
 # cuerdas, la delgada cruza las piernas del seno en el otro orden (12 nov). Se exigen tal
 # cual: cualquier otra diferencia, o que una de estas desaparezca, hace fallar la prueba.
 ACEPTADAS = {

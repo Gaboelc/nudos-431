@@ -62,6 +62,20 @@ def main(argv=None) -> int:
     r.add_argument("slug")
     ordenes.add_parser("estado", help="estado de producción de los 36 nudos de la edición 1 "
                                      "y qué le falta a cada uno para el siguiente")
+    rf = ordenes.add_parser("referencia", help="construye a la vez los nudos de modelado o más (o "
+                                                "los nombrados) e imprime cada uno en <carpeta>/<slug>/, "
+                                                "fuera de build/, para comparar después")
+    rf.add_argument("carpeta", type=Path)
+    rf.add_argument("slugs", nargs="*", help="solo estos nudos (por omisión, los de modelado o más)")
+    rf.add_argument("--impresores", type=int, default=None,
+                    help="navegadores a la vez (por omisión 8)")
+    cm = ordenes.add_parser("comparar", help="compara dos carpetas de «referencia»: modelo.json "
+                                             "byte a byte e imágenes en RGB")
+    cm.add_argument("antes", type=Path)
+    cm.add_argument("despues", type=Path)
+    cm.add_argument("--reimprimir", action="store_true",
+                    help="vuelve a imprimir solos, en <despues>, los nudos con el modelo igual y "
+                         "alguna imagen distinta, y compara otra vez")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -85,6 +99,11 @@ def main(argv=None) -> int:
             return _diagnostico(args.slug, args.pasos, args.todo)
         if args.orden == "ampliar":
             return _ampliar(args.imagen, args.zona, args.lado)
+        if args.orden == "referencia":
+            return _referencia(args.carpeta, args.slugs, args.impresores)
+        if args.orden == "comparar":
+            from .referencia import comparar
+            return comparar(args.antes.resolve(), args.despues.resolve(), args.reimprimir)
         return _hoja(args.slug, args.vista, args.pasos)
     except SpecError as e:
         print(f"Error en la especificación: {e}", file=sys.stderr)
@@ -133,6 +152,18 @@ def _imprimir(slug: str) -> int:
         print("Esta especificación no declara el error común.")
     print(f"Página de prueba: {prueba.relative_to(RAIZ)}")
     return 0
+
+
+def _referencia(carpeta: Path, slugs: list[str], impresores: int | None) -> int:
+    from .referencia import IMPRESORES, referencia
+    try:
+        fallas = referencia(carpeta.resolve(), slugs or None, impresores or IMPRESORES)
+    except ImpresionError as e:
+        print(e, file=sys.stderr)
+        return 1
+    for f in fallas:
+        print(f, file=sys.stderr)
+    return 1 if fallas else 0
 
 
 def _sitio(salida: Path, con: list[str]) -> int:

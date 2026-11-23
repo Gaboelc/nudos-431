@@ -1,6 +1,6 @@
 """Plantilla del amarre cuadrado, sobre dos palos cruzados en ángulo recto (anfitrión «cruz»).
 
-El método es el del diseño de T7 en tasks/plan.md: un ballestrinque en el palo de abajo,
+El método es el del diseño de T7 en tasks/historial.md: un ballestrinque en el palo de abajo,
 las vueltas alrededor de los dos palos, los ahorcados entre los palos y un ballestrinque
 de cierre en el palo de arriba.
 """
@@ -101,7 +101,7 @@ def _extremo(datos, clave: str, falla) -> Extremo:
 # --------------------------------------------------------------------------
 # La cuerda entera
 # --------------------------------------------------------------------------
-# Medidas en diámetros de cuerda; ver «Cómo se hizo» de T7 en tasks/plan.md.
+# Medidas en diámetros de cuerda; ver «Cómo se hizo» de T7 en tasks/historial.md.
 PASO_VUELTAS = 1.1      # entre dos vueltas vecinas sobre un palo
 HOLGURA = 1.05          # delante, entre el ballestrinque de inicio y la vuelta más cercana
 ABRIR = 0.4             # cuánto se apartan, a media altura, dos esquinas vecinas

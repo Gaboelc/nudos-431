@@ -1,6 +1,6 @@
 # Tareas: Libro de nudos del Grupo 431
 
-El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/plan.md`.
+Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con sus fechas, ramas y commits, en `tasks/historial.md`. El estado de cada nudo lo da `python -m nudos estado`.
 
 ## Decisiones previas
 
@@ -11,192 +11,29 @@ El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/p
 - [x] D5 Se trabaja desde la app de Claude con la computadora vinculada
 - [ ] D8 Especificaciones de la imprenta: sangrado, color y formato (antes de T13)
 
-## Fase 1: el as de guía de principio a fin
+## Pendientes de Gabriel
 
-- [x] T1 Repositorio y especificación v0 con el as de guía
-- [x] Repositorio público `Gaboelc/nudos-431` creado y T1 subida
-- [x] T2 Escena 3D compartida y visor publicado en su URL permanente (M, depende de T1 y del repositorio)
-  - [x] Escena compartida, página del visor, `python -m nudos sitio`, `publicados.txt` y pruebas
-  - [x] Revisado en Chrome de escritorio y en celular emulado, sin errores ni pedidos fuera del sitio
-  - [x] Sitio subido a la rama `gh-pages`
-  - [x] Gabriel activa GitHub Pages: Settings → Pages → Deploy from a branch → `gh-pages` / `(root)`
-  - [x] La dirección responde y el visor carga en Chrome como celular, sin errores
-  - [x] Gabriel abre https://gaboelc.github.io/nudos-431/as-de-guia/ en su celular y revisa los 7 pasos
-- [x] Punto de control 1: la especificación reproduce el prototipo y el visor está en línea
-- [x] T3 Imágenes de impresión, error común y vistas finales (M, depende de T2)
-  - [x] Error común y nudo terminado en la especificación, con sus pruebas (`tests/test_errores.py`)
-  - [x] `python -m nudos imprimir`: 11 imágenes a 300 ppp desde la escena del visor, idénticas al construir dos veces
-  - [x] Resaltado del paso 2 movido para que el error se vea: el firme llega azul al cruce
-  - [x] `prueba.pdf`: página de prueba en color y en escala de grises
-  - [x] Gabriel imprime `prueba.pdf` en la Epson a tamaño real y revisa que se distinga qué tramo va encima (aprobada, con los pasos en 3D)
-  - [x] Publicar el sitio: el resaltado del paso 2 cambió
-  - [x] Borrar `prototipo/` (queda en el historial de git)
-- [x] T4 Ficha impresa del as de guía con QR (M, depende de T3, D1 y D2)
-  - [x] Texto de la ficha en la especificación: para qué sirve, materiales, verificación y seguridad
-  - [x] Plantilla `libro/`, `python -m nudos ficha` y QR vectorial al visor; pliego de dos páginas carta con margen de resorte
-  - [x] Prueba de vocabulario (`config/terminos_seccion.txt`) y pruebas de la ficha
-  - [x] Gabriel revisa el texto de la ficha: aprobado, sin la frase del 9-1-1 en seguridad (va solo en el material inicial)
-  - [x] Gabriel imprime la ficha y escanea el QR
-  - [x] Filtro 1: Gabriel ata el as de guía paso a paso con cuerda real, siguiendo la ficha impresa (7 nov)
-  - [x] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (7 nov, P01)
-  - [x] Registrar los dos filtros en la especificación (campo `filtros`)
-- [x] Punto de control A:
-  - [x] La suite pasa, también desde un clon limpio en un entorno nuevo (76 pruebas)
-  - [x] El as de guía pasó los dos filtros
-  - [x] Decisión entre three.js y Blender para la impresión: se queda three.js
-  - [x] Revisión contigo: la ficha se queda como está, con el espacio libre de la página derecha; los nudos de más de 6 pasos se resuelven en T7
+- [ ] Revisar el texto de las fichas de T5 (ballestrinque), T6 (vuelta de escota) y T6b (los tres nudos de T6b)
+- [ ] Abrir el visor en un celular de gama baja y revisar que cargue y gire con fluidez (T7b; en la computadora, armar el paso más largo del amarre tarda 37 ms en vez de 20 y girar cuesta lo mismo)
+- [ ] Confirmar los números ABOK: el simple (46), el arnés de hombre (153), la silla de bombero (1100), el rizo (1402), el pescador (1414), el pescador doble (294), el constrictor (la sesión puso 1249 y la fuente dice 1188), el adujado (3089) y los amarres redondo y trípode, que quedaron sin número
+- [ ] El paso de preparar del ocho (abierto desde el punto de control de la tanda 1)
+- [ ] Filtro 2 de todos los nudos: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (en pausa desde el 9 nov); se registra en cada especificación
 
-## Fase 2: piloto por tipo de nudo
+## Fases 1 a 3
 
-- [ ] T5 Objeto anfitrión con el ballestrinque sobre poste (M, depende de T4; es el mayor riesgo técnico)
-  - [x] El poste en la especificación (`anfitrion`, segmentos `{poste: [[x, ángulo], ...]}`) y en la relajación, sin que la cuerda lo atraviese
-  - [x] Cruces sobre la superficie desenrollada del poste (`nudos/anfitrion.py`)
-  - [x] `specs/ballestrinque.yaml`: 5 pasos con el chicote, error común y texto de la ficha; pruebas en `tests/test_ballestrinque.py`
-  - [x] El poste en la escena, el visor y la ficha; el nudo terminado se mira desde el otro lado
-  - [ ] Gabriel revisa el texto de la ficha
-  - [x] Filtro 1: Gabriel lo ata paso a paso con cuerda real y un palo, siguiendo la ficha impresa (9 nov)
-  - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (en pausa desde el 9 nov)
-  - [ ] Registrar los filtros en la especificación
-- [ ] T6 Dos cuerdas con la vuelta de escota (M, depende de T4; puede ir en paralelo con T5)
-  - [x] Diseño escrito en el plan (formato, geometría, color, escena); falta implementarlo
-  - [x] Formato con `cuerdas` y trazado y secuencia por cuerda, con sus pruebas (`tests/test_spec.py`)
-  - [x] Geometría de varias cuerdas: cortes, radio por punto, separación por suma de radios (`tests/test_cuerdas.py`)
-  - [x] Escena, impresión, hoja y ficha con dos cuerdas; nudos de una cuerda idénticos píxel por píxel (38 imágenes del as de guía y del ballestrinque, con Edge)
-  - [x] `specs/vuelta-de-escota.yaml` y `tests/test_vuelta_de_escota.py`: 4 pasos, error común (el chicote por encima de sí misma) y texto de la ficha; la ficha cabe en el pliego
-  - [ ] Gabriel revisa el texto de la ficha
-  - [x] Gabriel imprime la ficha (`python -m nudos ficha vuelta-de-escota`) y la revisa (9 nov, ficha 9ec2271)
-  - [x] Filtro 1: Gabriel la ata paso a paso con dos cuerdas reales de distinto grosor, siguiendo la ficha impresa (9 nov)
-  - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (en pausa desde el 9 nov)
-  - [x] Registrar el filtro 1 en la especificación
-  - [x] Publicar el sitio: la vuelta de escota es nueva y el visor cambió (9 nov, construido desde d352483; revisado en línea)
-- [ ] T6b Alternativas y precauciones en la página y la ficha (S, pedido de Gabriel el 9 nov; antes del Punto de control B)
-  - [x] Campos `alternativas` y `precauciones` en el formato, con sus pruebas; sin ellos no hay ficha
-  - [x] En la ficha (página 2, las tres caben) y en el visor, debajo de los pasos, con para qué sirve, materiales y seguridad
-  - [x] Texto propio del as de guía, el ballestrinque y la vuelta de escota (en los dos últimos, el aviso de que se afloja pasó de «usos» a «precauciones»)
-  - [ ] Gabriel revisa el texto de los tres nudos
-  - [x] Publicar el sitio con «Sobre el nudo» (9 nov, construido desde 9ec2271, a pedido de Gabriel antes de su revisión)
-- [x] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas (aprobado el 9 nov: el ballestrinque y la vuelta de escota pasaron el filtro 1; los enganches siguen con el anfitrión)
-- [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)
-  - [x] Diseño escrito en el plan (palos, formato, geometría, cruces, escena y ficha)
-  - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (9 nov: cierre arriba, inicio en un paso, error sin imagen por la tensión, los amarres sí sostienen personas)
-  - [x] Formato: anfitrión `cruz`, `plantilla`, pasos con `hasta` y `error` con `variante` y `otros`, con sus pruebas (`nudos/plantillas/`, `tests/test_amarre_cuadrado.py` y `tests/test_spec.py`; nudos publicados idénticos: 3 modelos byte a byte y 49 imágenes píxel por píxel, con Edge)
-  - [x] Geometría: la cuerda entera, los pasos como prefijos, la relajación con los dos palos y los cruces por zonas (`nudos/plantillas/amarre.py`, `trazo.py` y `pasos.py`, `tests/test_amarre_cuadrado.py`; 7 pasos sin fallas y 40 cruces con 3 y 3, también con 2 y 2, 4 y 3, 3 y 4 y 6 y 6; las vueltas van en el orden de las referencias y, delante, por fuera del ballestrinque: ver «Cómo se hizo la geometría» en el plan)
-  - [x] Gabriel revisa en las imágenes el orden de las vueltas y las vueltas por fuera del ballestrinque de inicio (con la escena) (10 nov: aprobados, con el volteo del terminado; pidió que la cuerda no se viera rígida)
-  - [x] Escena, impresión y ficha con los dos palos y el reverso volteado; nudos publicados idénticos (modelos byte a byte, imágenes píxel por píxel) (10 nov: `Cruz.voltear`, la cruz en `render/escena.js`, «Firme» solo en el ballestrinque de inicio, remate en los dos extremos y `error.otros` en la ficha; 3 modelos y 49 imágenes iguales, con Edge; ver «Cómo se hizo la escena» en el plan. La ficha del amarre se arma cuando estén el error construido y el texto)
-  - [x] La cuerda abraza los palos: esquinas y ahorcados rehechos (10 nov, a pedido de Gabriel: las esquinas bajan pegadas a las caras de los dos palos y los ahorcados son vueltas tensas; el mismo método y los mismos 40 cruces; sin fallas con 3 y 3, 2 y 2, 4 y 3, 3 y 4 y 6 y 6; nudos publicados idénticos; ver «Cómo se hizo la geometría» en el plan)
-  - [x] Gabriel revisa el antes y el después de la cuerda que abraza los palos (10 nov: aprobado)
-  - [x] Error común construido: los ahorcados por encima del palo de arriba, como variante de la cuerda, construidos y comprobados como un paso más, junto al paso 5 en la impresión (10 nov: los mismos 38 cruces que el paso 5; sin fallas con 3 y 3, 2 y 2, 4 y 3, 3 y 4 y 6 y 6; ver «Cómo se hizo el error y la especificación» en el plan)
-  - [x] `specs/amarre-cuadrado.yaml`: pasos, error común y texto de la ficha; la ficha cabe; de 3 a 4 vueltas regenera los pasos (10 nov: 7 pasos, error y la cuerda floja sin imagen, encuadre; ficha de dos páginas que cabe; nudos publicados idénticos contra 6151f02)
-  - [x] Gabriel revisa el texto de la ficha (10 nov: aprobado; al atarlo, Gabriel confirmó que con 4 m de cuerda alcanza)
-  - [x] Filtro 1: Gabriel lo ata con dos palos y cuerda real, siguiendo la ficha impresa (10 nov, ficha e745c28; con 4 m de cuerda alcanza)
-  - [x] Registrar el filtro 1 en la especificación
-  - [x] Publicar el sitio con el amarre cuadrado (10 nov, construido desde 7bcb14c, con el amarre en `publicados.txt`; revisado en línea)
-- [ ] T7b Mejoras del render (M, pedido de Gabriel el 10 nov; después de T7 y antes de T8)
-  - [x] Página de prueba en color y en gris: hoy contra cada mejora por separado y las cuatro juntas (10 nov: `python -m nudos mejoras`, `build/mejoras/prueba.pdf`, diez hojas; contorno, sombra de contacto, supermuestreo y sombras suaves, detrás de `Imagen.mejoras` y de la opción `mejoras` de la escena, apagadas; nudos publicados idénticos a 563bed6: 4 modelos byte a byte y 67 imágenes píxel por píxel, con Edge; 244 pruebas pasan; ver «Cómo se hizo la página de prueba» en el plan. El nudo terminado apretado pasó a T7c)
-  - [x] Gabriel revisa la página de prueba y elige qué mejoras entran (10 nov: la sombra de contacto, el supermuestreo y las sombras suaves; el contorno no, y se quitó del código)
-  - [x] Implementar las elegidas en el visor y la impresión, sin cambiar la geometría ni los cruces de los pasos (10 nov: `MEJORAS_ACTIVAS` en las fichas; el visor pasa la sombra de contacto y las sombras suaves; el mapa de sombras se dibuja solo al cambiar de paso; la sombra de contacto, 10 veces más rápida; ver «Cómo se implementaron» en el plan)
-  - [x] Nueva referencia de imágenes de los nudos ya aprobados, anotada aquí: desde el commit «T7b: las mejoras elegidas en las fichas y el visor», las imágenes de impresión del as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado son las nuevas; sus modelos no cambian (byte a byte contra 563bed6), así que los filtros 1 siguen valiendo. Construir dos veces da las mismas 67 imágenes, con Edge; las cuatro fichas se arman y caben; 244 pruebas pasan. Las comparaciones de «nudos publicados idénticos» se hacen desde ese commit
-  - [x] Publicar el sitio: el visor cambió (sombra de contacto y sombras suaves) (10 nov, a pedido de Gabriel: construido desde b3ff5ee, gh-pages d4065c8; los cuatro visores cargan en línea sin errores)
-  - [ ] Gabriel abre el visor en un celular de gama baja y revisa que cargue y gire con fluidez (en la computadora, armar el paso más largo del amarre tarda 37 ms en vez de 20 y girar cuesta lo mismo)
-- [x] T7c Nudo terminado apretado, con la misma secuencia de cruces que el último paso (M, separada de T7b el 10 nov; antes del Punto de control B)
-  - [x] Diseño escrito en el plan (método, dónde vive, pruebas, formato y cada nudo publicado), probado en un experimento fuera del repositorio (10 nov: el as de guía se aprieta dentro de los límites, el ballestrinque casi no cambia, la vuelta de escota es el riesgo y el amarre queda como está)
-  - [x] Gabriel aprueba el diseño (11 nov)
-  - [x] Referencia: los cuatro nudos publicados construidos e impresos desde `main` antes de tocar el código (11 nov, desde 52cb117, fuera del repositorio)
-  - [x] `nudos/apretar.py`, `Modelo.apretado` y `Modelo.reverso_apretado`, con sus pruebas; pasos y error idénticos byte a byte (11 nov: los 4 `modelo.json` sin las claves nuevas, byte a byte, y las 67 imágenes, píxel por píxel, con Edge; `TERMINADO_APRETADO = False`. As de guía 110,0 → 94,7, ballestrinque casi igual, vuelta de escota 118,5 → 112,4 con la gruesa que conserva su forma, amarre sin apretar. Tres cambios al diseño: al soltar no hay corrección de largo, la gruesa queda sujeta y el reverso apretado es el reverso de hoy apretado; ver «Cómo se hizo» de T7c en el plan)
-  - [x] Página de prueba `build/mejoras/apretado.pdf`: hoy, a medias y apretado, en color y en gris (11 nov: seis hojas, as de guía, ballestrinque y vuelta de escota)
-  - [x] Gabriel compara en papel y decide si entra (y cuál de las tres) (11 nov: «Apretado», con las 30 rondas)
-  - [x] `TERMINADO_APRETADO = True` y nueva referencia, anotada aquí: desde el commit «T7c: las fichas llevan el nudo apretado», las imágenes del terminado del as de guía, el ballestrinque y la vuelta de escota son las nuevas; las demás imágenes y los modelos no cambian (55 imágenes píxel por píxel y los modelos byte a byte contra 52cb117), así que los filtros 1 siguen valiendo y no hubo que publicar el sitio. Construir dos veces da lo mismo; las cuatro fichas se arman y caben. Las comparaciones de «nudos publicados idénticos» se hacen desde ese commit, y las imágenes se comparan en RGB: el script de T7b no veía diferencias (ver «Cómo entró» de T7c en el plan)
-- [ ] T8 Plantilla de la cabeza de turco (M, no S: plantilla y anfitrión nuevos, como T7; depende de T5) (11 nov: Gabriel la deja para el final, después de todo el resto del plan; ver «Lo que dijo Gabriel al revisar» de T8 en el plan)
-  - [x] Diseño escrito en el plan (método, tubo, formato, geometría, cruces sobre el tubo, error, terminado, escena, hoja y ficha), con los números de un experimento fuera del repositorio (11 nov: se teje vuelta por vuelta sobre un tubo que se gira; con 3 cabos y 4 senos, la segunda vuelta va toda por encima y la tercera teje; dos pasadas en un tubo de radio 4 dan 32 cruces)
-  - [x] Referencia de los cuatro nudos publicados construida e impresa desde 80e3619, fuera del repositorio
-  - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (11 nov: las cuatro propuestas; se teje vuelta por vuelta, 3 cabos, 4 senos y dos pasadas en un tubo de radio 4, el error es empezar a tejer por encima, con los dos errores sin imagen, y el terminado va sobre el tubo, por delante y girado media vuelta)
-  - [x] Formato: anfitrión `tubo`, plantilla `cabeza-de-turco` con `cabos`, `senos` y `pasadas`, sus hitos, `{cabos}`, `{senos}` y `{pasadas}` en el texto y la variante `empieza-por-encima`, con sus pruebas; `docs/formato-spec.md`; nudos publicados idénticos a 80e3619 (11 nov: `nudos/plantillas/cabeza_turco.py` y `tests/test_cabeza_de_turco.py`; la variante solo existe con tres cabos; la combinatoria del centro confirma que con 3 cabos la segunda vuelta va toda por encima; 4 modelos byte a byte y 67 imágenes en RGB iguales a 80e3619; ver «Cómo se hizo el formato» en el plan)
-  - [x] Geometría: la cuerda entera sobre el tubo, los pasos como prefijos girados, los extremos y el remate, la relajación y los cruces en el mapa del tubo (`nudos/plantillas/cabeza_turco.py`, `pasos.py` generalizado); sin fallas con 3 × 4 y dos pasadas, y con otras medidas; nudos publicados idénticos (11 nov: el extremo corto entra a media diagonal, la salida del riesgo 1, porque en el seno no cabían el paso de pasada y el chicote; en el remate se mete bajo la banda del seno vecino; 55° y no 60°; 6 pasos y el error sin fallas, 34 cruces; también 3 × 4 con una y tres pasadas, 2 × 3, 3 × 2, 2 × 5, 4 × 5 y 3 × 7; 3 × 5 con dos pasadas no sale todavía; ver «Cómo se hizo la geometría» de T8 en el plan)
-  - [x] Escena, impresión (el terminado girado media vuelta) y hoja con el tubo desenrollado; nudos publicados idénticos (11 nov: el tubo en `render/escena.js`, `Tubo.voltear` para el terminado por detrás, `mapa` en `nudos/hoja.py`, encuadre y texto provisional en `specs/cabeza-de-turco.yaml`; en el remate el extremo corto metido todavía no se resalta; ver «Cómo se hizo la escena, la impresión y la hoja» de T8 en el plan)
-  - [x] Gabriel revisa en las imágenes el extremo corto a media diagonal y su remate bajo la banda del seno vecino (con la escena) (11 nov: no entendió el nudo de esta manera y duda que un tubo más grueso lo arregle; la deja para el final)
-  - [x] Mientras tanto, la cabeza de turco no sale en el sitio: `construir_sitio` construía todas las especificaciones de `specs/`, y la suya tiene texto provisional (11 nov, aprobado por Gabriel: el sitio lleva solo los nudos de `publicados.txt`, y `python -m nudos sitio --con <slug>` agrega uno al sitio local; ver el Punto de control B en el plan)
+- [x] T1 a T7c y T9 a T10, con los puntos de control 1, A, 2, B y C
+- [ ] T8 Cabeza de turco (provisional; Gabriel la deja para el final del plan)
   - [ ] Al volver: ver con Gabriel qué no se entiende en las imágenes, antes de tocar la geometría
   - [ ] Error construido y `specs/cabeza-de-turco.yaml` con el texto de la ficha; la ficha cabe
   - [ ] Gabriel revisa el texto de la ficha
   - [ ] Filtro 1: Gabriel la ata con un cordón y un tubo, siguiendo la ficha impresa
   - [ ] Registrar el filtro 1 y publicar el sitio con la cabeza de turco en `publicados.txt`
-- [x] Punto de control B (11 nov, con los cuatro nudos publicados; la cabeza de turco, al final):
-  - [x] Los nudos del piloto están publicados, sin la cabeza de turco (11 nov: Gabriel la dejó para el final; los otros cuatro ya están publicados)
-  - [x] El formato de especificación v1 está congelado
-    - [x] Propuesta en `docs/formato-spec.md`, en «Versiones»: los cambios compatibles no llevan migración y los incompatibles sí; la cabeza de turco queda provisional (11 nov; ver «Cómo se preparó» en el plan)
-    - [x] Gabriel aprueba la propuesta y decide si la cabeza de turco entra en v1 o queda provisional (11 nov: aprobada, con la cabeza de turco provisional)
-  - [x] Revisión contigo (11 nov: Gabriel aprobó las tres propuestas: el formato v1, la cabeza de turco provisional y el sitio solo con los nudos de `publicados.txt`)
-
-## Fase 3: el paso de IA y la operación
-
-- [x] T9 Skill nudo-nuevo, con pruebas doradas sobre el as de guía y la escota (M, depende del Punto de control B) (12 nov: ver T9 en el plan)
-  - [x] Diseño escrito en el plan (dónde vive la skill, qué hace, la hoja de revisión, las pruebas doradas a ciegas y el ocho) (12 nov)
-  - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (12 nov: las cuatro propuestas)
-  - [x] Hoja de revisión (`python -m nudos revision`), comparación de las pruebas doradas (`nudos/dorados.py`) y la skill en `.claude/skills/nudo-nuevo/` (12 nov; ver «Cómo se hizo la hoja, la comparación y la skill» en el plan)
-  - [x] Corrida dorada a ciegas, en una sesión nueva con un worktree sin las especificaciones del as de guía y de la vuelta de escota (12 nov: borradores en la rama `claude/competent-aryabhata-2dc24a`, 4aa97d2; el as de guía da el mismo nudo y el mismo error con otra división de pasos; en la vuelta de escota la delgada cruza el seno en otro orden; ver «La corrida dorada» en T9 del plan)
-  - [x] Gabriel decide qué exigen las pruebas doradas (12 nov: el mismo nudo terminado, el mismo error y que cada paso sea un paso validado, sin la misma división; `nudos/dorados.py`)
-  - [x] Gabriel mira si la vuelta de escota del borrador es el mismo nudo (12 nov: sí; se acepta con sus tres diferencias exactas)
-  - [x] Borradores en `main`, en `tests/dorados/`, y sus pruebas en `tests/test_dorados.py`; la skill corregida con lo que le faltó (12 nov: 8cdee59 y a2148a3; el paso de preparar la cuerda, sin cruces, sí va)
-  - [x] Borrador del ocho con la skill y su hoja de revisión (12 nov: `specs/ocho.yaml` en `borrador`, 3 pasos y 4 cruces, sin fallas; la ficha cabe; hoja en `revision/ocho/index.html`; ver «El ocho» en T9 del plan)
-  - [x] Gabriel revisa la hoja del ocho; sus correcciones, anotadas en T9 del plan (12 nov: «todo bien», sin correcciones; el ocho pasa a `modelado`)
-- [x] T10 Estado de producción y registro de pruebas sin nombres (S, depende de T4) (11 nov: campo `estado` en el formato v1.1, `python -m nudos estado` con los 35 nudos de `config/edicion-1.yaml` y `tests/test_estado.py`; el as de guía en `publicado`, los otros tres publicados en `cuerda-ok` y la cabeza de turco en `borrador`; ver «Cómo se hizo» de T10 en el plan)
-- [x] Punto de control C (12 nov):
-  - [x] Un nudo nuevo salió de la skill con correcciones menores (12 nov: el ocho, sin correcciones; las pruebas doradas pasan)
-  - [x] Decisión sobre usar subagentes (12 nov: Gabriel aprobó sesiones aparte, una por nudo y cada una en su worktree, de dos o tres a la vez; el borrador entra a `main` cuando Gabriel aprueba su hoja)
 
 ## Fase 4: producción de los 30 nudos restantes
 
-Cada nudo cumple la definición de terminado: pruebas automáticas, error común, imágenes, visor, ficha, filtro 1, filtro 2 y estado `publicado`. El filtro 2 está en pausa desde el 9 de noviembre (ver la definición de terminado en el plan).
+Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos con el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado del piloto). A todos les falta el filtro 2.
 
-### Tanda 1: libres, una cuerda
-- [ ] Simple (12 nov: Gabriel aprobó su hoja; en `main` y en `modelado`, 3 pasos sin fallas, la ficha cabe; filtro 1 aprobado el 12 nov, ficha c2627a8; está en `cuerda-ok`. En el sitio desde el 13 nov, en `publicados.txt`. Falta el filtro 2, en pausa. Por revisar en el texto: si ABOK 46 es su único número. Redibujado tallado en la rama `claude/tanda1-simple-327c2b`, b27513c: apretado, la cuerda del nudo baja de 47,9 a 38,9 diámetros; Gabriel aprobó la hoja nueva: en `main` (bd97a82); la ficha cabe)
-- [ ] Ocho (12 nov: en `modelado`, salió de la skill en T9; filtro 1 aprobado el 12 nov, ficha c2627a8; está en `cuerda-ok`. En el sitio desde el 13 nov, en `publicados.txt`. Falta el filtro 2, en pausa)
-- [ ] Ocho doble (12 nov: Gabriel dice que es la gaza en ocho, de una sola gaza; las imágenes R1 a R5 de `entradas/ocho-doble` la atan, y desde la R6 siguen con el de dos gazas, que no va. Borrador en la rama `claude/tanda1-ocho-doble-ac4c81`, 8fe248a: 4 pasos sin fallas; los cruces 9 a 16, del seno por la vuelta, no se ven en las fotos. Redibujado tallado: apretado, baja de 160,6 a 145,0 diámetros. Gabriel aprobó la hoja: en `main` y en `modelado`; para que la ficha cupiera se acortaron los pasos 1 y 4, dos criterios de verificación, una precaución y una alternativa, y se quitó el error sin imagen del chicote corto, que ya dice la verificación. Filtro 1 aprobado el 12 nov, ficha c2627a8, con los cruces 9 a 16 confirmados; está en `cuerda-ok`. En el sitio desde el 13 nov, en `publicados.txt`. Falta el filtro 2, en pausa)
-- [ ] As de guía español (13 nov: borrador en la rama `claude/dreamy-wozniak-5561ff`, 74bff22: 7 pasos y 15 cruces, sin fallas, con `dos_firmes`; la ficha cabe; apretado, baja de 164,8 a 143,9 diámetros. El error común, subir los lados al revés, no está comprobado con cuerda. Gabriel aprobó la hoja: en `main` y en `modelado`, la ficha cabe. Filtro 1 aprobado el 13 nov, ficha eb656c7, con el error confirmado; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
-- [ ] Mariposa alpina (12 nov: borrador en la rama `claude/tanda1-mariposa-ed24c1`, atada sobre la mesa. Redibujada tallada y con un paso 7, «Saca la gaza», con los cruces 11 a 14 que se leen en R10: sin él, la gaza quedaba encerrada bajo el cruce 1 y el apretado se la comía. 7 pasos y 14 cruces sin fallas, 7333d26; apretado, la cuerda del nudo baja de 167,0 a 142,5 diámetros y la gaza queda larga. Gabriel aprobó la hoja: en `main` y en `modelado`; para que la ficha cupiera se acortaron «para qué sirve» y el paso 1. Con `dos_firmes` (formato v1.2), sus dos extremos llevan «Firme» y no «Chicote», y el texto dice «el otro firme»; la cuerda y los cruces no cambian. Filtro 1 aprobado el 12 nov, ficha c2627a8; está en `cuerda-ok`. En el sitio desde el 13 nov, en `publicados.txt`. Falta el filtro 2, en pausa)
-- [ ] Margarita (13 nov: borrador en la rama `claude/elegant-elion-0084bf`, b0b9629: 6 pasos y 10 cruces, sin fallas, con `dos_firmes`; la ficha cabe. Gabriel aprobó la hoja con su familia nueva, «De acortamiento», y su seguridad corta por lo que puede caer: en `main` y en `modelado`, la ficha cabe. Filtro 1 aprobado el 13 nov, ficha eb656c7; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
-- [ ] Arnés de hombre (13 nov: borrador en la rama `claude/suspicious-boyd-67faff`, d73fcf5: 5 pasos y 7 cruces, sin fallas, con `dos_firmes`; la ficha cabe. La fuente es una sola imagen con cinco dibujos, así que el filtro 1 importa más; ABOK 153 sin confirmar. Gabriel aprobó la hoja: en `main` y en `modelado`, la ficha cabe. Filtro 1 aprobado el 13 nov, ficha eb656c7; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
-- [ ] Silla de bombero (requiere D1) (13 nov: borrador en la rama `claude/tanda1-silla-c99584`, 36e68d4: 7 pasos y 18 cruces, sin fallas, con `dos_firmes`; la ficha cabe; apretado, baja de 187,3 a 174,5 diámetros. Son 7 pasos y no 6, porque cada paso resalta un solo tramo; el 5 y el 6 se pueden juntar. ABOK 1100 sin confirmar. Gabriel aprobó la hoja: en `main` y en `modelado`, la ficha cabe, y su seguridad dice que se practica sin carga o con un objeto (D1). Filtro 1 aprobado el 13 nov, ficha eb656c7; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
-- [x] Punto de control de la tanda 1 (13 nov)
-  - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (13 nov; el filtro 2 sigue en pausa)
-  - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (13 nov: 398 pruebas)
-  - [x] Revisión con Gabriel (13 nov: cerró el punto de control y pidió arrancar la tanda 2; siguen abiertos los números ABOK sin confirmar del simple, el arnés de hombre y la silla, el paso de preparar del ocho y el filtro 2)
-
-### Tanda 2: libres, dos cuerdas o dos extremos
-- [ ] Rizo (14 nov: borrador en la rama `claude/friendly-ishizaka-2fd396`, ab4fe90: 5 pasos y 6 cruces sin fallas, con dos cuerdas, una por cada punta; la ficha cabe. Familia «De ligadura»; error, el nudo de vaca. Gabriel aprobó la hoja: en `main` y en `modelado`. Filtro 1 aprobado el 15 nov, ficha 6005d98; en `cuerda-ok` y en el sitio desde el 15 nov. Falta el filtro 2, en pausa)
-- [ ] Pescador (el sencillo, como el manual de la Tropa; Gabriel, 13 nov) (14 nov: borrador en la rama `claude/lucid-poincare-388d17`, d0215af: 6 pasos sin fallas; la ficha cabe. Los encima/debajo salen de las fotos del doble, porque los dibujos del manual son muy chicos. Gabriel aprobó la hoja: en `main` y en `modelado`. Filtro 1 aprobado el 15 nov, ficha 6005d98, con los encima/debajo confirmados; en `cuerda-ok` y en el sitio desde el 15 nov. Falta el filtro 2, en pausa)
-- [ ] Pescador doble (el de las imágenes de Animated Knots, después del sencillo; Gabriel, 13 nov) (14 nov: borrador en la misma rama, d8d7201: 6 pasos sin fallas; la ficha cabe, con imágenes chicas porque el nudo es ancho. Gabriel aprobó la hoja: en `main` y en `modelado`. Filtro 1 aprobado el 15 nov, ficha 6005d98; en `cuerda-ok` y en el sitio desde el 15 nov. Falta el filtro 2, en pausa)
-- [ ] Nudo aguja (el del manual de la Tropa) (13 nov: Gabriel eligió un anfitrión nuevo para el destorcedor, un cilindro corto parado sobre la mesa, que puede servir también para la estaca del tensor ajustable. Es una tarea de código, como T5: su sesión propone el diseño, Gabriel lo aprueba y después se dibuja el nudo. 14 nov: Gabriel aprobó el diseño, `anfitrion: {tipo: destorcedor}` (formato v1.3); anfitrión y borrador en la rama `claude/nice-kepler-d00550`, 693d369 y 81d68f0; los 12 publicados quedan iguales. Falta que Gabriel revise la hoja. 15 nov: en `main` y en `modelado`, con el destorcedor (formato v1.3); los 12 publicados quedan iguales. Filtro 1 aprobado el 15 nov, ficha 6005d98, con las vueltas y el cruce 1 confirmados; en `cuerda-ok` y en el sitio desde el 15 nov. Falta el filtro 2, en pausa)
-- [x] Punto de control de la tanda 2 (15 nov)
-  - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (15 nov; el filtro 2 sigue en pausa)
-  - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (15 nov: 416 pruebas)
-  - [x] Revisión con Gabriel (15 nov: cerró el punto de control y pidió arrancar la tanda 3 como se propuso; siguen abiertos los números ABOK sin confirmar, el paso de preparar del ocho y el filtro 2)
-
-### Tanda 3: sobre anfitrión
-- [x] Menos tokens por borrador (15 nov: Gabriel aprobó las cuatro medidas; ver «Gastar menos tokens en los borradores» en el plan)
-- [ ] Ballestrinque doble (*rolling hitch*, entrada en el manual de la Tropa) (15 nov: sobre el poste, decidido en el punto de control de la tanda 2; borrador en su propia sesión. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`, con la versión del palo sobre el poste. Falta el filtro 1, con la ficha. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Leñador o vuelta de braza (15 nov: sobre el poste; borrador en su propia sesión. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son los cruces 1, 3, 4 y 6. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Media llave y dos cotes (16 nov: sobre el poste; borrador en la rama `claude/tanda3-media-llave-c941f4`, 3c5b8dd, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son el sentido de las vueltas al poste y el cruce 3. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Fugitivo (16 nov: sobre el poste, de radio 4,5; borrador en la rama `claude/tanda3-fugitivo-44b52d`, 7acec93, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son los cruces 3 a 7. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Tensor (*trucker's hitch*) (16 nov: sobre el poste; borrador en la rama `claude/tanda3-tensor-6dc616`, 1063a4a, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja, también esa versión; en `main` y en `modelado`. Falta el filtro 1, con la ficha. La fuente es el tensor de liberación rápida; las dudas son los cruces 3 a 6 y el remate, que no se dibuja. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca) (15 nov: Gabriel aprobó el diseño de la estaca, `anfitrion: {tipo: estaca}` (formato v1.4); anfitrión y borrador en la rama `claude/tanda3-estaca-45866b`; los 16 publicados quedan iguales. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`, con la estaca. Falta el filtro 1, con la ficha; la duda principal es el cruce 8, el remate. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Constrictor (16 nov: sobre el poste, con el chicote; borrador en la rama `claude/tanda3-constrictor-0cc820`, 556c649, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; la duda es el cruce 3, la familia y el número ABOK. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Nudo de liberación rápida (*mooring hitch*) (16 nov: sobre el poste; borrador en la rama `claude/tanda3-liberacion-rapida-a8d91f`, 2f2a044, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; la duda principal es el cruce 2, y después el 7 y el 9. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Presilla de alondra (16 nov: sobre el poste, con el chicote; borrador en la rama `claude/tanda3-presilla-alondra-d2d429`, fd0adff, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son el cruce 1 y el error común. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [ ] Prusik (16 nov: libre, con dos cuerdas; borrador en la rama `claude/tanda3-prusik-c4499a`, 45368be, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son los cruces 1 y 4, que traban el nudo, y los de la primera pasada. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
-- [x] Punto de control de la tanda 3 (16 nov)
-  - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (16 nov; el filtro 2 sigue en pausa)
-  - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (16 nov: 457 pruebas)
-  - [x] Revisión con Gabriel (16 nov: cerró el punto de control y aprobó la propuesta de la tanda 4, que está en el plan)
-
-### Tanda 4: plantillas
-- [ ] Amarre redondo (17 nov: anfitrión `palos` y plantilla `amarre-redondo`, formato v1.6; 6 vueltas y 2 ahorcados, 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
-- [ ] Amarre diagonal (17 nov: plantilla `amarre-diagonal` y formato v1.5 en la rama `claude/tanda4-amarre-diagonal-065be5`; 9 pasos y el error sin fallas, 75 cruces; los 26 publicados iguales. 17 nov: Gabriel eligió 7 pasos y la ficha cabe. 17 nov: Gabriel aprobó imágenes, texto y los cambios al diseño; en `modelado`. Falta el filtro 1, con la ficha; ver «Cómo se hizo» del amarre diagonal en el plan. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
-- [ ] Amarre trípode (17 nov: plantilla `amarre-tripode` sobre tres `palos`, formato v1.6; 6 vueltas y 2 ahorcados por hueco, 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
-- [ ] Refuerzo de cabo (17 nov: anfitrión `cabo` y plantilla `refuerzo-de-cabo`, formato v1.7; 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
-- [x] Construir con todos los núcleos (17 nov: `nudos/procesos.py` relaja a la vez los pasos, el error, el reverso y el apretado, y la suite construye una sola vez todos los nudos de `modelado` o más; con pytest-xdist, `-n 4 --dist loadfile`. En `main` (6a4028e): los 26 `modelo.json` publicados iguales byte a byte; tres imágenes difirieron en 1 nivel, dos salen iguales impresas solas y la del tensor ajustable sale igual desde 3843a16, así que la variación era de la referencia. La suite pasa: 583 pruebas y 1 se salta, en 13 min 28 s con otra sesión usando la computadora; las cuatro fichas de la tanda 4 se arman. Ver «Construir con todos los núcleos» en el plan)
-- [ ] Adujado (17 nov: Gabriel aprobó el diseño. Plantilla `adujado`, la primera sin anfitrión, formato v1.8, en la rama `claude/adujado-8fbe75`; 4 senos y 4 vueltas, sin relajar, 7 pasos y el error sin fallas. Gabriel aprobó imágenes y texto; en `modelado` (eac11dd). 17 nov: en `main` (7a5ccdb), con el código en paralelo; los publicados iguales y la ficha cabe; ver «Cómo se hizo» del adujado en el plan. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
-- [ ] Puño de mono (17 nov: Gabriel aprobó el diseño. Plantilla `puno-de-mono` sin anfitrión, formato v1.9 (v1.8 en su rama), en la rama `claude/puno-de-mono-368ca9`; 3 vueltas por juego, 7 pasos y el error sin fallas, 57 cruces; los 30 publicados y de la tanda 4 iguales; la ficha cabe. 17 nov: Gabriel pidió los dedos dibujados y sin el paso del nudo simple: 6 pasos en dos dedos, sin fallas. Gabriel aprobó imágenes y texto; en `modelado` (126d0ec). 17 nov: en `main` (65f4fde), después del adujado, con el formato renumerado a v1.9; ver «Cómo se hizo» del puño de mono en el plan. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
+- [ ] Prusik: el otro tramo del cordino dice «Chicote» (tarea de código)
 - [ ] Punto de control de la tanda 4
 
 ### Tanda 5: anfitriones especiales

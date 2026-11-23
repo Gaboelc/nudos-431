@@ -1,6 +1,6 @@
 """Plantilla del puño de mono, sin anfitrión: se ata en los dedos y no lleva bola en el centro.
 
-El método es el del diseño de la tanda 4 en tasks/plan.md («El puño de mono»). Con el chicote
+El método es el del diseño de la tanda 4 en tasks/historial.md («El puño de mono»). Con el chicote
 se dan `vueltas` vueltas alrededor de dos dedos parados (el primer juego, alrededor de z); el
 chicote pasa entre los dedos y da otras tantas alrededor de las primeras, por la mitad (el
 segundo, alrededor de x); después pasa por dentro de las primeras y da otras tantas alrededor de
@@ -37,7 +37,7 @@ _CAMPOS = {"tipo", "vueltas"}
 # va de una zona a otra (el chicote que entra al centro, lo que sale del puño y cae), sin mapa.
 ESFERA, CENTRO, FUERA = 10, 11, 12
 
-# Medidas en diámetros de cuerda; ver el diseño en tasks/plan.md.
+# Medidas en diámetros de cuerda; ver el diseño en tasks/historial.md.
 PASO_VUELTA = 1.1      # entre dos vueltas vecinas de un juego
 CAPA = 1.05            # cuánto más lejos del centro va una vuelta donde pasa por encima
 HOLGURA = 0.9          # más allá de la vuelta de afuera del otro juego, la cara sigue entera

@@ -1,0 +1,1647 @@
+# Historial: Libro de nudos del Grupo 431
+
+Lo que ya se hizo, con sus diseños, decisiones, fechas, ramas y commits. Salió de `tasks/plan.md` y de `tasks/todo.md` el 22 de noviembre de 2026, sin cambios en el texto, para que las sesiones no lo lean entero en cada arranque. No hace falta leerlo: cuando una tarea nueva se parece a una cerrada (por ejemplo, una plantilla o un anfitrión nuevos), busca aquí su bloque con `grep` y lee solo ese.
+
+Las secciones siguen el orden del plan: las fases 1 a 3, tarea por tarea; las tandas 1 a 4 de la fase 4, y al final la lista de tareas tal como estaba ese día.
+
+## Del plan
+
+### Fase 1: primer corte vertical, el as de guía de principio a fin
+
+#### T1: Repositorio y especificación v0 con el as de guía
+
+**Descripción:** crear la estructura del repositorio y portar a un paquete el generador libre del prototipo. Definir la especificación v0 con el as de guía: metadatos, cuerda, pasos (trazado y secuencia de cruces) y tramos resaltados.
+
+**Criterios de aceptación:**
+- [ ] `specs/as-de-guia.yaml` describe los 7 pasos, y `construir` genera sus 7 líneas centrales relajadas.
+- [ ] En cada paso, la secuencia de cruces después de relajar coincide con la especificación y se cumplen los límites de separación, curvatura y estiramiento.
+- [ ] Una copia de la especificación con un cruce invertido en un solo paso hace fallar la prueba de consistencia entre pasos. Ninguna prueba automática detecta un error que se repite igual en todos los pasos: para eso está el filtro 1.
+
+**Verificación:**
+- [ ] `pytest -k as_de_guia`
+- [ ] `python -m nudos construir as-de-guia`
+- [ ] Manual: la hoja de vista superior coincide con la del prototipo.
+
+**Dependencias:** D5
+
+**Archivos:** `specs/as-de-guia.yaml`, `nudos/spec.py`, `nudos/cruces.py`, `nudos/libre.py`, `tests/test_as_de_guia.py`
+
+**Tamaño:** M. La mayor parte es código portado del prototipo.
+
+#### T2: Escena 3D compartida y visor publicado
+
+**Descripción:** separar la escena three.js del prototipo en un módulo único con la cuerda trenzada, el resaltado, el remate, las luces y el encuadre. Generar desde la especificación el visor del as de guía y publicarlo en su URL permanente.
+
+**Criterios de aceptación:**
+- [ ] El visor en `<base>/as-de-guia/` muestra los 7 pasos, con vista superior y 3D, y funciona en el celular.
+- [ ] El sitio construido no contiene ninguna imagen de las fuentes.
+- [ ] `publicados.txt` incluye el slug, y una prueba falla si su página no está en el sitio.
+
+**Verificación:**
+- [ ] `pytest tests/test_sitio.py`
+- [ ] `python -m nudos sitio`
+- [ ] Manual: abrir la URL en el celular.
+
+**Dependencias:** T1, D4
+
+**Archivos:** `render/escena.js`, `sitio/plantilla.html`, `sitio/visor.js`, `sitio/visor.css`, `sitio/vendor/`, `nudos/exportar.py`, `scripts/publicar.sh`, `publicados.txt`, `tests/test_sitio.py`
+
+**Tamaño:** M
+
+#### Punto de control 1: después de T1 y T2
+
+- [ ] La especificación reproduce el prototipo.
+- [ ] El visor está en su URL permanente.
+
+#### T3: Imágenes de impresión, error común y vistas finales
+
+**Descripción:** generar con Chrome sin interfaz las imágenes de cada paso a 300 ppp, desde la escena compartida. Agregar a la especificación el error común, que declara qué cruces se invierten y en qué paso, y las dos vistas del nudo terminado.
+
+**Criterios de aceptación:**
+- [ ] Para el as de guía se generan, a 300 ppp en su tamaño impreso:
+  - Los 7 pasos.
+  - El error (la gaza pequeña al revés) junto al paso correcto.
+  - Las 2 vistas finales.
+- [ ] La secuencia de cruces del error difiere de la correcta exactamente en los cruces declarados.
+- [ ] Construir dos veces produce las mismas imágenes.
+
+**Verificación:**
+- [ ] `pytest tests/test_errores.py`
+- [ ] `python -m nudos imprimir as-de-guia`
+- [ ] Manual: imprimir una página de prueba en la Epson y revisar que se distinga qué tramo cruza por encima.
+
+**Dependencias:** T2
+
+**Archivos:** `nudos/errores.py`, `nudos/imprimir.py`, `render/escena.js`, `specs/as-de-guia.yaml`, `tests/test_errores.py`
+
+**Tamaño:** M
+
+#### T4: Ficha impresa del as de guía con QR
+
+**Descripción:** crear la plantilla HTML/CSS de la ficha con todas sus secciones, que se llena desde la especificación. Incluye un QR al visor y se exporta a PDF con Chrome en tamaño carta, como un pliego de dos páginas con margen de resorte (D2). El texto va en tuteo y es propio.
+
+**Criterios de aceptación:**
+- [ ] El PDF tiene todas las secciones de la ficha y el QR abre el visor.
+- [ ] La prueba de vocabulario pasa: ningún término propio de una sección aparece en la ficha.
+- [ ] El nudo pasa los dos filtros y quedan registrados en la especificación.
+
+**Verificación:**
+- [ ] `pytest tests/test_ficha.py`
+- [ ] `python -m nudos ficha as-de-guia`
+- [ ] Manual: imprimir la ficha, escanear el QR y hacer los filtros 1 y 2.
+
+**Dependencias:** T3, D1, D2
+
+**Archivos:** `libro/ficha.html`, `libro/ficha.css`, `nudos/ficha.py`, `config/terminos_seccion.txt`, `tests/test_ficha.py`
+
+**Tamaño:** M
+
+#### Punto de control A: después de T3 y T4
+
+- [ ] Toda la suite pasa y el proyecto se construye desde un clon limpio.
+- [ ] La ficha impresa del as de guía pasó los dos filtros. Si el filtro 2 falla, se corrige la ficha antes de seguir: es la señal más importante del proyecto.
+- [ ] Decidir si la impresión se queda con three.js o pasa a Blender, según cómo se ve la página impresa.
+- [ ] Revisar contigo el diseño de la ficha y el formato de especificación.
+
+**Resultado (9 de noviembre de 2026):** la impresión se queda con three.js: la prueba impresa y los dos filtros pasaron con esas imágenes, y el visor y la ficha salen de la misma escena. La ficha se queda como está, incluido el espacio libre al final de la página derecha. Cómo caben los nudos de más de 6 pasos se decide en T7, con el amarre cuadrado.
+
+### Fase 2: piloto por tipo de nudo
+
+#### T5: Objeto anfitrión con el ballestrinque sobre poste
+
+**Descripción:** agregar a la especificación objetos anfitriones rígidos: poste, argolla, estaca, tablón, barril, cornamusa y cuerda anfitriona. Agregar a la relajación las colisiones contra ellos. Las vueltas se describen en coordenadas del anfitrión: posición a lo largo, ángulo y capa. Los cruces se verifican sobre la superficie desenrollada del anfitrión, no en la proyección.
+
+**Criterios de aceptación:**
+- [ ] El ballestrinque sobre un poste se construye en todos sus pasos sin que la cuerda atraviese el poste.
+- [ ] Los cruces sobre el poste coinciden con la especificación.
+- [ ] El nudo pasa los dos filtros.
+
+**Verificación:**
+- [ ] `pytest -k ballestrinque`
+- [ ] `python -m nudos construir ballestrinque`
+- [ ] Manual: filtros 1 y 2.
+
+**Dependencias:** T4
+
+**Archivos:** `nudos/anfitrion.py`, `nudos/libre.py`, `render/escena.js`, `specs/ballestrinque.yaml`, `tests/test_ballestrinque.py`
+
+**Tamaño:** M. Es el mayor riesgo técnico del proyecto, por eso va primero en la fase.
+
+**Cómo se hizo (9 de noviembre de 2026):** se implementó solo el poste. La argolla, la estaca, el tablón, el barril, la cornamusa y la cuerda anfitriona se agregan con el primer nudo que los necesite, para no dejar código sin un nudo que lo pruebe. Sobre el poste los puntos van como [x, ángulo], sin capa: qué tramo queda encima lo decide la secuencia, igual que en la mesa, y así el error común funciona sin cambios. Cerca del poste la cuerda se relaja sin gravedad ni suavizado, como si estuviera algo tensa, y con más correcciones de largo. El nudo terminado sobre un anfitrión no se voltea: se mira desde el otro lado (vista «detras»). Se usó el método con el chicote, que sirve en cualquier poste y es el que empieza los amarres.
+
+#### T6: Dos cuerdas con la vuelta de escota
+
+**Descripción:** permitir varias cuerdas por nudo, cada una con su grosor y su color según el rol. La vuelta de escota une cuerdas de distinto grosor. Los cruces entre cuerdas entran en la misma secuencia de cruces.
+
+**Criterios de aceptación:**
+- [ ] Dos cuerdas de distinto grosor y color se construyen y se ven bien en el visor y en la impresión.
+- [ ] La secuencia de cruces es correcta en cada paso, y la separación usa la suma de los radios.
+- [ ] El nudo pasa los dos filtros (el filtro 2, cuando se retome).
+
+**Verificación:**
+- [ ] `pytest -k vuelta_de_escota`
+- [ ] `python -m nudos construir vuelta-de-escota`
+- [ ] Manual: filtros 1 y 2.
+
+**Dependencias:** T4. Puede hacerse en paralelo con T5.
+
+**Archivos:** `nudos/spec.py`, `nudos/libre.py`, `nudos/cruces.py`, `specs/vuelta-de-escota.yaml`, `tests/test_vuelta_de_escota.py`
+
+**Tamaño:** M
+
+**Diseño (9 de noviembre de 2026, antes de implementar).** Referencia: `entradas/vuelta-de-escota/`, 7 imágenes. La cuerda gruesa forma un seno; la delgada sube por el seno, rodea por detrás sus dos ramas y se mete por debajo de sí misma.
+- **Formato:** `cuerdas` es una lista con `nombre`, `grosor` (diámetro relativo a la cuerda de siempre, que mide 1) y `color`. Con más de una cuerda, `trazado` y `secuencia` de cada paso pasan a ser mapas por cuerda: `trazado: {gruesa: [...], delgada: [...]}`. Cada secuencia recorre su cuerda desde su firme; cada etiqueta aparece dos veces en total, una con O y otra con U, en la misma cuerda o en las dos. Un nudo de una sola cuerda se sigue escribiendo como hasta ahora.
+- **Geometría:** las cuerdas se concatenan en una sola polilínea con cortes entre ellas, y cada punto lleva su cuerda y su radio. Ningún segmento, largo, suavizado ni salto de vecinos cruza un corte. Las colisiones y la separación usan la suma de los radios; el apoyo en la mesa, el radio de cada punto; la curvatura y el estiramiento se miden por cuerda, en sus diámetros. Los cruces se buscan con los segmentos válidos (`_cruces_2d`, que hoy está en `nudos/anfitrion.py`, pasa a `nudos/cruces.py`). Los primeros puntos de cada cuerda quedan fijos.
+- **Color:** la gruesa en el azul de siempre y la delgada en un color claro (crema, con trazador rojo). En gris, el rojo de Animated Knots se confundiría con el azul; crema, ámbar y azul quedan claro, medio y oscuro.
+- **Escena e impresión:** `datos_escena` lleva una lista de cuerdas por paso, cada una con sus puntos, radio, color y tramo resaltado; los nudos de una cuerda se exportan igual que ahora. Nombres en la imagen: el nombre de cada cuerda junto a su firme y «Chicote» solo en la que se mueve. Hay que revisar la hoja de revisión (`nudos/hoja.py`) y la ficha.
+- **Riesgo:** los nudos de una cuerda tienen que seguir dando exactamente las mismas imágenes (comprobado píxel por píxel contra el as de guía y el ballestrinque).
+
+**Cómo se hizo (9 de noviembre de 2026):** se implementó el diseño tal cual, con estos detalles que salieron al hacerlo.
+- Todas las cuerdas comparten el mismo paso de muestreo, así que la posición a lo largo de la polilínea es índice × paso. Cada pasada tiene que caer en la cuerda donde se declaró, y las fallas escriben la secuencia de cada cuerda.
+- Con varias cuerdas se corrige el largo 12 veces por vuelta, no 4: una gruesa empuja hacia arriba a la delgada que pasa encima, y la delgada se estiraba hasta su firme.
+- Una cuerda gruesa que sube sobre otra lo hace en un largo proporcional a su grosor. Con grosor 1 el cálculo es el de siempre.
+- Una gruesa que cruza en ángulo recto por encima de una delgada se apoya sobre ella con un radio igual a la suma de los radios (1,25 con grosores 1,5 y 1), que es 0,83 de su diámetro y no pasa la prueba de curvatura. No se cambió la prueba: en la vuelta de escota, la delgada cruza a la gruesa en diagonal en todos esos cruces, también los que quedan al revés en la vista de detrás. Está en `docs/formato-spec.md`.
+- La vuelta de escota tiene 4 pasos, con la gruesa de grosor 1,5. El error común es el chicote por encima de sí misma (cruce 6). En el modelo, la delgada pasa por debajo de sí misma justo después de cruzar la rama del chicote de la gruesa, no dentro del seno: es el mismo nudo, porque esa rama queda debajo de las dos pasadas de la delgada.
+- Esta computadora no tiene Chrome. Las comparaciones píxel por píxel (38 imágenes, antes y después del cambio) y las pruebas que dibujan se hicieron con Edge, poniendo `NUDOS_CHROME` en la ruta de `msedge.exe`. Las imágenes de un mismo navegador salen idénticas; entre Chrome y Edge pueden cambiar un poco.
+
+#### T6b: Alternativas y precauciones en la página y la ficha
+
+**Descripción:** pedido de Gabriel el 9 de noviembre de 2026. El visor y la ficha impresa muestran, además de los pasos, los detalles del nudo: para qué sirve, qué otros nudos convienen en su lugar y cuándo, y los cuidados y peligros de usarlo. Los `info.txt` de `entradas/` traen esos datos, pero son texto de Animated Knots: se usan como entrada y el texto del libro es propio, como el resto de la ficha.
+
+**Criterios de aceptación:**
+- [ ] La especificación lleva `alternativas` (otro nudo y cuándo conviene) y `precauciones` (cuidados y peligros), con texto propio. Sin ellos, la ficha no se genera.
+- [ ] El visor muestra para qué sirve, también se llama, alternativas, precauciones y seguridad, debajo de los pasos.
+- [ ] La ficha los muestra en la página 2 y sigue cabiendo en el pliego, en los tres nudos.
+- [ ] Gabriel revisa el texto de cada nudo.
+
+**Verificación:**
+- [ ] `pytest`
+- [ ] `python -m nudos ficha <slug>` para los tres nudos
+- [ ] Manual: el visor en el celular y las fichas impresas.
+
+**Dependencias:** T4. Va antes del Punto de control B, porque agrega campos al formato.
+
+**Archivos:** `nudos/spec.py`, `nudos/ficha.py`, `libro/ficha.html`, `libro/ficha.css`, `nudos/exportar.py`, `sitio/plantilla.html`, `sitio/visor.css`, `specs/*.yaml`, `docs/formato-spec.md`, `tests/`
+
+**Tamaño:** S
+
+#### Punto de control 2: después de T5 y T6
+
+- [x] El anfitrión y las dos cuerdas funcionan.
+- [x] Si el anfitrión no da resultados confiables, los enganches de la tanda 3 pasan a plantillas y se replanifica la fase 4. No hizo falta.
+
+**Aprobado por Gabriel el 9 de noviembre de 2026.** El ballestrinque sobre el poste y la vuelta de escota con dos cuerdas pasaron el filtro 1 con cuerda real, siguiendo la ficha impresa. Los enganches de la tanda 3 siguen con el anfitrión, y la fase 4 no se replanifica. Las revisiones de texto de T5, T6 y T6b siguen pendientes, pero no bloquean este punto.
+
+#### T7: Plantilla del amarre cuadrado
+
+**Descripción:** crear una plantilla que genere los pasos del amarre cuadrado a partir de medidas: diámetro de los postes, número de vueltas, número de ahorcados y los ballestrinques de inicio y de cierre.
+
+**Criterios de aceptación:**
+- [ ] Cambiar un parámetro, por ejemplo de 3 a 4 vueltas, regenera todos los pasos sin editar nada a mano.
+- [ ] La cuerda no atraviesa los postes ni otras vueltas.
+- [ ] El amarre pasa los dos filtros.
+
+**Verificación:**
+- [ ] `pytest -k amarre_cuadrado`
+- [ ] `python -m nudos construir amarre-cuadrado`
+- [ ] Manual: filtros 1 y 2.
+
+**Dependencias:** T5
+
+**Archivos:** `nudos/plantillas/amarre.py`, `specs/amarre-cuadrado.yaml`, `tests/test_amarre_cuadrado.py`, `render/escena.js`
+
+**Tamaño:** M
+
+**Diseño (9 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las respuestas del final).** Referencias: `entradas/amarre-cuadrado/` (18 imágenes) y la página 27 del manual de la Tropa. Las dos usan el mismo método, que es el que sigue la plantilla.
+- **Método:**
+  - Empieza con un ballestrinque en el palo de abajo, del lado de quien ata y pegado al palo de arriba.
+  - Siguen las vueltas alrededor de los dos palos. Cada una pasa por encima del palo de arriba, a los dos lados del de abajo, y por debajo del palo de abajo, a los dos lados del de arriba. Cada vuelta nueva va por dentro de la anterior sobre el palo de arriba y por fuera sobre el de abajo. Así, entre los palos, las vueltas quedan una junto a otra y no unas encima de otras.
+  - Después vienen los ahorcados: vueltas entre los dos palos, por debajo del de arriba y por encima del de abajo, que rodean las vueltas por fuera y las aprietan.
+  - Termina con un ballestrinque en el palo de arriba.
+- **Los dos palos:** son un anfitrión nuevo, `tipo: cruz`, con `radio` (el mismo para los dos, en diámetros de cuerda) y `largo` (el de cada palo).
+  - Están sobre la mesa y se cruzan en ángulo recto en x = y = 0. El de abajo va a lo largo de y, hacia el fondo de la mesa. Se apoya en la cuerda que pasa por debajo, así que su eje queda a la altura radio + 1, como el poste de T5. El de arriba va a lo largo de x y se apoya sobre el de abajo.
+  - Propuesta: radio 2,5, que es un palo de 4 cm con una cuerda de 8 mm.
+  - El ángulo queda fijo en 90°. El amarre diagonal agregará `angulo` cuando llegue. El poste de T5 no cambia.
+- **Formato:** un nudo de plantilla no lleva `segmentos`, `trazado` ni `secuencia`. Lleva `plantilla` con sus medidas, y cada paso dice con `hasta` hasta dónde llega:
+
+  ```yaml
+  anfitrion: {tipo: cruz, radio: 2.5, largo: 40}
+  plantilla:
+    tipo: amarre-cuadrado
+    vueltas: 3                              # alrededor de los dos palos
+    ahorcados: 3                            # entre los palos
+    inicio: {poste: abajo, lado: delante}   # ballestrinque de inicio
+    cierre: {poste: arriba, lado: derecha}  # ballestrinque de cierre
+  pasos:
+    - {titulo: Haz un ballestrinque en el palo de abajo, texto: …, hasta: inicio}
+    - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+    - {titulo: Da las demás vueltas, texto: …, hasta: vueltas}
+    - {titulo: Da el primer ahorcado, texto: …, hasta: ahorcado-1}
+    - {titulo: Da los demás ahorcados, texto: …, hasta: ahorcados}
+    - {titulo: Empieza el ballestrinque de cierre, texto: …, hasta: cierre-1}
+    - {titulo: Termina el ballestrinque, texto: …, hasta: cierre}
+  ```
+
+  - `hasta` puede ser `inicio-1`, `inicio`, `vuelta-<n>`, `vueltas`, `ahorcado-<n>`, `ahorcados`, `cierre-1` o `cierre`. Los pasos van en ese orden y el último llega a `cierre`. Un `hasta` que no existe con esas medidas, como `vuelta-4` con 3 vueltas, es un error al cargar.
+  - El tramo resaltado es lo que agrega cada paso, así que no se escribe.
+  - El texto puede decir `{vueltas}` o `{ahorcados}`, que salen en letras («tres»).
+  - Así, pasar de 3 a 4 vueltas es cambiar un número: los pasos, las imágenes y el texto se regeneran solos.
+  - Los 3 y 3 son los del manual de la Tropa, que pide «tres o cuatro» de cada uno.
+- **Geometría:** la plantilla calcula una sola vez la cuerda entera, desde el chicote corto del ballestrinque de inicio hasta el chicote del cierre.
+  - Cada paso es el comienzo de esa cuerda hasta su `hasta`, más el resto, que sale del amarre hacia afuera y cae a la mesa. Así un cruce es el mismo en todos los pasos y conserva su etiqueta.
+  - Cada tramo va sobre una superficie, en una capa contada en diámetros desde ella. Las vueltas van sobre la cara de arriba del palo de arriba y la de abajo del palo de abajo, a un diámetro una de otra. Entre los palos, las esquinas de las vueltas bajan de un palo al otro, una junto a otra. Los ahorcados van por fuera de las esquinas, a la altura donde se tocan los palos. Los ballestrinques van sobre su palo, como en T5.
+  - Después se pasa la curva suave, se muestrea cada 0,2 diámetros y se relaja como cerca del poste: sin gravedad, porque el amarre va apretado, con choques entre tramos y sin entrar en los palos ni estirarse.
+- **Cruces:** como sobre el poste, cada tramo se compara en la superficie desenrollada del cilindro donde va, y encima es lo más lejos del eje.
+  - Hay tres cilindros: el palo de abajo, el de arriba y, entre los palos, uno vertical alrededor del cruce (la «cintura» del amarre). En la cintura se cruzan los ahorcados con las esquinas de las vueltas.
+  - La plantilla sabe en qué zona va cada tramo. Los cruces entre zonas no se buscan; ahí se comprueba solo la separación, como entre el poste y la mesa.
+  - La plantilla escribe la secuencia que corresponde al método. Cada ahorcado pasa por encima de cada vuelta en las cuatro esquinas; las vueltas no se cruzan entre sí, porque van una junto a otra; y cada ballestrinque tiene sus dos cruces. Con 3 vueltas y 3 ahorcados son 40 cruces.
+  - Esa secuencia se compara con la que se mide en la cuerda relajada, igual que en los nudos libres. La consistencia entre pasos y la heurística del cruce que salta se aplican igual.
+- **Que la cuerda no atraviese nada:** no entra en ninguno de los dos palos más de 0,05 diámetros, como en el poste. Ningún tramo queda a menos de 0,97 diámetros de otro, así que tampoco atraviesa otras vueltas. La curvatura (0,9) y el estiramiento (2 %) se miden como siempre.
+- **Error común:** en una plantilla, el error no es un cruce invertido, sino una variante del método que la plantilla sabe construir, por ejemplo `error: {paso: 5, variante: ahorcados-por-fuera, …}`.
+  - El del amarre: los ahorcados por encima del palo de arriba, en lugar de entre los palos.
+  - Se construye y se comprueba como un paso más, con el mismo encuadre que el paso bien hecho.
+  - `invierte` sigue siendo el error de los nudos libres.
+  - Hay errores comunes que no se ven en una imagen. El del amarre es no mantener la cuerda tensa mientras se ata, y el amarre queda flojo. Para eso, `error` acepta `otros`, una lista de errores con `titulo` y `texto` y sin imagen. En la ficha y en el visor van debajo del error con imagen. Sirve para cualquier nudo; si no hay `otros`, nada cambia. La tensión también se pide en el texto de los pasos y se comprueba en la verificación: los palos no se mueven ni giran uno respecto al otro.
+- **Nudo terminado:** por delante, en la vista de los pasos. Por detrás, el amarre entero, palos y cuerda, se voltea como un marco sobre la mesa. Así queda arriba el palo que estaba abajo y se ven las vueltas que pasan por debajo de él.
+  - Es un giro rígido. Como los cruces se miden respecto a los palos y no a la mesa, la secuencia no cambia.
+  - Sobre un poste el nudo se mira desde el otro lado. En el amarre eso mostraría la misma cara, porque la de atrás queda contra la mesa.
+- **Escena:**
+  - Los dos palos son cilindros de madera, como el poste.
+  - Nombres: en el paso 1 van «Firme» en la parte larga y «Chicote» en el extremo corto, como en el ballestrinque. Desde el paso 2 se mueve la parte larga, y solo lleva «Chicote», en su punta.
+- **Ficha:**
+  - 7 pasos: 6 en la página 1 y 1 en la 2.
+  - El error, junto al paso 5 bien hecho.
+  - El terminado, por delante y por detrás.
+  - Materiales: dos palos y una cuerda de unos 3 m (por confirmar al atarlo).
+  - La hoja de revisión sigue dibujando solo la cuerda vista desde arriba.
+  - Seguridad: con los amarres se arman construcciones que sí sostienen personas, así que la ficha no dice lo contrario (excepción a D1). Los cuidados, como revisar cada amarre y los palos antes de subirse a una construcción, van en `precauciones`. Gabriel los revisa con el texto de la ficha.
+- **Lo que no cambia:** el generador libre y el poste. El as de guía, el ballestrinque y la vuelta de escota tienen que dar los mismos `modelo.json`, byte a byte, y las mismas imágenes, píxel por píxel. Se comprueba como en T6.
+- **Riesgo:** las esquinas entre los palos. Ahí tres o cuatro vueltas bajan de un palo al otro en poco espacio, y los ahorcados pasan por fuera de ellas. Si no caben a un diámetro con estas medidas, se agranda el radio de los palos o se cambia la forma de las esquinas, mirando las imágenes. Los límites no se aflojan.
+- **Lo que decidió Gabriel (9 de noviembre):**
+  1. El cierre va en el palo de arriba, como en la propuesta.
+  2. El ballestrinque de inicio va en un solo paso, que remite a la ficha del Ballestrinque. Son 7 pasos.
+  3. El error con imagen son los ahorcados por fuera de los palos. Además va, sin imagen, no mantener la tensión mientras se ata, porque es muy común que el amarre quede flojo (`error.otros`).
+  4. Los amarres sí sostienen personas: para eso son. La ficha no dice que no, y D1 queda con esa excepción.
+
+**Cómo se hizo la geometría (9 de noviembre de 2026; las esquinas y los ahorcados, rehechos el 10):** con el diseño, salvo lo que sigue. Gabriel lo revisó en las imágenes de la escena el 10 de noviembre: aprobó el orden de las vueltas, las vueltas que delante pasan por fuera del ballestrinque y el volteo del terminado, y pidió que la cuerda no se viera rígida («en el ballestrinque la cuerda gira alrededor de la circunferencia del palo, aquí no»). Por eso se rehicieron las esquinas y los ahorcados.
+- **El orden de las vueltas es el de las referencias, al revés de lo que decía el diseño.** Cada vuelta nueva va por fuera de la anterior sobre el palo de arriba y por dentro sobre el de abajo (el palo del ballestrinque de inicio), como en las fotos y la descripción de `entradas/amarre-cuadrado/`. Así la última vuelta termina por fuera, junto al palo de arriba, y de ahí sale el primer ahorcado; los ahorcados terminan en el mismo lugar y el cierre empieza ahí mismo, en el palo de arriba a la derecha, sin cruzar nada más. Al revés, la última vuelta termina delante, bajo el palo de abajo, y para llegar al cierre en el palo de arriba la cuerda tendría que pasar por encima de las esquinas de ese lado, con cruces que el método no tiene.
+- **Delante, las vueltas pasan por fuera del ballestrinque de inicio.** El ballestrinque va pegado al palo de arriba, como dice el método. En las fotos las vueltas pasan por encima de él, pero dos tramos apilados sobre la misma superficie no se pueden comparar en su mapa. Por eso, delante, las vueltas pasan bajo el palo de abajo más lejos del cruce que detrás: con 3 vueltas, entre 6,6 y 8,8 diámetros, frente a 3,05 y 5,25 detrás. Visto desde arriba, el amarre queda más largo hacia quien ata. Gabriel lo aprobó en las imágenes el 10 de noviembre; la otra salida era apilar las vueltas sobre el ballestrinque y contar esos cruces.
+- **El ballestrinque de inicio queda con la cruz abajo a la derecha.** Así el firme sale por el costado del palo de abajo y sube recto a la primera vuelta. Si subiera desde arriba del palo, su esquina sería tan corta que los ahorcados no la cruzarían con seguridad en el mapa de la cintura.
+- **Las piezas.** La cuerda se arma con rectas, arcos alrededor de un palo en su plano de corte, curvas suaves y puntos sueltos (`nudos/plantillas/trazo.py` y `amarre.py`), y las esquinas entre dos rectas se redondean con radio 1,3. Lo que va sobre un palo, como el arco de una vuelta o el paso de un ahorcado por debajo o por encima de un palo, va en la zona de ese palo. Las esquinas de las vueltas y los ahorcados, entre los palos, van en la cintura.
+- **Las esquinas** (rehechas el 10 de noviembre). Antes eran postes verticales lejos de los palos, con tramos rectos y horizontales hasta cada palo: la cuerda se veía rígida, como una jaula, sobre todo delante. Ahora cada esquina deja un palo siguiendo su arco y llega al otro igual, así que baja pegada a las caras de los dos; entre uno y otro va en una curva suave (de Hermite). Dónde deja cada palo es lo de una cuerda tensa: cada punto es la tangente desde el otro.
+  - Con las vueltas a 1,1 sobre los palos, las esquinas rectas de un lado quedarían a 0,78 a media altura, porque la banda que forman se angosta al girar de un palo al otro. Por eso, a media altura, cada esquina se aparta 0,4 de su vecina a lo largo de la banda (`ABRIR`), y las vueltas siguen a 1,1 sobre los palos.
+  - Delante, las vueltas pasan bajo el palo de abajo por fuera del ballestrinque de inicio, así que cada esquina sube primero recta, pegada a la cara del palo de abajo, y pasa por encima del ballestrinque. Vistas desde arriba, las esquinas vecinas de delante se cruzan, y la de la vuelta anterior pasa por encima; por eso su tramo recto es un diámetro más alto que el de la siguiente (`ESCALON`). Con 3 vueltas, esos tramos llegan de 4,5 a 6,5 diámetros sobre la mesa; con 6, el más alto llega a la altura del palo de arriba.
+  - Delante a la derecha, las esquinas que suben a la vuelta siguiente pasan por fuera del firme, que va pegado al cruce. Desde un poco más abajo de donde pasan, el firme va en la zona del palo de arriba, así que en la cintura solo lo cruzan los ahorcados. En la cuerda real esas vueltas pasan por fuera del firme sin cruzarlo sobre ningún palo; el método no cuenta ese paso, como antes.
+- **Los ahorcados** (rehechos el 10 de noviembre) son vueltas tensas entre los palos. En cada cuadrante van por el camino más corto que deja por fuera, a 1,08, todo lo que ya está atado a su altura: las esquinas, los ahorcados anteriores, la salida de la última vuelta y el ballestrinque de inicio. Pasan bajo el palo de arriba y sobre el de abajo justo por fuera de las esquinas, cada uno 1,1 más afuera que el anterior. Su altura sube y baja suave: pasan bajo el palo de arriba cerca de su cara de abajo y sobre el de abajo cerca de su cara de arriba, y entre el primero y el último hay 0,8 de altura, así que en el mapa de la cintura no se cruzan.
+- **La salida de la última vuelta** sube por la cara del palo de abajo y se aparta de él, en la zona de ese palo, sin acercarse al ballestrinque a lo largo del palo. Ya lejos del firme, pasa a la zona del palo de arriba y va a pasar bajo él, donde empieza el primer ahorcado. Así, como antes, no se mide como cruce con el firme ni con el ballestrinque.
+- **Los cruces de los ballestrinques ya van separados al trazarlos.** La diagonal va un diámetro más lejos del palo donde cruza. Levantarla después, como sobre el poste, estiraba la cuerda un 3 %, porque tenía que correr alrededor del palo.
+- **Sin gravedad.** La cuerda se relaja tensa y el resto de cada paso ya va trazado hasta la mesa. Si cae, tira del amarre y lo estira.
+- **Resultado** (con las esquinas rehechas). Con 3 vueltas y 3 ahorcados, los 7 pasos salen sin fallas: los 40 cruces del método, separación de al menos 0,99, curvatura de al menos 1,00, estiramiento de hasta 1,3 % y penetración de 0,03 en los palos. También sin fallas con 2 y 2, 4 y 3, 3 y 4 y 6 y 6, con separación de al menos 0,99 y curvatura de al menos 0,95. Construir el amarre tarda cerca de un minuto.
+- **Pendiente.** `inicio-1` es la cuerda hasta antes de la diagonal del inicio: es un comienzo de la cuerda, pero no un momento del atado, porque la cuerda empieza en el chicote y el ballestrinque se ata desde el firme. La especificación no lo usa. El error construido está en «Cómo se hizo el error y la especificación».
+
+**Cómo se hizo la escena (10 de noviembre de 2026):** con el diseño, más estos detalles.
+- **Los palos.** La escena dibuja la cruz con los datos de `Cruz.datos()`: el palo de abajo a lo largo de y y el de arriba a lo largo de x, de madera como el poste, con el alto de los dos en el encuadre. El visor y la impresión usan la misma escena.
+- **Las vistas.** Los pasos y el nudo terminado, por delante y por detrás, van en la vista de los pasos (3D, desde donde se ata). Por detrás, `Cruz.voltear` gira el amarre entero, palos y cuerda, media vuelta alrededor del eje y, como una página, y lo apoya en lo que queda más abajo: el abultamiento del ballestrinque de cierre, así que el palo de arriba queda a dos diámetros de la mesa. No se relaja ni se vuelve a comprobar, porque es un giro rígido. No va en `Modelo.reverso`: la impresión lo calcula del último paso. La ficha dice «Por detrás es como lo ves si volteas los dos palos juntos como la página de un libro».
+- **Los nombres.** En el paso del ballestrinque de inicio la cuerda se pasa a la escena al revés, desde la parte larga, para que «Firme» quede en ella y «Chicote» en el extremo corto. Desde la primera vuelta, el paso dice que solo lleva «Chicote» (`nombres`), en la punta de la parte larga. Los dos extremos de la cuerda llevan remate en todos los pasos, para que el extremo corto se vea igual en todos (`dos_remates`). Cuáles pasos tienen firme lo dice la plantilla (`CON_FIRME`).
+- **Los errores sin imagen** (`error.otros`) van en la ficha debajo del error con imagen, como «Otro error común». El visor todavía no muestra el error común de ningún nudo, así que tampoco estos.
+- **La hoja de revisión** sigue dibujando solo la cuerda, como decía el diseño.
+- **El encuadre** lo pone la especificación definitiva. Sin él, la escena encuadra la cuerda de todos los pasos con sus restos, que salen unos 18 diámetros del amarre, y en los pasos el amarre se ve chico. Si con el encuadre el resto queda fuera de la imagen, el paso pierde el nombre «Chicote», que va en su punta.
+- **Una ficha de prueba**, con texto de relleno y el paso 5 en lugar del error, cabe en el pliego: 6 pasos en la página 1 y, en la 2, el paso 7, el error con el otro error debajo, el terminado, la verificación, las precauciones y las alternativas, con espacio libre al final.
+- **Nudos publicados:** iguales que antes, los 3 modelos byte a byte y las 49 imágenes píxel por píxel, con Edge.
+
+**Cómo se hizo el error y la especificación (10 de noviembre de 2026):**
+- **El error es una variante de la cuerda entera** (`cuerda(plantilla, cruz, variante)` en `nudos/plantillas/amarre.py`; `construir_error` en `pasos.py`). Hasta las vueltas es la misma cuerda, punto por punto. En cada ahorcado, donde el bien hecho pasa por debajo del palo de arriba, el error sube en diagonal desde un diámetro por fuera de su cara (`FUERA`), pasa por encima, por fuera de las vueltas, y baja en diagonal por la otra cara. Entre los palos y sobre el palo de abajo va como el bien hecho. Se construye y se comprueba como un paso más, hasta el `hasta` del paso 5, y resalta lo mismo que ese paso.
+- **Cruza las mismas esquinas que el paso 5** (38 cruces con 3 y 3): por el lado del palo de arriba no cruza nada. Lo que sube y baja va en la zona de la cintura, y el arco sobre el palo en la del palo de arriba. Las esquinas de las vueltas llegan al palo más arriba de donde el ahorcado empieza a subir, así que cada una lo cruza una vez en el mapa de la cintura. La plantilla escribe esa secuencia para la variante y se compara con la cuerda relajada, como en los pasos.
+- **Tres ajustes, para que se cumpla eso y la cuerda relaje bien:**
+  1. Cada ahorcado va más bajo que el anterior, al revés que en el bien hecho. Si fuera más alto, pasaría por fuera de donde suben los anteriores y serían cruces que el método no tiene. Por eso, sobre cada esquina, los ahorcados del error pasan en el orden contrario.
+  2. Sobre el palo de arriba van 1,6 diámetros más afuera cada uno, y el primero a 1,6 de la última vuelta (`SEPARA_ENCIMA`), no a 1,1.
+  3. Cada uno empieza a subir 0,5 más lejos del palo que el anterior (`ABRE_FUERA`).
+  Sin los dos últimos, donde un ahorcado baja del palo tiene que rodear enseguida el pie del anterior, y esa esquina quedaba con radio de 0,2 a 0,7. Al relajar, la cuerda la cortaba y lo que sobraba ondulaba la bajada, con radio 0,2. Subiendo recto junto a la cara del palo, la esquina era de 100° y pasaba lo mismo.
+- **Resultado** (relajado): sin fallas con 3 y 3 (separación 0,99, curvatura 0,99, estiramiento 1,1 % y penetración 0,03), y también con 2 y 2, 4 y 3, 3 y 4 y 6 y 6. La variante también lleva el ballestrinque de cierre, aunque la especificación no lo muestra.
+- **La imagen del error** va junto al paso 5 bien hecho, en la misma escena y con el mismo encuadre. Los ahorcados se ven sobre el palo de arriba, a los dos lados de las vueltas; los dos últimos, en ámbar. No lleva nombres: el error de los otros nudos lleva solo «Firme», y desde el paso 2 el amarre no lo lleva.
+- **La especificación** (`specs/amarre-cuadrado.yaml`): 7 pasos con texto propio y `{vueltas}` y `{ahorcados}`, el error y, sin imagen, la cuerda floja mientras se ata (`error.otros`). La verificación pide la tensión: si empujas un palo, no se corre ni gira. Las precauciones piden revisar cada amarre y los palos antes de subirse, y revisarlos otra vez si la construcción queda armada varios días; no hay sección de seguridad ni nada que diga que el amarre no sostiene personas (excepción a D1). Los materiales dicen una cuerda de unos 4 m: la del modelo mide 3,7 m sin los extremos, y Gabriel confirmó al atarlo, el 10 de noviembre, que con 4 m alcanza.
+- **El encuadre** es x de −11 a 14 e y de −14 a 10, para los pasos, el error y el terminado. Los restos salen unos 18 diámetros del amarre: en los pasos 5 y 6 su punta queda fuera y no se ve «Chicote».
+- **La ficha cabe:** a la página 1 le sobran unos 6 mm (se acortaron los textos de los pasos 1, 2, 4 y 6 para que cada uno ocupe 4 o 5 líneas) y a la 2, unos 26 mm.
+- **Nudos publicados:** iguales que en 6151f02, los 3 modelos byte a byte y las 49 imágenes píxel por píxel, con Edge.
+- **Filtro 1 (10 de noviembre):** Gabriel revisó y aprobó el texto de la ficha, y ató el amarre con dos palos y cuerda real siguiendo la ficha impresa (e745c28): aprobado, y con 4 m de cuerda alcanza. Queda registrado en la especificación. El filtro 2 sigue en pausa.
+
+#### T7b: Mejoras del render
+
+**Descripción:** mejorar cómo se ven las cuerdas en el visor y en la impresión, empezando por lo que ayuda a leer qué tramo va encima en cada cruce. Pedido de Gabriel el 10 de noviembre de 2026. Las mejoras se deciden con una página de prueba impresa, no mirando la pantalla, y solo entran las que se notan en el papel. En orden de prioridad:
+
+1. **Contorno:** un borde oscuro y fino en cada cuerda, como en los manuales técnicos dibujados. En un cruce, el contorno de la cuerda de encima corta a la de abajo, y eso se lee aun a 58 mm y en gris.
+2. **Sombra de contacto:** oscurecer la cuerda de abajo justo donde otra la cruza. Se calcula desde la geometría, para que salga igual cada vez y no dependa de la luz ni del navegador.
+3. **Supermuestreo en la impresión:** dibujar cada imagen al doble de resolución y reducirla a 300 ppp, para que los bordes salgan nítidos.
+4. **Sombras más suaves:** menos oscuras y de borde más blando, sobre todo la del poste y la de los palos, que oscurecen la mesa.
+5. **Nudo terminado apretado:** una geometría aparte, solo para las dos vistas del nudo terminado, con la cuerda ajustada como queda de verdad. Los pasos no cambian. El nudo apretado tiene que tener la misma secuencia de cruces que el último paso y cumplir los mismos límites, y las pruebas lo comprueban.
+
+**Criterios de aceptación:**
+- [x] Hay una página de prueba en color y en gris, con las imágenes a su tamaño impreso. Muestra el paso 7 del as de guía, el par del error del ballestrinque, un paso de la vuelta de escota y uno del amarre cuadrado, como están hoy y con cada mejora por separado (`python -m nudos mejoras`; el nudo apretado pasó a T7c).
+- [x] Gabriel imprime la página de prueba y elige qué mejoras entran (10 de noviembre: todas menos el contorno).
+- [x] La geometría y los cruces de los pasos no cambian, y las pruebas lo comprueban. Así, los filtros 1 ya hechos siguen valiendo (los modelos, byte a byte contra 563bed6).
+- [x] Construir dos veces sigue dando las mismas imágenes. Las imágenes nuevas de los nudos ya aprobados quedan como la nueva referencia, y eso queda escrito en `tasks/todo.md`.
+- [ ] El visor sigue cargando y girando con fluidez en un celular de gama baja. Medido en la computadora (ver «Cómo se implementaron»); falta abrirlo en el celular.
+- [x] Si el nudo apretado necesita un campo en la especificación, queda documentado en `docs/formato-spec.md` antes del Punto de control B (pasó a T7c).
+
+**Verificación:**
+- [x] `python -m pytest`
+- [x] `python -m nudos imprimir` y `python -m nudos ficha` de cada nudo ya aprobado
+- [ ] Manual: imprimir la página de prueba en la Epson y abrir el visor en el celular (la página de prueba, revisada; falta el celular).
+
+**Dependencias:** T7 terminada, porque las dos tocan `render/escena.js`. Va antes de T8 y del Punto de control B: cuantos menos nudos estén aprobados, menos imágenes cambian, y el formato se congela en B.
+
+**Archivos:** `render/escena.js`, `render/impresion.js`, `nudos/imprimir.py`, `nudos/libre.py` o un módulo nuevo para apretar el nudo, `docs/formato-spec.md` si hace falta, y las pruebas correspondientes.
+
+**Tamaño:** M. La mejora 5 es la más cara, porque toca la relajación. Si se complica, se separa en su propia tarea y las otras cuatro siguen. Se separó: es T7c.
+
+**Riesgo:** pulir sin evidencia de un problema de lectura, porque el único filtro 2 hecho pasó con los renders actuales. Por eso la página de prueba decide qué entra.
+
+**Cómo se hizo la página de prueba (10 de noviembre de 2026):** `python -m nudos mejoras` (`nudos/mejoras.py`) construye los cuatro nudos y deja en `build/mejoras/` las imágenes de cada variante y `prueba.pdf`. Son diez hojas carta, una en color y otra en gris por cada imagen, para imprimirlas por las dos caras. Cada hoja pone la misma imagen, a 58 × 64 mm, como sale hoy, con cada mejora sola y con las cuatro juntas. Las imágenes son el paso 7 del as de guía, el par del error del ballestrinque (el paso 5 bien y mal), el paso 4 de la vuelta de escota, donde la delgada pasa bajo sí misma, y el paso 5 del amarre, donde los ahorcados pasan sobre las vueltas.
+
+- **La opción.** Cada imagen lleva sus mejoras en `Imagen.mejoras` (`nudos/imprimir.py`, con los nombres de `MEJORAS`), y la escena las recibe en la opción `mejoras` de `crearEscena` (`render/escena.js`). Las fichas usan `MEJORAS_ACTIVAS`, que hoy está vacía, y el visor no pasa ninguna. Con las mejoras apagadas, los cuatro nudos de `publicados.txt` salen idénticos a `main` (563bed6): los 4 modelos byte a byte y las 67 imágenes de impresión píxel por píxel, con Edge.
+- **Contorno (no entró; se quitó del código y queda en da891eb).** Cada malla (cuerdas, tapas y palos) se dibuja otra vez por dentro, engordada a lo largo de sus normales lo justo para que asome un borde de tinta de 0,7 pt (0,25 mm). El borde se adelanta 0,3 diámetros hacia la cámara, para que no lo tape el poste que está justo detrás de la cuerda. Al principio se corría el borde en la pantalla, pero así salía más fino de un lado de la cuerda.
+- **Sombra de contacto.** Va como color por vértice. Cada vértice se oscurece hasta un 60 % según lo cerca que tenga el eje de otra cuerda, de un tramo lejano de la misma o de un palo, y según cuánto lo mire. Llega hasta un diámetro. Se calcula en el navegador al armar cada paso, con una rejilla para no comparar todo con todo.
+- **Supermuestreo.** El navegador dibuja la página al doble (factor de escala 2) y Pillow la reduce a 300 ppp con Lanczos. Lo hace `nudos/imprimir.py`; la escena no cambia.
+- **Sombras suaves.** La mesa se oscurece 0,17 en vez de 0,26 y el sol usa un mapa de sombras de varianza, difuminado, con un borde de 0,45 diámetros en cualquier nudo. Al principio se repartió el sol en 8 luces, pero las sombras salían en copias escalonadas.
+- **Para el visor, si se eligen.** El contorno dobla las mallas que hay que dibujar. Las sombras suaves difuminan el mapa de sombras cada vez que se dibuja, así que en el visor habría que actualizarlo solo al cambiar de paso (`shadowMap.autoUpdate = false`): mientras se gira, la escena no cambia. La sombra de contacto solo cuesta al armar cada paso.
+
+**Elección (10 de noviembre de 2026):** Gabriel revisó la página de prueba y eligió la sombra de contacto, el supermuestreo y las sombras suaves. El contorno no entró («me gustaron todos los cambios menos el contorno negro»), así que se quitó del código.
+
+**Cómo se implementaron:**
+- **En la impresión.** `MEJORAS` son ahora las tres y `MEJORAS_ACTIVAS` las lleva todas (`nudos/imprimir.py`), así que las imágenes de las fichas salen con ellas. `python -m nudos mejoras` se queda, para volver a mirarlas o probar una nueva: compara las imágenes sin mejoras con cada una y con las tres juntas, que son las de las fichas.
+- **En el visor.** `sitio/visor.js` pasa la sombra de contacto y las sombras suaves; el supermuestreo es solo de la impresión, porque en pantalla el lienzo ya sigue la densidad de px. La sombra de la mesa del visor baja como la de la impresión: 0,17 con el tema claro y 0,33 con el oscuro (`sitio/visor.css`).
+- **El mapa de sombras se dibuja solo al cambiar de paso** (`shadowMap.autoUpdate = false`), con o sin mejoras: la luz y la cuerda no se mueven al girar la cámara. En el visor, el mapa de las sombras suaves mide 1024 en vez de 2048, para que un celular lo difumine rápido; difuminado, se ve igual.
+- **La sombra de contacto se aceleró para el celular.** El eje que oscurece se toma cada 0,25 diámetros (`CONTACTO_MUESTREO`), y cada anillo del tubo junta primero los tramos y los palos que pueden alcanzarlo. En el paso 7 del amarre, el más largo, armar el paso pasó de 335 ms a 37 ms en la computadora de Gabriel; sin la sombra de contacto son 20 ms. Al cambiar de paso, el primer cuadro, que difumina la sombra, sube de unos 6 a unos 15 ms (con el mapa de 2048 de la impresión). Al girar, cada cuadro sigue costando alrededor de 1 ms, con o sin mejoras, porque ya no se redibuja el mapa de sombras.
+- **Revisado en el visor** con el navegador de la app, en la computadora y como celular, con los temas claro y oscuro: gira, cambia de paso con las sombras al día y no da errores. Falta abrirlo en un celular de gama baja de verdad, después de publicar.
+- **Nueva referencia.** Los modelos de los cuatro nudos aprobados no cambian (byte a byte contra 563bed6), así que los filtros 1 siguen valiendo. Sus imágenes sí cambian, y las que salen desde el commit «T7b: las mejoras elegidas en las fichas y el visor» son la nueva referencia: construir dos veces da las mismas 67 imágenes, píxel por píxel, con Edge. Las cuatro fichas se arman y caben.
+- **El nudo terminado apretado se separó en su propia tarea, T7c,** como permitía el tamaño de esta. La relajación de hoy conserva el largo de cada tramo, y apretar el nudo pide tirar de los extremos sin que cambie ningún cruce, con su propia prueba de secuencia y de límites. No está en la página de prueba.
+
+#### T7c: Nudo terminado apretado
+
+**Descripción:** la mejora 5 de T7b, separada el 10 de noviembre de 2026 porque es la más cara. Una geometría aparte, solo para las dos vistas del nudo terminado, con la cuerda ajustada como queda de verdad. Los pasos no cambian. Hoy la relajación conserva el largo de cada tramo, así que hace falta una que tire de los extremos (o acorte la cuerda dentro del nudo) sin que ningún cruce cambie.
+
+**Criterios de aceptación:**
+- [x] El nudo apretado tiene la misma secuencia de cruces que el último paso y cumple los mismos límites, y las pruebas lo comprueban, también sobre el poste y en el amarre (que no se aprieta).
+- [x] Las dos vistas del nudo terminado salen del nudo apretado; los pasos y sus imágenes no cambian (`TERMINADO_APRETADO = True` desde el 11 de noviembre).
+- [x] Construir dos veces da el mismo nudo apretado.
+- [x] Si necesita un campo en la especificación, queda documentado en `docs/formato-spec.md` antes del Punto de control B (no lo necesita; «El nudo apretado» explica cómo sale).
+- [x] Gabriel compara en papel el terminado de hoy con el apretado y decide si entra (11 de noviembre: entra el apretado).
+
+**Verificación:**
+- [x] `python -m pytest`
+- [x] `python -m nudos imprimir` de cada nudo ya aprobado
+- [x] Manual: imprimir el terminado de hoy junto al apretado (`build/mejoras/apretado.pdf`).
+
+**Dependencias:** T7b, porque toca las mismas imágenes del nudo terminado. Va antes del Punto de control B, porque puede cambiar el formato.
+
+**Archivos:** `nudos/apretar.py` (nuevo), `nudos/construir.py`, `nudos/anfitrion.py`, `nudos/imprimir.py`, `nudos/mejoras.py`, `docs/formato-spec.md`, `tests/test_apretar.py`.
+
+**Tamaño:** M.
+
+**Diseño (10 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el 11 de noviembre).** Se probó en un experimento fuera del repositorio con los tres nudos publicados que no son de plantilla. Los números de abajo salen de ahí.
+
+- **Método: acortar la cuerda dentro del nudo, como si se tirara de sus cabos.** Es el método con que se calculan los nudos apretados (SONO, *shrink on no overlaps*): la cuerda se acorta poco a poco donde está el nudo y, después de cada poco, se deshacen los choques. Así ningún tramo atraviesa a otro y ningún cruce cambia. Se parte del último paso ya relajado.
+  - Cada punto de la cuerda pertenece a una de tres partes, según dónde estaba en el último paso:
+    - **El nudo:** lo que está a menos de 6 diámetros, sobre la mesa, de algún cruce. Es lo único que se acorta.
+    - **La cola:** cada cuerda después de su último cruce, que es su chicote. No se acorta ni se sujeta: conserva el largo que le dio el trazado y el nudo la arrastra.
+    - **Lo sujeto:** el resto, como el firme lejos del nudo o la gaza grande del as de guía. Se queda donde está, como si lo sostuvieras con las manos. La cuerda que se quita del nudo es la que sale por ahí, fuera de la imagen.
+  - La primera prueba medía la distancia a los cruces a lo largo de la cuerda, no sobre la mesa. Así, en la vuelta de escota, quedaba sujeto el medio de la vuelta que da la delgada por debajo del seno, lejos de los cruces a lo largo de la cuerda pero cerca de ellos en la mesa, y la cuerda se doblaba contra ella con radio 0,53.
+  - Se aprieta por rondas. En cada ronda:
+    1. **Se acorta.** Cada punto del nudo se acerca al medio entre sus dos vecinos, que es lo que hace una cuerda al tensarla, mientras actúan los choques, la mesa, el poste y el límite de curva. En el nudo la cuerda no puede estirarse; fuera de él conserva su largo.
+    2. **Se suelta.** Sin acortar y sin gravedad, se resuelven los choques y la curva. En el nudo la cuerda puede recuperar largo donde lo necesita para no chocar. Sin este paso, la tensión dejaba tramos encimados, a 0,94.
+    3. **Se vuelve a muestrear** cada cuerda a paso parejo, como al construir un paso. Cada punto recuerda dónde estaba en el último paso, así que su parte y si va sobre el poste no cambian aunque la cuerda se acorte.
+  - Después de cada ronda, la cuerda se comprueba como un paso: la secuencia de cruces del último paso y los mismos límites (sobre el poste, también la penetración). El apretado es la ronda más apretada que los cumple, de 30 como máximo. Si ninguna los cumple, es el último paso tal cual, así que el apretado nunca agrega fallas. No se para en la primera ronda que falla: la curvatura sube y baja unas centésimas de una ronda a otra.
+  - Como la cuerda se vuelve a muestrear en cada ronda, la prueba de estiramiento comprueba aquí que los tramos quedaron parejos. El apretado acorta la cuerda a propósito.
+  - **Mientras se aprieta, los choques son a 1,12 diámetros.** Una cuerda que abraza a otra del mismo grosor se dobla con radio 1,0, así que un nudo apretado del todo queda al borde del límite de 0,9: en el experimento bajaba a entre 0,78 y 0,86. Con esa holgura, las vueltas quedan con radio de 0,91 o más y el nudo se ve igual de apretado: en una cuerda de 8 mm es 1 mm de luz. La plantilla del amarre hace lo mismo, con 1,08 y 1,1.
+  - Un nudo de plantilla no se aprieta: su plantilla ya traza la cuerda tensa.
+- **Dónde vive:**
+  - `nudos/apretar.py`, nuevo. `apretar(...)` recibe el último paso y devuelve un `Resultado` como el de un paso, sin resaltado y con su propio número de puntos y su propio h. Reusa `_colisiones` y `_limitar_curva` de `nudos/libre.py` sin cambiarlas, y tiene su propia corrección de largo, que en el nudo solo impide que la cuerda se estire o se encoja. `relajar` no cambia.
+  - Sobre el poste, `nudos/anfitrion.py` le pasa a `apretar` lo mismo que a `relajar` y a `_resultado`: cómo sacar la cuerda del poste, dónde no cae (cerca del poste no hay gravedad) y cómo buscar los cruces en sus dos mapas.
+  - `Modelo` (`nudos/construir.py`) suma `apretado`, el último paso apretado, y `reverso_apretado`, el apretado volteado con `voltear`, como el reverso de hoy. Sus fallas, si las hay, entran en las del nudo. `modelo.json` los lleva aparte, y `pasos` y `error` no cambian, byte a byte.
+  - `imprimir.imagenes` saca las dos vistas del terminado del apretado cuando `TERMINADO_APRETADO` es verdadero. Mientras Gabriel decide queda en falso, como `MEJORAS_ACTIVAS` en T7b, así que las fichas no cambian. Si no entra, el código se quita y queda en el historial.
+  - El visor no muestra el nudo terminado, así que no cambia y no hay que publicar el sitio.
+- **El formato no cambia.** No hace falta ningún campo: qué se aprieta lo deciden los cruces del último paso y el tipo de nudo, y las medidas (6 diámetros, 1,12 y 30 rondas) están en el código. `docs/formato-spec.md` explica en «Nudo terminado» cómo sale el apretado. Si un nudo futuro no debiera apretarse, el campo se agrega con ese nudo: antes del Punto de control B, o después con su migración.
+- **Pruebas** (`tests/test_apretar.py`):
+  - En el as de guía, el ballestrinque sobre el poste y la vuelta de escota, el apretado tiene la secuencia del último paso y cumple los límites, y su reverso tiene la secuencia invertida.
+  - En el as de guía, el nudo se aprieta de verdad: la cuerda mide al menos 5 diámetros menos que en el último paso.
+  - Construir dos veces da el mismo apretado, punto por punto.
+  - En el amarre, el terminado sigue siendo el último paso y su volteo rígido, como hoy.
+  - No se usa una ronda que cambia un cruce: con un nudo pequeño de prueba y una ronda que se hace fallar a propósito, el apretado es la ronda anterior.
+  - Los pasos y el error de los cuatro nudos publicados no cambian: sus modelos, byte a byte contra b3ff5ee, como en T7b.
+- **Página de prueba:** `python -m nudos mejoras` arma además `build/mejoras/apretado.pdf`. Por cada nudo hay una hoja en color y otra en gris con el terminado, por delante y por detrás, en tres columnas: el de hoy, uno a medias (la mitad de las rondas) y el apretado. Van a su tamaño impreso (58 × 64 mm) y con las mejoras de T7b. La columna a medias está por si el apretado del todo esconde algún cruce. Gabriel elige una de las tres.
+- **Qué pasa con cada nudo publicado** (según el experimento):
+  - **As de guía:** se aprieta de verdad. Con 30 rondas, la cuerda pasa de 110 a 97 diámetros, la gaza pequeña se cierra sobre el chicote y el collar sobre el firme. Cumple los límites (separación 1,05, curvatura de 0,91 o más y estiramiento de 1,2 % o menos) con los mismos 7 cruces.
+  - **Ballestrinque:** casi no cambia, porque cerca del poste la relajación ya deja la cuerda tensa. El firme queda un poco más recto.
+  - **Vuelta de escota: es el riesgo.** Apretada del todo conserva los cruces, pero la gruesa queda doblada sobre la delgada con radio de 0,85 a 0,88. Es el caso que ya documenta `docs/formato-spec.md`: una gruesa de 1,5 apoyada sobre una delgada no pasa de 0,83. En el experimento, la curvatura bajaba de 0,9 desde la tercera ronda, así que con la regla de la ronda más apretada que cumple se acortaría solo unos 2 de sus 118 diámetros. Al implementar se prueba una corrección de curva más firme y que la gruesa, que es más rígida, conserve su forma mientras se ajusta la delgada. Si aun así no cumple, queda casi como hoy: los límites no se aflojan.
+  - **Amarre cuadrado:** queda como está. La plantilla ya traza la cuerda tensa, con las vueltas y los ahorcados a 1,1 y 1,08 diámetros, más juntos que la holgura del apretado. Por delante sigue siendo el paso 7 y por detrás su volteo rígido.
+  - Los filtros 1 siguen valiendo: los pasos no cambian, y el terminado es una vista, no un paso. Si el apretado entra, sus imágenes del terminado pasan a ser la nueva referencia.
+- **Costo:** apretar tarda de 5 a 20 segundos por nudo, así que `construir` y las pruebas tardan un poco más.
+
+**Cómo se hizo (11 de noviembre de 2026).** Está como en el diseño (`nudos/apretar.py`, `Modelo.apretado` y `Modelo.reverso_apretado`, el poste en `nudos/anfitrion.py` con `sobre` por coordenada material, `TERMINADO_APRETADO = False` y `tests/test_apretar.py`), con tres cambios que salieron al implementarlo. Los tres están en el docstring de `nudos/apretar.py` y en «El nudo apretado» de `docs/formato-spec.md`.
+
+- **Al soltar, el nudo no tiene corrección de largo.** En el diseño, al soltar se impedía que la cuerda del nudo se encogiera. Así, la cuerda comprimida se pandeaba en dientes de sierra de dos tramos: después de volver a muestrear quedaban tramos de 0,7 h. La curvatura, que se mide cada dos tramos, no lo veía, y la prueba de estiramiento sí. Era el estiramiento de 15,9 % del experimento, no un error al restaurar el estado con dos cuerdas: aquí, en la vuelta de escota, llegó a 50 % entre las rondas 3 y 18. Sin esa corrección, el nudo recupera al soltar el largo que necesita para no chocar, y ninguna ronda de los tres nudos se estira más de 1 %. El as de guía, además, se aprieta más: 94,7 en vez de 96,9.
+- **Con cuerdas de distinto grosor, la más gruesa conserva su forma:** lo que tiene en el nudo queda sujeto y solo se acorta la delgada. En la vuelta de escota, la curvatura que fallaba era siempre la de la gruesa al pasar sobre la delgada, de 0,76 a 0,89. Se probó una corrección de curva más firme solo para la gruesa (el radio mínimo por 1,1 y por 1,2, y la corrección tres veces por vuelta), y siguió entre 0,75 y 0,89 en la mayoría de las rondas: solo cumplían de 3 a 5 rondas sueltas. Con la gruesa quieta del todo, la delgada se doblaba demasiado (14 de 30 rondas cumplían). Sin sujetar la gruesa, la ronda 13 cumplía por poco (110,3), pero por detrás la gaza de la gruesa se deformaba. Con la gruesa sujeta, cumplen 23 de 30 rondas y la gaza queda como la de una vuelta de escota de verdad.
+- **El nudo por detrás apretado es el reverso de hoy apretado**, con la secuencia invertida, y no el apretado volteado. Voltear el apretado lo relaja con la relajación de los pasos, que choca a 1,0: en el as de guía la cuerda se estiraba 6,9 %, y en la vuelta de escota la gruesa quedaba apoyada sobre la delgada con radio 0,83 (el caso que ya documentaba el formato). Apretar el reverso pasa por la misma guarda, así que tampoco agrega fallas: si ninguna ronda cumple, queda el reverso de hoy.
+- **Las partes se deciden una sola vez,** en el último paso, como en el diseño. El experimento medía la distancia a los cruces desde donde estaba la cuerda en cada ronda; con las partes fijas, el as de guía se apretaba igual (110,0 → 96,9 con el soltar del diseño).
+- **La guarda** se queda con la ronda más corta entre las que cumplen, de 30 como máximo, y no para en la primera que falla. Si ninguna cumple, `apretar` devuelve el último paso, el mismo objeto, y sus fallas no se cuentan dos veces.
+
+Lo que da cada nudo publicado (largo de la cuerda en diámetros, de hoy al apretado; curvatura mínima del apretado):
+
+| Nudo | Por delante | Por detrás | Rondas que cumplen | Curvatura |
+|---|---|---|---|---|
+| As de guía | 110,0 → 94,7 | 109,8 → 94,2 | 28 y 30 de 30 | 0,97 y 0,91 |
+| Ballestrinque | 62,2 → 62,1 | el mismo nudo, desde el otro lado | 30 de 30 | 1,12 |
+| Vuelta de escota | 118,5 → 112,4 | 118,0 → 114,1 | 23 y 27 de 30 | 0,91 y 0,90 |
+| Amarre cuadrado | no se aprieta | | | |
+
+En todos, la separación es de 1,05 o más, el estiramiento de 0,9 % o menos y la penetración en el poste de 0,0003. Las rondas que no cumplen fallan solo por curvatura, entre 0,84 y 0,899. Con 30 rondas, la elegida es siempre la última. A medias, con 15, el as de guía queda en 100,2 y 98,6, la vuelta de escota en 114,0 y 114,8, y el ballestrinque igual.
+
+- **Nudos publicados idénticos.** Los cuatro `modelo.json`, sin `apretado` ni `reverso_apretado`, salen byte a byte iguales a los de 52cb117 (el código no cambió desde b3ff5ee). Las imágenes, ver «Elección». Una prueba guarda la huella de los pasos y el error de cada nudo publicado (`test_los_pasos_y_el_error_de_los_nudos_publicados_no_cambian`): si una cambia a propósito, hay que repetir el filtro 1 de ese nudo.
+- **Pruebas** (`tests/test_apretar.py`, 19): las del diseño, la de que la gruesa conserva su forma y la de que la guarda no para en la primera ronda que falla. El nudo pequeño es un nudo simple: un trébol abierto con sus tres cruces alternados, que en tres rondas pasa de 69,0 a 68,1 diámetros. La ronda que se hace fallar invierte un cruce al buscarlo. La página de prueba tiene la suya en `tests/test_mejoras.py`.
+- **Costo:** apretar tarda de 2 a 7 segundos por vista, así que `construir` tarda de 5 a 13 segundos más por nudo, y la suite, alrededor de un minuto más.
+- **Página de prueba:** `python -m nudos mejoras` arma además `build/mejoras/apretado.pdf`: seis hojas, una en color y otra en gris por nudo (as de guía, ballestrinque y vuelta de escota), con el terminado por delante (arriba) y por detrás (abajo), hoy, a medias y apretado, a 58 × 64 mm y con las mejoras de T7b. Cada imagen es como saldría en la ficha, con el encuadre ajustado a su cuerda, y su pie dice cuánta cuerda se quitó del nudo.
+**Elección (11 de noviembre de 2026):** Gabriel imprimió la página de prueba y eligió el apretado, con las 30 rondas («Apretado»).
+
+**Cómo entró:**
+- `TERMINADO_APRETADO = True` (`nudos/imprimir.py`): las dos vistas del terminado de las fichas salen del apretado. La página de prueba se queda, con la primera columna como «Sin apretar», para volver a mirarla. La prueba de que dos cuerdas se dibujan con su color (`tests/test_cuerdas.py`) dibuja ahora el último paso sin resaltado, como antes: en su nudo sintético, apretado, la vuelta de la delgada se cierra sobre la gruesa y quedaba menos crema que su mínimo.
+- **Nueva referencia.** Desde el commit «T7c: las fichas llevan el nudo apretado», las imágenes del terminado del as de guía, el ballestrinque y la vuelta de escota son las nuevas. De las 67 imágenes de impresión de los cuatro nudos publicados (con las de su página de prueba), cambian solo las 6 del terminado y sus 6 copias en gris; las otras 55 salen iguales a las de 52cb117, píxel por píxel, con Edge. Construir dos veces da los mismos `modelo.json`, byte a byte, y las mismas imágenes del terminado. Las cuatro fichas se arman y caben. Los pasos, el error y el visor no cambian, así que no hubo que publicar el sitio ni repetir los filtros 1.
+- **El script de comparación de imágenes no veía diferencias.** `comparar.py`, el de T7b (fuera del repositorio), comparaba las imágenes en RGBA, y con Pillow 13 `getbbox()` solo mira el canal alfa, que es opaco en todas. Así, decía «iguales» aunque no lo fueran. Las comparaciones «píxel por píxel» hechas con él, en T7b y en la primera de T7c, no comprobaban nada. Ahora se compara en RGB. Los modelos byte a byte sí valían, y también `test_dibujar_dos_veces_da_las_mismas_imagenes`, que compara los bytes de los archivos.
+- **Una variación rara al dibujar.** En la primera de tres construcciones, `error.png` del ballestrinque salió con 25 píxeles distintos, en 1 nivel de 255. En las otras dos y en cuatro dibujos sueltos salió igual a la de 52cb117. No viene de la geometría, porque su modelo es idéntico: es del navegador.
+
+#### T8: Plantilla de la cabeza de turco
+
+**Descripción:** crear una plantilla de cabeza de turco alrededor de un cilindro, parametrizada por cabos y senos, con los pasos del método clásico.
+
+**Criterios de aceptación:**
+- [ ] El tejido alterna encima y debajo correctamente sobre el cilindro, según la prueba de cruces.
+- [ ] Cambiar el número de cabos o senos regenera el modelo.
+- [ ] El nudo pasa los dos filtros.
+
+**Verificación:**
+- [ ] `pytest -k cabeza_de_turco`
+- [ ] `python -m nudos construir cabeza-de-turco`
+- [ ] Manual: filtros 1 y 2.
+
+**Dependencias:** T5
+
+**Archivos:** `nudos/plantillas/cabeza_turco.py`, `specs/cabeza-de-turco.yaml`, `tests/test_cabeza_de_turco.py`. Con el diseño de abajo, además: `nudos/plantillas/pasos.py`, `nudos/anfitrion.py`, `nudos/spec.py`, `nudos/imprimir.py`, `nudos/hoja.py`, `render/escena.js` y `docs/formato-spec.md`.
+
+**Tamaño:** M, no S. Son una plantilla y un anfitrión nuevos, como en T7.
+
+**Diseño (11 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las cuatro propuestas del final).** Las referencias son `entradas/cabeza-de-turco/` (27 imágenes: una de tres cabos tejida alrededor de una tabla, que se gira mientras se teje, y triplicada) y la página 26 del manual de la Tropa (una de tres cabos y cinco senos atada plana sobre la mesa, doblada y pasada después a un objeto cilíndrico). Los números salen de un experimento fuera del repositorio con la cuerda ideal sobre el tubo, sin relajar y sin los extremos.
+
+- **El nudo, sobre el tubo desenrollado.** Si se mira la superficie del tubo desenrollada (a lo largo del eje y alrededor), la cuerda va de un borde al otro y vuelve, como una onda.
+  - Da tantas vueltas al tubo como cabos, hace tantos senos en cada borde como senos y se cruza senos × (cabos − 1) veces. Con 3 cabos y 4 senos son 3 vueltas, 4 senos de cada lado y 8 cruces.
+  - Los cruces alternan encima y debajo a lo largo de toda la cuerda.
+  - Cabos y senos no pueden tener un divisor común aparte del 1. Si lo tienen, salen dos o más cuerdas cerradas y no un nudo de una sola cuerda: con 3 cabos no se puede hacer con 3 ni con 6 senos.
+  - Con más pasadas, cada cabo lleva varias cuerdas paralelas que hacen lo mismo, y cada cruce de cabos pasa a ser pasadas × pasadas cruces: 32 con 3 × 4 y dos pasadas.
+- **Método: cada vuelta va en su lugar definitivo.** La plantilla teje la cuerda vuelta por vuelta, y cada vuelta pasa por encima o por debajo de lo que ya está, como queda en el nudo terminado. Con 3 cabos, sean cuantos sean los senos, salen los pasos del método clásico de tres cabos:
+  1. La primera vuelta no cruza nada.
+  2. La segunda cruza la primera siempre por encima: 3 veces con 4 senos.
+  3. La tercera teje por debajo, por encima, por debajo… (5 cruces con 4 senos) hasta llegar junto al comienzo.
+  4. Cada pasada más sigue el mismo camino junto a la primera, siempre del mismo lado: por encima donde ella va por encima y por debajo donde va por debajo.
+  5. Se esconden los chicotes.
+
+  Así cada paso es el comienzo de la cuerda entera, como en el amarre, y un cruce conserva su etiqueta en todos los pasos.
+  - En las fotos de `entradas/` se dan dos vueltas casi paralelas y después se cruzan entre sí al trenzar. El manual la ata plana y al final la pasa al tubo. En los dos casos, entre un paso y otro cambian cruces que ya estaban, o la forma entera, y aquí cada cambio sería un cruce nuevo con otra etiqueta. Tejiendo vuelta por vuelta sale el mismo nudo sin mover lo que ya está atado.
+  - Con otro número de cabos se teje igual, alternando con lo que ya está, pero la segunda vuelta ya no va toda por encima: con 4 cabos y 5 senos, por ejemplo, pasa por encima y después por debajo. La plantilla lo construye igual. El texto de los pasos se escribe para las medidas de la especificación.
+- **El tubo:** un anfitrión nuevo, `tipo: tubo`, con `radio` y `largo`. Es un cilindro horizontal a lo largo de x, centrado en x = 0 y con el eje en y = 0. Se parece al poste, con dos diferencias:
+  - Se apoya sobre el nudo, que lo rodea entero. Debajo de cada cruce hay dos capas de cuerda, así que su eje queda a la altura radio + 2 (el del poste está a radio + 1).
+  - Se gira en la mano: en cada paso, la plantilla gira el nudo alrededor del eje para que lo que agrega el paso quede de frente (ver «Escena»).
+  - El poste y la cruz no cambian.
+  - El radio mínimo depende de las medidas (ver «Geometría»). Propuesta: radio 4. Con un cordón de 4 mm es un tubo de 3,2 cm, y con uno de 3 mm, de 2,4 cm, el grosor de un anillo de pañoleta.
+- **Formato:**
+
+  ```yaml
+  anfitrion: {tipo: tubo, radio: 4, largo: 24}
+  plantilla:
+    tipo: cabeza-de-turco
+    cabos: 3
+    senos: 4
+    pasadas: 2
+  pasos:
+    - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+    - {titulo: Cruza por encima, texto: …, hasta: vuelta-2}
+    - {titulo: Empieza a tejer, texto: …, hasta: vuelta-3-mitad}
+    - {titulo: Termina de tejer, texto: …, hasta: vueltas}
+    - {titulo: Sigue el mismo camino, texto: …, hasta: pasadas}
+    - {titulo: Esconde los chicotes, texto: …, hasta: remate}
+  ```
+
+  - `cabos` va de 2 a 5, `senos` de 2 a 7, sin divisor común con `cabos` aparte del 1, y `pasadas` de 1 a 3. Otra cosa es un error al cargar.
+  - `hasta` puede ser, en este orden: `vuelta-1-mitad`, `vuelta-1`, … `vuelta-<cabos>-mitad`, `vuelta-<cabos>` (la primera pasada, por medias vueltas), `pasada-2-mitad`, `pasada-2`, … `pasada-<pasadas>` y `remate`. `vueltas` es lo mismo que la última vuelta y `pasadas` que la última pasada, como `vueltas` y `ahorcados` en el amarre. Cada paso llega más lejos que el anterior y el último llega a `remate`.
+  - En el texto, `{cabos}`, `{senos}` y `{pasadas}` salen en letras.
+  - Ningún paso tiene firme: el extremo corto se sujeta contra el tubo y se trabaja con la parte larga, que lleva «Chicote» en su punta en todos los pasos. Los dos extremos llevan remate, como en el amarre.
+  - Cambiar cabos, senos o pasadas es cambiar un número: la cuerda, los cruces, los pasos y las imágenes se regeneran. El texto sí puede tener que cambiar, porque «cruza por encima tres veces» depende de los senos.
+- **Geometría:** la plantilla calcula una sola vez la parte de la cuerda que va sobre el tubo, desde donde entra el extremo corto hasta el chicote, en coordenadas del tubo: posición a lo largo, ángulo y distancia al eje.
+  - **El camino** del centro de cada cabo es una onda hecha de arcos de circunferencia. Redondea los senos más que una sinusoide del mismo ancho: en el experimento, con un radio casi del doble. Las pasadas van paralelas, a 1,1 diámetros, del mismo lado de la primera.
+  - **La altura.** En cada cruce, la cuerda de encima va 1 diámetro más lejos del eje que la de debajo, que va apoyada en el tubo. Sobre una banda de varias pasadas sigue arriba todo lo que dura la banda, más 0,6, y entre un cruce y el siguiente sube o baja con una curva suave.
+  - **El ancho de la onda** lo elige la plantilla según el radio del tubo. A media altura entre los bordes, las cuerdas forman un ángulo con la dirección en que se rodea el tubo. Es el menor entre 45° y 70°, de 5 en 5, con el que la cuerda ideal queda a 1 diámetro de las demás y con un radio de curvatura de al menos 1,2. Con más ángulo, la onda es más ancha y hay más cuerda entre un cruce y el siguiente, así que cabe en un tubo más delgado, pero las cuerdas se cruzan más cerradas. Si no cabe ni con 70°, la falla dice el radio mínimo para esas medidas.
+
+    | Cabos × senos y pasadas | Radio mínimo | Con radio | Ángulo | Ancho del nudo | Cuerda en el nudo | Cruces |
+    |---|---|---|---|---|---|---|
+    | 3 × 4, una | 2 | 4 | 45° | 5,4 | 105 | 8 |
+    | 3 × 4, dos | 2,75 | 4 | 60° | 8,2 | 227 | 32 |
+    | 3 × 4, tres | 4 | 5,5 | 60° | 11,4 | 443 | 72 |
+    | 3 × 5, dos | 3,5 | 5 | 60° | 8,1 | 275 | 40 |
+    | 3 × 5, tres | 5,25 | 6,5 | 65° | 11,6 | 531 | 90 |
+
+    El ancho y la cuerda están en diámetros; la cuerda no incluye los extremos. Con el radio de la tercera columna, la curvatura mínima de la cuerda ideal es de 1,3 a 1,8. Con 4 cabos y 5 senos, con una pasada y radio 4, no cabe con ningún ángulo: con más cabos hay cruces cerca de los senos, más juntos a lo largo de la cuerda, y hace falta un tubo más grueso.
+  - **Los extremos** salen del nudo por un mismo seno de un borde. El extremo corto llega desde fuera del nudo, a lo largo del tubo, y entra por la cuerda de más afuera de ese seno. Al final de cada pasada, antes de llegar a donde empezó la anterior, la cuerda se corre a la siguiente por dentro de ese seno, así que no cruza el extremo corto. Ahí es donde hay menos lugar: entre el último cruce y el seno tienen que caber el paso de una pasada a la siguiente y el final del chicote. Es lo que en el amarre fueron las esquinas.
+  - **El remate:** cada extremo se mete por debajo de la banda de al lado, entre el nudo y el tubo, y queda escondido. La plantilla escribe esos cruces. Es el único paso en que cambia el extremo corto, que en los demás cuelga hasta la mesa.
+  - **Cada paso** es el comienzo de esa cuerda hasta su `hasta`, girado para que quede de frente, más el extremo corto y el resto, que salen del nudo y caen a la mesa. Los dos se trazan en cada paso, porque por dónde caen depende del giro.
+  - Después se pasa la curva suave, se muestrea cada 0,2 diámetros y se relaja como el amarre: sin gravedad, con choques entre tramos y sin entrar en el tubo más de 0,05 ni estirarse.
+  - Un nudo de plantilla no se aprieta (T7c): la plantilla ya traza la cuerda tensa.
+  - `nudos/plantillas/pasos.py` hoy sirve solo al amarre, porque usa la cruz y sus mapas. Pasa a pedirle a cada plantilla su sólido, su cuerda y sus mapas, sin que cambie lo que da el amarre.
+- **Cruces sobre el tubo:** como sobre el poste, en la superficie desenrollada del tubo, comparando cada par en la vuelta más cercana; encima es lo más lejos del eje.
+  - Hay dos zonas: el tubo, con la parte tejida, y la mesa, con el extremo corto y el resto hasta que llegan al nudo. Los cruces entre zonas no se buscan; ahí solo se comprueba la separación, como entre el poste y la mesa.
+  - La plantilla escribe la secuencia del método. Alterna por cabos a lo largo de la cuerda, y cada pasada hace lo mismo que la primera. Las etiquetas se numeran en el orden en que se forma cada cruce, así que un cruce conserva la suya en todos los pasos.
+  - Esa secuencia se compara con la que se mide en la cuerda relajada, como en los nudos libres. Es la prueba de que el tejido alterna bien sobre el tubo, el primer criterio de aceptación. Las pruebas comprueban además, para varias medidas, que la secuencia de la plantilla alterna por cabos y tiene senos × (cabos − 1) × pasadas² cruces, más los del remate.
+  - Cada cruce guarda su lugar en el mapa del tubo, a lo largo y alrededor, y no en la mesa. Como el nudo se gira entre pasos, en la mesa un mismo cruce se movería, y la heurística del cruce que salta lo tomaría por otro.
+- **Error común:** una variante del método, como en el amarre. Propuesta: `empieza-por-encima`.
+  - En la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando. Es el error más fácil de cometer, porque la segunda vuelta fue toda por encima. Todos los cruces de la tercera vuelta quedan al revés y el nudo no se traba.
+  - Se ve desde `vuelta-3-mitad`. Se construye y se comprueba como un paso más, con el mismo giro y el mismo encuadre que el paso bien hecho.
+  - Sin imagen (`error.otros`) irían dos más: que la segunda pasada cambie de lado o se monte sobre la primera, y apretar de una vez tirando de un chicote, que deforma el nudo. Se aprieta de a poco, siguiendo la cuerda.
+- **Nudo terminado:** por delante, el último paso. Por detrás, el tubo y el nudo girados media vuelta alrededor del eje. Es un giro rígido, como el volteo del amarre: la secuencia no cambia y no se relaja de nuevo. Entre las dos vistas se ve el nudo entero, también la parte que en la vista de los pasos queda contra la mesa.
+- **Escena:**
+  - El tubo es un cilindro de madera, como el poste.
+  - **El giro de cada paso.** Lo que agrega el paso, o su última media vuelta si es más largo, queda centrado en la cara del tubo que mira la cámara. La cámara de los pasos mira desde arriba y algo por delante, a unos 40° de la vertical. Como el tubo se ve igual girado, en la imagen solo gira la cuerda. El texto dice cuándo girar el tubo: hacia ti, porque la cuerda pasa por encima del tubo hacia el fondo.
+  - Nombres: solo «Chicote», en la punta de la parte larga.
+- **Hoja de revisión:** sobre el tubo, la vista desde arriba no sirve para revisar 32 cruces. La hoja dibuja además el tubo desenrollado con cada cruce y su etiqueta, que es donde se ve si el tejido alterna.
+- **Ficha** (con 3 cabos, 4 senos y dos pasadas):
+  - 6 pasos, todos en la página 1. Con tres pasadas son 7, como en el amarre.
+  - El error, junto al paso 3 bien hecho, y el terminado, por delante y girado.
+  - Materiales, por confirmar al atarlo: un cordón de 3 o 4 mm y unos 1,5 m, y un tubo o un palo redondo de unos 3 cm de grosor. Cuanto más grueso el cordón, más grueso tiene que ser el tubo.
+  - Familia nueva: Decorativos. Usos: anillo para sujetar la pañoleta, y adorno o agarre en un bastón o un mango.
+  - No lleva sección de seguridad, porque no sostiene nada. En las precauciones: si sellas los chicotes con fuego, el nylon derretido quema.
+- **Lo que no cambia:** el generador libre, el poste, la cruz y la plantilla del amarre. Los cuatro nudos de `publicados.txt` tienen que dar los mismos `modelo.json`, byte a byte, y las mismas imágenes, comparadas en RGB, que en 80e3619. Esa referencia ya está construida, fuera del repositorio.
+- **Riesgos:**
+  1. Los extremos, por lo apretado que queda el seno por donde salen. Si no caben, el extremo corto entra a media diagonal, lejos de los cruces, o se agranda el tubo, mirando las imágenes. Los límites no se aflojan.
+  2. Sobre un tubo liso, los senos de las primeras vueltas pueden correrse hasta que la tercera vuelta los traba. El texto pide sujetarlos con el pulgar. El filtro 1 dirá si alcanza o si conviene un tubo que agarre más, como uno de cartón.
+  3. Que se lean 32 cruces en una imagen de 58 × 64 mm. Por eso cada paso pone de frente lo que agrega. Con tres pasadas serían 72.
+- **Lo que decidió Gabriel (11 de noviembre): las cuatro propuestas.**
+  1. El método es tejer vuelta por vuelta. No se trenza como en las fotos ni se ata plana como en el manual, porque las dos cambian cruces entre pasos.
+  2. Las medidas son 3 cabos, 4 senos y dos pasadas, sobre un tubo de radio 4 (unos 3 cm), con 6 pasos. No se usan 3 y 5, como en el manual, ni tres pasadas, como en las fotos.
+  3. El error con imagen es empezar a tejer la tercera vuelta por encima (`empieza-por-encima`). Van también los dos errores sin imagen: que la segunda pasada cambie de lado o se monte sobre la primera, y apretar de una vez tirando de un chicote.
+  4. El terminado va sobre el tubo: por delante, y por detrás girado media vuelta. No se muestra el anillo solo, sin el tubo.
+
+**Cómo se hizo el formato (11 de noviembre de 2026):** como en el diseño, con estos detalles.
+- **El tubo** (`anfitrion: {tipo: tubo, radio, largo}`) solo va con una plantilla, como la cruz: sin ella es un error al cargar. Su largo tiene que ser mayor que su grosor.
+- **La plantilla** es `CabezaDeTurco`, en `nudos/plantillas/cabeza_turco.py`. Lee `cabos`, `senos` y `pasadas` con los límites del diseño. Si cabos y senos tienen un divisor común, el mensaje dice cuántas cuerdas cerradas saldrían. En el texto, `{pasadas}` con una sola pasada es «una».
+- **La variante depende de las medidas.** `VARIANTES` es una propiedad: `empieza-por-encima` existe con tres cabos, y con otro número no hay ninguna, porque la segunda vuelta ya alterna. Si una especificación pide un error con esas medidas, el mensaje dice que la plantilla no sabe construir ningún error común.
+- **La combinatoria del camino del centro** también está ahí (`cruces_del_centro`, `encima_del_centro` y `por_vuelta`), porque la variante la necesita. No depende del radio ni de la forma de la onda. Confirma lo del experimento: con 3 cabos y 2, 4, 5 o 7 senos, la segunda vuelta va toda por encima y la tercera empieza por debajo; con 4 cabos y 5 senos, la segunda va por encima y después por debajo.
+- **Hay cruces justo al completar una vuelta**, donde la cuerda vuelve al lugar donde empezó: pasa cuando cabos divide a 2k + m, con k la vuelta y m las vueltas entre las dos pasadas. Con 3 × 4, el cruce de la segunda vuelta con la primera que está justo ahí es de la vuelta que termina. Por eso cada vuelta se cuenta hasta volver al comienzo, incluido, y el fin de una vuelta como hito no puede caer justo ahí (lo decide la geometría). Con la cuenta al revés, la segunda vuelta de 3 × 4 daba «OO» y la tercera «OUOUOU».
+- **Nudos publicados:** iguales que en 80e3619, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge. En la primera impresión, `error-correcto.png` de la vuelta de escota salió con 15 píxeles distintos en 1 nivel, mientras la suite dibujaba a la vez; impresa otra vez, salió igual. Es la variación rara del navegador de T7c.
+
+**Cómo se hizo la geometría (11 de noviembre de 2026):** con el diseño, salvo lo que sigue. Está en `nudos/plantillas/cabeza_turco.py` (`Cuerda`), el tubo en `nudos/anfitrion.py` (`Tubo`) y las pruebas en `tests/test_cabeza_de_turco.py`. Falta que Gabriel lo revise en las imágenes, con la escena.
+- **El extremo corto entra a media diagonal, no en el ápice del seno A.** Es la salida que el diseño dejaba para el riesgo 1. Con radio 4, entre el último cruce antes de A y su ápice quedan unos 3,5 diámetros alrededor del tubo (P / 6), y la banda de ese cruce ocupa más de uno. Ahí no caben el paso de una pasada a la siguiente (que necesita unos 3 para correrse 1,1 sin doblarse de más), el final del chicote y la curva del extremo corto. Ahora el extremo corto llega desde fuera del nudo, a lo largo del tubo, y entra a la primera pasada en el brazo que sale de A, 2 diámetros antes de su primer cruce. Así el paso a la pasada siguiente pasa sobre el ápice: empieza 0,6 después del último cruce y termina 2,8 antes del primero. Con tres pasadas, la banda es más ancha y todo se corre 0,8 más lejos de los cruces.
+- **El chicote** termina 1,1 después del último cruce antes de A. Con 3 × 4 ese cruce es por debajo, así que la punta queda bajo la banda que cruza. El paso de `pasadas` termina antes, a media diagonal, y el remate agrega ese último cruce: el paso 5 tiene 30 cruces y el remate 34.
+- **El remate del extremo corto.** En vez de colgar, el extremo corto vuelve por encima del ápice de A, por fuera del borde, cruza la muesca entre A y el seno vecino y se mete por debajo de la banda que baja de ese seno, a media distancia entre su ápice y el cruce (a 1,5 d de A, con d = P / 6). Son dos cruces más, uno por pasada. Esa banda va levantada sobre él desde el primer paso, así que el extremo corto es lo único que cambia en el remate: el cuerpo, con sus alturas, es el mismo con el extremo que cuelga y con el metido. No encontré un lugar más cerca: junto al ápice todas las cuerdas van apoyadas en el tubo, entre dos cruces que no dejan lugar para levantar una banda sobre el extremo, y junto al primer cruce después de A el extremo tendría que volver sobre sí mismo. Queda a la vista el tramo que cruza la muesca, por fuera del borde del nudo. Es lo primero que conviene mirar en las imágenes.
+- **Los hitos** caen entre dos pasadas por cruces, en el medio: en un ápice o a media diagonal, lejos de los cruces, porque ahí sale el resto. La vuelta se cuenta hasta volver al comienzo, incluido (ver «Cómo se hizo el formato»). La última vuelta de cada pasada, menos la última pasada, termina donde empieza el paso a la siguiente. Con 3 × 4 y dos pasadas, los pasos de la especificación forman 0, 3, 3, 2, 22 y 4 cruces.
+- **Las alturas** van por cada cruce de dos carriles: la de encima sigue arriba 0,6 más allá del eje de la de abajo, a lo largo de la cuerda, y las mesetas de los carriles de una banda se juntan. Es lo mismo que el experimento, pero medido a lo largo de la cuerda y no alrededor del tubo. Por eso la cuerda ideal de 3 × 4 con dos pasadas en radio 4 ya cumple con 55° (curvatura 1,26) y no con 60°, como decía la tabla del diseño: el experimento medía las mesetas en arco alrededor del tubo, que en una diagonal es más largo, y le quedaban más cerca. La plantilla sigue la regla del diseño y elige 55°. Los pasos cumplen igual con 60°.
+- **Lo que cae a la mesa** se traza en cada paso, con el giro. El extremo corto que cuelga, si sale por la mitad de arriba del tubo, gira suave por la superficie hacia el costado que baja y cae en un cuarto de circunferencia que se aleja del tubo; si sale por la de abajo, sigue a lo largo del tubo mientras baja. El resto se aleja 2,2 del tubo en 3 diámetros siguiendo la cuerda, lo rodea hacia atrás y cae detrás del tubo. Al principio caía derecho, y vista desde arriba esa caída es un punto: al relajar aparecían cruces falsos.
+- **Los cruces del tubo** se buscan en su superficie desenrollada y guardan su lugar en el mapa del nudo. Ese lugar da la vuelta a C / (4 senos), entre dos cruces: los cruces caen siempre en múltiplos de C / (2 senos) alrededor del tubo, también justo debajo de A, y cortando ahí un cruce saltaba 28 diámetros. Dos pasadas a menos de 3 diámetros a lo largo de la cuerda no cuentan como cruce (`CRUCE_MIN`): no pueden serlo, y salían donde la cuerda cae casi vertical al costado del tubo.
+- **`nudos/plantillas/pasos.py`** construye los pasos de las dos plantillas igual y le pide a cada una su sólido, su cuerda y cómo buscar sus cruces (`geometria`). El amarre da el mismo `modelo.json`, byte a byte. `Resultado` y `modelo.json` llevan además el giro de cada paso de la cabeza de turco.
+- **Resultado** con 3 cabos, 4 senos y dos pasadas en radio 4 (55°): los 6 pasos sin fallas, con separación de al menos 1,00, curvatura de al menos 1,15, estiramiento de hasta 0,8 % y nada dentro del tubo. El error, igual (curvatura 1,15). Construir el nudo tarda unos 30 segundos. Sin fallas también con 3 × 4 con una pasada (45°) y con tres (radio 5,5), 2 × 3 y 3 × 2 con dos pasadas, y 2 × 5, 4 × 5 (radio 6) y 3 × 7 (radio 6) con una.
+- **Pendiente: 3 × 5 con dos pasadas no sale**, ni con radio 5, 5,5 ni 6. Su último cruce antes de A es por encima, así que la banda del seno vecino pasa por debajo de él y no le queda lugar para levantarse sobre el extremo corto. Habría que meterlo más lejos, al otro lado del ápice del seno vecino. Se deja para después de que Gabriel revise el remate en las imágenes, porque puede cambiar.
+
+**Cómo se hizo la escena, la impresión y la hoja (11 de noviembre de 2026):** con el diseño, más estos detalles. Falta que Gabriel lo revise en las imágenes.
+- **El tubo.** La escena lo dibuja con los datos de `Tubo.datos()`, de madera como el poste, a lo largo de x y centrado en x = 0, y el alto del encuadre lo incluye. El visor y la impresión usan la misma escena.
+- **Las vistas.** Los pasos, el error y el terminado van en la vista de los pasos. Por delante, el terminado es el remate, girado como ese paso; por detrás, `Tubo.voltear` gira el tubo y el nudo media vuelta alrededor del eje: un giro rígido, que no se relaja ni se comprueba otra vez y suma 180° al giro. La ficha dice «Por detrás es como lo ves si giras el tubo media vuelta».
+- **Los nombres.** Solo «Chicote», en la punta de la parte larga, y los dos extremos con remate, como desde el paso 2 del amarre.
+- **El encuadre** va en la especificación: x de −7 a 11 e y de −9 a 9, el nudo con el tubo y el comienzo de lo que cae a la mesa. Lo que cae detrás del tubo sigue 3 diámetros por la mesa, y su punta queda fuera del encuadre en casi todos los pasos. El terminado, sin nada que cuelgue, se ve más grande.
+- **La hoja de revisión** (`python -m nudos hoja cabeza-de-turco`) lleva, debajo de la de siempre, el tubo desenrollado de cada paso (`mapa` en `nudos/hoja.py`), desde el seno A, con cada cruce y su etiqueta. Lo que va más lejos del eje se dibuja encima y más oscuro, y lo que agrega el paso, en ámbar.
+- **La especificación** (`specs/cabeza-de-turco.yaml`) tiene los 6 pasos, el error y los dos errores sin imagen, con texto provisional: falta el de la ficha.
+- **Visto en las imágenes:** en el remate se resalta solo lo que agrega el chicote. El extremo corto metido, que es lo que más cambia, va azul, porque cada paso resalta un solo tramo de la cuerda. Se arregla según lo que decida Gabriel del remate.
+- **Nudos publicados:** iguales que en 80e3619, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge. Una vez, `paso-1.png` del amarre salió con 20 píxeles distintos en 1 nivel mientras se construía otro nudo a la vez; impresa sola, salió igual. Construir la cabeza de turco dos veces da el mismo `modelo.json`, byte a byte.
+
+**Lo que dijo Gabriel al revisar (11 de noviembre de 2026):** no entendió el nudo tejido de esta manera, y duda que un tubo más grueso, con los dos extremos en el seno A, lo arregle. Ya presentó el avance en la junta del grupo. Decidió dejar la cabeza de turco para el final: se sigue con el resto del plan y se vuelve a ella cuando todo lo demás esté terminado. Al volver, conviene empezar por ver con él qué parte no se entiende en las imágenes, antes de tocar la geometría. Lo hecho queda en `main` (formato, geometría, escena, impresión y hoja, con sus pruebas), y la nota de traspaso está fuera del repositorio, con las demás notas de las sesiones. Mientras tanto, `specs/cabeza-de-turco.yaml` sigue en `specs/` con texto provisional, y `construir_sitio` construye todas las especificaciones de esa carpeta: antes de la próxima publicación del sitio hay que dejarla fuera.
+
+#### Punto de control B: después de T7 y T8
+
+- [x] Los nudos del piloto están publicados, sin la cabeza de turco. (11 nov: Gabriel la dejó para el final; los otros cuatro ya están publicados.)
+- [x] El formato de especificación queda congelado como v1 en `docs/formato-spec.md`. A partir de aquí, un cambio incompatible necesita un script de migración (ver abajo).
+- [x] Revisión contigo antes de automatizar. (11 nov: Gabriel aprobó las tres propuestas de abajo.)
+
+**Cómo se preparó (11 de noviembre de 2026; Gabriel aprobó las tres propuestas el mismo día):** el punto de control se cierra con los cuatro nudos publicados, sin la cabeza de turco.
+- **El formato v1** está en `docs/formato-spec.md`, en «Versiones». Precisa qué cambio necesita migración.
+  - Un cambio compatible agrega algo que ninguna especificación usa todavía, como un anfitrión, una plantilla o un campo opcional. Las especificaciones anteriores dan el mismo `modelo.json`, byte a byte, así que no hay nada que migrar: la versión sube a 1.1, 1.2…
+  - Un cambio incompatible cambia algo que ya existe. Lleva un script de migración que reescribe todas las especificaciones en el mismo commit, y la versión sube a 2.
+  - Lo que traen T10 (`estado`), T12 (`secciones`) y las tandas 3 a 5 (anfitriones y plantillas nuevos) son cambios compatibles. Sin esta distinción, cada anfitrión nuevo de la fase 4 llevaría un script de migración sin nada que migrar.
+- **La cabeza de turco queda provisional:** el tubo, la plantilla y su variante pueden cambiar sin migración hasta que se publique, porque solo los usa su especificación.
+- **Para dejarla fuera del sitio**, el sitio lleva solo los nudos de `publicados.txt`. `construir_sitio` construye esas especificaciones, y no todas las de `specs/`.
+  - Publicar un nudo ya es agregarlo a `publicados.txt`: es el último paso de cada nudo. Hoy, en cambio, un nudo nuevo de `specs/` sale en línea con la siguiente publicación del sitio, y su dirección no está protegida hasta que alguien lo agrega a la lista.
+  - No espera a T10 ni cambia el formato. El estado de T10 no alcanza solo: el ballestrinque, la vuelta de escota y el amarre están en línea sin el filtro 2, así que no llegan a `publicado`, y el sitio tendría que llevar también estados anteriores, como el de la cabeza de turco.
+  - Para ver un nudo nuevo en el sitio antes de publicarlo, `python -m nudos sitio --con <slug>` lo agrega al sitio local. `scripts/publicar.sh` no usa esa opción.
+  - Cambian `nudos/exportar.py`, `nudos/__main__.py`, `tests/test_sitio.py`, `CLAUDE.md`, `README.md` y el comentario de `publicados.txt`. La geometría y las pruebas de la cabeza de turco no se tocan.
+  - **Cómo se hizo (11 nov):** `nudos_del_sitio`, en `nudos/exportar.py`, dice qué nudos lleva el sitio. Falla si falta la especificación de un nudo de `publicados.txt`. Con `--con cabeza-de-turco`, el sitio sale idéntico al de 378e9d4, archivo por archivo. Sin la opción, solo falta la cabeza de turco: su carpeta y su línea en `index.html` y `404.html`. Los nudos publicados quedan iguales a 378e9d4: los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge. En la primera impresión salieron unos píxeles distintos en 1 nivel en `error.png` de la vuelta de escota, y salieron iguales al imprimirla otra vez. En la referencia, `prueba/paso-7-arriba.png` del amarre tenía 2 píxeles distintos en 1 nivel: impresa otra vez desde 378e9d4, salió igual que ahora. Es la variación rara del navegador de T7c. En la suite, 341 pruebas: falló una vez `test_con_mejoras_dibujar_dos_veces_da_lo_mismo`, que dibuja la misma imagen dos veces, por esa misma variación, y pasó al correr sola.
+
+### Fase 3: el paso de IA y la operación
+
+#### T9: Skill nudo-nuevo
+
+**Descripción:** crear una skill de Claude, guardada en la cuenta de Gabriel y con su fuente en el repositorio, que toma la carpeta de entrada de un nudo (imágenes, descripción y enlace a la fuente) y hace lo siguiente:
+- Elige el tipo de generador.
+- Escribe el borrador de la especificación.
+- Construye el modelo.
+- Produce una hoja de revisión privada, con la fuente junto a los renders y la secuencia de cruces de cada paso.
+
+La skill no copia texto de la fuente ni publica imágenes de la fuente.
+
+**Criterios de aceptación:**
+- [x] Pruebas doradas: a partir de las entradas originales del as de guía y de la vuelta de escota, la skill produce especificaciones con las mismas secuencias de cruces ya validadas. (12 nov: con el criterio que decidió Gabriel; la vuelta de escota, con la lectura que Gabriel aceptó como el mismo nudo.)
+- [x] Con un nudo nuevo, el ocho, el borrador construye y pasa la validación automática, y tus correcciones quedan registradas. (12 nov: sin correcciones.)
+- [x] La hoja de revisión queda en `revision/`, fuera de git.
+
+**Verificación:**
+- [x] `pytest tests/test_dorados.py`
+- [x] Manual: ejecutar la skill con las entradas del ocho y revisar la hoja.
+
+**Dependencias:** Punto de control B
+
+**Archivos:** `skills/nudo-nuevo/SKILL.md`, `docs/formato-spec.md`, `nudos/revision.py`, `tests/test_dorados.py`. Con el diseño de abajo, la skill va en `.claude/skills/nudo-nuevo/SKILL.md`, y además: `nudos/__main__.py` y `tests/dorados/`.
+
+**Tamaño:** M
+
+**Diseño (12 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las cuatro propuestas del final).**
+
+- **Dónde vive la skill:** en `.claude/skills/nudo-nuevo/SKILL.md`, dentro del repositorio. El plan decía `skills/nudo-nuevo/`, con una copia guardada en la cuenta de Claude. Claude Code carga solas las skills de `.claude/skills/` en cada sesión que trabaja en el repositorio, también en un worktree. Así no hay que subirla ni mantener dos copias, y cada cambio de la skill queda en git junto al código que usa.
+- **Qué hace** `/nudo-nuevo <slug>`, en este orden:
+  1. Lee `entradas/<slug>/`: las imágenes y `info.txt` o `fuente.md`. Son entrada: no copia su texto ni sus imágenes a ninguna parte del repositorio.
+  2. Elige el generador: libre, con una cuerda o varias; sobre un anfitrión que ya existe (hoy, el poste), o con una plantilla que ya existe (hoy, la del amarre cuadrado). Si el nudo necesita un anfitrión o una plantilla que no existe, se detiene y lo dice, porque eso es una tarea de código, como T5 o T7, y no un borrador.
+  3. Lee las imágenes paso a paso y escribe `specs/<slug>.yaml` con `estado: borrador`: los segmentos, los pasos con su secuencia, el error común, el terminado y el texto de la ficha, en tuteo, propio y sin términos de ninguna sección. Sigue `docs/formato-spec.md` y usa los nudos publicados como ejemplo.
+  4. Construye con `python -m nudos construir <slug>` y corrige la geometría hasta que no queden fallas. Si la secuencia medida no coincide con la declarada, vuelve primero a la imagen y no ajusta la secuencia para que coincida: un cruce mal leído es el error que las pruebas no ven.
+  5. Arma la hoja de revisión con `python -m nudos revision <slug>` y se detiene para que Gabriel la revise. El nudo sigue en `borrador`: pasa a `modelado` cuando Gabriel lo aprueba.
+- **La hoja de revisión** (`nudos/revision.py`) es una página HTML en `revision/<slug>/`, que ya está fuera de git. Por cada paso pone, lado a lado, las imágenes de la fuente que le corresponden, el paso dibujado desde arriba y a 55°, y la secuencia declarada junto a la medida. La skill anota en `revision/<slug>/pasos.yaml` qué imágenes de la fuente usó en cada paso. La página enlaza las imágenes de `entradas/`, sin copiarlas.
+- **Las pruebas doradas** (`tests/test_dorados.py`): la skill corre sobre las entradas del as de guía y de la vuelta de escota, y sus borradores se guardan en `tests/dorados/`. La prueba los carga, los construye sin fallas y compara la secuencia de cada paso con la de la especificación validada. No importa cómo se llaman los cruces: los dos se renumeran en el orden en que aparecen. También compara los cruces del error común.
+  - La prueba no corre la skill, porque la skill es Claude leyendo imágenes. Comprueba lo que la skill produjo la última vez: cuando la skill cambia, se corre otra vez y se guardan los borradores nuevos.
+  - Para que la corrida sea a ciegas, la hace una sesión nueva en un worktree sin `specs/as-de-guia.yaml` ni `specs/vuelta-de-escota.yaml`. Si no, la skill podría copiarlos.
+  - Si la skill divide los pasos de otra manera que la especificación validada, la prueba falla, y Gabriel decide si la división nueva es mejor.
+  - Los borradores dorados llevan el texto que escribió la skill, que es propio, como el de cualquier especificación.
+- **El ocho** es el primer nudo nuevo. La skill escribe su borrador y Gabriel revisa la hoja. Sus correcciones se anotan aquí, en T9: qué cruce o qué texto cambió y por qué. Lo que se repita pasa a la skill como regla, para que el borrador siguiente no lo repita. El ocho sigue después con la tanda 1: su filtro 1 y su publicación son de esa tanda.
+- **Lo que no cambia:** el formato, porque la skill escribe v1.1; los nudos publicados, y la cabeza de turco.
+- **Preguntas para Gabriel:**
+  1. ¿La skill va en `.claude/skills/nudo-nuevo/`, en vez de en `skills/` y subida a tu cuenta?
+  2. ¿La corrida dorada la hace una sesión nueva en un worktree sin las dos especificaciones validadas? Es la manera que veo de que sea a ciegas.
+  3. ¿Los borradores dorados se guardan en git, en `tests/dorados/`?
+  4. ¿Tus correcciones del ocho se anotan en el plan, y las que se repitan pasan a la skill como reglas?
+- **Lo que decidió Gabriel (12 de noviembre): las cuatro propuestas.** La skill va en `.claude/skills/nudo-nuevo/`; la corrida dorada la hace una sesión nueva en un worktree sin las dos especificaciones validadas; los borradores dorados van en git, en `tests/dorados/`, y sus correcciones del ocho se anotan aquí, y las que se repitan pasan a la skill.
+
+**Cómo se hizo la hoja, la comparación y la skill (12 de noviembre de 2026):** con el diseño, más estos detalles. Faltan la corrida dorada y el ocho.
+- **La hoja de revisión** (`python -m nudos revision <slug>`, `nudos/revision.py`) construye el nudo, guarda su `modelo.json` y arma `revision/<slug>/index.html`. Necesita el modelo en memoria y no solo `modelo.json`, porque ahí está la secuencia declarada además de la medida. Cada paso se dibuja con `nudos/hoja.py`, desde arriba y a 55°, y una secuencia distinta sale en rojo, como las fallas, arriba. Las imágenes de la fuente se enlazan con una ruta relativa, o con su dirección completa si están en otra unidad. En un worktree las entradas no están, y `NUDOS_ENTRADAS` dice dónde buscarlas. Sin `pasos.yaml`, la página muestra arriba todas las imágenes de la fuente. Probada con el as de guía y sus 8 imágenes de `entradas/`.
+- **`datos_json`** (`nudos/construir.py`) es el contenido de `modelo.json`, aparte de `guardar`, que lo escribe. La hoja lo usa para dibujar cada paso como la hoja de siempre.
+- **La comparación** de las pruebas doradas está en `nudos/dorados.py`: `renumerar` numera los cruces en el orden en que aparecen, y `diferencias` dice en qué difiere un borrador de la especificación validada: el número de pasos, las cuerdas, la secuencia de cada paso, cómo se reparten los cruces entre las cuerdas y el error común. `tests/test_dorados.py` la prueba con el as de guía y la vuelta de escota con otras etiquetas, un cruce al revés, un paso menos y otro error. Las pruebas de los borradores dorados se agregan con ellos.
+- **La skill** (`.claude/skills/nudo-nuevo/SKILL.md`) sigue los pasos del diseño: leer la fuente, elegir el generador, decidir los pasos, leer los cruces, trazar, el error y el texto, construir y corregir, y la hoja con su informe. Tiene una sección para la corrida dorada y otra, vacía todavía, para las reglas que salgan de las correcciones de Gabriel.
+- **Nudos publicados:** iguales a 378e9d4, los 4 modelos byte a byte (con `datos_json`) y las 67 imágenes en RGB, con Edge, y el sitio igual. Pasan las 371 pruebas.
+
+**El ocho, el primer borrador de la skill (12 de noviembre de 2026):** `specs/ocho.yaml`, en `borrador`, con su hoja en `revision/ocho/`. Falta que Gabriel lo revise.
+- **Lo que leí.** Tres pasos: una vuelta con el chicote por encima del firme (imágenes 1 y 2), el chicote por debajo del firme (imágenes 5 y 3, que van en otro orden que sus números) y el chicote por la vuelta, que entra por encima y sale por debajo (imagen 4, el nudo ya ajustado). No hay imagen del chicote entrando a la vuelta, así que los cruces 3 y 4 los leí en el nudo terminado. La secuencia del último paso, `2O 1U 4O 3U 1O 2U 3O 4U`, alterna, como el ocho. Fuera del repositorio comprobé con los 3-coloreos que es un ocho y no un nudo simple.
+- **El error común** es el que advierte la fuente: meter el chicote por la vuelta de abajo hacia arriba, con los cruces 3 y 4 al revés. Con los 3-coloreos, sale un nudo simple. Ninguna imagen lo muestra.
+- **Construir** salió sin fallas al primer intento: separación de al menos 0,99, curvatura de 1,13 y estiramiento de hasta 1,3 %. La ficha se arma y cabe, sin términos de ninguna sección.
+- **Lo que cambió al usar la skill.** La hoja de revisión mostraba las secuencias como las numera la construcción, en el orden en que aparecen los cruces, y no con las etiquetas de la especificación. Ahora usa las de la especificación, que son las que se comparan de un paso a otro. A la skill le agregué que las imágenes se ordenan por lo que muestran y no por el nombre del archivo, que un paso sin imagen se lee en el nudo terminado y que un cruce se amplía en una copia fuera de `entradas/`. `python -m nudos estado` dice ahora que a un borrador con todo el texto le falta la revisión de Gabriel. Las pruebas de T10 ya no suponen qué nudos tienen especificación.
+- **Nudos publicados:** los 4 modelos, iguales a 378e9d4 byte a byte. Pasan las 372 pruebas; se saltan las de construir la cabeza de turco y el ocho, que son borradores.
+
+**La corrida dorada (12 de noviembre de 2026):** la hizo una sesión nueva, en un worktree sin las dos especificaciones validadas. Sus borradores están en su rama, `claude/competent-aryabhata-2dc24a` (commit 4aa97d2, `tests/dorados/`), y todavía no en `main`. Los dos construyen sin fallas. La comparación (`nudos/dorados.py`) la hizo después la sesión de `main`, leyendo los borradores desde ese worktree:
+- **As de guía:** el nudo terminado y el error común son idénticos a los validados, y cada paso del borrador tiene la secuencia de un paso validado. Solo cambia la división: 5 pasos en vez de 7. El borrador no tiene «Acerca el chicote», que no forma cruces, ni el paso intermedio «Vuelve por encima».
+- **Vuelta de escota:** 5 pasos en vez de 4, porque el borrador tiene dos pasos sin cruces al comienzo. La gruesa cruza igual, pero la delgada cruza las dos piernas del seno en el orden contrario. Es el lugar donde la sesión anotó su duda: ahí se tapan las tres cuerdas. Falta saber si es el mismo nudo dibujado de otra manera o uno equivocado. La comparación de los dos nudos terminados está en `revision/dorados/vuelta-de-escota-comparada.png`, fuera de git.
+- **Una fuga:** un script de diagnóstico de esa sesión, corrido desde fuera de su worktree, importó el `nudos` de A: y cargó la vuelta de escota validada. Vio que tiene 4 pasos y el error en el 4, pero no sus secuencias. Su borrador ya tenía 5 pasos y el error en el 5, y después solo cambió la geometría.
+- **Lo que le faltó a la skill,** según esa sesión: cómo separar una cuerda que pasa justo sobre un cruce (dos lecturas dan la misma cuerda real y secuencias distintas); que en un worktree un script que no corre con `-m` desde su raíz usa el `nudos` de A:; que las fallas digan dónde ocurren y que la hoja dibuje el reverso; de dónde sacar el error común si la fuente no lo trae, y si va un paso de preparar la cuerda, sin cruces.
+- **Lo que decidió Gabriel (12 de noviembre):** las pruebas doradas no exigen la misma división de los pasos, porque esa es una decisión de cómo enseñar el nudo y no de cómo leer los cruces. Exigen que cada paso del borrador sea un paso validado, en el mismo orden; que cada cruce sea siempre el mismo cruce validado; el mismo nudo terminado y el mismo error común. Después dijo que la vuelta de escota del borrador es el mismo nudo que la validada y que los dos borradores vienen a `main`.
+- **Cómo se hizo:** `diferencias` (`nudos/dorados.py`) compara así, con pruebas para otra división de los pasos, un paso de más sin cruces, pasos en otro orden, un cruce que cambia de nombre entre pasos y otro error. Con ese criterio, el borrador del as de guía no tiene diferencias. El de la vuelta de escota difiere en el último paso, y por eso también en el error común.
+- **Lo que le faltó a la skill, corregido:** en `nudos/libre.py`, las fallas de separación y de estiramiento dicen cerca de qué punto ocurren, como ya lo decía la de curvatura. La hoja de revisión dibuja el nudo terminado por detrás. La skill avisa del `nudos` de A: en los scripts de un worktree, dice qué hacer con una cuerda que pasa justo sobre un cruce y de dónde sacar el error común cuando la fuente no lo trae. Queda para Gabriel si va un paso de preparar la cuerda, sin cruces.
+- **Nudos publicados:** iguales a 378e9d4, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge, y el sitio igual. Pasan las 377 pruebas.
+- **Los borradores en `main`** (12 nov, con permiso de Gabriel): el commit de la corrida, solo con `tests/dorados/`, entró con `cherry-pick` (8cdee59). `tests/test_dorados.py` comprueba que los dos construyen sin fallas y los compara con las especificaciones validadas. El as de guía no tiene diferencias. La vuelta de escota tiene las tres que Gabriel aceptó, porque es el mismo nudo, y se exigen tal cual (`ACEPTADAS`): cualquier otra, o que una de ellas desaparezca, hace fallar la prueba.
+- **El paso de preparar la cuerda** (Gabriel, 12 nov): sí va. El primer paso prepara la cuerda, sin cruces. Está en la skill, en «Decide los pasos».
+- **El ocho** (Gabriel, 12 nov): «todo bien», sin correcciones. Pasa a `modelado`. Su filtro 1 y su publicación son de la tanda 1.
+- **La suite:** pasan 383 pruebas; se salta la de construir la cabeza de turco, que es un borrador. Desde la última comparación no cambió el código que construye e imprime los nudos publicados.
+
+#### T10: Estado de producción y registro de pruebas
+
+**Descripción:** agregar a la especificación el campo de estado y el registro de los dos filtros. Cada prueba guarda la fecha, el rol del probador y un código anónimo, para no repetir probador en un nudo que ya conoce. Generar una tabla con el estado de los 35 nudos.
+
+**Criterios de aceptación:**
+- [x] `python -m nudos estado` muestra los 35 nudos con su estado y qué los bloquea.
+- [x] Una prueba impide marcar un nudo como `publicado` si no tiene los dos filtros registrados.
+- [x] El registro solo acepta roles y códigos, no nombres.
+
+**Verificación:**
+- [x] `pytest tests/test_estado.py`
+- [x] `python -m nudos estado`
+
+**Dependencias:** T4
+
+**Archivos:** `nudos/spec.py`, `nudos/estado.py`, `tests/test_estado.py`. Además, `config/edicion-1.yaml`, `nudos/ficha.py`, `nudos/__main__.py`, las cuatro especificaciones publicadas y `docs/formato-spec.md`.
+
+**Tamaño:** S
+
+**Cómo se hizo (11 de noviembre de 2026):**
+- **El campo `estado`** es opcional, y sin él una especificación está en `borrador`. Así es un cambio compatible del formato, que pasa a v1.1 sin migración. El as de guía está en `publicado`; el ballestrinque, la vuelta de escota y el amarre, en `cuerda-ok`; la cabeza de turco no lo lleva, así que es un borrador, porque su texto es provisional.
+- **Qué pide cada estado** está en `docs/formato-spec.md`, en «Estado». `modelado` pide lo que la ficha necesita de la especificación (`faltan_textos`, que ahora usa también `nudos/ficha.py`), y que construya sin fallas. `cuerda-ok` y `novato-ok` piden que el último registro de su filtro esté aprobado. `publicado` pide además estar en `publicados.txt`. Estar en el sitio no basta para estar en `publicado`: los tres nudos sin filtro 2 están en línea y siguen en `cuerda-ok`.
+- **Lo comprueban `nudos/estado.py` y `tests/test_estado.py`,** no la carga de la especificación. Si una prueba no pasa, el nudo sigue construyendo y se puede corregir; lo que falla es la suite, y `python -m nudos estado` dice qué falta. Las pruebas construyen sin fallas los nudos de `modelado` o más, con los modelos de `conftest.py` cuando los hay. La orden no los construye, porque con 35 nudos tardaría minutos; hoy tarda menos de un segundo.
+- **Los 35 nudos** están en `config/edicion-1.yaml`, por tanda, con el slug de su carpeta en `entradas/`. Una prueba comprueba que son 35, sin repetir, y que cada especificación y cada nudo publicado están en la lista.
+- **Los probadores.** El registro ya aceptaba solo el rol y un código desde T4: no hay campo `nombre`, y el código es como P01. El rol es texto libre que describe a la persona sin nombrarla. La orden lista cada código con los nudos que ya probó, y el estado marca como problema que un mismo código repita el filtro 2 de un nudo: si no pasa, se repite con otra persona.
+- **Nudos publicados:** iguales a 378e9d4, los 4 modelos byte a byte y las 67 imágenes en RGB, con Edge; el sitio, igual que sin T10. En la suite, 361 pruebas: falló una vez `test_dibujar_dos_veces_da_las_mismas_imagenes` y pasó al correr sola. Es la variación rara del navegador, que hoy salió en las dos corridas de la suite, cada vez en una prueba distinta de las que dibujan dos veces lo mismo.
+
+#### Punto de control C: después de T9 y T10
+
+- [x] Las pruebas doradas pasan, y un nudo nuevo salió de la skill con correcciones menores. (12 nov: el ocho, sin correcciones.)
+- [x] Decidir si se usan subagentes en paralelo para los borradores de la tanda 1. (12 nov: Gabriel aprobó la propuesta de abajo.)
+
+**Propuesta (12 de noviembre de 2026; Gabriel la aprobó el mismo día):** sí en paralelo, pero en sesiones aparte y no en subagentes, de dos o tres a la vez.
+- **Una sesión por nudo,** cada una en su worktree, como la corrida dorada. Corre `/nudo-nuevo <slug>`, deja el borrador en su rama y la hoja de revisión en su worktree. A diferencia de un subagente, Gabriel puede abrirla, ver lo que hizo y corregirla ahí mismo.
+- **De dos o tres a la vez:** los filtros humanos marcan el ritmo. No conviene tener más borradores esperando revisión que los que Gabriel alcanza a revisar y atar.
+- **Cuando Gabriel aprueba la hoja,** el borrador entra a `main` y pasa a `modelado`. Después vienen el filtro 1 y la publicación, en la carpeta de A:, de a un nudo.
+- **La tanda 1** son el simple, el ocho doble, el as de guía español, la mariposa alpina, la margarita, el arnés de hombre y la silla de bombero; el ocho ya está en `modelado`. La silla de bombero va con D1. El ocho, que Gabriel aprobó antes de la regla del paso de preparar la cuerda, sigue con sus 3 pasos.
+
+### Fase 4: las tandas 1 a 4
+
+**Tanda 1 (12 de noviembre de 2026):** los borradores los hacen sesiones aparte con la skill, como se decidió en el Punto de control C. El ocho salió en T9, y el simple, el ocho doble y la mariposa alpina, de las tres primeras sesiones.
+- **El ocho doble es la gaza en ocho** (Gabriel): una sola gaza fija en el extremo. Las imágenes R1 a R5 de `entradas/ocho-doble` la atan; desde la R6 siguen con el ocho de dos gazas, que no va.
+- **Lo que pidió Gabriel al revisar el ocho doble y la mariposa: que el nudo quede más tallado.** Los borradores salen sueltos, con los lazos abiertos, y así confunden; la mariposa, sobre todo. El apretado de T7c no lo arregla, porque solo acorta la cuerda a menos de 6 diámetros de un cruce: en la mariposa, la cuerda del nudo bajó apenas de 172,6 a 155,7 diámetros, y los dos lazos grandes del cuerpo quedaron igual.
+  - La skill dice ahora cómo dibujar el nudo tallado: donde la cuerda real se toca, los tramos van a 1,1 o 1,3 diámetros; las vueltas del cuerpo, cerradas, con radio de 1 a 2; solo la gaza, el firme y el chicote van grandes, y el último paso se parece a la foto del nudo armado.
+  - La hoja de revisión muestra el terminado apretado, el de la ficha, con cuánto se acortó la cuerda, y las medidas de cada paso, para ver lo que se acerca al límite sin llegar a falla.
+  - Los cuatro borradores (el ocho, el simple, el ocho doble y la mariposa) se vuelven a dibujar tallados, y Gabriel revisa otra vez sus hojas. Los nudos publicados no cambian.
+  - **El ocho, redibujado:** el cuerpo del nudo, al 90 % alrededor de su centro, con el firme y el chicote igual de largos. Construye sin fallas, con un estiramiento de hasta 1,3 %; al 80 % la cuerda se estiraba más de 2 % en el lazo de abajo. Apretado, la cuerda del nudo baja ahora de 58,9 a 42,9 diámetros; antes bajaba de 67,9 a 48,6. Su terminado apretado ya se veía tallado antes, así que el cambio está sobre todo en los pasos.
+- **Lo que dijeron las sesiones de la skill,** que ya está en ella: qué hacer si las imágenes son de otro nudo, con un nudo que la fuente ata en la mano, con uno sin chicote y con uno de cuerda doble; cómo unir los segmentos entre pasos, y una duda `general` en `pasos.yaml`.
+- **Queda como tarea de código:** que un nudo sin chicote, como la mariposa, no lleve «Chicote» en su segundo firme. Hoy el formato recorre la cuerda desde un firme hasta un chicote. Ya está hecha: ver «Un nudo en medio de la cuerda», abajo.
+- **Los borradores redibujados** (12 nov): el simple, el ocho doble y la mariposa alpina, tallados, y Gabriel aprobó sus hojas. Entraron a `main` con `cherry-pick` y están en `modelado`, como el ocho.
+  - **La mariposa lleva un paso 7, «Saca la gaza».** En R9 la gaza queda encerrada bajo el cruce de los dos tramos de arriba, y el apretado se la comía. En R10 sus dos patas pasan por encima de esos tramos: son los cruces 11 a 14. Con ese paso, la gaza sale larga también en el terminado apretado.
+  - **Las fichas no cabían** en el ocho doble y la mariposa. Se acortó el texto sin cambiar lo que dice, y la skill pide ahora armar la ficha antes del informe.
+  - Pasan 388 pruebas.
+- **Filtro 1 y publicación** (12 y 13 nov): Gabriel ató el simple, el ocho, el ocho doble y la mariposa alpina con las fichas de c2627a8, y los cuatro pasaron; están en `cuerda-ok`. Antes de publicar entró `dos_firmes` (formato v1.2, c51bea8): en la mariposa, los dos extremos llevan «Firme», sin cambiar su cuerda ni sus cruces. Los cuatro están en `publicados.txt` y en el sitio desde el 13 nov, construido desde f9cb4fc (`gh-pages` 7d01b76). Los cuatro visores cargan en línea con todos sus recursos; el único 404 de la consola es el ícono que el navegador pide en la raíz del dominio, fuera del sitio.
+- **Los últimos cuatro** (13 nov): el as de guía español, la margarita, el arnés de hombre y la silla de bombero salieron de tres sesiones y de una cuarta después; Gabriel aprobó sus hojas, los ató con las fichas de eb656c7 y pidió publicarlos. Están en `cuerda-ok` y en el sitio, construido desde 337c763 (`gh-pages` 1a7e82e), con sus cuatro visores revisados en línea. La margarita estrena la familia «De acortamiento». Lo que encontraron sus sesiones está en la skill: el radio mínimo de 1,2 en las curvas del trazado, el espacio para una cuerda tejida, el límite de 2,5 diámetros para un cruce entre pasos, el borde del apretado en la punta de una gaza y el resaltado de un solo tramo.
+
+**Punto de control de la tanda 1 (13 de noviembre de 2026; Gabriel lo cerró el mismo día y pidió arrancar la tanda 2):**
+- **Los ocho nudos están en el sitio** y en `cuerda-ok`, con su filtro 1. Ninguno llega a `publicado`, porque el filtro 2 sigue en pausa desde el 9 de noviembre. `python -m nudos estado` lo muestra.
+- **La suite pasa:** 398 pruebas, sin regresiones. Los cuatro nudos del piloto siguen iguales a la referencia de 378e9d4 en la última comparación (c51bea8, al entrar `dos_firmes`), y desde entonces no cambió el código que los construye.
+- **Lo que conviene revisar:**
+  - Tres números ABOK sin confirmar: el simple (46), el arnés de hombre (153) y la silla de bombero (1100).
+  - El ocho sigue con 3 pasos, sin el paso de preparar la cuerda que pide la regla nueva.
+  - En el as de guía español apretado, el tramo de abajo cuelga un poco; las imágenes de la silla de bombero salen chicas, porque el nudo es ancho.
+  - El filtro 2: la propuesta pendiente es retomarlo al menos una vez por tipo de nudo antes de su tanda. La tanda 2 es la de dos cuerdas o dos extremos, así que su probador sería el de la vuelta de escota.
+  - La tarea aparte de las pruebas de dibujo que fallan por el navegador: falló una vez en casi cada corrida de la suite.
+- **Lo que viene, la tanda 2:** el rizo, el pescador y el nudo aguja, este último con la página del manual de la Tropa como entrada (D9). Con la misma forma de trabajar: una sesión por nudo, de a tres.
+- **Un nudo en medio de la cuerda** (12 nov): que la mariposa no lleve «Chicote» en su segundo firme. Gabriel aprobó el diseño antes de implementarlo.
+  - **Cómo se hizo:** con un campo opcional, `dos_firmes: true` (formato v1.2, un cambio compatible). Solo cambia los nombres: en las imágenes, el visor y la ficha, los dos extremos llevan «Firme» y ninguno «Chicote». El primero va donde la cuerda entra al encuadre y el otro, donde sale o, si no sale, junto a su final (`render/escena.js`). Las imágenes del error común también llevan los dos. La cuerda, los cruces, el remate del final y el apretado no cambian: después de su último cruce, el otro firme sigue siendo la cola, que el nudo arrastra. Por ahora solo un nudo de una sola cuerda y sin plantilla lleva `dos_firmes`: con varias cuerdas, cada una ya lleva su nombre, y en un nudo de plantilla la plantilla dice qué nombres lleva cada paso.
+  - **La mariposa** lleva `dos_firmes: true`, y su texto dice «el otro firme» donde decía «el chicote». Su `modelo.json` solo cambia en el texto de los pasos, y la ficha sigue cabiendo. La skill `nudo-nuevo` dice ahora que un nudo en medio de la cuerda lleva `dos_firmes` y que su texto no dice «chicote».
+  - **Los nudos publicados no cambian:** se construyeron e imprimieron desde `main` antes del cambio y después en la rama, y sus `modelo.json` son iguales byte a byte, igual que sus 67 imágenes en RGB, incluidas las de la página de prueba.
+  - Pasan 394 pruebas. La que dibuja dos veces la misma imagen falló una vez en la suite, que corría junto con la impresión de los publicados, y pasó al correrla sola: es la variación conocida del navegador.
+
+**El destorcedor del nudo aguja (tanda 2).** El nudo aguja de la página 25 del manual de la Tropa se ata al ojo de un destorcedor. En el dibujo, el destorcedor es un disco parado sobre la mesa: la cuerda le da media vuelta por fuera, a ras de la mesa, y el nudo se hace en el firme, a unos 10 diámetros de él. Ninguno de los anfitriones que había sirve: el poste es una barra horizontal de madera. El 13 de noviembre, Gabriel eligió un anfitrión nuevo, un cilindro corto parado sobre la mesa como ojo del destorcedor. Es una tarea de código, como T5.
+
+**Diseño (14 de noviembre de 2026; Gabriel lo aprobó el mismo día):**
+- **El tipo y sus medidas:** `anfitrion: {tipo: destorcedor, radio: 1.5, alto: 2}`. Es un cilindro de eje vertical en x = y = 0, apoyado en la mesa, de `radio` y `alto` en diámetros de cuerda. Está fijo en el origen, como el centro de la cruz y del tubo, para tener menos campos y para que al voltear el nudo quede en el mismo lugar (ver abajo).
+  - `radio` es de medio diámetro de cuerda o más, como los demás anfitriones. En el dibujo del manual, el disco mide unas siete cuerdas de ancho, como un destorcedor de verdad junto a un sedal. El radio del nudo aguja se elige al dibujarlo: si conviene, más chico, para que el nudo no salga chico en la ficha.
+  - `alto` tiene que ser mayor que 1, para que la cuerda que lo rodea, que va a ras de la mesa, no quede por encima de él. Solo cambia el dibujo; la cuerda nunca pasa por encima.
+- **Los segmentos van sobre la mesa,** como `[x, y]`. Un segmento `{poste: …}` con el destorcedor es un error al cargar. La cuerda que lo rodea se traza con su eje a `radio + 0,5` del centro, o un poco más, con puntos cada medio diámetro, para que la curva suave no lo corte por dentro.
+- **Cómo se construye:** como un nudo libre (`nudos/libre.py`), con la misma curva, la misma elevación en los cruces y la misma relajación, con gravedad y suavizado. La diferencia es que, en la relajación, la cuerda no puede entrar en el destorcedor: después de cada corrección de choques, lo que entró se empuja hacia afuera en el plano de la mesa, hasta tocarlo, a cualquier altura (`empujar`, como el del poste). La comprobación agrega la del poste: la cuerda no entra en él más de 0,05 diámetros (`penetracion`).
+- **Los cruces** se buscan en la proyección desde arriba, como sin anfitrión: la cuerda no sale de la mesa, así que no hace falta ninguna superficie desenrollada.
+- **El nudo terminado por detrás** se voltea como sin anfitrión (`libre.voltear`): la cuerda se voltea como una página, se vuelve a relajar con el destorcedor y todos los cruces quedan al revés. Como el destorcedor está en x = 0 y es simétrico, volteado queda en el mismo lugar. Se mira desde arriba, como los nudos sin anfitrión, y no desde el otro lado, como el poste: un nudo plano mirado desde el otro lado de la mesa sigue mostrando su cara de arriba. La ficha dice: «Por detrás es como lo ves si volteas el nudo con el destorcedor como la página de un libro».
+- **El apretado** es el de un nudo libre, por delante y por detrás, con el destorcedor empujando la cuerda y la comprobación de penetración en cada ronda. Si la gaza que lo abraza queda a menos de 6 diámetros de un cruce, se acorta y se ajusta alrededor del destorcedor, sin entrar en él.
+- **En la escena** (`render/escena.js`), un cilindro de metal, gris acero (metálico y algo brillante, para que no se confunda con la madera de los palos), parado en el origen, de la mesa hasta `alto`. Echa y recibe sombra, y su eje entra a la sombra de contacto como el de los palos. `altoDeEncuadre` cuenta su alto. Lo ve también el visor del sitio, que usa la misma escena. Si en las imágenes de prueba no se reconoce como un destorcedor, se le puede dar después la forma de una argolla gruesa sin cambiar el formato.
+- **En la hoja de revisión** (`nudos/hoja.py`), el destorcedor se dibuja en gris, como un cilindro, en las dos vistas: desde arriba, un disco; a 55°, un cilindro corto. `hoja()` recibe el anfitrión aparte, como el mapa del tubo, porque `modelo.json` no lo lleva y no tiene por qué cambiar. Lo pasan `python -m nudos hoja` y `python -m nudos revision`.
+- **La estaca del tensor ajustable,** que es de madera y más alta, es el mismo sólido con otro tipo (`tipo: estaca`), otro material en la escena y otras palabras en la ficha: en la imagen de la entrada, la cuerda le da la vuelta a ras del suelo y el nudo se hace en el firme, como en el nudo aguja. No se agrega ahora, sino con el tensor ajustable, como se decidió en T5: ningún anfitrión sin un nudo que lo pruebe. Queda por decidir cómo se mira por detrás, porque una estaca clavada no se voltea.
+- **Formato v1.3, un cambio compatible:** el tipo `destorcedor` en «Anfitrión», con su tabla de medidas, lo que cambia en «Nudo terminado», «Dónde se buscan los cruces» y «Qué se comprueba», y su línea en el registro. Ninguna especificación usa el tipo nuevo, así que los nudos publicados se cargan igual y dan el mismo `modelo.json`.
+- **Lo que no cambia:** el camino de los nudos sin anfitrión y el del poste. Para comprobarlo, se construyen e imprimen los 12 nudos de `publicados.txt` desde `main` antes de tocar el código y otra vez al final, y se comparan los `modelo.json` byte a byte y las imágenes en RGB.
+- **Pruebas** (`tests/test_destorcedor.py`), con un nudo de prueba que no es del libro, una gaza alrededor del destorcedor cerrada con un cruce:
+  - la carga: sin `alto` o con `alto` de 1 o menos es un error, igual que un segmento `{poste: …}`;
+  - construye sin fallas y la cuerda no entra en el destorcedor, ni en los pasos ni en el reverso ni en los dos apretados;
+  - el reverso tiene la secuencia invertida;
+  - un trazado que pasa por dentro del destorcedor sale empujado hasta su borde;
+  - la escena lleva el destorcedor, con su tipo, su radio y su alto.
+- **Archivos:** `nudos/spec.py`, `nudos/anfitrion.py`, `nudos/libre.py`, `nudos/construir.py`, `nudos/apretar.py`, `nudos/imprimir.py`, `nudos/ficha.py`, `nudos/hoja.py`, `nudos/revision.py`, `nudos/__main__.py`, `render/escena.js`, `docs/formato-spec.md`, la tabla de «Elige el generador» de la skill `nudo-nuevo` y `tests/test_destorcedor.py`.
+- **Después,** el nudo aguja se dibuja con la skill sobre el destorcedor, como un borrador más.
+
+**Cómo se hizo (14 de noviembre de 2026).** Está como en el diseño.
+- **El código:** `Anfitrion.en_la_mesa` (`nudos/spec.py`) marca los anfitriones con los que todo el nudo va sobre la mesa; hoy es solo el destorcedor. Con ellos, `libre.construir_paso`, `libre.voltear` y `apretar.apretado` siguen el camino de un nudo libre y le pasan a la relajación el sólido (`Destorcedor`, en `nudos/anfitrion.py`) y a la comprobación su penetración (`penetracion_destorcedor`). El camino sin anfitrión no cambió: con `anfitrion=None` y `medir=None`, la relajación y la comprobación son las de antes.
+- **La escena** dibuja un cilindro gris acero. Sin un mapa de entorno, el metal muy metálico se veía negro, así que va con `metalness` 0,55. **La hoja de revisión** lo dibuja como esferas grises sobre su superficie.
+- **Las pruebas** (`tests/test_destorcedor.py`) usan una gaza de prueba cerrada con un cruce.
+- **Los nudos publicados no cambian:** se construyeron e imprimieron los 12 de `publicados.txt` desde `main` (6a0d249), antes de tocar el código, y otra vez en la rama. Los 12 `modelo.json` son iguales byte a byte, y 176 de las 180 imágenes son iguales en RGB. Las otras 4 son de la vuelta de escota, con 3 a 15 píxeles distintos en 1 nivel. Es la variación del navegador: impresa otra vez desde `main` en un worktree aparte, la vuelta de escota también difiere de la referencia en 4 imágenes, otras y con pocos píxeles.
+- Pasan 412 pruebas y 2 se saltan. La que dibuja dos veces la misma imagen falló en la suite y pasó al correrla sola: es la variación conocida del navegador.
+- **El nudo aguja:** cinco pasos y siete cruces. El chicote da dos vueltas al firme hacia el destorcedor y una y media al tramo que vuelve, alejándose de él. Rectos, el firme y el tramo que vuelve se estiraban más de 2 % al pasar por encima del chicote, y el reverso se comprimía 8 % entre los cruces 3 y 6. Con las vueltas de radio 1,75 y una onda de 0,5 en los dos tramos, como dos cuerdas torcidas, no queda ninguna falla. El terminado apretado se parece mucho al dibujo 3 del manual. Gabriel aprobó su hoja de revisión el mismo día, y el nudo pasó a `modelado`.
+
+**Filtro 1 y publicación de la tanda 2 (15 de noviembre de 2026).** Gabriel ató el rizo, el pescador, el pescador doble y el nudo aguja con las fichas de 6005d98, y los cuatro pasaron. En el nudo aguja confirmó las vueltas y el cruce 1, y en el pescador, los encima/debajo que salieron de las fotos del doble. Están en `cuerda-ok` y en `publicados.txt` (2943ac8), y en el sitio, construido desde 2943ac8 (`gh-pages` 964a4f3). Los cuatro visores cargan en línea sin errores en la consola, y el del nudo aguja muestra el destorcedor.
+
+**Punto de control de la tanda 2 (15 de noviembre de 2026; Gabriel lo cerró el mismo día y pidió arrancar la tanda 3 como se propone abajo):**
+- **Los cuatro nudos están en el sitio** y en `cuerda-ok`, con su filtro 1. Ninguno llega a `publicado`, porque el filtro 2 sigue en pausa. El sitio tiene 16 nudos.
+- **La suite pasa:** 416 pruebas, y 1 se salta. Los 12 nudos publicados antes siguen iguales a la referencia de a62f791: se compararon al entrar el destorcedor (6005d98), y desde entonces no cambió el código que los construye.
+- **Lo que conviene revisar:**
+  - Tres números ABOK sin confirmar de esta tanda: el rizo (1402), el pescador (1414) y el pescador doble (294). El nudo aguja no lleva. Siguen pendientes los del simple, el arnés de hombre y la silla de bombero.
+  - El ocho sigue sin el paso de preparar la cuerda.
+  - El filtro 2: la propuesta sigue siendo retomarlo al menos una vez por tipo de nudo antes de su tanda. La tanda 3 es sobre anfitrión, como el ballestrinque.
+  - La tarea aparte de las pruebas de dibujo que fallan por el navegador. En las dos últimas corridas, la suite pasó entera.
+- **Lo que viene, la tanda 3: sobre anfitrión.** Son diez nudos. Lo que proponen sus entradas:
+  - **Sobre el poste, sin código nuevo:** el ballestrinque doble, porque la fuente dice que el esfuerzo tira a lo largo del mástil; la vuelta de braza, la media llave y dos cotes, el fugitivo, el constrictor, el nudo de liberación rápida y la presilla de alondra. El tensor también: en las fotos va en medio de la cuerda y su chicote da la vuelta a un gancho, que puede ser el poste, con el extremo fijo saliendo del encuadre por arriba.
+  - **El prusik** se ata con un cordino cerrado alrededor de otra cuerda. La propuesta es dibujarlo como un nudo libre de dos cuerdas, sin anfitrión: la cuerda gruesa, recta, y el cordino como una gaza cuyos dos tramos salen del encuadre, donde lo cierra un pescador doble, que ya tiene su ficha. No necesita código. Sus usos de escalada y rescate van como conocimiento (D1), como en la silla de bombero.
+  - **El tensor ajustable** va sobre una estaca, la tarea de código que quedó anotada con el destorcedor: el mismo sólido, con `tipo: estaca`, de madera y más alto. Falta decidir cómo se ve por detrás. La propuesta es como el destorcedor: se voltea el nudo como una página, como si sacaras la estaca.
+  - **La forma de trabajar** es la misma: una sesión por nudo, de a tres, y la estaca como tarea aparte, con un diseño que Gabriel aprueba antes del código.
+
+**Gastar menos tokens en los borradores (15 de noviembre de 2026; Gabriel aprobó las cuatro medidas el mismo día).** Se midieron cinco borradores de las tandas 1 y 2 en sus transcripciones: cada uno hizo de 70 a 120 llamadas al modelo, y su contexto creció de unos 84 mil tokens a entre 340 y 490 mil. Cada llamada vuelve a leer todo el contexto, así que cada borrador releyó de 17 a 38 millones de tokens. Lo que más pesaba era el razonamiento, unos 130 mil tokens del contexto final, porque las sesiones heredaban el esfuerzo máximo de la configuración; después venían lo fijo al arrancar, unos 82 mil, los resultados de las órdenes, las imágenes (de 30 a 40 lecturas) y de 15 a 38 scripts propios por borrador para medir radios, separaciones y cruces, o para ampliar las imágenes.
+- **Esfuerzo medio** en las sesiones de borrador (`effort` al arrancarlas). La primera prueba es el siguiente nudo del poste de la tanda 3, que se compara con el ballestrinque doble y la vuelta de braza, arrancados antes con el esfuerzo de siempre. Si lee peor los cruces, se vuelve a subir.
+- **`python -m nudos diagnostico <slug> [--pasos 2,4-5] [--todo]`** (`nudos/diagnostico.py`): construye solo esos pasos, en segundos, y dice en pocas líneas qué falla (`!!`) o no cumple la skill (`!`): el radio del trazado antes de relajar, sobre la mesa; la separación, la curvatura y el estiramiento de la cuerda relajada, con hasta tres lugares por medida; lo que mide el anfitrión, y dónde quedó cada cruce y cuánto se movió. Cada lugar se nombra con el punto de control más cercano a lo largo de la cuerda, como `gaza[3]`. Con `--todo` mide también el error común, el nudo por detrás y los dos apretados. Además, `python -m nudos ampliar <imagen> --zona x0,y0,x1,y1` deja en `revision/_ampliadas/` una copia ampliada con cuadrícula, y `hoja --pasos` dibuja solo los pasos que se piden. No cambia cómo se construye nada.
+- **Menos contexto fijo:** `.claude/settings.json`, que leen también los worktrees, apaga en este proyecto los plugins que no usa: datos, diseño (taste-skill), gestión de plugins y agent-skills. Gabriel ya había apagado los conectores de Google y Spotify.
+- **La skill lee lo justo:** del formato, solo las secciones que usa un borrador; una sola especificación de ejemplo; cada imagen una vez, y después solo la zona de un cruce dudoso con `ampliar`; `diagnostico` mientras corrige y `construir` al final, sin scripts propios.
+- **Medido con esfuerzo medio (16 nov):** la media llave y dos cotes, el fugitivo y el nudo de liberación rápida hicieron de 29 a 35 llamadas, terminaron con 170 a 230 mil tokens de contexto y releyeron de 3,8 a 6,3 millones de caché. El ballestrinque doble y la vuelta de braza, con el esfuerzo de siempre, hicieron de 76 a 89 llamadas, terminaron con 360 a 430 mil y releyeron de 20 a 25 millones. Es de cuatro a seis veces menos. Falta que Gabriel compare la calidad de sus lecturas de cruces al revisar las hojas.
+- **La hoja de revisión dibuja el poste y la cruz (16 nov; Gabriel lo pidió el mismo día).** Antes solo dibujaba la cuerda, el destorcedor y la estaca, y la vista a 55° se centraba en la mesa: un nudo sobre el poste, como el fugitivo, salía del cuadro. Ahora `nudos/hoja.py` dibuja el poste y los dos palos de la cruz color madera, cortados en el encuadre más un margen, y la vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos (0141d12, de la sesión del fugitivo). La ficha, las imágenes de impresión y el visor no cambian: no usan la hoja. Pasan 450 pruebas y 1 se salta (`tests/test_hoja.py` es nueva).
+- **Los tres borradores en `main` (16 nov).** Gabriel revisó las hojas de la media llave y dos cotes, el fugitivo y el nudo de liberación rápida, ya con el poste, y los aprobó. Pasaron a `modelado`, sus fichas caben y pasan 453 pruebas. Falta el filtro 1.
+- **Los últimos cuatro en `main` (16 nov).** Gabriel aprobó las hojas del tensor, el constrictor, la presilla de alondra y el prusik tal como están, también la versión de liberación rápida del tensor. Pasaron a `modelado`, sus fichas caben y pasan 457 pruebas. Con esto, los diez nudos de la tanda 3 tienen especificación; les falta el filtro 1. Gastaron como los otros de esfuerzo medio: de 25 a 43 llamadas y de 3,2 a 8,9 millones de caché releída.
+- **Filtro 1 y publicación (16 nov).** Gabriel ató los diez con cuerda real, con sus fichas, y todos salieron bien. Pasaron a `cuerda-ok`, con el filtro 1 anotado en cada especificación, y entraron a `publicados.txt`: el sitio tiene 26 nudos. Se publicó desde 272df85 (`gh-pages` 6f9d35a), y los visores cargan en línea sin errores en la consola.
+
+**Punto de control de la tanda 3 (16 de noviembre de 2026; Gabriel lo cerró el mismo día):**
+- **Los diez nudos están en el sitio** y en `cuerda-ok`, con su filtro 1. Ninguno llega a `publicado`, porque el filtro 2 sigue en pausa. El sitio tiene 26 nudos.
+- **La suite pasa:** 457 pruebas, y 1 se salta. Los 16 nudos publicados antes siguen iguales a la referencia de 74e1b1b: se compararon al entrar la estaca, y desde entonces solo cambió la hoja de revisión, que no se usa para construir ni imprimir.
+- **Lo que cambió en la forma de trabajar:** los borradores arrancan con esfuerzo medio y usan `diagnostico` y `ampliar`. Gastaron de cuatro a seis veces menos, y Gabriel no vio peores lecturas de cruces: los diez pasaron el filtro 1. La hoja de revisión dibuja el poste y la cruz.
+- **Lo que conviene revisar:**
+  - Números ABOK sin confirmar: el constrictor (la sesión puso 1249 y la fuente dice 1188), la presilla de alondra, que no lleva, y los de las tandas anteriores.
+  - En el prusik, el otro tramo del cordino lleva «Chicote». Con dos cuerdas no se puede usar `dos_firmes`: es una tarea de código.
+  - El tensor es el de liberación rápida, y su remate con dos cotes no se dibuja.
+  - El ocho sigue sin el paso de preparar la cuerda, y el filtro 2 sigue en pausa.
+
+**Propuesta de la tanda 4: plantillas (16 nov; Gabriel la aprobó el mismo día, también que el puño de mono no usa nada de la cabeza de turco, y pidió arrancar los tres primeros diseños).** Son seis nudos, y ninguno se dibuja punto por punto: todos necesitan código, como el amarre cuadrado en T7. Cada uno es una tarea de código con la forma de T5 y T7: su sesión propone el diseño, Gabriel lo aprueba, se programa, se comprueba que los 26 publicados no cambian y después se escribe la especificación.
+- **Amarre diagonal, sobre la cruz que ya existe.** Una plantilla nueva, `amarre-diagonal`, que reusa lo del amarre cuadrado: una vuelta de braza alrededor de los dos palos, en diagonal; vueltas en una diagonal y después en la otra; ahorcados entre los palos, y un ballestrinque de cierre. Los palos siguen en ángulo recto: la fuente dice que el diagonal sirve para cualquier ángulo, y el recto es el más fácil de leer. No necesita anfitrión nuevo, así que es el primero.
+- **Amarre redondo y amarre trípode, sobre palos paralelos.** Un anfitrión nuevo, `palos`, con dos o tres palos acostados uno junto al otro a lo largo de x. El redondo: un ballestrinque en un palo, vueltas alrededor de los dos y un ballestrinque de cierre, con o sin ahorcados (la fuente lleva dos o tres). El trípode: vueltas en ocho entre los tres palos, ahorcados en los dos huecos y un ballestrinque de cierre; la ficha lo muestra atado sobre la mesa y explica con texto cómo se abren las patas. Los dos son la misma tarea, porque comparten el anfitrión.
+- **Refuerzo de cabo, sobre el extremo de una cuerda.** Un anfitrión nuevo, `cabo`: el mismo cilindro acostado que el poste, con su forma de buscar los cruces, pero dibujado como cuerda gruesa y con un extremo cortado. La cuerda del nudo es el cordel: unas vueltas sobre el cabo, un seno a lo largo de él, más vueltas encima y el extremo por el seno. Una plantilla, `refuerzo-de-cabo`, con el número de vueltas.
+- **Adujado, libre sobre la mesa.** Una plantilla, `adujado`: senos que se alternan, unas vueltas alrededor de la aduja y un seno que pasa por ella y se abre por encima. Son muchos cruces, así que la plantilla escribe su secuencia, como el amarre cuadrado. Se propone con pocos senos (cuatro) para que se lea en la ficha.
+- **Puño de mono.** Una plantilla, `puno-de-mono`: tres juegos de tres vueltas, cada uno alrededor del anterior, y el remate escondido en el centro. Se propone sin bola en el centro, como se ata en los dedos, y con su forma de buscar los cruces, que no es la del tubo. No usa nada de la cabeza de turco, que sigue provisional: ni el tubo ni su plantilla. Gabriel confirma si es así.
+- **El orden:** primero el amarre diagonal, porque usa la cruz; después los palos paralelos, con el redondo y el trípode, y el cabo. El adujado y el puño de mono van al final, porque son los de más cruces. Los diseños se pueden pedir a la vez, en tres sesiones; el código va de a uno, porque los anfitriones nuevos tocan los mismos archivos (`nudos/spec.py`, `nudos/anfitrion.py`, `render/escena.js` y `nudos/hoja.py`).
+
+**El adujado (tanda 4).** La entrada (`entradas/adujado/`) son 21 fotos de un mismo método y su descripción. Se empieza dejando el extremo más largo que la aduja, para que quede afuera. Se hacen senos que se cierran sobre el tramo que viene del extremo, uno por encima y el siguiente por debajo, para no torcer la cuerda. La aduja se junta por la mitad, de modo que queda larga y angosta, con un ojo en cada punta. Con lo que queda de cuerda se dan vueltas apretadas alrededor de la mitad, avanzando hacia una punta. Después se mete un seno de la cuerda por el ojo de esa punta, se abre, se pasa por encima de la punta y queda abrazando la aduja junto a las vueltas. Se tira del chicote para cerrarlo. La descripción dice además que, para usarla, se deja en el suelo con el extremo del principio abajo, y la cuerda sale sin enredarse.
+
+**Diseño (17 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las siete decisiones del final tal como están):**
+- **Sin anfitrión.** Es la primera plantilla que va libre sobre la mesa: no hay sólido, y la aduja es la misma cuerda. Hoy `nudos/spec.py` pide que toda plantilla vaya sobre su anfitrión. Pasa a aceptar `ANFITRION = None`, que quiere decir sin anfitrión: entonces la especificación no lleva `anfitrion`, y si lo lleva es un error al cargar. Las demás plantillas siguen igual.
+- **La aduja es plana, no un manojo redondo.** Bajo las vueltas, los tramos de la aduja van uno junto a otro sobre la mesa, en una banda. Con 4 senos son 8 tramos, 4 de cada lado del óvalo, y la banda mide unos 8,5 diámetros de ancho. Se pensó juntarlos en un manojo redondo, como en la mano. No conviene, por dos razones:
+  - En un manojo, unos tramos quedan encima de otros en el mismo lugar visto desde arriba, y los cruces no se pueden buscar en la proyección. Haría falta un mapa desenrollado alrededor del manojo, como en el cabo. Pero aquí no hay cilindro: los tramos del manojo son la misma cuerda que se abre en los ojos, y no tienen un ángulo fijo alrededor de un eje.
+  - En una banda plana, todo se busca en la proyección desde arriba, que es la de los nudos libres (zona `MESA`), sin mapas nuevos. La foto de la aduja ya juntada también se ve ancha y baja.
+- **Medidas y límites:**
+
+  ```yaml
+  plantilla:
+    tipo: adujado
+    senos: 4       # de 3 a 6
+    vueltas: 4     # de 3 a 8
+  pasos:
+    - {titulo: Haz los dos primeros senos, texto: …, hasta: seno-2}
+    - {titulo: Haz los demás senos, texto: …, hasta: senos}
+    - {titulo: Junta la aduja y da la primera vuelta, texto: …, hasta: vuelta-1}
+    - {titulo: Da las demás vueltas, texto: …, hasta: vueltas}
+    - {titulo: Pasa un seno por el ojo, texto: …, hasta: por-el-ojo}
+    - {titulo: Pasa el seno por encima de la punta, texto: …, hasta: por-encima}
+    - {titulo: Tira del chicote, texto: …, hasta: tirar}
+  ```
+
+  - `senos` va de 3 a 6, y se propone 4, como en la propuesta de la tanda 4. La fuente da unos 8, pero con más de 4 la banda pasa de 8 tramos y las vueltas no se leen en la ficha. `vueltas` va de 3 a 8; se propone 4. En el texto, `{senos}` y `{vueltas}` salen en letras.
+  - `hasta` puede ser, en este orden: `seno-1` … `seno-<n>`, `juntar` (la aduja juntada, sin vueltas), `vuelta-1` … `vuelta-<m>`, `por-el-ojo`, `por-encima` y `tirar`. `senos` es lo mismo que `seno-<n>` y `vueltas` que `vuelta-<m>`. Los pasos van en ese orden y el último llega a `tirar`. Un `hasta` que no existe es un error al cargar, como en el amarre.
+  - Son 7 pasos. El primero muestra dos senos, para que se vean juntos uno por encima y otro por debajo. Juntar la aduja va en el texto del paso 3, porque su imagen ya la muestra juntada; `juntar` queda disponible, como `colocar` en el refuerzo.
+- **Al revés que la fuente, de izquierda a derecha.** En las fotos el extremo sale por la derecha y las vueltas avanzan hacia la izquierda. Aquí el extremo sale por la izquierda, las vueltas avanzan hacia la derecha y el seno pasa por el ojo de la derecha, en el sentido en que se lee, como el refuerzo de cabo. Es la imagen en un espejo: el adujado no tiene un lado que importe, y los encima/debajo de la secuencia son los del espejo.
+- **Geometría.** La plantilla calcula la cuerda de cada hito entera, como el refuerzo de cabo, porque juntar la aduja y pasar el seno por encima cambian el principio de la cuerda. Todo va sobre la mesa, y cada tramo sube un diámetro donde pasa sobre otro.
+  - **La aduja abierta** (pasos 1 y 2): óvalos uno dentro de otro, el primero de 24 × 12 diámetros, con el eje largo en x, y cada seno 1,1 más afuera que el anterior. El extremo entra por la izquierda, a lo largo de y = 0, hasta dentro del primer óvalo. Ahí la cuerda dobla y da la vuelta al óvalo en sentido contrario al reloj, visto desde arriba. Cada seno se cierra en la punta izquierda pasando sobre el extremo o bajo él, y sigue al óvalo siguiente. El seno 1 pasa por encima, el 2 por debajo y así. Fuera de la aduja, el extremo queda en la mesa, unos 4 diámetros más allá del último óvalo.
+  - **La aduja juntada** (desde el paso 3): los mismos senos, aplastados por la mitad. Los dos lados de cada óvalo se juntan en la banda, en el mismo orden en que estaban: los senos de adentro, al medio. La banda va de x = −2 a x = 5,5, y fuera de ella cada lado se abre otra vez en los ojos, que conservan los 24 diámetros de largo. Sobre la banda, los tramos van a 1,05 uno de otro. Donde hay vueltas debajo, la banda se apoya en ellas, un diámetro sobre la mesa.
+  - **Las vueltas** empiezan en x = −1,5 y avanzan 1,1 hacia la derecha. La cuerda llega por delante de la aduja, desde la punta izquierda, sube por delante, pasa sobre la banda hacia atrás, baja por detrás y vuelve por debajo. Por arriba cada vuelta va derecha, a lo ancho. Por debajo va corrida media vuelta, 0,55 más a la derecha: si fueran una sobre otra, la proyección desde arriba las juntaría en una sola línea y los cruces no se podrían buscar. En la cuerda real la vuelta va igual de recta por arriba y por abajo; la diferencia queda bajo la aduja y desde la cámara de los pasos no se ve.
+  - **El seno por el ojo** (paso 5): la cuerda sale de la última vuelta por arriba y entra al ojo de la derecha, entre los tramos de delante y los de atrás. Ahí baja, pasa bajo la punta del ojo y sale a la mesa más allá de ella, en un seno de unos 6 diámetros. La otra rama del seno vuelve a subir por el ojo y va hacia la izquierda por encima de las vueltas, hasta el chicote, que cae a la mesa detrás de la aduja.
+  - **El seno por encima** (paso 6): el seno, abierto, rodea la aduja entre la última vuelta y el ojo. Pasa por arriba sobre la banda y sobre sus dos ramas, que entran al ojo, y por debajo bajo la banda, corrido igual que las vueltas. Va suelto, a unos 2 diámetros de la última vuelta, para que se vea que todavía no está cerrado.
+  - **Tirar** (paso 7): la misma cuerda, con el seno apretado contra la última vuelta y el chicote más largo. Los cruces son los mismos que en el paso 6, así que conservan sus etiquetas.
+  - **En cada paso,** lo que sigue de la cuerda después del hito sale de la aduja hacia atrás y cae a la mesa sin cruzar nada, para que no tape lo que se está haciendo. En los pasos 1 y 2 sale de la punta izquierda; en los 3 y 4, de la última vuelta por detrás.
+  - **Lo que se resalta** lo dice la plantilla, como en el refuerzo (`inicio` y `fin` de `TrazoDePaso`): en los senos y las vueltas, lo que agrega el paso; en el paso 5, el seno desde la última vuelta hasta el chicote; en el 6, el seno que rodea la aduja, y en el 7, el chicote.
+- **Cruces.** Se buscan como en un nudo libre: en la proyección desde arriba, donde encima es lo más alto. La plantilla escribe la secuencia del método: cada seno pasa sobre el extremo o bajo él, alternando; cada vuelta pasa por arriba sobre los tramos de la banda y por abajo bajo ellos; el seno por el ojo pasa bajo la punta del ojo, y su rama que vuelve, sobre las vueltas; el seno por encima pasa sobre la banda y sobre sus dos ramas, y bajo la banda.
+  - Con `n` senos y `m` vueltas, `seno-<k>` tiene k cruces y `juntar`, n. `vuelta-<j>` tiene n + 4nj: cada vuelta cruza los 2n tramos de la banda dos veces, una por arriba y otra por abajo. `por-el-ojo` tiene n + 4nm + 2n + m, y `por-encima` y `tirar`, n + 4nm + 4n + 2 + m. Con 4 y 4 son 1 a 4, 4, 20 a 68, 84 y 90. Si la geometría da alguno más, como en el refuerzo, la plantilla lo cuenta y el plan lo anota.
+  - Las etiquetas son números y no cambian mientras el cruce sea el mismo. Al juntar la aduja, los cruces de los senos con el extremo se mueven pero son los mismos, y conservan su etiqueta. En el paso 6, los cruces del seno con la punta del ojo desaparecen y los del seno que rodea la aduja son nuevos, con etiquetas nuevas. Así la consistencia entre pasos y los cruces que saltan se comprueban sin cambiar `consistencia` ni `cruces_que_saltan`.
+- **Que la cuerda no se atraviese:** ningún tramo queda a menos de 0,97 de otro, la curvatura mínima es 0,9 y el estiramiento máximo es 2 %. Son los límites de siempre, y no se aflojan. No hay medida de penetración, porque no hay anfitrión. La relajación es la de las plantillas: sin gravedad, con choques.
+- **Error común** (`variante: sin-alternar`, desde `seno-2`): todos los senos pasan por encima del extremo. La cuerda se tuerce un poco en cada seno; al soltar la aduja, las torceduras salen como cocas y se enreda. Es la misma cuerda que el paso 1 con el cruce del seno 2 al revés. Se muestra junto al paso 1, con su encuadre, y el seno 2 va en ámbar, así que se ve si pasa por encima o por debajo.
+  - **Sin imagen** (`error.otros`), dos errores. El primero es pasar el seno por el ojo y tirar sin pasarlo por encima de la punta: el seno sale por el ojo y las vueltas se sueltan. El segundo es empezar con el extremo dentro de la aduja: al soltarla, la cuerda sale enredada.
+- **El nudo por detrás:** la aduja volteada como la página de un libro, como los nudos libres (`libre.voltear`). La frase de la ficha es la de los nudos sin anfitrión, que ya existe (`POR_DETRAS[None]`). Por detrás se ve la parte de abajo de las vueltas y del seno.
+- **El apretado:** no hay, como en todo nudo de plantilla. El paso de tirar ya va con el seno apretado.
+- **Los nombres.** El chicote es lo que se mueve, así que lleva «Chicote» en su punta en todos los pasos. Ningún paso tiene firme (`CON_FIRME` vacío). Los dos extremos llevan remate. El texto llama «extremo» al del principio, que no lleva nombre en la imagen.
+- **En la escena y la impresión** no hay nada nuevo: es una cuerda sola, sin anfitrión, como los nudos libres. Se revisa que `nudos/exportar.py`, `nudos/imprimir.py` y `render/escena.js` no supongan que toda plantilla tiene anfitrión.
+- **En la hoja de revisión,** las vueltas tienen 16 cruces cada una en una franja de 1,1 diámetros, y desde arriba no se leen. La hoja del adujado lleva además la aduja vista desde abajo. Cada etiqueta va en la vista donde se ve el tramo de encima: las de la cara de arriba de las vueltas y del seno, desde arriba; las de abajo, desde abajo.
+- **Ficha:** 7 pasos, 6 en la página 1 y 1 en la 2, como el refuerzo de cabo. El error va junto al paso 1. El terminado, por delante y por detrás. Materiales: una cuerda de 5 a 10 m. No hay sección de seguridad: el adujado no sostiene nada. Las precauciones dicen cómo se suelta la aduja para usarla. La familia es «Cuidado de la cuerda», como el refuerzo de cabo, y el número ABOK de la fuente (3089) se confirma con los demás.
+- **Formato v1.8, un cambio compatible** (la gestora lo renumera al integrar): «Plantillas» dice que una plantilla puede ir sin anfitrión, y lleva la del adujado con sus hitos y su variante en «Error común»; su línea en el registro. Ninguna especificación usa nada de esto, así que los nudos publicados se cargan igual. La tabla «Elige el generador» de la skill `nudo-nuevo` lleva la fila del adujado.
+- **Lo que no cambia:** los anfitriones, el camino de los nudos libres y las demás plantillas. Para comprobarlo, como en el refuerzo de cabo: antes del código se construyen e imprimen desde `main` los 26 nudos de `publicados.txt`, en un worktree aparte; al final, lo mismo en la rama. Los `modelo.json` se comparan byte a byte y las imágenes en RGB. Si una imagen difiere en 1 nivel en pocos píxeles, ese nudo se imprime solo antes de concluir nada. Después corre la suite entera.
+- **Pruebas** (`tests/test_adujado.py`, con una especificación de prueba que no es del libro):
+  - la carga: el adujado con anfitrión; `senos` o `vueltas` fuera de rango; un `hasta` que no existe, pasos fuera de orden o un último paso que no es `tirar`; las demás plantillas siguen pidiendo su anfitrión;
+  - construye sin fallas con 4 senos y 4 vueltas, y también con 3 y 3 y con 6 y 8;
+  - el número de cruces de cada hito, el de las fórmulas de arriba;
+  - los cruces de los senos con el extremo conservan su etiqueta al juntar la aduja, y los del paso 6 al tirar; la consistencia entre pasos pasa;
+  - el error tiene los mismos cruces que el paso 1, con el del seno 2 al revés;
+  - el giro por detrás invierte la secuencia;
+  - la escena recibe una sola cuerda sin anfitrión, con «Chicote» en su punta.
+
+  En `tests/test_hoja.py`, la hoja del adujado tiene la vista desde abajo.
+- **Archivos:** `nudos/spec.py` (la plantilla sin anfitrión), `nudos/plantillas/adujado.py` (nuevo), `nudos/plantillas/__init__.py`, `nudos/plantillas/pasos.py` (`geometria()` y un paso sin sólido ni medida de penetración), `nudos/hoja.py` y `nudos/__main__.py` (la vista desde abajo), lo que haga falta en `nudos/exportar.py` y `nudos/imprimir.py` si suponen un anfitrión, `docs/formato-spec.md`, la tabla de la skill `nudo-nuevo`, `tests/test_adujado.py` y `tests/test_hoja.py`. Después, `specs/adujado.yaml`, con texto propio, en `borrador` hasta que Gabriel revise sus imágenes.
+- **Riesgos.** El primero es el largo: la cuerda mide unos 380 diámetros, más del doble que el refuerzo, y construir cada paso puede tardar. Si tarda demasiado, se achica la aduja a 20 × 10, que es lo que más pesa. El segundo es el paso 6: el seno que rodea la aduja pasa sobre sus propias ramas justo donde entran al ojo, y puede no caber a un diámetro. Si no cabe, el seno se corre hacia la última vuelta o se agranda el ojo, mirando las imágenes. Los límites no se aflojan. El tercero es que 8 tramos con 4 vueltas no se lean en la ficha; eso se ve en las imágenes, y si pasa, se baja a 3 senos.
+- **Lo que decide Gabriel:**
+  1. La aduja juntada como una banda plana de tramos sobre la mesa, no un manojo redondo, para buscar los cruces desde arriba como en un nudo libre.
+  2. Las medidas: 4 senos y 4 vueltas, con la aduja abierta de 24 × 12 diámetros.
+  3. Al revés que la fuente: el extremo a la izquierda, las vueltas hacia la derecha y el seno por el ojo de la derecha.
+  4. Los 7 pasos, con los dos primeros senos en el paso 1 y juntar la aduja en el texto del paso 3.
+  5. El error con imagen: todos los senos por encima del extremo, junto al paso 1. Sin imagen: no pasar el seno por encima de la punta y empezar con el extremo dentro de la aduja.
+  6. Las vueltas y el seno de la parte de abajo, corridos media vuelta respecto de los de arriba.
+  7. Por detrás, la aduja volteada como una página, igual que los nudos libres.
+
+**Cómo se hizo (17 de noviembre de 2026).** Con el diseño, salvo lo que sigue. Está en `nudos/plantillas/adujado.py` y `specs/adujado.yaml`.
+- **La cuerda no se relaja.** Al relajar, las vueltas, apretadas alrededor de la banda, tiraban de la cuerda y la comprimían hasta los senos y el seno por el ojo, que se doblaban sobre sí mismos. Dejar quietas solo las vueltas no bastó. La plantilla traza ahora toda la cuerda sin que nada se toque ni se doble de más (`quietos` en todos los puntos, como la vuelta de braza del amarre diagonal), y `construir` ni siquiera llama a la relajación. Así cada paso tarda unos segundos.
+- **La altura** se apila como en el refuerzo de cabo, pero en la planta: un punto va sobre lo que tiene debajo tanto como pide el contacto, √(1,03² − d²) a una distancia d, y no un diámetro entero. Las subidas y bajadas se suavizan, y entre dos pasadas por encima a menos de 3 diámetros la cuerda no baja, salvo el extremo, que alterna. Los costados de las vueltas son media vuelta alrededor del tramo de afuera, 0,3 más afuera que él, para que vistos desde arriba no toquen su línea.
+- **Las medidas cambiaron un poco para que nada se doble:** las puntas de los senos van a 2,8 una de otra (no a 2,4), los ojos se abren en 12 diámetros, el primer seno abierto mide 30 × 13 y las curvas sobre la mesa tienen radio 1,2. Con más senos, la banda se abre más despacio, y con más vueltas la aduja se alarga. Construyen sin fallas 4 y 4, la del libro, y también 3 y 3, 3 y 8, 5 y 6, 6 y 3 y 6 y 8.
+- **El seno que rodea la aduja** no puede ir derecho, como una vuelta: la cuerda que entra al ojo llega a la mesa recién donde los dos tramos del medio se separan, unos 7 diámetros después de las vueltas, y por ahí pasa el seno por debajo. Por arriba va junto a las vueltas, así que por los costados va en diagonal, por fuera de la aduja. En el paso 6 va en el mismo lugar que al tirar, pero 0,8 más alto y más afuera: correrlo lejos de las vueltas movía sus cruces más de lo que permite `cruces_que_saltan`.
+- **Los cruces:** como en el diseño hasta las vueltas. Después cambian dos cosas. La cuerda que sale de la última vuelta pasa sobre los n tramos de delante antes de ir por el medio de la banda hacia el ojo, y el chicote sale del ojo hacia el fondo, sobre los n tramos de detrás, sin volver sobre las vueltas. Además, el seno que rodea la aduja pasa una sola vez sobre la cuerda que entra al ojo. Así, `por-el-ojo` tiene 5n + 4nm y no 3n + 4nm + m, y `por-encima` y `tirar`, 7n + 4nm + 1 y no 5n + 4nm + m + 2. Con 4 y 4 son 1 a 4, 4, 20 a 68, 84 y 93.
+- **El nudo por detrás** se voltea como una página, rígido y sin relajar, con todos los cruces al revés (`voltear_sin_relajar` en `nudos/plantillas/pasos.py`).
+- **La hoja de revisión** lleva debajo la aduja vista desde abajo (`desde_abajo` en `nudos/hoja.py`), solo en `python -m nudos hoja`: la hoja no dibuja etiquetas en sus vistas, así que es otro dibujo de los mismos pasos.
+- **El error** lleva su propio encuadre, cerca de la punta izquierda: con el de los pasos casi no se veía el cruce del segundo seno.
+- **Formato v1.8**, y la fila del adujado en la tabla «Elige el generador» de la skill. Las pruebas están en `tests/test_adujado.py`. Con ellas pasan 599 pruebas y 2 se saltan; las dos que listan los tipos de plantilla ahora incluyen el adujado.
+- **Los nudos publicados no cambian:** se construyeron e imprimieron los 26 de `publicados.txt` desde `main` (e4daa3b), antes de tocar el código, y otra vez en la rama. Los 26 `modelo.json` son iguales byte a byte. De las imágenes, 8 de 6 nudos difirieron en 1 nivel en 1 a 8 píxeles. Impresas otra vez, desde la rama o desde `main`, salen iguales, así que es la variación conocida del navegador. Al final, todas son iguales a la referencia en RGB.
+- **La especificación:** 7 pasos con texto propio, el error y sus dos errores sin imagen. La familia es «Cuidado de la cuerda» y el ABOK, 3089, como en la fuente; Gabriel los confirma. La alternativa, el adujado en ocho, viene de la fuente y no está en el libro. La ficha cabe: 6 pasos en la página 1 y, en la 2, el paso 7, el error, el terminado, la verificación, las precauciones y la alternativa.
+- **Gabriel aprobó las imágenes y el texto el 17 de noviembre:** la especificación pasó a `modelado`. Falta el filtro 1, atarlo con cuerda real siguiendo la ficha. El código entra a `main` después de las otras plantillas de la tanda 4, si entran antes; entonces el formato pasa a la versión que siga y se vuelve a comparar con los publicados.
+
+**El puño de mono (tanda 4).** La entrada (`entradas/puno-de-mono/`) son 24 fotos de un mismo método, su descripción y un dibujo con el método en la mano. En las fotos el molde es una pieza de metal en U con las dos puntas hacia arriba, en lugar de dos dedos. Con el extremo de trabajo se dan tres vueltas alrededor de los dos dedos (el primer juego). El extremo pasa entre los dedos y da tres vueltas alrededor de las primeras, por la mitad, entre los dedos (el segundo juego). Después pasa por dentro de las primeras vueltas y da tres vueltas alrededor de las segundas (el tercero). Se sacan los dedos, se hace un nudo simple en el extremo, se mete en el centro y se aprieta vuelta por vuelta, desde el centro hasta la otra punta de la cuerda. La descripción advierte dos cosas: que es fácil contar mal las vueltas de un juego, y que un puño con peso adentro, lanzado con una cuerda, puede herir a quien lo recibe. También aconseja atarlo con el extremo corto, para no pasar toda la cuerda por las vueltas.
+
+**Diseño (17 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las ocho decisiones del final tal como están):**
+- **Sin anfitrión y sin bola.** Como lo confirmó Gabriel el 16 de noviembre: no usa nada de la cabeza de turco (ni el tubo ni su plantilla, que siguen provisionales y no se tocan), no lleva bola en el centro y no se dibujan los dedos. Es una plantilla sin anfitrión, como la que propone el adujado: `ANFITRION = None`, y la especificación no lleva `anfitrion`. Si el adujado entra antes, esta tarea usa lo suyo; si no, lo agrega igual que dice su diseño.
+  - Sin los dedos, las vueltas de los primeros pasos no flotan: el primer juego queda acostado sobre la mesa, una vuelta sobre otra, y desde el segundo, el puño se apoya en las vueltas que pasan por debajo. En la relajación sin gravedad nada tira de las vueltas sueltas hacia el centro, así que conservan su forma, como en la mano.
+  - Se pensó dibujar dos clavijas paradas, como el molde de las fotos. No se propone: en el grupo se ata en los dedos, y unas clavijas en la ficha harían pensar que hace falta un molde. Queda como salida si las imágenes no se leen (decisión 1).
+- **Los tres juegos y sus ejes.** Cada juego es una banda de `vueltas` vueltas paralelas, a 1,1 una de otra, alrededor de su eje:
+  - **El primero** rodea los dos dedos, que van parados: sus vueltas son horizontales, alrededor de z, y quedan una sobre otra. Así se ven en la cámara de los pasos como en las fotos, desde arriba y de frente. Si fueran verticales, desde quien ata se verían de canto.
+  - **El segundo** rodea el primero por la mitad, alrededor de x: pasa sobre las vueltas del primero por delante y por detrás (en y), y entre los dedos por arriba y por abajo.
+  - **El tercero** rodea el segundo, alrededor de y: pasa sobre el segundo por arriba y por abajo (en z), y por dentro del primero a la izquierda y a la derecha (en x), entre el segundo y los dedos.
+  - Así cada juego queda encima de otro en dos caras opuestas del puño y debajo del tercero en otras dos: el segundo sobre el primero en ±y, el tercero sobre el segundo en ±z y el primero sobre el tercero en ±x. Es lo que traba el puño, y es la secuencia del método.
+  - Las vueltas de un juego avanzan en hélice, sin cruzarse entre sí.
+- **Suelto y apretado.** Hasta meter el nudo en el centro, el puño está suelto, con la forma que le dan los dedos: un óvalo aplastado de unos 13 diámetros de largo en x, 9 de ancho en y y 7 de alto. Los dedos, que no se dibujan, quedarían a unos 4 del centro en x. Apretado, es una esfera: la capa de adentro de las vueltas va a unos 3,5 del centro, y el puño mide unos 10 diámetros. No se aprieta más porque la cuerda tiene que pasar a un diámetro de todo, también donde el chicote entra al centro. En la cuerda real queda más chico, porque las vueltas se aplastan; la imagen muestra la forma, que es lo que se busca.
+- **Las medidas y los pasos:**
+
+  ```yaml
+  plantilla:
+    tipo: puno-de-mono
+    vueltas: 3        # en cada juego
+  pasos:
+    - {titulo: Da tres vueltas alrededor de dos dedos, texto: …, hasta: juego-1}
+    - {titulo: Pasa el chicote entre los dedos, texto: …, hasta: vuelta-2-1}
+    - {titulo: Da las demás vueltas alrededor de las primeras, texto: …, hasta: juego-2}
+    - {titulo: Pasa el chicote por dentro de las primeras vueltas, texto: …, hasta: vuelta-3-1}
+    - {titulo: Da las demás vueltas alrededor de las segundas, texto: …, hasta: juego-3}
+    - {titulo: Saca los dedos y haz un nudo simple, texto: …, hasta: nudo}
+    - {titulo: Mete el nudo en el centro, texto: …, hasta: centro}
+    - {titulo: Aprieta las vueltas, texto: …, hasta: apretar}
+  ```
+
+  - `vueltas` va de 3 a 4, y se propone 3, como en la fuente. Con 4 el puño es más redondo y más grande. En el texto, `{vueltas}` sale en letras.
+  - `hasta` puede ser, en este orden: `vuelta-1-1` … `vuelta-1-<n>`, `vuelta-2-1` … `vuelta-2-<n>`, `vuelta-3-1` … `vuelta-3-<n>`, `nudo`, `centro` y `apretar`. `juego-<j>` es lo mismo que `vuelta-<j>-<n>`. Los pasos van en ese orden y el último llega a `apretar`. Un `hasta` que no existe es un error al cargar, como en el amarre.
+  - Son 8 pasos, uno más que los otros nudos de plantilla. Los cambios de juego van en su propio paso, porque son donde más se equivoca quien empieza: en cada uno, la imagen muestra el paso entre los dedos o por dentro de las primeras vueltas y la primera vuelta del juego nuevo. Sacar los dedos va en el texto del paso 6, porque sin dedos la imagen no cambia.
+- **Geometría.** La plantilla calcula la cuerda de cada hito entera, como el refuerzo de cabo, porque meter el nudo y apretar cambian la cuerda desde el chicote hacia atrás y el puño entero. Cada hito tiene su centro y los semiejes del puño, y todo se apoya en la mesa por lo que queda más abajo.
+  - **Cada vuelta** se traza en el mapa del puño (abajo), como en el cabo: rodea su eje a la distancia que le toca, y sube un diámetro donde pasa sobre otro juego. Entre las caras, donde no cruza nada, baja y sube en rampas suaves.
+  - **El firme** sale de la primera vuelta del primer juego, abajo, hacia atrás y a la izquierda, entre las caras del segundo y del tercero, y baja a la mesa. No cruza nada en ningún paso.
+  - **Los cambios de juego** van por las esquinas del puño, donde se juntan tres caras y no pasa ninguna banda: del primer juego al segundo, por una esquina de arriba, entre los dedos; del segundo al tercero, por otra, entrando al primero. Así no cruzan nada.
+  - **El nudo simple** (paso 6) va en el chicote, sobre la mesa, a la derecha del puño. Al meterlo (paso 7), el chicote entra al centro por una tercera esquina y el nudo queda en el centro, con la misma forma y sin girar: sus tres cruces son los mismos y conservan su etiqueta. Al apretar (paso 8), el puño se cierra alrededor de él.
+  - **En cada paso,** lo que sigue de la cuerda después del hito sale del puño hacia afuera por donde la última vuelta no tiene nada encima, se aleja de las vueltas y cae a la mesa, a la derecha o hacia quien ata, como los restos del amarre. Así no tapa las vueltas ni las cruza.
+  - **Lo que se resalta** lo dice la plantilla, como en el refuerzo (`inicio` y `fin` de `TrazoDePaso`): en las vueltas, lo que agrega el paso, con el cambio de juego; en el paso 6, el nudo simple; en el 7, el chicote desde la última vuelta, y en el 8, nada.
+- **Cruces: la forma propia de buscarlos.** Desde arriba no se pueden buscar: las vueltas del primer juego quedan una sobre otra, y en el puño apretado todo se tapa. En el tubo y el cabo se buscan en un cilindro desenrollado; aquí, en el puño desenrollado como un globo terráqueo:
+  - Cada punto de las vueltas se mira desde el centro del puño. Su dirección, con cada coordenada dividida por el semieje del puño en ese hito, da una longitud y una latitud. Encima es lo más lejos del centro, medido igual. Con los semiejes, el puño suelto y el apretado tienen el mismo mapa, así que un cruce no se mueve de lugar al apretar.
+  - El polo va por dos esquinas opuestas del puño que no usan ni el firme ni los cambios de juego ni el chicote, donde no pasa nada. La longitud es periódica, como el ángulo en el tubo.
+  - Las zonas son tres: las vueltas (en ese mapa), el nudo del centro (desde arriba, solo entre sus propios tramos) y la mesa (desde arriba, como siempre: el firme, el resto y el nudo simple antes de meterlo). Entre zonas no se buscan; ahí la comprobación es solo de separación. Lo que va de una zona a otra, como el chicote que entra al centro o el resto que sale, no entra en ningún mapa.
+  - Es código nuevo. No usa `buscar_en_el_tubo` ni el mapa del cabo.
+- **La secuencia la escribe la plantilla** con el método: cada vuelta del segundo juego pasa sobre cada vuelta del primero en sus dos caras; cada una del tercero, sobre cada una del segundo en las suyas y bajo cada una del primero en las suyas; y el nudo simple tiene sus tres cruces.
+  - Con `n` vueltas por juego, `vuelta-1-<k>` no tiene cruces; `vuelta-2-<k>` tiene 2nk; `vuelta-3-<k>`, 2n² + 4nk, y `nudo`, `centro` y `apretar`, 6n² + 3. Con 3 son 0; 6, 12 y 18; 30, 42 y 54; y 57. Si la geometría da alguno más, como en el refuerzo, la plantilla lo cuenta y el plan lo anota.
+  - Las etiquetas son números y no cambian de un paso a otro: los 54 cruces de las vueltas son los mismos sueltos y apretados, y los del nudo, en la mesa y en el centro. Así la consistencia entre pasos y los cruces que saltan se comprueban sin cambiar `consistencia` ni `cruces_que_saltan`.
+- **Que la cuerda no se atraviese:** ningún tramo queda a menos de 0,97 de otro, la curvatura mínima es 0,9 y el estiramiento máximo es 2 %. Son los límites de siempre, y no se aflojan. No hay medida de penetración, porque no hay anfitrión. La relajación es la de las plantillas: sin gravedad, con choques.
+- **Error común** (`variante: tercero-por-fuera`, desde `vuelta-3-1`): el tercer juego pasa por fuera del primero, no por dentro, y rodea el puño entero. Así nada traba al tercero: al sacar los dedos, sus vueltas se corren y el puño se deshace al apretarlo. Es la misma cuerda que el paso 5 con el primer juego por debajo del tercero en sus dos caras: 2n² cruces al revés. Se construye y se comprueba como un paso más y se muestra junto al paso 5, con su encuadre. El tercer juego va en ámbar, así que se ve si pasa por fuera o por dentro de las primeras vueltas.
+  - **Sin imagen** (`error.otros`), dos errores. El primero es contar mal: un juego con una vuelta de más o de menos deja el puño chueco y con un lado flojo. El segundo es apretar tirando solo del firme: las vueltas de adentro quedan flojas y el puño se deforma; se aprieta vuelta por vuelta, siguiendo la cuerda desde el nudo del centro hasta el firme.
+- **El nudo por detrás:** el puño volteado como la página de un libro, como dice la frase de los nudos sin anfitrión (`POR_DETRAS[None]`). Pero no con `libre.voltear`: ese voltea la cuerda, la relaja otra vez y espera los cruces al revés, porque se miden desde arriba. Aquí se miden desde el centro, así que voltear el puño es un giro rígido que no cambia la secuencia. La plantilla da su propio `voltear`, como `Cabo.voltear`: gira el último paso media vuelta alrededor de y y lo apoya en lo que queda más abajo, sin relajarlo. `nudos/imprimir.py` lo usa si la plantilla lo tiene. Por detrás se ven la cara de abajo del puño y el firme, que sale de ella.
+- **El apretado:** no hay, como en todo nudo de plantilla. El paso de apretar ya es el puño apretado.
+- **Los nombres.** El firme es la cuerda larga, que queda afuera, y en todos los pasos lleva «Firme». El chicote lleva «Chicote» en su punta hasta el paso 6. En los pasos 7 y 8 está escondido en el centro, así que solo va «Firme»: la plantilla lo dice en `SOLO_FIRME`, un atributo nuevo y opcional que `nudos/exportar.py` lee, como `SIN_NOMBRES`. Sin él, todo sigue igual. Los dos extremos llevan remate.
+- **En la escena** no hay nada nuevo: es una cuerda sola, sin anfitrión, como los nudos libres y el adujado.
+- **En la hoja de revisión** (`nudos/hoja.py`), la vista desde arriba no muestra la mitad de los cruces. La hoja del puño lleva además el puño desenrollado, en el mismo mapa con que se buscan los cruces, con cada etiqueta en su lugar, como el cabo desenrollado. `python -m nudos hoja` y `revision` lo piden para el puño.
+- **Ficha:** 8 pasos, 6 en la página 1 y 2 en la 2. El error va junto al paso 5. El terminado, por delante y por detrás. Materiales: una cuerda de unos 2 m, que se confirma con el modelo y al atarlo. No hay sección de seguridad, porque el puño no sostiene a nadie; las precauciones dicen que no se le mete peso para lanzarlo y que nunca se lanza hacia una persona. La familia es «Decorativos», como la cabeza de turco, y el número ABOK de la fuente (2200) se confirma con los demás.
+- **Formato v1.9, un cambio compatible** (renumerado al entrar a `main` después del adujado, que es la v1.8): la plantilla `puno-de-mono` en «Plantillas», con sus hitos y su variante en «Error común»; el puño desenrollado en «Dónde se buscan los cruces»; su volteo en «Nudo terminado», y su línea en el registro. Si el adujado no entró antes, también que una plantilla puede ir sin anfitrión. Ninguna especificación usa nada de esto, así que los nudos publicados se cargan igual. La tabla «Elige el generador» de la skill `nudo-nuevo` lleva la fila del puño.
+- **Lo que no cambia:** los anfitriones, el camino de los nudos libres y las demás plantillas, también la cabeza de turco. Para comprobarlo, como en el refuerzo de cabo: antes del código se construyen e imprimen desde `main` los 26 nudos de `publicados.txt`, en un worktree aparte; al final, lo mismo en la rama. Los `modelo.json` se comparan byte a byte y las imágenes en RGB. Si una imagen difiere en 1 nivel en pocos píxeles, ese nudo se imprime solo antes de concluir nada. Después corre la suite entera.
+- **Pruebas** (`tests/test_puno_de_mono.py`, con una especificación de prueba que no es del libro):
+  - la carga: el puño con anfitrión; `vueltas` fuera de 3 a 4; un `hasta` que no existe, pasos fuera de orden o un último paso que no es `apretar`;
+  - construye sin fallas con 3 vueltas y con 4;
+  - el número de cruces de cada hito, el de las fórmulas de arriba;
+  - los cruces de las vueltas conservan su etiqueta y su encima/debajo al apretar, y los del nudo simple al meterlo; la consistencia entre pasos pasa;
+  - el mapa del puño: un cruce está en el mismo lugar suelto y apretado, y el polo no cae sobre la cuerda;
+  - el error tiene los mismos cruces que el paso 5, con los del primero y el tercer juego al revés;
+  - el volteo por detrás conserva la secuencia y no entra en la mesa;
+  - la escena recibe una sola cuerda sin anfitrión, y los pasos 7 y 8 llevan solo «Firme».
+
+  En `tests/test_hoja.py`, la hoja del puño dibuja el puño desenrollado.
+- **Archivos:** `nudos/plantillas/puno.py` (nuevo: la plantilla, su geometría, su mapa y su volteo), `nudos/plantillas/__init__.py`, `nudos/plantillas/pasos.py` (`geometria()`), `nudos/spec.py` (la plantilla sin anfitrión, si el adujado no la trajo), `nudos/exportar.py` (`SOLO_FIRME`), `nudos/imprimir.py` (el volteo de la plantilla), `nudos/hoja.py` y `nudos/__main__.py` (el puño desenrollado), `docs/formato-spec.md`, la tabla de la skill `nudo-nuevo`, `tests/test_puno_de_mono.py` y `tests/test_hoja.py`. Después, `specs/puno-de-mono.yaml`, con texto propio, en `borrador` hasta que Gabriel revise sus imágenes.
+- **Riesgos.** El primero es el puño apretado: donde se juntan tres caras, las bandas casi se tocan, y por una de esas esquinas tiene que entrar el chicote. Si no cabe a un diámetro, se agranda el puño apretado, mirando las imágenes; los límites no se aflojan. El segundo es el largo: la cuerda del puño suelto mide unos 300 diámetros, y construir cada paso puede tardar como en el adujado. El tercero es la ficha: con 8 pasos, la página 2 lleva dos pasos además del error y el terminado, y puede no caber. Si no cabe, se juntan los pasos 6 y 7 en uno («Haz un nudo simple y mételo en el centro»), con la imagen del nudo ya en el centro.
+- **Lo que decidió Gabriel (17 de noviembre):** aprobó las ocho propuestas.
+  1. Sin anfitrión y sin dibujar los dedos: el primer juego acostado en la mesa y el puño apoyado en sus propias vueltas. Si no se lee, dos clavijas paradas como el molde.
+  2. Los ejes: el primer juego horizontal, como en las fotos; el segundo por la mitad, entre los dedos; el tercero por dentro del primero.
+  3. Las medidas: 3 vueltas por juego (se acepta 4), el puño suelto de unos 13 × 9 × 7 diámetros y el apretado de unos 10.
+  4. Los 8 pasos, con un paso para cada cambio de juego y otro para meter el nudo, y el chicote como extremo de trabajo, como aconseja la fuente.
+  5. El error con imagen: el tercer juego por fuera del primero, junto al paso 5. Sin imagen: contar mal y apretar tirando solo del firme.
+  6. Los cruces buscados en el puño desenrollado como un globo, mirados desde su centro.
+  7. Por detrás, el puño volteado como una página, con un giro rígido.
+  8. La familia «Decorativos».
+
+**Cómo se hizo (17 de noviembre de 2026).** Con el diseño, salvo lo que sigue. Está en `nudos/plantillas/puno.py` (la plantilla, su geometría, sus mapas y su volteo) y `specs/puno-de-mono.yaml`, en `borrador`. Falta que Gabriel lo revise en las imágenes.
+- **Son 7 pasos, no 8.** Con 8, la página 2 del pliego se pasaba 83 mm: le tocaba una fila más. Se juntaron hacer el nudo simple y meterlo en el centro en un paso, «Haz un nudo simple y mételo en el centro», como decía el riesgo del diseño. `nudo` (el nudo simple en la mesa) queda disponible y la especificación no lo usa. Para que la página 1 cupiera se acortaron los usos, los materiales y el texto de los pasos.
+- **El puño es más grande que en el diseño.** Apretado, la capa de adentro va a 5,5 del centro (6,5 con 4 vueltas), no a 3,5: el puño mide unos 14 diámetros, y suelto, unos 20 × 18 × 15. Con menos, los cambios de juego del puño apretado quedan con radio de 1,05, y la relajación, que endereza todo lo que se dobla con radio menor que 1,1, los arrugaba hasta 0,1. En la cuerda real el puño queda más chico, porque las vueltas se aplastan.
+- **Las vueltas de un juego son una hélice de n vueltas, cada una Δβ más allá** (Δβ es 1,1 dividido por el radio). En una cara, la vuelta de más afuera pasa a (n/2 − 1/8)·Δβ del medio de la banda, y la cara sigue entera 0,9 más allá: es lo que mide la rampa entre una cara y otra.
+- **Los cambios de juego son una mezcla suave de los dos juegos,** prolongados 30° más allá de donde terminan y empiezan. Una curva de Hermite entre los dos se doblaba con radio de 0,4.
+- **El chicote entra al centro donde termina la última vuelta, no por la esquina K3.** La esquina le queda de lado, y para llegar a ella se doblaba con radio de 0,2. Donde termina la vuelta, entre dos caras, no tiene nada encima ni debajo: se dobla hacia adentro en un arco de radio 1,5 y sigue derecho. Lo mismo para salir del puño: el resto de cada paso sale así, se aleja por encima del puño hasta pasar su costado y cae a la mesa. Al terminar el tercer juego, el chicote cruza el centro en una sola curva suave y sale por la esquina K0, junto al firme.
+- **El firme llega por la mesa desde atrás, a la derecha,** y sube a la primera vuelta en la dirección en que ella sigue, bajando a la mesa a un diámetro del puño. Así no pasa junto a la cara de la derecha, donde en el error el tercer juego va por fuera.
+- **El nudo simple** es un trébol (2, 3) sobre un toro de radios 1,6 y 0,6, abierto 0,7 rad a cada lado de su punta de afuera, con las dos patas en un arco de radio 1,4. Dentro del puño, la pata que entra es solo su arco (la recta es el chicote), el nudo se corre de lado para que la pata siga al chicote, y la punta es medio arco, para que no asome. En la mesa, el nudo se apoya en lo más bajo, con su pata y su punta: si la punta quedaba bajo la mesa, la relajación arrugaba el nudo.
+- **Los mapas.** Los cruces de las vueltas se buscan en una proyección estereográfica desde la esquina opuesta al polo, que no tiene costura, y no en longitud y latitud. Pero esa proyección agranda mucho las caras cerca de esa esquina: con 4 vueltas, dos cruces aparecían a 3 diámetros de donde estaban al apretar. Por eso cada cruce guarda su lugar en la cara del puño más cercana, en diámetros sobre una esfera de radio 6 (`lugar_en_la_cara`), y no en el mapa. Los del nudo simple, en el marco del nudo.
+- **Lo que se agregó fuera de la plantilla:** `nudos/spec.py` acepta `ANFITRION = None`; `TrazoDePaso` lleva `marco` (el centro del puño y el nudo simple); `construir_paso` no mide la penetración sin sólido; `nudos/exportar.py` usa `nombres(hito)` de la plantilla (en vez de `SOLO_FIRME`, que queda como dato), y `nudos/imprimir.py` y `nudos/ficha.py` usan su `voltear`. La hoja (`python -m nudos hoja`) dibuja el puño desenrollado alrededor del polo (proyección azimutal equidistante), con las etiquetas de los cruces de las vueltas; la hoja de revisión privada no dibuja mapas, como con el tubo y el cabo.
+- **El error** lleva el encuadre del puño entero, sin lo que cae a la mesa. Más cerca de la cara de la izquierda se cortaba la parte de arriba, y el bien y el mal no se distinguían.
+- **Resultado.** Con 3 vueltas, los 7 pasos y el error salen sin fallas: separación de al menos 1,03, curvatura de al menos 1,17 y nada estirado. Con 4, también. Construir el puño tarda unos 20 segundos.
+- **La ficha cabe:** 6 pasos en la página 1 y, en la 2, el paso 7, el error con sus dos errores sin imagen, el terminado, la verificación, las precauciones y las alternativas. Los materiales dicen unos 2 m de cuerda: el puño del modelo usa más, porque es más grande que uno real; se confirma al atarlo.
+- **Pruebas:** `tests/test_puno_de_mono.py` (la carga, la forma, los cruces del método, los pasos sin fallas con 3 y 4 vueltas, las etiquetas al apretar y al meter el nudo, el error, los nombres, el volteo, las imágenes y la hoja). En `tests/test_cabeza_de_turco.py`, la lista de tipos de plantilla lleva el puño. Pasan 607 pruebas y 2 se saltan.
+- **Los nudos publicados no cambian:** se construyeron e imprimieron desde `main` (6a4028e), antes de tocar el código, los 26 de `publicados.txt` y los 4 de la tanda 4 que ya están en `main`, y otra vez en la rama. Los 30 `modelo.json` son iguales byte a byte. De las imágenes, 16 de 8 nudos diferían en 1 nivel en 1 a 30 píxeles. Impresos esos 8 nudos solos, desde `main` también diferían de la primera referencia, en las mismas imágenes, y la rama y `main` impresos solos dan las mismas 133 imágenes (una de la mariposa alpina, que difería en 16 píxeles, sale igual impresa otra vez). Es la variación conocida del navegador.
+
+**Con los dedos y sin el paso del nudo simple (17 de noviembre de 2026; Gabriel lo pidió al ver la primera ficha: «Mejor hágalo con los dedos y no muestres el paso donde se hace el nudo que va como núcleo»).** Eligió dos dedos solos, sin mano, y el nudo simple solo en el texto. Cambia lo que sigue; lo demás queda como arriba.
+- **Los dedos se dibujan** en los pasos de las vueltas: dos cilindros parados sobre la mesa, color piel y con la punta redonda, de radio 1,3, a ±6,45 del centro y más altos que el puño (`Dedos` en `nudos/plantillas/puno.py`). Son un sólido: la cuerda no entra en ellos (`penetracion_dedos`, con el máximo de 0,05). No son un anfitrión de la especificación: la plantilla dice en qué pasos van (`dedos(hito)`), cada paso los lleva a `render/escena.js` (`dedos`) y `construir_paso` los usa para relajar ese paso (`marco["solido"]`). La hoja de revisión no los dibuja.
+- **El puño suelto cambió de forma.** Con los dedos, el tercer juego tiene que pasar entre ellos, y no junto a los extremos de las primeras vueltas, como en el óvalo de antes. Ahora cada juego es una vuelta redondeada en su plano (`FormaDedos`): el primero, un óvalo alrededor de los dos dedos; el segundo, un rectángulo de esquinas redondeadas que abraza al primero por la mitad, entre los dedos, y el tercero, otro que abraza al segundo por arriba y por abajo, entre los dedos y por dentro del primero. Las esquinas tienen radio 2,5 y el primer juego deja 3 de holgura a los costados del tercero: con menos, los cambios de juego se doblaban con radio de 0,6. Suelto, el puño mide unos 23 × 15 × 14 diámetros. Los cruces y sus etiquetas son los mismos que en el puño apretado, que no cambió.
+- **Los cambios de juego, en los dedos,** prolongan 30° el juego que termina y 50° el que empieza. Con 60°, el cambio quedaba a 0,96 de la última vuelta del juego anterior.
+- **Lo que sigue de cada paso** sale donde termina la vuelta. El del tercer juego sale hacia atrás, a lo largo de su eje, porque esa vuelta termina bajando junto a un dedo, y cae a la mesa atrás, a la izquierda. El firme sale de la primera vuelta hacia afuera, por delante a la derecha, y no hacia atrás, donde está un dedo.
+- **Son 6 pasos.** Ya no están el paso del nudo simple ni los hitos `nudo` y `centro`. El último, «Esconde el chicote y aprieta», dice que se sacan los dedos, se hace el nudo simple, se mete al centro y se aprieta; su imagen es el puño apretado, con el nudo escondido. El tercer juego ya no cruza el centro para salir junto al firme.
+- **El error y su paso bien hecho van sin dedos:** en el error, el tercer juego rodea todo el puño y pasaría por ellos. Así el error se distingue mucho mejor: el tercer juego, en ámbar, por fuera de todo.
+- **Resultado.** Con 3 vueltas, los 6 pasos y el error salen sin fallas: separación de al menos 1,04, curvatura de al menos 1,07, estiramiento de hasta 1,1 % y la cuerda sin entrar en los dedos. Con 4, también. La ficha cabe: 6 pasos en la página 1 y, en la 2, el error, el terminado y los textos.
+- **Los nudos publicados siguen sin cambiar,** también con los dedos en `render/escena.js`: comparados con la misma referencia de `main` (6a4028e), los 30 `modelo.json` son iguales byte a byte, y las 9 imágenes de 6 nudos que diferían en 1 nivel salen iguales a las de `main` impresas solas, las 99 de esos nudos. Pasan 609 pruebas y 2 se saltan.
+- **Gabriel aprobó las imágenes y el texto el 17 de noviembre:** la especificación pasó a `modelado`. Falta el filtro 1, atarlo con cuerda real siguiendo la ficha, y con él confirmar el largo de cuerda (la ficha dice unos 2 m) y el número ABOK 2200. El código entra a `main` después del adujado, si entra antes; entonces el formato pasa a la versión que siga y se vuelve a comparar con los publicados.
+
+**El amarre diagonal (tanda 4).** Una plantilla nueva, `amarre-diagonal`, sobre la cruz del amarre cuadrado. La referencia es `entradas/amarre-diagonal/` (15 fotos y `info.txt`): una vuelta de braza alrededor de los dos palos, tres o cuatro vueltas en una diagonal, tres o cuatro en la otra, tres o cuatro ahorcados y un ballestrinque de cierre. La fuente explica por qué empieza con la vuelta de braza y no con un ballestrinque: al tirar de ella, los dos palos se juntan aunque haya un hueco entre ellos.
+
+**Diseño (16 de noviembre de 2026; Gabriel lo aprobó el mismo día con las cuatro propuestas del final):**
+- **Los palos** son la cruz de T7, en ángulo recto: el plan de T7 decía que el diagonal agregaría `angulo`, pero la propuesta de la tanda 4 los deja rectos, que es como se lee mejor. Lo único que cambia es la altura: debajo del palo de abajo se cruzan las dos diagonales, así que ahí hay dos capas de cuerda y su eje queda a `radio + 2`, no a `radio + 1`. La especificación no lo escribe: lo dice la plantilla (`CAPAS_DEBAJO = 2`), la carga lo pasa a la cruz y el cuadrado sigue a `radio + 1`. El modelo no guarda la cruz; la escena y la hoja la leen de `Cruz.datos()`, que ya da `z_abajo`.
+- **Medidas y límites:**
+
+  ```yaml
+  anfitrion: {tipo: cruz, radio: 2.5, largo: 40}
+  plantilla:
+    tipo: amarre-diagonal
+    vueltas: 3                              # en cada diagonal
+    ahorcados: 3                            # entre los palos
+    cierre: {poste: arriba, lado: derecha}  # ballestrinque de cierre
+  ```
+
+  - `vueltas`, de 2 a 4, es el número de vueltas en cada diagonal. La fuente da el mismo número a las dos, así que es un solo campo. No pasa de 4 porque las vueltas de una diagonal tienen que caber, una junto a otra, en los dos huecos entre los palos donde van.
+  - `ahorcados`, de 2 a 6, como en el cuadrado.
+  - `cierre`, como en el cuadrado: por ahora en el palo de arriba, a la `derecha` o a la `izquierda`. Las fotos lo hacen a la izquierda; la izquierda es el reflejo de todo el amarre, como en el cuadrado. Se propone a la derecha, como en el cuadrado.
+  - No hay `inicio`: la vuelta de braza siempre rodea los dos palos, en el mismo lugar. El chicote siempre da tres vueltas, como en la ficha de la vuelta de braza.
+  - Los 3 y 3 son los de la fuente. Con radio 2,5, la primera diagonal (la vuelta de braza y 3 vueltas, a 1,1 una de otra) ocupa unos 3,3 diámetros de ancho, y todavía cabe en los huecos. Con 4 vueltas puede no caber. Entonces `construir` falla y dice que no caben, como el cuadrado cuando un ahorcado no cabe. No se aflojan los límites: se agranda el radio o se queda en 3.
+- **El camino de la cuerda,** en el orden en que se ata. Como en el cuadrado, la plantilla calcula la cuerda entera una vez, desde el chicote corto, y cada paso es su comienzo hasta su `hasta`, con el resto que cae a la mesa. La primera diagonal va de delante a la derecha hacia atrás a la izquierda. Sus vueltas pasan entre los palos por esos dos huecos (cuadrantes 4 y 2). La segunda va de delante a la izquierda hacia atrás a la derecha (cuadrantes 3 y 1).
+  1. **Vuelta de braza.** El chicote rodea los dos palos en la primera diagonal: por encima del palo de arriba, entre los palos atrás a la izquierda, por debajo del palo de abajo y entre los palos delante a la derecha. En la cara de delante del palo de arriba, a la derecha del de abajo, rodea el firme y se enrolla tres veces en su propio tramo, bajando hacia el hueco. Ahí la ve quien ata.
+  2. **La primera diagonal.** El firme baja por la cara de delante, junto a la vuelta de braza, y da las vueltas en el mismo sentido: por debajo del palo de abajo, de derecha a izquierda; entre los palos atrás a la izquierda; por encima del de arriba, de atrás hacia delante; y entre los palos delante a la derecha. Cada vuelta va junto a la anterior, más hacia delante a la izquierda, sin montarse. Sobre la cara de delante, la primera vuelta se aparta de la vuelta de braza lo que ocupan las vueltas del chicote, y se junta otra vez antes de llegar a lo alto del palo, como las esquinas del cuadrado se apartan a media altura (`ABRIR`).
+  3. **El cambio de diagonal.** La última vuelta llega por encima del palo de arriba a su cara de delante, no baja al hueco y cruza esa cara hacia la izquierda. Ahí empieza la segunda diagonal. Nada de la primera queda a la izquierda de ese tramo, así que no cruza nada.
+  4. **La segunda diagonal.** Baja entre los palos delante a la izquierda, pasa por debajo del palo de abajo de izquierda a derecha, sube entre los palos atrás a la derecha y pasa por encima del palo de arriba, de atrás hacia delante. Cada vuelta nueva va más atrás a la izquierda que la anterior. Encima del palo de arriba y debajo del de abajo pasa por fuera de las vueltas de la primera, así que va un diámetro más lejos del palo donde las cruza, con rampas suaves, como la diagonal del ballestrinque. Fuera de ahí va pegada al palo.
+  5. **Los ahorcados** son los del cuadrado: vueltas tensas entre los palos, por fuera de todas las esquinas, por debajo del palo de arriba y por encima del de abajo. La salida de la última vuelta baja al hueco de delante a la izquierda y empieza el primer ahorcado sin cruzar nada. Como en el cuadrado, va en la zona de un palo mientras pasa junto a las esquinas, y el sentido de los ahorcados es el que deja esa salida.
+  6. **El ballestrinque de cierre** es el del cuadrado, en el palo de arriba, junto al último ahorcado.
+- **Qué se reúsa del cuadrado,** sin cambiar lo que construye: los palos (`_Palos`, `_tangente`, `_hermite`), el trazo por zonas (`trazo.py`), los ahorcados (`cerca`, `extremos`, `_cadena`) con su variante por encima del palo, el ballestrinque de cierre (`_ballestrinque`), los restos que caen a la mesa (`_resto`), la búsqueda de cruces por zona (`pasos.py`), el volteo del terminado (`Cruz.voltear`) y los nombres de la escena (`CON_FIRME`). Hoy los ahorcados y el cierre están dentro de `cuerda()`, en `amarre.py`. Se sacan a funciones que reciben las esquinas, y las dos plantillas las usan. Es mover código sin cambiar el orden de las cuentas: si el `modelo.json` del cuadrado cambia aunque sea en un decimal, se vuelve atrás y el diagonal lleva su copia. Lo nuevo va en `nudos/plantillas/amarre_diagonal.py`: las vueltas en diagonal, la vuelta de braza y el cambio de diagonal.
+- **Las vueltas en diagonal.** Cada una va en un plano vertical a 45° de los dos palos, separado del de su vecina 1,1 diámetros. Sobre cada palo sigue el corte de ese plano con el palo, que es una elipse. Entre los palos baja por la tangente común de las dos elipses, como una cuerda tensa, y después se suaviza como las esquinas del cuadrado (`_hermite`). Así baja pegada a la cara de los dos palos, que es lo que Gabriel pidió en T7.
+- **Cómo se cuentan los cruces:** como en el cuadrado, cada zona tiene su mapa. El palo de abajo, el de arriba y la cintura entre los dos se desenrollan, y encima es lo más lejos del eje. Entre zonas solo se comprueba la separación.
+  - **La vuelta de braza:** sus 7 cruces sobre el palo de arriba, como en la ficha publicada: 2 al rodear el firme y 5 de las tres vueltas del chicote.
+  - **Las dos diagonales:** cada vuelta de la segunda pasa por encima de cada vuelta de la primera dos veces: sobre el palo de arriba y bajo el de abajo. La vuelta de braza cuenta como una vuelta más de la primera. Las dos diagonales no se tocan entre los palos, porque van en huecos distintos. Las vueltas del chicote van en la cara de delante, y ninguna vuelta de la segunda diagonal las cruza: cruza la vuelta de braza por la cara de atrás.
+  - **Los ahorcados:** cada uno pasa por encima de cada esquina. Cada vuelta tiene dos esquinas, y son 2n + 1 vueltas: la vuelta de braza, n de la primera diagonal y n de la segunda.
+  - **El ballestrinque de cierre** tiene sus 2.
+  - En total son 7 + 2·n·(n + 1) + 2·m·(2n + 1) + 2. Con 3 y 3 son 75 cruces, contra los 40 del cuadrado. La plantilla escribe esa secuencia hasta cada hito, como `_secuencias`, y se compara con la que se mide en la cuerda relajada. La consistencia entre pasos y el cruce que salta se comprueban igual.
+- **Los pasos** (`hasta`, en este orden): `inicio`, `vuelta-1` … `vuelta-<n>`, `segunda-1` … `segunda-<n>`, `ahorcado-1` … `ahorcado-<m>`, `cierre-1` y `cierre`. `vueltas`, `segundas` y `ahorcados` son alias del último de cada uno. No hay `inicio-1`: la cuerda empieza en el chicote, y la vuelta de braza sin las vueltas del chicote no es un comienzo de ella. El texto puede decir `{vueltas}` y `{ahorcados}`. Se proponen 9 pasos:
+
+  ```yaml
+  pasos:
+    - {titulo: Haz una vuelta de braza alrededor de los dos palos, hasta: inicio}
+    - {titulo: Da la primera vuelta en diagonal, hasta: vuelta-1}
+    - {titulo: Completa las {vueltas} vueltas, hasta: vueltas}
+    - {titulo: Cambia a la otra diagonal, hasta: segunda-1}
+    - {titulo: Completa las {vueltas} vueltas de la otra diagonal, hasta: segundas}
+    - {titulo: Da el primer ahorcado, hasta: ahorcado-1}
+    - {titulo: Completa los {ahorcados} ahorcados, hasta: ahorcados}
+    - {titulo: Empieza el ballestrinque de cierre, hasta: cierre-1}
+    - {titulo: Termina el ballestrinque, hasta: cierre}
+  ```
+
+  El paso 1 remite a la ficha de la vuelta de braza, como el cuadrado remite a la del ballestrinque. En la ficha caben 9 pasos: la rejilla tiene tres columnas, así que son 6 en la página 1 y 3 en la 2, en la misma fila donde el cuadrado tiene uno solo. El paso 1 lleva «Firme» y «Chicote»; desde el 2, solo «Chicote» (`CON_FIRME = ("inicio",)`).
+- **El error común,** con imagen: la variante `ahorcados-por-fuera` del cuadrado, con los ahorcados por encima del palo de arriba en lugar de entre los palos. Se ve desde `ahorcado-1` y va junto al paso 7. Sale casi gratis, porque los ahorcados son los mismos, y es igual de común en los dos amarres. Sin imagen (`error.otros`) van dos:
+  - **Empezar con un ballestrinque en un solo palo.** Los palos no se juntan, y el amarre puede soltarse. Es lo que la fuente explica.
+  - **La cuerda floja mientras atas**, como en el cuadrado.
+  - La otra variante que se pensó, todas las vueltas en una sola diagonal, no se propone: no caben una junto a otra en los huecos, y montadas no se pueden comparar en el mapa.
+- **Nudo terminado:** como en el cuadrado. Por delante, en la vista de los pasos. Por detrás, el amarre se voltea entero como un marco (`Cruz.voltear`), y se ven las dos diagonales cruzadas bajo el palo de abajo. Se aprieta como el cuadrado (T7c).
+- **Lo que cambia en el formato (v1.5, compatible):** la plantilla `amarre-diagonal`, con sus campos, sus hitos, `{vueltas}` y `{ahorcados}`, y la variante `ahorcados-por-fuera`. Con ella, el palo de abajo de la cruz queda a `radio + 2`. Ninguna especificación anterior la usa. Se agrega a «Plantillas», a «Anfitrión» (la altura de la cruz) y a «Error común» de `docs/formato-spec.md`, y se anota en el registro. La skill lleva la fila del amarre diagonal en «Elige el generador».
+- **Pruebas,** en `tests/test_amarre_diagonal.py`, con la forma de `test_amarre_cuadrado.py`:
+  - Se lee bien, y las medidas fuera de rango o los campos desconocidos se detectan. No lleva `inicio`.
+  - Los hitos siguen la cuerda. Al pasar de 3 a 4 vueltas, los mismos pasos siguen valiendo.
+  - La secuencia del método tiene 7 + 2n(n + 1) + 2m(2n + 1) + 2 cruces con 2 y 2, 3 y 3, 3 y 4 y 4 y 3. Cada vuelta de la segunda diagonal pasa por encima de cada una de la primera en los dos palos.
+  - Los cruces se buscan solo dentro de cada zona.
+  - El palo de abajo queda a `radio + 2` con el diagonal y sigue a `radio + 1` con el cuadrado.
+  - Los 9 pasos se construyen sin fallas, sin entrar en los palos ni en otras vueltas, con los cruces del método. El error se construye como un paso más y cruza las mismas esquinas.
+  - Cada paso resalta lo que agrega, y un cruce conserva su etiqueta y su lugar.
+  - La escena dibuja la cruz más alta. «Firme» va solo en el paso 1. Por detrás, el amarre se voltea con los palos.
+  - Las pruebas del cuadrado no cambian.
+- **Archivos:**
+  - `nudos/plantillas/amarre_diagonal.py` (nuevo).
+  - `nudos/plantillas/amarre.py`: los ahorcados y el cierre, sacados a funciones.
+  - `nudos/plantillas/__init__.py`, en `TIPOS`.
+  - `nudos/plantillas/pasos.py`: la geometría de los dos amarres.
+  - `nudos/anfitrion.py`: `Cruz` con las capas debajo.
+  - `nudos/spec.py`: un campo interno de `Anfitrion` con esas capas, que no se escribe en el YAML, y la carga, que lo toma de la plantilla.
+  - `docs/formato-spec.md`, `.claude/skills/nudo-nuevo/SKILL.md` y `tests/test_amarre_diagonal.py`.
+  - Después, `specs/amarre-diagonal.yaml`, en `modelado` cuando Gabriel apruebe las imágenes.
+  - No cambian `render/escena.js` ni `nudos/hoja.py`, que ya leen la altura de cada palo, ni la frase de «por detrás» de `nudos/ficha.py`.
+- **Que los 26 publicados no cambien:**
+  1. Antes del código, desde `main` y en un worktree aparte, se construyen e imprimen con Edge los 26 nudos de `publicados.txt`. Esa referencia queda fuera de git, con el commit anotado.
+  2. Después del código, se construyen e imprimen los mismos 26 desde la rama.
+  3. Los 26 `modelo.json` tienen que ser iguales byte a byte, y las imágenes de impresión iguales en RGB, píxel por píxel. Se usa el `comparar.py` de las notas de T7c.
+  4. Si una imagen difiere en un nivel, ese nudo se vuelve a imprimir solo desde el commit de referencia, como se hizo con la estaca, para ver si era de la corrida.
+  5. El que más importa es el amarre cuadrado, porque es el único que pasa por el código que se mueve. Pasa toda la suite.
+- **Riesgos:**
+  - **El ancho de la primera diagonal,** con las vueltas del chicote en la cara de delante. Si no cabe en los huecos con radio 2,5, se ajusta el apartado junto a las vueltas del chicote o se agranda el radio, mirando las imágenes.
+  - **Los 75 cruces,** que hacen el amarre más lento de construir que el cuadrado, que tarda cerca de un minuto. Puede llegar a dos o tres.
+- **Lo que decidió Gabriel (16 de noviembre), como se proponía:**
+  1. El error con imagen son los ahorcados por encima del palo de arriba, el mismo del cuadrado. Sin imagen van empezar con un ballestrinque en un solo palo y la cuerda floja.
+  2. Un solo `vueltas` para las dos diagonales, con 3 y 3 ahorcados.
+  3. Son 9 pasos, y la vuelta de braza va en uno solo que remite a su ficha.
+  4. El cierre va a la derecha, como en el cuadrado, aunque las fotos lo hacen a la izquierda.
+
+**Cómo se hizo (16 y 17 de noviembre de 2026).** Está como en el diseño, salvo lo que sigue. Falta que Gabriel lo revise en las imágenes. La plantilla está en `nudos/plantillas/amarre_diagonal.py`, y las pruebas en `tests/test_amarre_diagonal.py`.
+- **Palos de radio 3, no 2,5.** Con radio 2,5, la última vuelta de la primera diagonal cruza la segunda a 6° de donde tiene que empezar la segunda diagonal, en la cara de delante del palo de arriba, y la vuelta de braza no cabe en esa cara. Con radio 3 (un palo de unos 5 cm con una cuerda de 8 mm) cabe todo. Con radio 3 caben 3 vueltas en cada diagonal; con 4, construir falla y dice que no caben, y hace falta radio 4.
+- **Con el cierre a la derecha, la primera diagonal va de delante a la izquierda hacia atrás a la derecha.** Es el reflejo de lo que decía el diseño. La segunda diagonal termina en la cara de delante del palo de arriba, y solo si termina a la derecha sale de ahí al primer ahorcado sin cruzar nada, como en el cuadrado. Con el cierre a la izquierda todo se refleja y queda como en las fotos.
+- **Cómo van las vueltas.** Cada una va en su plano a 45° de los palos y sigue el corte del plano con cada palo. Entre los palos baja por la tangente común de los dos cortes, suavizada como las esquinas del cuadrado, y pasa al plano de la vuelta siguiente en la esquina con que baja. La segunda diagonal deja por dentro, en su plano, cada cruce con la primera: así se aparta del palo solo donde cruza.
+- **La vuelta de braza.** Su tramo con las vueltas del chicote va en la cara de delante del palo de arriba, a 3,4 diámetros del firme y apartado 1,2 del palo. El chicote lo rodea en hélice, a 1,2 de su eje, con 5 cruces, y le da media vuelta al firme, que se aparta 1,2 del palo donde el chicote pasa por debajo. Al final del tramo, después de las vueltas del chicote, el tramo ya baja entre los palos: cuenta como parte de esa esquina, porque el tercer ahorcado lo cruza ahí.
+- **La vuelta de braza no se relaja.** La relajación no tiene tensión, y con ella el chicote se soltaba del firme. Se probó dejar sus curvas por encima de 1,1, que es donde la relajación empieza a alisar, pero se soltaba igual, por otro lado. Por eso la vuelta de braza y el firme donde el chicote lo rodea van trazados sin quiebres (curvatura de al menos 1,05) y quedan quietos. `relajar` acepta una máscara de puntos `quietos`; sin ella no cambia nada. Igual se comprueban los cruces, la separación, la curvatura y que no entre en los palos.
+- **El palo de abajo queda a radio + 2,1, no + 2.** La décima de más es aire. Sin ella, la segunda diagonal quedaba apretada contra la mesa y, en el error, un cruce bajo el palo se perdía al relajar.
+- **Lo que se comparte con el cuadrado.** Los ahorcados y el cierre pasaron de `cuerda()` a `ahorcados_y_cierre`, y las alturas de los ahorcados a `alturas_de_ahorcados`, en `nudos/plantillas/amarre.py`. La cuerda del cuadrado sale igual punto por punto, con 2 y 2, 3 y 3, 4 y 3, 3 y 4 y 6 y 6, bien y con el error.
+- **El error.** Después de la segunda diagonal, la cuerda baja un poco por la cara de delante y vuelve a subir en medio círculo hasta pasar por encima del palo de arriba. Los ahorcados empiezan a subirlo a 0,7 de su cara, no a 1,0 como en el cuadrado. Con 1,0, uno cruza una esquina de la vuelta de braza justo donde llega al palo y al relajar deja de cruzarla.
+- **El resto** que cae a la mesa en cada paso gira más despacio que en el cuadrado, porque aquí la cuerda suele llegar bajando por la cara de un palo. En el paso 1 sale recto hacia delante, para no pasar por encima de la vuelta de braza.
+- **Resultado.** Con 3 vueltas y 3 ahorcados, los 9 pasos y el error salen sin fallas: los 75 cruces del método, separación de al menos 0,99, curvatura de al menos 0,98 y estiramiento de hasta 1 %. Construirlo tarda unos tres minutos. También sin fallas con 3 y 4 y con 3 y 6, y con el cierre a la izquierda. No salen todavía: con 2 y 2, el error se dobla con radio 0,72; con 2 y 6, en el paso 9 cambia un cruce al relajar; y con 4 vueltas y palos de radio 4, la vuelta de braza se dobla con radio 0,83.
+- **Los nudos publicados no cambian.** Los 26 `modelo.json` son iguales byte a byte a la referencia, construida e impresa desde 3843a16 antes del código. De las imágenes, dos difirieron (el paso correcto junto al error del ballestrinque y de la vuelta de braza), en una corrida que compartía la máquina con las pruebas. Impresos otra vez solos, desde la referencia y desde la rama, dan las mismas imágenes.
+- **Pruebas.** Pasan 489 y se saltan 2: la de siempre y la de `test_estado` para el amarre diagonal, que está en borrador. `tests/test_amarre_diagonal.py` es nueva. Falló una prueba de la cabeza de turco que esperaba la lista vieja de plantillas, y se corrigió.
+- **La especificación** (`specs/amarre-diagonal.yaml`) está en `borrador`, con texto propio para que Gabriel lo revise. Pide una cuerda de unos 5 m: la del modelo mide 4,5 m. Se confirma al atarlo.
+- **La ficha no cabe con 9 pasos.** En la página 2, los pasos 7, 8 y 9 llenan la fila, y el par del error baja a otra: sobran unos 91 mm. En el cuadrado cabe porque su único paso de esa página comparte fila con el error. El diseño decía mal que cabían.
+- **Siete pasos (17 de noviembre).** Gabriel eligió pasar a 7 pasos, como el cuadrado, en vez de cambiar la plantilla de la ficha. Las vueltas de la primera diagonal van en un solo paso (`hasta: vueltas`), y el ballestrinque de cierre en otro que remite a su ficha (`hasta: cierre`). El error va junto al paso 6. Así la ficha cabe: 6 pasos en la página 1 y, en la 2, el paso 7 en la misma fila que el error.
+- **Lo que aprobó Gabriel (17 de noviembre).** Las imágenes y el texto de la ficha, y los tres cambios al diseño: palos de radio 3, la primera diagonal reflejada con el cierre a la derecha y la vuelta de braza sin relajar. El amarre pasa a `modelado` y está listo para el filtro 1, con la ficha: falta confirmar con cuerda que alcanzan unos 5 m.
+
+**Los palos paralelos: amarre redondo y trípode (tanda 4).** Un anfitrión nuevo, `palos`, con dos o tres palos acostados uno junto al otro a lo largo de x, y dos plantillas sobre él, `amarre-redondo` y `amarre-tripode`. Es una sola tarea de código, porque las dos comparten el anfitrión y casi toda la geometría.
+
+**Diseño (16 de noviembre de 2026, antes de implementar; Gabriel lo aprobó el mismo día con las cuatro propuestas del final: el redondo con dos ahorcados, el trípode con las vueltas alrededor de los tres palos, el error `sin-ahorcados` y las medidas propuestas):** Referencias: `entradas/amarre-redondo/` (11 imágenes), `entradas/amarre-tripode/` (17 imágenes) y las páginas 29 y 30 del manual de la Tropa. Las cuatro hacen lo mismo en los dos amarres: un ballestrinque en un palo, las vueltas, los ahorcados entre los palos y un ballestrinque de cierre en el mismo palo del inicio, al otro lado de las vueltas. Lo que no coincide va en las decisiones del final.
+- **El método del redondo:**
+  - Un ballestrinque en el palo de delante, a la izquierda.
+  - Las vueltas alrededor de los dos palos, de izquierda a derecha, una junto a otra: por encima de los dos, por detrás del de atrás, por debajo de los dos y por delante del de delante.
+  - Los ahorcados entre los dos palos, alrededor de las vueltas: bajan por el hueco a la derecha de las vueltas, pasan por debajo de ellas, suben por el hueco a la izquierda y pasan por encima.
+  - Termina con un ballestrinque en el palo de delante, a la derecha de los ahorcados.
+- **El método del trípode:** el mismo, con tres palos: el ballestrinque de inicio en el palo de delante, a la izquierda; las vueltas alrededor de los tres palos (o en ocho, según la decisión 2); los ahorcados del hueco de atrás, entre el palo del medio y el de atrás; los del hueco de delante, y el ballestrinque de cierre en el palo de delante, a la derecha. El orden de los huecos es el de Animated Knots: primero el que queda lejos del palo del inicio, para terminar junto a él. La cuerda pasa de un hueco al otro por encima del palo del medio, a la derecha de los ahorcados, así que ahí no cruza nada.
+- **Los palos:** `anfitrion: {tipo: palos, cantidad: 2, radio: 2.5, largo: 30}`.
+  - `cantidad` es 2 o 3. `radio` es el de todos los palos, de al menos medio diámetro, como los demás anfitriones; la propuesta es 2,5, un palo de 4 cm con una cuerda de 8 mm, como la cruz. `largo` es el de cada palo, mayor que su grosor; la propuesta es 30. Los palos están centrados en x = 0.
+  - Van uno junto al otro a lo largo de y, simétricos alrededor de y = 0, con un hueco de 1,1 diámetros entre sus caras (`HUECO`, en el código, no en la especificación): por ahí bajan los ahorcados, y en la cuerda real los ahorcados apartan los palos lo mismo. Con dos palos, los ejes van en y = ±(radio + 0,55); con tres, en y = 0 y ±(2 radio + 1,1). El de delante es el de y negativa, hacia quien ata.
+  - Sus ejes van a la altura radio + 2, como el tubo: por debajo del hueco pasan dos capas, la vuelta y el ahorcado que la rodea. Así ninguna cuerda baja de la mesa, pero los palos quedan un diámetro sobre la mesa también en los pasos antes de los ahorcados. Se mira en las imágenes; si se nota, se ve con Gabriel.
+  - Cada plantilla pide su número de palos: el redondo, 2, y el trípode, 3. Otro número es un error al cargar. Si el amarre no cabe en el largo de los palos, el paso no se construye y la falla dice cuánto mide el amarre.
+- **Formato del redondo:**
+
+  ```yaml
+  anfitrion: {tipo: palos, cantidad: 2, radio: 2.5, largo: 30}
+  plantilla:
+    tipo: amarre-redondo
+    vueltas: 6        # alrededor de los dos palos
+    ahorcados: 2      # entre los palos
+  pasos:
+    - {titulo: Haz un ballestrinque en un palo, texto: …, hasta: inicio}
+    - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+    - {titulo: Completa las {vueltas} vueltas, texto: …, hasta: vueltas}
+    - {titulo: Da el primer ahorcado, texto: …, hasta: ahorcado-1}
+    - {titulo: Completa los {ahorcados} ahorcados, texto: …, hasta: ahorcados}
+    - {titulo: Empieza el ballestrinque de cierre, texto: …, hasta: cierre-1}
+    - {titulo: Termina el ballestrinque, texto: …, hasta: cierre}
+  ```
+
+  - `vueltas` y `ahorcados` van de 2 a 6, como en el amarre cuadrado, y salen en letras en el texto. No llevan `inicio` ni `cierre`: el método los pone siempre en el palo de delante, el inicio a la izquierda y el cierre a la derecha. Si un nudo los necesita en otro lado, se agregan con él.
+  - `hasta` puede ser, en este orden, lo mismo que en el amarre cuadrado: `inicio-1`, `inicio`, `vuelta-<n>`, `vueltas`, `ahorcado-<n>`, `ahorcados`, `cierre-1` y `cierre`. Son los mismos 7 pasos, así que la ficha se arma igual: 6 en la página 1 y 1 en la 2.
+- **Formato del trípode:** como el redondo, con `tipo: amarre-tripode` y `cantidad: 3`. `ahorcados` es cuántos van en cada hueco, de 2 a 6. Los ahorcados se numeran a lo largo de la cuerda, de `ahorcado-1` hasta el doble de `ahorcados`: primero los del hueco de atrás y después los del de delante. `hueco-1` es lo mismo que el último del hueco de atrás y `ahorcados`, que el último de todos. Los pasos son 7:
+
+  ```yaml
+  pasos:
+    - {titulo: Haz un ballestrinque en un palo de afuera, texto: …, hasta: inicio}
+    - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+    - {titulo: Completa las {vueltas} vueltas, texto: …, hasta: vueltas}
+    - {titulo: Ahorca el hueco de atrás, texto: …, hasta: hueco-1}
+    - {titulo: Ahorca el hueco de delante, texto: …, hasta: ahorcados}
+    - {titulo: Empieza el ballestrinque de cierre, texto: …, hasta: cierre-1}
+    - {titulo: Termina el ballestrinque, texto: …, hasta: cierre}
+  ```
+
+  Cómo se abren las patas va en el texto del último paso y en la verificación: la ficha muestra el trípode cerrado, sobre la mesa, como se ata.
+- **Geometría:** como en el amarre cuadrado, la plantilla calcula una sola vez la cuerda entera, desde el chicote corto del ballestrinque de inicio, y cada paso es su comienzo hasta su `hasta`, más el resto que sale y cae a la mesa (`nudos/plantillas/pasos.py`, sin cambios en cómo se construye un paso). Se arma con las piezas de `nudos/plantillas/trazo.py` y las de `amarre.py` (el ballestrinque en cuatro carriles, las tangentes, las curvas de Hermite y el resto), y se relaja tensa, sin gravedad.
+  - **Los ballestrinques** van como en el amarre cuadrado, sobre el palo de delante, con su cruz arriba, de cara a quien ata. Por el lado del hueco pasa una sola cuerda: ahí no va la diagonal, que es la que se levanta un diámetro.
+  - **Las vueltas** van a 1,1 diámetros una de otra, como una hélice que avanza 1,1 por vuelta. Cada una rodea el contorno de los palos: sigue el arco de cada palo de afuera y, de un palo al otro, va recta, tangente a los dos, por encima y por debajo del hueco. En el trípode, esas rectas pasan tangentes por encima y por debajo del palo del medio. La primera vuelta empieza más a la derecha que el ballestrinque: el firme pasa del palo de delante al de atrás por encima del hueco, a la altura del ballestrinque, y avanza hasta la primera vuelta por la cara de atrás de ese palo, donde no hay nada. Entre el ballestrinque y la primera vuelta quedan 2,2 diámetros, para que bajen los ahorcados; lo mismo entre la última vuelta y el ballestrinque de cierre.
+  - **Los ahorcados** rodean las vueltas en el plano del hueco. Bajan y suben por el hueco junto a las vueltas, a 1,05 de ellas, y cada uno 1,1 más afuera que el anterior, porque en el hueco cabe una sola cuerda. Por encima y por debajo de las vueltas van uno junto a otro, a lo largo de y, como en las fotos, y no encima del anterior. La última vuelta termina sobre el palo de delante y baja por el hueco a la derecha, donde empieza el primer ahorcado; el último ahorcado sale por arriba hacia el ballestrinque de cierre.
+- **Cruces:** como en la cruz, cada tramo va en una zona y cada zona tiene su mapa. Los cruces entre zonas no se buscan; ahí solo se comprueba la separación.
+  - **Cada palo**, con su superficie desenrollada (x y el arco alrededor del eje), donde encima es lo más lejos del eje, como el poste. Ahí van los ballestrinques y los arcos de las vueltas.
+  - **Cada hueco**, con la superficie desenrollada de un cilindro acostado a lo largo de y, cuyo eje pasa por el medio de las vueltas a la altura de los ejes de los palos. Es la cintura de la cruz, acostada. Ahí van las rectas de las vueltas sobre y bajo el hueco, que van a lo largo de y, y las partes de los ahorcados que pasan sobre y bajo ellas, que lo rodean. Encima es lo más lejos del eje, así que cada ahorcado pasa por encima de cada vuelta, arriba y abajo. Como los ahorcados van uno junto a otro a lo largo de y, ahí no se cruzan entre ellos.
+  - **Donde los ahorcados bajan por el hueco**, a los lados de las vueltas, una zona sin mapa: ahí no se buscan cruces, solo la separación. En el hueco van uno junto a otro a lo largo de x; en el mapa del hueco quedarían uno sobre otro.
+  - **La secuencia** la escribe la plantilla: los 2 cruces de cada ballestrinque y 2 de cada ahorcado con cada vuelta. En el redondo, con 6 vueltas y 2 ahorcados, son 2 · 6 · 2 + 4 = 28 cruces. En el trípode, cada ahorcado cruza las vueltas en su hueco: con 6 y 2 son 4 · 6 · 2 + 4 = 52. Si al implementarlo un ahorcado tiene que pasar sobre el final de la última vuelta, como en las fotos, ese cruce se agrega al método y se dice aquí.
+  - Se compara con lo que se mide en la cuerda relajada, con la consistencia entre pasos y la heurística del cruce que salta, como en el amarre cuadrado.
+- **Que la cuerda no atraviese nada:** no entra en ningún palo más de 0,05 diámetros (`penetracion_palos`, como en la cruz), no queda a menos de 0,97 de otro tramo, y la curvatura (0,9) y el estiramiento (2 %) se miden como siempre. Si no caben, se cambia la forma (más hueco, otras esquinas), mirando las imágenes; los límites no se aflojan.
+- **Error común:** la variante `sin-ahorcados`, la misma en las dos plantillas: después de las vueltas, la cuerda va directo al ballestrinque de cierre. Las dos fuentes dicen que lo difícil del redondo es que quede apretado, y los ahorcados son lo que lo aprieta: sin ellos, el amarre queda flojo aunque las vueltas estén bien.
+  - Va junto al paso 6, `cierre-1`, con el mismo encuadre: bien hecho, el cierre empieza junto a los ahorcados; en el error, junto a las vueltas sueltas. Se ve desde `cierre-1`.
+  - En la variante, `ahorcado-<n>`, `hueco-1` y `ahorcados` son lo mismo que `vueltas`, para que el paso del error resalte lo mismo que el bien hecho.
+  - Hasta las vueltas es la misma cuerda, punto por punto, y su secuencia es la del paso sin los cruces de los ahorcados.
+  - `error.otros`, sin imagen: en el redondo, unir dos palos para alargarlos con un solo amarre, que los deja girar (las dos fuentes recomiendan dos, separados); en el trípode, apretarlo tanto que las patas no se abren, algo que Animated Knots advierte para este amarre. Los dos dicen además, en el texto de los pasos, que se tira fuerte en cada vuelta.
+- **Nudo terminado:** por delante, en la vista de los pasos. Por detrás, los palos y la cuerda se voltean juntos como una página, con media vuelta alrededor del eje y, y se apoyan en lo más bajo, como la cruz (`Palos.voltear`). Los palos siguen a lo largo de x y el de delante sigue delante; se ven los ahorcados bajo las vueltas y la parte de atrás de los ballestrinques. Es un giro rígido: la cuerda no se relaja otra vez y la secuencia no cambia. No hay apretado, como en todo nudo de plantilla.
+- **Escena** (`render/escena.js`): cada palo, un cilindro de madera a lo largo de x, como el palo de arriba de la cruz, en las `y` y a la altura `z` que manda `Palos.datos()` (`{tipo: palos, radio, largo, y: [...], z}`). Echan y reciben sombra, y sus ejes entran a la sombra de contacto. `altoDeEncuadre` cuenta `z + radio`. Volteados, cambia solo `z`. El visor del sitio los ve igual, porque usa la misma escena.
+- **Nombres:** como en el amarre cuadrado: en el paso del ballestrinque de inicio, «Firme» en la parte larga y «Chicote» en el extremo corto; desde la primera vuelta, solo «Chicote», en la punta de la parte larga. Los dos extremos llevan remate (`CON_FIRME`, `dos_remates`).
+- **Ficha** (`nudos/ficha.py`): `POR_DETRAS["palos"]`: «Por detrás es como lo ves si volteas los palos juntos como la página de un libro». La impresión voltea el último paso como la cruz (`nudos/imprimir.py`, `terminado`, que pasa a usar el `voltear` del sólido para los dos tipos). Los materiales (cuánta cuerda) salen del largo de la cuerda del modelo y Gabriel los confirma al atarlo. Seguridad: como en el amarre cuadrado, la excepción a D1. Con estos amarres se arman construcciones a las que la gente se sube, así que la ficha no dice lo contrario, y los cuidados van en `precauciones`: revisar cada amarre y los palos, y en el trípode, que las patas apoyen en suelo firme y no se abran solas.
+- **Hoja de revisión** (`nudos/hoja.py`): los palos color madera, a lo largo de x, cortados en el encuadre más un margen, como el palo de arriba de la cruz (`_palos`).
+- **Formato v1.5 (o la versión que toque cuando entre), un cambio compatible:** el tipo `palos` en «Anfitrión», con su tabla de medidas; dos secciones en «Plantillas», una por amarre; la variante `sin-ahorcados` en «Error común»; lo que cambia en «Nudo terminado» y «Dónde se buscan los cruces», y su línea en el registro. «Lo que se agregará» deja de nombrar los amarres redondo y trípode, y el párrafo de la hoja de revisión suma los palos. Ninguna especificación usa nada de esto, así que los nudos publicados se cargan igual.
+- **Lo que no cambia:** el amarre cuadrado, la cruz, el poste y todo lo demás. Para comprobarlo, antes del código se construyen e imprimen los 26 nudos de `publicados.txt` desde el commit de `main` del que sale la rama, en un worktree aparte, y se guardan fuera del repositorio sus `modelo.json` y sus imágenes de `impresion/`. Al terminar, se hace lo mismo en la rama y se compara: los `modelo.json`, byte a byte, y las imágenes, en RGB. Si alguna imagen difiere, ese nudo se imprime otra vez desde `main`: si también difiere de la referencia, es la variación conocida del navegador.
+- **Pruebas:**
+  - `tests/test_palos.py`, el anfitrión: la carga (sin `cantidad`, con `cantidad` de 1 o 4, sin `largo` o con `largo` no mayor que el grosor; una plantilla con otro número de palos es un error); dónde quedan los ejes con 2 y 3 palos; que `empujar` saca de cada palo lo que entró y `penetracion` lo mide; los datos de la escena; que el volteo es rígido, conserva la secuencia y deja los palos en la altura que dice.
+  - `tests/test_amarre_redondo.py` y `tests/test_amarre_tripode.py`: los 7 pasos construyen sin fallas; la secuencia tiene los cruces que dice el método; con otras medidas (2 y 2, 4 y 3, 6 y 6) también construyen, y cambiar las vueltas regenera los pasos sin tocar nada más; un `hasta` que no existe con esas medidas es un error al cargar; el error común construye sin fallas y tiene la secuencia de la variante. Como cada amarre tarda en construirse, cada archivo lo construye una sola vez.
+  - La prueba de `POR_DETRAS`, que ya pide una frase por tipo, y la de la hoja, que dibuja los palos.
+- **Archivos:** `nudos/spec.py`, `nudos/anfitrion.py` (`Palos`), `nudos/plantillas/__init__.py`, `nudos/plantillas/paralelos.py` (nuevo: las dos plantillas y su cuerda), `nudos/plantillas/trazo.py` (las zonas nuevas), `nudos/plantillas/pasos.py` (su geometría y sus mapas), `nudos/imprimir.py`, `nudos/ficha.py`, `nudos/hoja.py`, `render/escena.js`, `docs/formato-spec.md`, la tabla de «Elige el generador» de la skill `nudo-nuevo` y las tres pruebas. Las piezas de `amarre.py` se usan como están; si el diagonal ya las movió, se usan de donde queden.
+- **Después,** las dos especificaciones, `specs/amarre-redondo.yaml` y `specs/amarre-tripode.yaml`, con texto propio, encuadre y su ficha, para que Gabriel revise el texto y los ate.
+- **Riesgo:** los ahorcados junto a las vueltas. Bajan por un hueco donde cabe una sola cuerda, rodean la esquina de la última vuelta y, arriba, se separan uno del otro a lo largo de y. Si no caben a un diámetro, se agranda el hueco o se cambian las esquinas, mirando las imágenes. En el trípode, el hueco de atrás queda tapado por el palo del medio en la vista de los pasos; se ve desde arriba y en la vista por detrás.
+- **Lo que decide Gabriel:**
+  1. **El redondo lleva ahorcados.** La propuesta es que sí, dos: los llevan Animated Knots («dos o tres») y el manual de la Tropa («se ahorca el amarre»). Sin ellos, el amarre son vueltas entre dos ballestrinques, y el error común tendría que ser otro.
+  2. **Las vueltas del trípode: alrededor de los tres palos o en ocho.** La propuesta de la tanda 4 decía en ocho, como Animated Knots. Al leer las entradas salió que el manual de la Tropa da como método principal «unas siete vueltas alrededor de las piezas», y el ocho («en forma de S») como otra forma. Propongo alrededor de los tres. Es la geometría del redondo con un palo más, así que casi no agrega código; la banda queda apretada, como en la cuerda real; y es más fácil de seguir con la ficha. En ocho, cada vuelta pasa por cada hueco dos veces, una en cada sentido, y en el hueco cabe una sola cuerda, así que cada vuelta ocupa 2,2 diámetros a lo largo de los palos. En la imagen, sobre cada palo, las vueltas quedarían separadas por más de un diámetro, cuando en la cuerda real se aprietan. Además, en ocho los ahorcados se cruzan con las vueltas sobre la superficie de los palos de afuera, y no en el hueco, así que necesita su propio mapa. Si eliges el ocho, el resto del diseño no cambia.
+  3. **El error común de los dos:** `sin-ahorcados`, con imagen, junto al paso 6. Sin imagen, en el redondo, un solo amarre para alargar un palo, y en el trípode, apretarlo tanto que las patas no se abren.
+  4. **Las medidas:** 6 vueltas y 2 ahorcados en el redondo (las fotos llevan unas siete vueltas y el manual no dice cuántas); 6 vueltas y 2 ahorcados por hueco en el trípode (Animated Knots dice unas seis, y el manual, unas siete); palos de radio 2,5 y 30 de largo en los dos. Si prefieres 7 vueltas, como el manual, la plantilla acepta hasta 8 y se agregan «siete» y «ocho» a los números en letras.
+
+**Cómo se hizo el código (16 de noviembre de 2026).** Está como en el diseño, salvo lo que sigue. Los palos están en `nudos/anfitrion.py` (`Palos`) y las dos plantillas en `nudos/plantillas/paralelos.py`. El formato es v1.5. Las pruebas son dos archivos y no tres: `tests/test_palos.py`, el anfitrión, y `tests/test_amarres_paralelos.py`, las dos plantillas juntas, porque comparten casi todo.
+- **Los ejes de los palos van a la altura radio + 2,1, no + 2.** La relajación abre a 1,1 de radio toda curva más cerrada, y los ahorcados que abrazan las vueltas a 1,0 se apretaban contra lo demás y se estiraban. Ahora pasan a 1,1 por encima y por debajo de las vueltas, y abajo hace falta ese 0,1 más para no bajar de la mesa.
+- **Las esquinas de los ahorcados son redondas, de radio 1,6, y los ahorcados bajan por el hueco a 1,6 de las vueltas.** Con esquinas de 1,1, el segundo ahorcado, que en su plano no abraza nada, se encogía al relajar: la relajación le cortaba las esquinas y la cuerda que sobraba se ondulaba en los costados.
+- **Los ahorcados son 2 o 3 por hueco, no de 2 a 6.** Van uno junto a otro a lo largo de y, por encima y por debajo de las vueltas. Con cuatro o más, ocupan más que el hueco, quedan sobre los palos y se tuercen tanto al bajar que pierden cruces y curvatura. Las dos fuentes llevan dos o tres.
+- **Los cruces son 26 en el redondo y 50 en el trípode, no 28 y 52.** Por encima de las vueltas, la primera es el firme que sale del ballestrinque de inicio, a la izquierda de los ahorcados, así que ningún ahorcado la cruza. En el trípode, en el hueco de delante, cada ahorcado cruza además la cuerda que va de la última vuelta al hueco de atrás. Son `m × (2n − 1) + 4` y `m × (4n − 1) + 4`.
+- **El mapa de un hueco no se desenrolla.** Lo que va en él siempre está por encima o por debajo de las vueltas, así que su ángulo nunca llega a 0 ni a ±180°.
+- **El último ahorcado de cada hueco sigue un diámetro más por encima de las vueltas.** En el mapa del hueco, su cruce con la vuelta de más a la derecha cae casi al final de su tramo, y en el paso que termina ahí a veces no se medía.
+- **En el trípode, la cuerda pasa al hueco de delante dos diámetros más allá del último ahorcado de atrás, y vuelve hacia la izquierda a lo largo de 90° alrededor del palo del medio.** Con uno, la esquina entre las dos rectas quedaba con radio 0,77; con 50°, la cuerda que baja al hueco de delante se comprimía y se doblaba con 4 vueltas y 3 ahorcados.
+- **Lo que sigue de la cuerda en cada paso:** después del ballestrinque de inicio o de una vuelta, sigue por encima de los palos, como la vuelta siguiente, y cae a la mesa detrás del palo de atrás; en la imagen se aleja hacia el fondo. Después de un ahorcado, sigue a la derecha y, en una curva suave, sube y gira hasta pasar alto sobre el palo de atrás. En los ballestrinques a medio hacer cae delante, como en el amarre cuadrado.
+- **Resultado:** con 6 vueltas y 2 ahorcados, los 7 pasos y el error salen sin fallas en los dos amarres, con los cruces del método. En el redondo: separación de al menos 1,0, curvatura de al menos 0,93 y estiramiento de hasta 1,6 %. En el trípode: separación de al menos 0,99, curvatura de al menos 0,94 y estiramiento de hasta 1,5 %. El redondo también sale sin fallas con 2 y 2, 4 y 3, 6 y 3 y 2 y 3, y el trípode con 2 y 2, 4 y 3 y 6 y 3. **El trípode con 2 vueltas y 3 ahorcados falla:** en los pasos 5 y 7, la cuerda se dobla junto al segundo ahorcado del hueco de delante (radio 0,3). Lo que lo arregla rompe otras medidas, así que queda así: ningún nudo del libro lo usa. Construir cada amarre tarda de uno a dos minutos. Las imágenes de prueba (sin especificación, con texto de relleno) se leen: los ahorcados se ven en la canaleta entre los palos, sobre las vueltas, y en el error el cierre queda junto a las vueltas sueltas.
+- **Los nudos publicados no cambian:** se construyeron e imprimieron los 26 de `publicados.txt` desde `main` (3843a16), antes de tocar el código, y otra vez en la rama. Los 26 `modelo.json` son iguales byte a byte y 264 de las 265 imágenes son iguales en RGB. La otra, el error del ballestrinque, tenía 25 píxeles distintos en 1 nivel; impresa otra vez en la rama, es igual a la de `main`, así que era la variación del navegador.
+- **Pasan 517 pruebas y 1 se salta** (`tests/test_palos.py` y `tests/test_amarres_paralelos.py` son nuevas). Una del amarre cuadrado usaba `amarre-redondo` como ejemplo de una plantilla que no existe; ahora usa otro nombre.
+
+**Las dos especificaciones (17 de noviembre de 2026; Gabriel pidió escribirlas).** `specs/amarre-redondo.yaml` y `specs/amarre-tripode.yaml`, en `borrador`, con 6 vueltas y 2 ahorcados, 7 pasos con texto propio y el error `sin-ahorcados` junto al paso 6.
+- **Los errores sin imagen** (`error.otros`): en el redondo, un solo amarre para alargar un palo, que deja girar los palos como una tijera; en el trípode, las vueltas demasiado apretadas, que no dejan abrir las patas.
+- **El trípode abre las patas en el texto del último paso,** «Termina el ballestrinque y abre las patas»: se cruzan las dos de afuera y la del medio se abre hacia el otro lado, como en Animated Knots. La verificación pide que se pare solo y que los palos no resbalen en el amarre, y las precauciones, suelo firme y las puntas trabadas si es blando o liso.
+- **Seguridad:** como en el amarre cuadrado, la excepción a D1. No hay sección de seguridad ni nada que diga que el amarre no sostiene personas, y las precauciones piden revisar los amarres y los palos.
+- **Materiales:** la cuerda del modelo mide 2,9 m en el redondo y 4,1 m en el trípode, con una de 8 mm, sin lo que se deja para manejarla. La ficha dice unos 4 m y unos 5 m; se confirma al atarlos.
+- **Sin número ABOK:** Animated Knots compara el redondo con el 2103 y el trípode con el 2111, pero dice que no son el mismo método. Queda para confirmar.
+- **El encuadre** es x de −12 a 12,5 en los dos, e y de −9 a 8 en el redondo y de −12 a 11 en el trípode. Los extremos de la cuerda salen del cuadro en la mayoría de los pasos.
+- **Las fichas caben** después de acortar los usos y los pasos que ocupaban 6 o 7 líneas. Las dos están en `build/<slug>/ficha.pdf`.
+- **Gabriel aprobó las imágenes y el texto de los dos el 17 de noviembre** («Apruebo todo»), y pasaron a `modelado`. Falta el filtro 1.
+
+**El cabo y el refuerzo de cabo (tanda 4).** La entrada (`entradas/refuerzo-de-cabo/`) son 18 fotos de un mismo método y su descripción. El cabo, de tres cordones, está parado con la punta arriba, sujeta con cinta. El cordel se pone a lo largo del cabo, con el extremo corto hacia la punta y más allá de ella. Con el largo se dan unas vueltas apretadas hacia la punta, sobre el extremo corto. Ese extremo, que sale por encima de las vueltas, se dobla hacia abajo en un seno que queda sobre ellas, con la curva hacia la punta y su extremo por debajo de las vueltas. Se dan otras tantas vueltas encima de las dos ramas del seno, también hacia la punta, hasta que solo queda fuera la curva. El largo se pasa por el seno y se tira del extremo corto: el seno se mete bajo las vueltas de encima y arrastra al largo con él. Al final se cortan las dos puntas al ras. La descripción advierte que no se tire de más: el seno tiene que quedar a medio camino.
+
+**Diseño (16 de noviembre de 2026; Gabriel lo aprobó el mismo día, con las seis decisiones del final tal como están):**
+- **El cabo es un cilindro rígido, no una segunda cuerda.** Se pensó dibujarlo como una cuerda gruesa de verdad, con dos cuerdas (T6). No conviene, por tres razones:
+  - Los cruces de dos cuerdas se buscan en la proyección desde arriba. Ahí las vueltas, que rodean el cabo, se ven casi de canto a los costados, y las ramas que van bajo las vueltas quedan una encima de otra en el mismo lugar. Es lo que en T7 obligó a usar los mapas desenrollados.
+  - Una cuerda gruesa relajada se dobla y cae a la mesa por su peso, y el refuerzo se ata sobre un tramo recto.
+  - Hoy no hay plantillas con varias cuerdas, y las varias cuerdas sobre un anfitrión están en «Lo que se agregará».
+
+  Por eso el cabo es un sólido, como el poste, que solo se dibuja como cuerda. El cordel es la cuerda del nudo: mide 1 diámetro, y todas las medidas van en diámetros del cordel.
+- **El tipo y sus medidas:** `anfitrion: {tipo: cabo, radio: 3, largo: 30}`. Es un cilindro horizontal a lo largo de x, con el eje en y = 0, como el poste y el tubo. La punta, cortada, está en x = 0, y el cabo sigue hacia x negativo hasta `-largo`. La punta va a la derecha: las vueltas avanzan hacia ella de izquierda a derecha, en el sentido en que se lee.
+  - `radio` va de 1,5 a 8. Con 3, el cabo mide 6 diámetros: es uno de 12 mm con un cordel de 2 mm. Un cordel de 1 mm sería radio 6, pero el cordel se vería muy delgado en la ficha. Por eso se propone 3, y el texto pide un cordel delgado sin decir su grosor.
+  - `largo` es mayor que `2·radio`. La plantilla comprueba además que el refuerzo quepa: el cabo tiene que pasar al menos 3 diámetros más allá del extremo corto. Si no cabe, es un error al cargar.
+  - El eje queda a la altura `radio + 1`: el cabo se apoya en la mesa sobre las vueltas de abajo, igual que el poste sobre la cuerda que pasa por debajo. Fuera del refuerzo queda a un diámetro de la mesa, como el poste.
+  - Solo se usa con una plantilla, como la cruz y el tubo (`_SOLO_CON_PLANTILLA`).
+- **El sólido** es la clase `Cabo` de `nudos/anfitrion.py`: `punto`, `cilindricas`, `empujar` y `penetracion` como los del tubo, pero entre `-largo` y 0. Más allá de la punta no empuja, así que el cordel puede pasar por delante del corte. La medida es `penetracion_cabo` («en el cabo»), con el mismo máximo de 0,05. La relajación es la de las plantillas: sin gravedad, con choques y sin entrar en el cabo.
+- **La plantilla:**
+
+  ```yaml
+  anfitrion: {tipo: cabo, radio: 3, largo: 30}
+  plantilla:
+    tipo: refuerzo-de-cabo
+    vueltas: 4        # antes del seno, y otras tantas encima de él
+  pasos:
+    - {titulo: Da la primera vuelta, texto: …, hasta: vuelta-1}
+    - {titulo: Da las demás vueltas, texto: …, hasta: vueltas}
+    - {titulo: Haz un seno con el extremo corto, texto: …, hasta: seno}
+    - {titulo: Da las vueltas sobre el seno, texto: …, hasta: seno-vueltas}
+    - {titulo: Pasa el chicote por el seno, texto: …, hasta: por-el-seno}
+    - {titulo: Tira del extremo corto, texto: …, hasta: tirar}
+    - {titulo: Corta las puntas, texto: …, hasta: cortar}
+  ```
+
+  - `vueltas` va de 3 a 8 y cuenta las vueltas de cada mitad: son las mismas antes y después del seno, como en la fuente. Se propone 4, es decir, 8 en total. La fuente da unas 8 por mitad con un cordel más delgado. Con radio 3 y 4 por mitad, el refuerzo mide 8,8 diámetros, una vez y media el grosor del cabo, que es lo que se suele pedir. En el texto, `{vueltas}` sale en letras.
+  - `hasta` puede ser, en este orden: `colocar` (el cordel a lo largo del cabo, sin vueltas), `vuelta-1` … `vuelta-<n>`, `seno`, `seno-vuelta-1` … `seno-vuelta-<n>`, `por-el-seno`, `tirar` y `cortar`. `vueltas` es lo mismo que `vuelta-<n>` y `seno-vueltas` que `seno-vuelta-<n>`. Los pasos van en ese orden y el último llega a `cortar`. Un `hasta` que no existe es un error al cargar, como en el amarre.
+  - Son 7 pasos. Poner el cordel a lo largo del cabo va en el texto del paso 1, porque su imagen ya muestra el extremo corto hacia la punta. `colocar` queda disponible, como `inicio-1` en el amarre, y la especificación no lo usa.
+- **Geometría.** La plantilla calcula la cuerda de cada hito entera, con piezas sobre el cabo (en coordenadas [x, ángulo, capa]) y sobre la mesa, como el amarre. Un ángulo se mide como en el poste: 0 arriba, 90 hacia quien ata. Las vueltas avanzan hacia la punta, y por delante del cabo bajan. La cámara de los pasos mira desde unos 50°, así que todo lo que va a lo largo del cabo se pone alrededor de 50°, de frente.
+  - **Las vueltas,** a 1,1 una de otra a lo largo del cabo y apretadas contra él. Cada una sube un diámetro donde pasa sobre algo, como los ballestrinques del amarre, que ya van separados al trazarlos. Con 4 por mitad, las de abajo van de x = −13,4 a −9 y las de encima, de −9 a −4,6. Quedan 4,6 diámetros hasta la punta para la curva del seno.
+  - **El extremo corto** va a 84°, a lo largo del cabo, bajo las primeras vueltas. En los pasos 1 y 2 sigue hasta la punta, la pasa y cae a la mesa por delante del corte. Al principio, el cordel dobla 90° desde él para empezar la primera vuelta, con radio de al menos 0,9.
+  - **El seno.** Sus dos ramas van a 4,2 diámetros de arco una de otra, a 84° (la que sale de debajo de las vueltas) y a 16° (la que vuelve). Su curva, de radio 2,1, queda más allá de las vueltas de encima, hacia la punta. La rama que vuelve pasa sobre las primeras vueltas y su extremo queda sobre el cabo, más allá de ellas, sin caer a la mesa. Se separan tanto para que, en el paso de tirar, quepa entre ellas la vuelta que da el largo alrededor de la curva (abajo). Con ramas a 2,2 de arco, como se pensó primero, no cabe a un diámetro.
+  - **El chicote** pasa por el seno: sale de la última vuelta entre las dos ramas, a 50°, va hacia la punta por debajo de la curva y cae a la mesa.
+  - **Tirar.** La curva del seno queda a la mitad de las vueltas de encima, y el largo la rodea por dentro del seno. Entra bajo las vueltas a 33°, junto al borde de la última, da media vuelta de radio 1,05 dentro del seno, vuelve a 67° por encima de la curva y sale por el borde, hacia la mesa. La rama que vuelve queda más larga hacia afuera. Todo eso queda bajo las vueltas: en la imagen se ven sus bultos y las dos puntas que salen.
+  - **Cortar.** La misma cuerda, cortada a un diámetro de donde sale de las vueltas: la rama que vuelve, donde se une la primera mitad con la segunda, y el largo, en el borde de la punta.
+  - **En cada paso,** lo que sigue del largo después del hito sale por delante del cabo, desde abajo, y cae a la mesa hacia quien ata, como los restos del amarre. Por eso la imagen no tapa las vueltas.
+  - **No es el «comienzo de la cuerda entera».** En el amarre y en la cabeza de turco, cada paso es el comienzo de una sola cuerda y lo que se mueve está al final. Aquí el seno, el tirar y el corte cambian el principio de la cuerda, que es el extremo corto. Por eso la plantilla da la cuerda de cada hito (`trazo(hito, previo)`, que ya devuelve los puntos y las zonas del paso) y dice ella misma qué tramo se resalta (`inicio` y `fin` de `TrazoDePaso`). En las vueltas se resalta lo que agrega el paso; en `seno`, el extremo corto hasta donde sale de las vueltas; en `tirar`, el extremo corto hasta la curva, que es lo que se tira, y en `cortar`, nada. `nudos/plantillas/pasos.py` no cambia, salvo `geometria()`, que reconoce la plantilla nueva.
+- **Cruces.** Como en el tubo: los tramos sobre el cabo se comparan en su superficie desenrollada (x y el arco alrededor del eje, con periodo de una vuelta), donde encima es lo más lejos del eje, y los de la mesa, en la proyección. Entre las dos zonas no se buscan. El corte del mapa va atrás y abajo, a 230°, donde no hay cruces.
+  - La plantilla escribe la secuencia del método: cada vuelta pasa por encima de lo que va a lo largo del cabo bajo ella; la rama que vuelve pasa por encima de las primeras vueltas; la curva del seno, por encima del chicote. Las vueltas no se cruzan entre sí, porque van una junto a otra.
+  - Con `n` vueltas por mitad, `vuelta-<k>` tiene k cruces; `seno`, 2n; `seno-vuelta-<k>`, 2n + 2k, y `por-el-seno`, 4n + 1. Con 4, son 4, 8, 16 y 17. En `tirar` y en `cortar`, la plantilla los cuenta con su geometría: con 4 son unos 20 y 14. En `cortar` faltan los de la rama que vuelve sobre las primeras vueltas, porque se cortó.
+  - Las etiquetas son números, como siempre, y no cambian de un paso a otro mientras el cruce sea el mismo. En `tirar`, los cruces que se movieron llevan etiquetas nuevas: el de la curva con el chicote y los de las vueltas de encima, que ahora pasan sobre el largo y no sobre el seno. Así la consistencia entre pasos y los cruces que saltan se comprueban igual que en el amarre, sin cambiar `consistencia` ni `cruces_que_saltan`.
+- **Que el cordel no atraviese nada:** no entra en el cabo más de 0,05, ningún tramo queda a menos de 0,97 de otro, la curvatura mínima es 0,9 y el estiramiento máximo es 2 %. Son los límites de siempre, y no se aflojan.
+- **Error común** (`variante: por-fuera-del-seno`, desde `por-el-seno`): el chicote pasa por encima de la curva del seno, no por dentro. Al tirar del extremo corto, el seno sale sin arrastrarlo y el refuerzo se deshace. Es la misma cuerda que el paso 5 con ese cruce al revés: el chicote se levanta sobre la curva, en vez de pasar por debajo. Se construye y se comprueba como un paso más y se muestra junto al paso 5, con el mismo encuadre. El chicote va en ámbar, así que se ve si pasa por encima o por debajo de la curva azul.
+  - **Sin imagen** (`error.otros`), dos errores. El primero es tirar de más: si el seno pasa más allá de las vueltas de encima, el largo queda suelto sobre las primeras y se sale. El segundo son las vueltas flojas o separadas: el refuerzo se corre hacia la punta y se sale por ella.
+- **El nudo por detrás:** se gira el cabo media vuelta alrededor de su eje, como se gira en la mano, igual que el tubo. Es un giro rígido, así que la secuencia no cambia y no se relaja otra vez. Lo que estaba arriba y de frente queda abajo y atrás, así que el giro se apoya después en lo que queda más abajo, como la cruz al voltearse (`Cabo.voltear` devuelve el paso girado y los datos del cabo girado para la escena). Se mira con la vista de los pasos y con el encuadre girado del tubo (`girado_y`). En la ficha: «Por detrás es como lo ves si giras el cabo media vuelta» (`POR_DETRAS["cabo"]`). Por detrás se ven solo vueltas, que es lo que se busca: que el refuerzo no muestre puntas en ningún lado.
+- **El apretado:** no hay, como en todo nudo de plantilla. El paso de cortar ya va con las vueltas apretadas.
+- **Los nombres.** El largo es el que se mueve, así que lleva «Chicote» en su punta desde el paso 1 hasta el de tirar. Ningún paso tiene firme (`CON_FIRME` vacío). Los dos extremos llevan remate (`dos_remates`). En `cortar` no va ningún nombre: la plantilla dice en `NOMBRES` qué hitos no llevan «Chicote», y `nudos/exportar.py` le hace caso. Es un atributo nuevo y opcional de las plantillas: sin él, como en el amarre y la cabeza de turco, todo sigue igual. El texto llama «extremo corto» al otro extremo, que no lleva nombre en la imagen.
+- **En la escena** (`render/escena.js`), el cabo es una cuerda crema, con la trenza de las cuerdas (`COLORES.crema`). Se dibuja como un `TubeGeometry` recto, para que la trenza vaya a lo largo como en las demás cuerdas, y se repite cada π · 2 · radio. La punta, en x = 0, es un disco plano del crema oscuro de la trenza, para que se vea el corte, y el otro extremo, en `-largo`, también. Echa y recibe sombra, y su eje entra a la sombra de contacto como el de los palos. `altoDeEncuadre` cuenta `z + radio`, como el tubo. En gris, el cabo crema queda claro, el cordel azul oscuro y el ámbar en medio. No lleva cinta: si la punta se deshilacha, el texto dice que le pongas cinta antes. La trenza no es la del cabo de tres cordones de la fuente; si en la página de prueba no se lee como cuerda, se le hace después una textura torcida, sin cambiar el formato.
+- **En la hoja de revisión** (`nudos/hoja.py`), el cabo se dibuja color crema en las dos vistas, cortado en la punta y, hacia el otro lado, en el encuadre más un margen, como el poste. Como en la cabeza de turco, la hoja lleva además el cabo desenrollado: la vista desde arriba no muestra la mitad de las vueltas, ni lo que va bajo ellas. `mapa()` se generaliza: hoy recibe los `senos` del tubo para saber dónde cortar, y pasa a recibir el ángulo del corte (230° en el cabo). `python -m nudos hoja` y `revision` lo piden para el cabo como para el tubo.
+- **Ficha:** 7 pasos, 6 en la página 1 y 1 en la 2, como el amarre. El error va junto al paso 5. El terminado, por delante y por detrás. Materiales: el cabo, unos 60 cm de cordel delgado (se confirma con el modelo y al atarlo) y algo para cortar. No hay sección de seguridad: el refuerzo no sostiene nada. El número ABOK de la fuente (3443) se confirma con los demás.
+- **Formato v1.5, un cambio compatible** (o el número que siga, según el orden en que entren los anfitriones de la tanda 4): el tipo `cabo` en «Anfitrión», con su tabla de medidas; la plantilla `refuerzo-de-cabo` en «Plantillas», con sus hitos y su variante en «Error común»; el cabo en «Nudo terminado» y en «Dónde se buscan los cruces», y su línea en el registro. «Plantillas» deja de decir que cada paso es el comienzo de la cuerda entera: dice que en el refuerzo la plantilla da la cuerda de cada paso. Ninguna especificación usa nada de esto, así que los nudos publicados se cargan igual. La tabla «Elige el generador» de la skill `nudo-nuevo` lleva la fila del refuerzo de cabo, como la del amarre.
+- **Lo que no cambia:** el poste, la cruz, el tubo, los cilindros parados, el camino de los nudos libres y las plantillas del amarre y la cabeza de turco. Para comprobarlo:
+  1. Antes de tocar el código, en un worktree aparte desde la punta de `main` donde empieza el código (después de los anfitriones de la tanda 4 que entren antes), se construyen e imprimen con Edge los 26 nudos de `publicados.txt` (`construir` e `imprimir`). Sus `modelo.json` e imágenes se copian a una carpeta de referencia fuera de git.
+  2. Al final, lo mismo en la rama.
+  3. Los `modelo.json` se comparan byte a byte. Las imágenes se comparan en RGB, contando los píxeles distintos y cuánto difieren.
+  4. Si alguna imagen difiere, ese nudo se imprime otra vez desde `main` en el worktree de referencia. Si también difiere de la primera referencia, en otros píxeles y por 1 nivel, es la variación conocida del navegador. Si no, hay que arreglar el código.
+  5. Corre la suite entera.
+- **Pruebas** (`tests/test_refuerzo_de_cabo.py`, con una especificación de prueba que no es del libro):
+  - la carga: el cabo sin plantilla, sin `radio` o `largo`, o con `largo` muy corto para el refuerzo; `vueltas` fuera de 3 a 8; un `hasta` que no existe, pasos fuera de orden o un último paso que no es `cortar`;
+  - construye sin fallas con 4 vueltas, y también con 3, 6 y 8. El cordel no entra en el cabo;
+  - el número de cruces de cada hito, el de la fórmula de arriba;
+  - las etiquetas que siguen en `tirar` están en el mismo lugar, y la consistencia entre pasos pasa;
+  - el error tiene los mismos cruces que el paso 5, con el de la curva al revés;
+  - el giro por detrás conserva la secuencia, no entra en la mesa y manda a la escena el cabo girado;
+  - la escena recibe el cabo con su tipo, radio, largo y altura, y `cortar` no lleva nombres.
+
+  En `tests/test_hoja.py`, la hoja dibuja el cabo y su mapa. La prueba de que cada tipo de anfitrión tiene su frase en `POR_DETRAS` ya existe y cubre el cabo.
+- **Archivos:** `nudos/spec.py`, `nudos/anfitrion.py` (`Cabo`), `nudos/plantillas/refuerzo.py` (nuevo), `nudos/plantillas/__init__.py`, `nudos/plantillas/pasos.py` (`geometria()`), `nudos/plantillas/trazo.py` (la zona del cabo), `nudos/exportar.py` (`NOMBRES`), `nudos/imprimir.py` (el terminado sobre el cabo), `nudos/ficha.py` (`POR_DETRAS`), `nudos/hoja.py` y `nudos/__main__.py` (el mapa del cabo), `render/escena.js`, `docs/formato-spec.md`, la tabla de la skill `nudo-nuevo`, `tests/test_refuerzo_de_cabo.py` y `tests/test_hoja.py`. Después, `specs/refuerzo-de-cabo.yaml`, con texto propio, en `borrador` hasta que Gabriel revise sus imágenes.
+- **Riesgo:** el paso de tirar. Bajo las vueltas de encima quedan la curva del seno y la vuelta que da el largo alrededor de ella, entre las dos ramas, con las vueltas encima. Es donde más tramos hay en menos espacio. Si no cabe a un diámetro con estas medidas, se separan más las ramas o se agranda el radio del cabo, mirando las imágenes. Los límites no se aflojan. El otro riesgo es que ocho vueltas de cordel no se lean en la ficha; eso se ve en la página de prueba, y si pasa, se baja `vueltas` a 3.
+- **Lo que decidió Gabriel (16 de noviembre):** aprobó las seis propuestas.
+  1. El cabo como cilindro rígido dibujado como cuerda crema, recto, con la punta cortada a la derecha y sin cinta, en vez de una segunda cuerda.
+  2. Las medidas: radio 3 (un cabo de 12 mm con un cordel de 2 mm) y 4 vueltas por mitad.
+  3. Los 7 pasos, con «Corta las puntas» al final: el terminado es el refuerzo cortado, sin puntas a la vista.
+  4. El error con imagen: el chicote por encima del seno, no por dentro. Sin imagen: tirar de más y las vueltas flojas.
+  5. Por detrás, el cabo girado media vuelta en la mano, como el tubo.
+  6. En el paso de tirar, el seno se dibuja abierto bajo las vueltas, con el largo dando la vuelta por dentro de él. En la cuerda real se cierra al apretar, pero queda tapado por las vueltas, así que la imagen muestra lo mismo.
+
+**Cómo se hizo (16 y 17 de noviembre de 2026).** Con el diseño, salvo lo que sigue. Está en `nudos/plantillas/refuerzo.py` (la plantilla y su geometría), `Cabo` en `nudos/anfitrion.py` y `specs/refuerzo-de-cabo.yaml`, en `borrador`.
+- **La cuerda de cada hito se traza en el mapa del cabo,** x a lo largo y el arco alrededor, pieza por pieza: el extremo corto, cada vuelta, la rama que vuelve, la curva del seno y el chicote. Cada pieza tiene un nivel, y en un cruce va encima la de nivel más alto. La plantilla escribe la secuencia con los cruces de ese mapa y esos niveles. La etiqueta de un cruce es la de sus dos piezas en el mismo lugar alrededor del cabo, así que el de la curva con el chicote es el mismo al pasarlo y al tirar, aunque se corra a lo largo del cabo.
+- **La altura sale de lo que hay debajo:** un punto que en el mapa queda a menos de 0,95 de un tramo más bajo va un diámetro sobre él, y toda la cuerda sube y baja en rampas de 2,4 (más largas donde sube dos capas). Entre dos subidas cercanas de un mismo tramo no baja. Las rampas no bajan a un tramo que tiene algo encima, salvo una vez al chicote que sale de la última vuelta: si no, la última vuelta, el chicote y lo que los cubre se levantaban unos a otros sin parar.
+- **El seno es más ancho que en el diseño:** sus ramas van a 7 diámetros de arco una de otra (a 106° el extremo corto y a −16° la rama que vuelve) y no a 4,2, y su curva es plana, con esquinas de radio 1,2. Así la última vuelta pasa sobre la rama que vuelve lejos de donde el chicote gira hacia el seno.
+- **Al pasar el chicote son 4n + 2 cruces, no 4n + 1:** antes de girar hacia el seno, la última vuelta pasa otra vez sobre la rama que vuelve. Con 4 vueltas son 18.
+- **Tirar y cortar, simplificados (Gabriel lo eligió el 17 de noviembre).** El diseño ponía la curva del seno a la mitad de las vueltas de encima, con el chicote dando media vuelta alrededor de ella. No cabe: la media vuelta, la subida del chicote sobre la curva y la separación con las primeras vueltas piden unas 7 vueltas encima, y aun con 8 la relajación arrugaba las partes que bajo las vueltas van de costado, paralelas a ellas, porque sus cruces se forman y se deshacen. Ahora, al tirar, la curva queda apretada contra el borde de las vueltas, con el chicote enganchado y todavía a la vista, y la rama que vuelve sale lo que se acortó el seno. En el paso 5 la curva va más suelta, para que se note la diferencia. Al cortar, el seno queda escondido bajo las vueltas de encima, lo más cerca de las primeras que se puede, y el chicote pasa bajo su curva y termina dentro de él, sin el doblez que hace en la cuerda real. Por fuera se ve igual: vueltas y la punta corta de la rama que vuelve. El tramo recto de la curva escondida va justo entre dos vueltas, que pasan sobre él sin cruzarlo.
+- **`vueltas` va de 4 a 8:** con 3, el seno no cabe escondido. Con 4, la del libro, y con 8 los siete pasos construyen sin fallas. Con 5, 6 y 7, los pasos 1 a 6 también, pero el de cortar se dobla bajo las vueltas (radio de 0,2 a 0,4): queda para cuando un nudo lo necesite. `construir` lo dice como falla.
+- **Los nombres:** «Chicote» desde el paso 1 hasta el de tirar. Al cortar no va ningún nombre ni resaltado: la plantilla lo dice en `SIN_NOMBRES`, que `nudos/exportar.py` lee.
+- **La especificación:** 7 pasos con texto propio, el error y sus dos errores sin imagen, el encuadre de los pasos y uno más cerca para el terminado. La familia es «Cuidado de la cuerda», que es nueva y la confirma Gabriel, como el número ABOK 3443.
+- **La escena:** el cabo es una cuerda crema con la trenza de las demás, sin el hilo de color, que a ese grosor se veía como una raya. Los dos cortes son discos del tono medio de la trenza. **La hoja de revisión** lo dibuja color crema y además desenrollado, como el tubo, con cada cruce en el punto de la cuerda más cercano a su lugar en la mesa.
+- **Formato v1.5** (`docs/formato-spec.md`), y la fila del refuerzo en la tabla «Elige el generador» de la skill.
+- **Las pruebas** (`tests/test_refuerzo_de_cabo.py`): la carga, el cabo, los cruces del método, los siete pasos sin fallas, la etiqueta del cruce de la curva al tirar, el error, los nombres, el giro por detrás, las imágenes y la hoja. Pasan 480 pruebas y 2 se saltan.
+- **Los nudos publicados no cambian:** se construyeron e imprimieron los 26 de `publicados.txt` desde `main` (3843a16), antes de tocar el código, y otra vez en la rama. Los 26 `modelo.json` son iguales byte a byte, y 233 de las 239 imágenes son iguales en RGB. Las otras 6, de 6 nudos, difieren en 1 nivel en 1 a 23 píxeles: impresas otra vez, desde `main` o desde la rama, salen iguales a la referencia, así que es la variación conocida del navegador.
+- **La ficha cabe:** 6 pasos en la página 1 y, en la 2, el paso 7, el error con los dos errores sin imagen, el terminado, la verificación, las precauciones y las alternativas. Para que la página 1 cupiera se acortaron los usos, los materiales y los pasos 1, 4 y 6. El error lleva su propio encuadre, cerca del cruce de la curva con el chicote: con el de los pasos, el bien y el mal casi no se distinguían.
+- **Gabriel aprobó las imágenes y el texto el 17 de noviembre:** la especificación pasó a `modelado`. Falta el filtro 1, atarlo con cuerda real siguiendo la ficha. El código entra a `main` después de los otros anfitriones de la tanda 4, si entran antes; entonces el formato pasa a la versión que siga y se vuelve a comparar con los publicados.
+
+**La estaca del tensor ajustable (tanda 3).** La entrada (`entradas/tensor-ajustable`) es una sola imagen con cuatro dibujos: una estaca clavada, la cuerda que le da la vuelta a ras del suelo y el nudo sobre el firme, a unos diez diámetros de ella.
+
+**Diseño (15 de noviembre de 2026; Gabriel lo aprobó el mismo día):**
+- **El tipo y sus medidas:** `anfitrion: {tipo: estaca, radio: 1.5, alto: 5}`. Es el mismo cilindro parado en x = y = 0 que el destorcedor, con las mismas reglas (radio de al menos medio diámetro y alto mayor que 1), de madera y más alto. Es redondo, aunque el dibujo la muestra cuadrada: una cuadrada sería otro sólido, con otro empuje. El alto se elige al dibujar; con 5 se ve como estaca y casi no tapa la cuerda que pasa detrás de ella.
+- **Cómo se construye:** como con el destorcedor. `EN_LA_MESA` lleva los dos, y en `nudos/anfitrion.py` comparten la clase `Parado`; `Estaca` solo cambia el nombre de su medida (`penetracion_estaca`) y lo que manda a la escena.
+- **El nudo por detrás** se voltea como una página, como si sacaras la estaca y la volvieras a clavar. En el uso real la cuerda está tensa en el aire, y su otra cara es la que ves desde el otro lado de la cuerda, que es lo mismo. La estaca sigue en la imagen, en el mismo lugar. La ficha: «Por detrás es como lo ves si sacas la estaca, volteas el nudo como la página de un libro y la vuelves a clavar».
+- **El apretado** es el del destorcedor.
+- **En la escena,** de madera, como los palos. Al encuadrar, su alto no levanta toda la caja, como el del destorcedor: se encuadran solo las cuatro esquinas de su tapa, para que se vea entera sin achicar el nudo, que es largo. El destorcedor no cambia.
+- **En la hoja de revisión,** color madera. **En la ficha,** las frases de «por detrás» están en `POR_DETRAS` (`nudos/ficha.py`), con una prueba de que cada tipo de anfitrión tiene la suya.
+- **Formato v1.4, un cambio compatible.** La skill lleva la estaca en «Elige el generador».
+
+**Cómo se hizo (15 y 16 de noviembre de 2026).** Está como en el diseño (7680606).
+- **Los nudos publicados no cambian:** los 16 `modelo.json` son iguales byte a byte a la referencia, construida e impresa desde 74e1b1b antes del cambio. De las imágenes, 6 de 5 nudos diferían en 1 nivel en 4 a 20 píxeles; impresos otra vez desde 74e1b1b en un worktree aparte, esos 5 nudos dan las mismas imágenes que la rama, así que la variación era de la corrida de referencia.
+- Pasan 432 pruebas y 1 se salta (`tests/test_estaca.py` es nueva).
+- **El tensor ajustable:** cuatro pasos y ocho cruces. El chicote da dos vueltas al firme dentro de la gaza, hacia la estaca (cruces 1 a 4), pasa por debajo del tramo que sube a las vueltas (5) y da una vuelta más por fuera, más lejos de la estaca (6 y 7), y sale entre su propio tramo y el firme (8). Con vueltas de radio 1,3 a 1,5, el reverso y el error común se comprimían hasta 8 %. Con las del nudo aguja (radio 1,75 y una onda de 0,5 en el firme) no queda ninguna falla. La duda principal es el cruce 8: el dibujo es una perspectiva de la cuerda en el aire, y leído desde arriba deja el chicote por fuera de su tramo, sin nada que lo apriete. Se puso como lo pide un cote, y se revisa en el filtro 1.
+
+**Los tres borradores en `main` (16 de noviembre de 2026).** Gabriel revisó las hojas del ballestrinque doble, la vuelta de braza y el tensor ajustable y los aprobó el 16 nov. Entraron a `main` con la estaca (formato v1.4) y la hoja de revisión que encuadra el reverso volteado, y pasaron a `modelado`. Los 16 `modelo.json` publicados son iguales byte a byte a la referencia de 74e1b1b, y sus imágenes también; dos de la vuelta de escota variaron en 1 nivel en la corrida con todos y salen iguales impresas solas. Pasan 446 pruebas y 1 se salta. Las tres fichas caben y están listas para el filtro 1. Las dudas que se revisan con cuerda: en la vuelta de braza, los cruces 1, 3, 4 y 6; en el tensor ajustable, el cruce 8.
+
+**Las tres ramas de la tanda 4 en `main` (17 de noviembre de 2026; Gabriel pidió integrarlas).** Entraron de a una, con un merge cada una: el amarre diagonal (v1.5) sin conflictos, porque salía de `main`; los palos paralelos (v1.6, ed80a80) y el cabo (v1.7, bab9c59) con conflictos en las listas de anfitriones y plantillas, la hoja, la impresión del nudo por detrás, la escena, el formato y el plan, donde quedaron los dos lados. Cada rama decía ser la v1.5, así que los palos pasaron a v1.6 y el cabo a v1.7.
+- **Los 26 publicados no cambian:** sus `modelo.json` son iguales byte a byte a la referencia (la de 74e1b1b para los 16 primeros y la de 3843a16 para los diez de la tanda 3), y sus imágenes, iguales en RGB. Dos difirieron en la corrida con todos: el prusik salió igual impreso solo, y el tensor ajustable, en 4 píxeles de 1 nivel, sale igual al de `main` impreso otra vez desde 3843a16 en un worktree aparte, así que la variación era de la referencia.
+- **Pasan 577 pruebas y 1 se salta.** La de la cabeza de turco que lista las plantillas ahora las nombra todas.
+- **Las cuatro fichas caben:** el amarre diagonal, el redondo, el trípode y el refuerzo de cabo, en `modelado`. Falta el filtro 1.
+
+**Construir con todos los núcleos (17 de noviembre de 2026).** Construir relajaba cada paso en un solo núcleo, y la suite tardaba 45 minutos. Ahora `nudos/procesos.py` abre un grupo de procesos, uno por hilo de la computadora. `construir` relaja a la vez los pasos y el error común; el reverso y el apretado por delante esperan al último paso, y el apretado por detrás, al reverso. En un nudo de plantilla, la cuerda entera se calcula una vez y cada paso se relaja en su proceso. Lo usan `construir`, `diagnostico`, `imprimir`, `ficha`, `revision`, `sitio` (todos los nudos a la vez) y `mejoras`; `hoja` lee el `modelo.json` que deja `construir`. `NUDOS_PROCESOS=1` vuelve a un solo proceso, y un programa leído de stdin construye en uno solo, porque los procesos nuevos no pueden volver a importarlo. La física (`_largos`, `_colisiones`, `relajar`) no cambió.
+- **Los procesos del grupo arrancan con `OPENBLAS_NUM_THREADS=1`.** Sin eso, cada proceso comprometía 1,5 GB al importar numpy (los búferes de OpenBLAS para 24 hilos), y 28 procesos agotaban la memoria de la computadora: la impresión que corría al lado falló.
+- **Los resultados no cambian.** Antes del código se construyeron e imprimieron desde `main` (e4daa3b) los 26 nudos de `publicados.txt` y los 4 de la tanda 4. Con la rama, los 30 `modelo.json` son iguales byte a byte, y los 30 modelos, construidos en un solo proceso y con el grupo, son idénticos con todos los decimales, también en qué apretado es el mismo objeto que el último paso. De las imágenes, 6 de 3 nudos difirieron en 1 o 2 niveles en 1 a 27 píxeles. El ballestrinque doble sale igual a la referencia impreso solo, y el arnés de hombre y la media llave salen iguales desde `main` y desde la rama, así que la variación era del navegador en la corrida de referencia.
+- **La suite** construye una sola vez, al empezar, todos los nudos de `modelado` o más, en hilos que mandan sus pasos al grupo mientras las demás pruebas siguen (`modelos` en `tests/conftest.py`). `test_sitio.py` y `test_estado.py` comparten esos modelos, en vez de construir otra vez los 22 publicados que no tenían fixture. Con pytest-xdist (`-n 4 --dist loadfile`), el primer proceso que llega construye los nudos y deja cada uno en la carpeta compartida de la corrida en cuanto está; los demás los leen de ahí. Las pruebas no escriben en `build/`: las que dibujan usan `tmp_path`. Con 8 procesos tarda lo mismo que con 4: el límite es el amarre cuadrado y las pruebas de su archivo. `tests/test_procesos.py` comprueba que con procesos y sin ellos da lo mismo.
+- **Tiempos** (la sesión del adujado usaba la computadora al mismo tiempo):
+
+| | Antes | Después |
+|---|---|---|
+| `construir amarre-diagonal` | 68 s | 16 s |
+| `diagnostico as-de-guia --pasos 3` (un paso) | 1,7 s | 1,7 s |
+| `diagnostico as-de-guia` (siete pasos) | 8,0 s | 2,7 s |
+| Construir los 30 nudos de `modelado` o más | 1568 s en un núcleo; 115 s con un proceso por nudo | 90 s |
+| La suite, `python -m pytest` | 45 min 29 s, con otras construcciones al lado | 6 min 47 s a 7 min 15 s |
+| La suite con `-n 4 --dist loadfile` | | 3 min 27 s a 3 min 58 s |
+
+Un paso solo no se reparte: para eso habría que tocar la física, y eso es otra tarea. Pasan 583 pruebas y 1 se salta.
+- **Cómo entró (17 nov, 6a4028e).** Con `merge --no-ff`, sin conflictos. Los 26 publicados, impresos desde `main`, contra `ref-3843a16`: los `modelo.json` iguales byte a byte; tres imágenes difirieron en 1 nivel (16, 4 y 1 píxeles). La mariposa alpina y la media llave salen iguales impresas solas; el paso 2 del tensor ajustable sale igual impreso desde 3843a16 en un worktree aparte, así que la variación era de la referencia. La suite pasa en `main`: 583 pruebas y 1 se salta, en 13 min 28 s, con la sesión del adujado usando la computadora al mismo tiempo. Las cuatro fichas de la tanda 4 se arman y caben.
+
+**El adujado y el puño de mono en `main`, y los seis de la tanda 4 en el sitio (17 y 18 de noviembre de 2026).** Las dos ramas salieron de `main` antes de construir con todos los núcleos; entraron con `merge --no-ff`, primero el adujado (7a5ccdb) y después el puño de mono (65f4fde).
+- **Conflictos:** en `construir.py` y `plantillas/pasos.py` quedó el código en paralelo de `main` con lo que agrega cada plantilla: las dos clases (`_Adujado` y `_Puno`) y un solo `construir_paso`, que no relaja si todo está quieto (el adujado) y mide la penetración en los dedos si el paso los tiene (el puño). El nudo terminado por detrás se arma en el modelo solo para una plantilla sin anfitrión que no se voltea ella misma (el adujado); el puño de mono se voltea con su `voltear`, al imprimir, como en su rama. El mensaje de una plantilla sin anfitrión con `anfitrion` dice las dos cosas que esperan sus pruebas. En el formato, el adujado es la v1.8 y el puño de mono pasa a ser la v1.9; en el plan, la skill y las pruebas de tipos quedan los dos.
+- **Comprobación:** el adujado y el puño de mono dan el mismo `modelo.json` que en sus ramas, y el adujado, el mismo con procesos y con uno solo. Los 26 publicados contra `ref-3843a16`: modelos iguales byte a byte; difirieron el paso 2 del tensor ajustable (la variación conocida de la referencia) y dos imágenes del arnés de hombre (5 y 4 píxeles, 1 o 2 niveles), que salen iguales impreso solo. Los cuatro de la tanda 4 que ya estaban, contra su impresión de d7b47f9: iguales, modelos e imágenes. Las dos fichas nuevas caben. La suite con `-n 4 --dist loadfile`: 632 pruebas pasan y 1 se salta, en 3 min 33 s; `test_con_mejoras_dibujar_dos_veces_da_lo_mismo` falló una vez con los cuatro procesos (el navegador, cargado, dibujó distinto la segunda vez) y pasa sola tres de tres.
+- **Filtro 1 y publicación:** Gabriel ató los seis con cuerda real y los aprobó el 17 nov, con las fichas de los commits en que entraron a `modelado` (24d7d39, e8db8af, 413c3c8, eac11dd y 126d0ec). Pasaron a `cuerda-ok` y a `publicados.txt`; el sitio se publicó el 18 nov. El filtro 2 sigue en pausa.
+
+
+**Gastar menos tokens, segunda parte (22 de noviembre de 2026; Gabriel pidió las seis medidas).** El plan pesaba 292 KB y la lista 38 KB, casi todo historia de tareas cerradas, y cada sesión los leía enteros.
+- **El plan y la lista, solo con lo vigente:** lo cerrado pasó, sin cambiar una línea, a este historial; el plan quedó en unos 25 KB y la lista en unos 4. Las referencias del código y del formato a los diseños apuntan aquí.
+- **`python -m nudos referencia` y `comparar`** (`nudos/referencia.py`) reemplazan los scripts que cada sesión escribía para construir, imprimir y comparar los nudos hechos. Imprimen fuera de `build/`, borran aunque Drive deje archivos de solo lectura, comparan `modelo.json` en bytes y no pickles, y corren con `python -m`, así que los procesos pueden volver a importar el programa. Los 32 nudos: construir, 83 s; imprimir con 8 navegadores, 188 s.
+- **Edge se actualizó solo el 18 nov a las 15:30, a la 158.0.4370.33,** y desde entonces todas las imágenes salen con cientos de píxeles distintos, de 2 a 4 niveles, aunque el código no cambie: 3843a16 impreso hoy da lo mismo que `main`, y los dos difieren de `ref-3843a16`. Los 26 `modelo.json` siguen iguales byte a byte. Por eso `referencia` anota la versión del navegador y `comparar` avisa si no coinciden, y las dos carpetas se arman el mismo día.
+- **Sesiones:** se archivaron las de T7, T8 (con ellas, en cascada, «Resto del plan» y la corrida dorada de T9) y las de la tanda 4 y la tanda 1 que ya estaban en `main`. Los cambios sin commit del worktree de T9 quedaron como parche en la carpeta de notas de la gestora (`t9-sin-commit.patch`). En `CLAUDE.md` quedaron el modelo y el esfuerzo por tipo de sesión y la regla de no encadenar sesiones para tareas cortas.
+
+## La lista de tareas hasta el 22 de noviembre de 2026
+
+## Tareas: Libro de nudos del Grupo 431
+
+El detalle de cada tarea (criterios, verificación y archivos) está en `tasks/plan.md`.
+
+### Decisiones previas
+
+- [x] D1 Postura de seguridad: ningún nudo sostiene, sube ni baja personas en actividades; la práctica con personas solo con instructor y equipo certificados
+- [x] D2 Carta, resorte e imprenta (consecuencias en el plan)
+- [ ] D3 Leyenda de los símbolos ✓, + y ★ de la Tropa (antes de T12)
+- [x] D4 GitHub Pages en la cuenta personal (`Gaboelc`), repositorio público
+- [x] D5 Se trabaja desde la app de Claude con la computadora vinculada
+- [ ] D8 Especificaciones de la imprenta: sangrado, color y formato (antes de T13)
+
+### Fase 1: el as de guía de principio a fin
+
+- [x] T1 Repositorio y especificación v0 con el as de guía
+- [x] Repositorio público `Gaboelc/nudos-431` creado y T1 subida
+- [x] T2 Escena 3D compartida y visor publicado en su URL permanente (M, depende de T1 y del repositorio)
+  - [x] Escena compartida, página del visor, `python -m nudos sitio`, `publicados.txt` y pruebas
+  - [x] Revisado en Chrome de escritorio y en celular emulado, sin errores ni pedidos fuera del sitio
+  - [x] Sitio subido a la rama `gh-pages`
+  - [x] Gabriel activa GitHub Pages: Settings → Pages → Deploy from a branch → `gh-pages` / `(root)`
+  - [x] La dirección responde y el visor carga en Chrome como celular, sin errores
+  - [x] Gabriel abre https://gaboelc.github.io/nudos-431/as-de-guia/ en su celular y revisa los 7 pasos
+- [x] Punto de control 1: la especificación reproduce el prototipo y el visor está en línea
+- [x] T3 Imágenes de impresión, error común y vistas finales (M, depende de T2)
+  - [x] Error común y nudo terminado en la especificación, con sus pruebas (`tests/test_errores.py`)
+  - [x] `python -m nudos imprimir`: 11 imágenes a 300 ppp desde la escena del visor, idénticas al construir dos veces
+  - [x] Resaltado del paso 2 movido para que el error se vea: el firme llega azul al cruce
+  - [x] `prueba.pdf`: página de prueba en color y en escala de grises
+  - [x] Gabriel imprime `prueba.pdf` en la Epson a tamaño real y revisa que se distinga qué tramo va encima (aprobada, con los pasos en 3D)
+  - [x] Publicar el sitio: el resaltado del paso 2 cambió
+  - [x] Borrar `prototipo/` (queda en el historial de git)
+- [x] T4 Ficha impresa del as de guía con QR (M, depende de T3, D1 y D2)
+  - [x] Texto de la ficha en la especificación: para qué sirve, materiales, verificación y seguridad
+  - [x] Plantilla `libro/`, `python -m nudos ficha` y QR vectorial al visor; pliego de dos páginas carta con margen de resorte
+  - [x] Prueba de vocabulario (`config/terminos_seccion.txt`) y pruebas de la ficha
+  - [x] Gabriel revisa el texto de la ficha: aprobado, sin la frase del 9-1-1 en seguridad (va solo en el material inicial)
+  - [x] Gabriel imprime la ficha y escanea el QR
+  - [x] Filtro 1: Gabriel ata el as de guía paso a paso con cuerda real, siguiendo la ficha impresa (7 nov)
+  - [x] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (7 nov, P01)
+  - [x] Registrar los dos filtros en la especificación (campo `filtros`)
+- [x] Punto de control A:
+  - [x] La suite pasa, también desde un clon limpio en un entorno nuevo (76 pruebas)
+  - [x] El as de guía pasó los dos filtros
+  - [x] Decisión entre three.js y Blender para la impresión: se queda three.js
+  - [x] Revisión contigo: la ficha se queda como está, con el espacio libre de la página derecha; los nudos de más de 6 pasos se resuelven en T7
+
+### Fase 2: piloto por tipo de nudo
+
+- [ ] T5 Objeto anfitrión con el ballestrinque sobre poste (M, depende de T4; es el mayor riesgo técnico)
+  - [x] El poste en la especificación (`anfitrion`, segmentos `{poste: [[x, ángulo], ...]}`) y en la relajación, sin que la cuerda lo atraviese
+  - [x] Cruces sobre la superficie desenrollada del poste (`nudos/anfitrion.py`)
+  - [x] `specs/ballestrinque.yaml`: 5 pasos con el chicote, error común y texto de la ficha; pruebas en `tests/test_ballestrinque.py`
+  - [x] El poste en la escena, el visor y la ficha; el nudo terminado se mira desde el otro lado
+  - [ ] Gabriel revisa el texto de la ficha
+  - [x] Filtro 1: Gabriel lo ata paso a paso con cuerda real y un palo, siguiendo la ficha impresa (9 nov)
+  - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (en pausa desde el 9 nov)
+  - [ ] Registrar los filtros en la especificación
+- [ ] T6 Dos cuerdas con la vuelta de escota (M, depende de T4; puede ir en paralelo con T5)
+  - [x] Diseño escrito en el plan (formato, geometría, color, escena); falta implementarlo
+  - [x] Formato con `cuerdas` y trazado y secuencia por cuerda, con sus pruebas (`tests/test_spec.py`)
+  - [x] Geometría de varias cuerdas: cortes, radio por punto, separación por suma de radios (`tests/test_cuerdas.py`)
+  - [x] Escena, impresión, hoja y ficha con dos cuerdas; nudos de una cuerda idénticos píxel por píxel (38 imágenes del as de guía y del ballestrinque, con Edge)
+  - [x] `specs/vuelta-de-escota.yaml` y `tests/test_vuelta_de_escota.py`: 4 pasos, error común (el chicote por encima de sí misma) y texto de la ficha; la ficha cabe en el pliego
+  - [ ] Gabriel revisa el texto de la ficha
+  - [x] Gabriel imprime la ficha (`python -m nudos ficha vuelta-de-escota`) y la revisa (9 nov, ficha 9ec2271)
+  - [x] Filtro 1: Gabriel la ata paso a paso con dos cuerdas reales de distinto grosor, siguiendo la ficha impresa (9 nov)
+  - [ ] Filtro 2: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (en pausa desde el 9 nov)
+  - [x] Registrar el filtro 1 en la especificación
+  - [x] Publicar el sitio: la vuelta de escota es nueva y el visor cambió (9 nov, construido desde d352483; revisado en línea)
+- [ ] T6b Alternativas y precauciones en la página y la ficha (S, pedido de Gabriel el 9 nov; antes del Punto de control B)
+  - [x] Campos `alternativas` y `precauciones` en el formato, con sus pruebas; sin ellos no hay ficha
+  - [x] En la ficha (página 2, las tres caben) y en el visor, debajo de los pasos, con para qué sirve, materiales y seguridad
+  - [x] Texto propio del as de guía, el ballestrinque y la vuelta de escota (en los dos últimos, el aviso de que se afloja pasó de «usos» a «precauciones»)
+  - [ ] Gabriel revisa el texto de los tres nudos
+  - [x] Publicar el sitio con «Sobre el nudo» (9 nov, construido desde 9ec2271, a pedido de Gabriel antes de su revisión)
+- [x] Punto de control 2: el anfitrión funciona; si no, los enganches pasan a plantillas (aprobado el 9 nov: el ballestrinque y la vuelta de escota pasaron el filtro 1; los enganches siguen con el anfitrión)
+- [ ] T7 Plantilla del amarre cuadrado (M, depende de T5)
+  - [x] Diseño escrito en el plan (palos, formato, geometría, cruces, escena y ficha)
+  - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (9 nov: cierre arriba, inicio en un paso, error sin imagen por la tensión, los amarres sí sostienen personas)
+  - [x] Formato: anfitrión `cruz`, `plantilla`, pasos con `hasta` y `error` con `variante` y `otros`, con sus pruebas (`nudos/plantillas/`, `tests/test_amarre_cuadrado.py` y `tests/test_spec.py`; nudos publicados idénticos: 3 modelos byte a byte y 49 imágenes píxel por píxel, con Edge)
+  - [x] Geometría: la cuerda entera, los pasos como prefijos, la relajación con los dos palos y los cruces por zonas (`nudos/plantillas/amarre.py`, `trazo.py` y `pasos.py`, `tests/test_amarre_cuadrado.py`; 7 pasos sin fallas y 40 cruces con 3 y 3, también con 2 y 2, 4 y 3, 3 y 4 y 6 y 6; las vueltas van en el orden de las referencias y, delante, por fuera del ballestrinque: ver «Cómo se hizo la geometría» en el plan)
+  - [x] Gabriel revisa en las imágenes el orden de las vueltas y las vueltas por fuera del ballestrinque de inicio (con la escena) (10 nov: aprobados, con el volteo del terminado; pidió que la cuerda no se viera rígida)
+  - [x] Escena, impresión y ficha con los dos palos y el reverso volteado; nudos publicados idénticos (modelos byte a byte, imágenes píxel por píxel) (10 nov: `Cruz.voltear`, la cruz en `render/escena.js`, «Firme» solo en el ballestrinque de inicio, remate en los dos extremos y `error.otros` en la ficha; 3 modelos y 49 imágenes iguales, con Edge; ver «Cómo se hizo la escena» en el plan. La ficha del amarre se arma cuando estén el error construido y el texto)
+  - [x] La cuerda abraza los palos: esquinas y ahorcados rehechos (10 nov, a pedido de Gabriel: las esquinas bajan pegadas a las caras de los dos palos y los ahorcados son vueltas tensas; el mismo método y los mismos 40 cruces; sin fallas con 3 y 3, 2 y 2, 4 y 3, 3 y 4 y 6 y 6; nudos publicados idénticos; ver «Cómo se hizo la geometría» en el plan)
+  - [x] Gabriel revisa el antes y el después de la cuerda que abraza los palos (10 nov: aprobado)
+  - [x] Error común construido: los ahorcados por encima del palo de arriba, como variante de la cuerda, construidos y comprobados como un paso más, junto al paso 5 en la impresión (10 nov: los mismos 38 cruces que el paso 5; sin fallas con 3 y 3, 2 y 2, 4 y 3, 3 y 4 y 6 y 6; ver «Cómo se hizo el error y la especificación» en el plan)
+  - [x] `specs/amarre-cuadrado.yaml`: pasos, error común y texto de la ficha; la ficha cabe; de 3 a 4 vueltas regenera los pasos (10 nov: 7 pasos, error y la cuerda floja sin imagen, encuadre; ficha de dos páginas que cabe; nudos publicados idénticos contra 6151f02)
+  - [x] Gabriel revisa el texto de la ficha (10 nov: aprobado; al atarlo, Gabriel confirmó que con 4 m de cuerda alcanza)
+  - [x] Filtro 1: Gabriel lo ata con dos palos y cuerda real, siguiendo la ficha impresa (10 nov, ficha e745c28; con 4 m de cuerda alcanza)
+  - [x] Registrar el filtro 1 en la especificación
+  - [x] Publicar el sitio con el amarre cuadrado (10 nov, construido desde 7bcb14c, con el amarre en `publicados.txt`; revisado en línea)
+- [ ] T7b Mejoras del render (M, pedido de Gabriel el 10 nov; después de T7 y antes de T8)
+  - [x] Página de prueba en color y en gris: hoy contra cada mejora por separado y las cuatro juntas (10 nov: `python -m nudos mejoras`, `build/mejoras/prueba.pdf`, diez hojas; contorno, sombra de contacto, supermuestreo y sombras suaves, detrás de `Imagen.mejoras` y de la opción `mejoras` de la escena, apagadas; nudos publicados idénticos a 563bed6: 4 modelos byte a byte y 67 imágenes píxel por píxel, con Edge; 244 pruebas pasan; ver «Cómo se hizo la página de prueba» en el plan. El nudo terminado apretado pasó a T7c)
+  - [x] Gabriel revisa la página de prueba y elige qué mejoras entran (10 nov: la sombra de contacto, el supermuestreo y las sombras suaves; el contorno no, y se quitó del código)
+  - [x] Implementar las elegidas en el visor y la impresión, sin cambiar la geometría ni los cruces de los pasos (10 nov: `MEJORAS_ACTIVAS` en las fichas; el visor pasa la sombra de contacto y las sombras suaves; el mapa de sombras se dibuja solo al cambiar de paso; la sombra de contacto, 10 veces más rápida; ver «Cómo se implementaron» en el plan)
+  - [x] Nueva referencia de imágenes de los nudos ya aprobados, anotada aquí: desde el commit «T7b: las mejoras elegidas en las fichas y el visor», las imágenes de impresión del as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado son las nuevas; sus modelos no cambian (byte a byte contra 563bed6), así que los filtros 1 siguen valiendo. Construir dos veces da las mismas 67 imágenes, con Edge; las cuatro fichas se arman y caben; 244 pruebas pasan. Las comparaciones de «nudos publicados idénticos» se hacen desde ese commit
+  - [x] Publicar el sitio: el visor cambió (sombra de contacto y sombras suaves) (10 nov, a pedido de Gabriel: construido desde b3ff5ee, gh-pages d4065c8; los cuatro visores cargan en línea sin errores)
+  - [ ] Gabriel abre el visor en un celular de gama baja y revisa que cargue y gire con fluidez (en la computadora, armar el paso más largo del amarre tarda 37 ms en vez de 20 y girar cuesta lo mismo)
+- [x] T7c Nudo terminado apretado, con la misma secuencia de cruces que el último paso (M, separada de T7b el 10 nov; antes del Punto de control B)
+  - [x] Diseño escrito en el plan (método, dónde vive, pruebas, formato y cada nudo publicado), probado en un experimento fuera del repositorio (10 nov: el as de guía se aprieta dentro de los límites, el ballestrinque casi no cambia, la vuelta de escota es el riesgo y el amarre queda como está)
+  - [x] Gabriel aprueba el diseño (11 nov)
+  - [x] Referencia: los cuatro nudos publicados construidos e impresos desde `main` antes de tocar el código (11 nov, desde 52cb117, fuera del repositorio)
+  - [x] `nudos/apretar.py`, `Modelo.apretado` y `Modelo.reverso_apretado`, con sus pruebas; pasos y error idénticos byte a byte (11 nov: los 4 `modelo.json` sin las claves nuevas, byte a byte, y las 67 imágenes, píxel por píxel, con Edge; `TERMINADO_APRETADO = False`. As de guía 110,0 → 94,7, ballestrinque casi igual, vuelta de escota 118,5 → 112,4 con la gruesa que conserva su forma, amarre sin apretar. Tres cambios al diseño: al soltar no hay corrección de largo, la gruesa queda sujeta y el reverso apretado es el reverso de hoy apretado; ver «Cómo se hizo» de T7c en el plan)
+  - [x] Página de prueba `build/mejoras/apretado.pdf`: hoy, a medias y apretado, en color y en gris (11 nov: seis hojas, as de guía, ballestrinque y vuelta de escota)
+  - [x] Gabriel compara en papel y decide si entra (y cuál de las tres) (11 nov: «Apretado», con las 30 rondas)
+  - [x] `TERMINADO_APRETADO = True` y nueva referencia, anotada aquí: desde el commit «T7c: las fichas llevan el nudo apretado», las imágenes del terminado del as de guía, el ballestrinque y la vuelta de escota son las nuevas; las demás imágenes y los modelos no cambian (55 imágenes píxel por píxel y los modelos byte a byte contra 52cb117), así que los filtros 1 siguen valiendo y no hubo que publicar el sitio. Construir dos veces da lo mismo; las cuatro fichas se arman y caben. Las comparaciones de «nudos publicados idénticos» se hacen desde ese commit, y las imágenes se comparan en RGB: el script de T7b no veía diferencias (ver «Cómo entró» de T7c en el plan)
+- [ ] T8 Plantilla de la cabeza de turco (M, no S: plantilla y anfitrión nuevos, como T7; depende de T5) (11 nov: Gabriel la deja para el final, después de todo el resto del plan; ver «Lo que dijo Gabriel al revisar» de T8 en el plan)
+  - [x] Diseño escrito en el plan (método, tubo, formato, geometría, cruces sobre el tubo, error, terminado, escena, hoja y ficha), con los números de un experimento fuera del repositorio (11 nov: se teje vuelta por vuelta sobre un tubo que se gira; con 3 cabos y 4 senos, la segunda vuelta va toda por encima y la tercera teje; dos pasadas en un tubo de radio 4 dan 32 cruces)
+  - [x] Referencia de los cuatro nudos publicados construida e impresa desde 80e3619, fuera del repositorio
+  - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (11 nov: las cuatro propuestas; se teje vuelta por vuelta, 3 cabos, 4 senos y dos pasadas en un tubo de radio 4, el error es empezar a tejer por encima, con los dos errores sin imagen, y el terminado va sobre el tubo, por delante y girado media vuelta)
+  - [x] Formato: anfitrión `tubo`, plantilla `cabeza-de-turco` con `cabos`, `senos` y `pasadas`, sus hitos, `{cabos}`, `{senos}` y `{pasadas}` en el texto y la variante `empieza-por-encima`, con sus pruebas; `docs/formato-spec.md`; nudos publicados idénticos a 80e3619 (11 nov: `nudos/plantillas/cabeza_turco.py` y `tests/test_cabeza_de_turco.py`; la variante solo existe con tres cabos; la combinatoria del centro confirma que con 3 cabos la segunda vuelta va toda por encima; 4 modelos byte a byte y 67 imágenes en RGB iguales a 80e3619; ver «Cómo se hizo el formato» en el plan)
+  - [x] Geometría: la cuerda entera sobre el tubo, los pasos como prefijos girados, los extremos y el remate, la relajación y los cruces en el mapa del tubo (`nudos/plantillas/cabeza_turco.py`, `pasos.py` generalizado); sin fallas con 3 × 4 y dos pasadas, y con otras medidas; nudos publicados idénticos (11 nov: el extremo corto entra a media diagonal, la salida del riesgo 1, porque en el seno no cabían el paso de pasada y el chicote; en el remate se mete bajo la banda del seno vecino; 55° y no 60°; 6 pasos y el error sin fallas, 34 cruces; también 3 × 4 con una y tres pasadas, 2 × 3, 3 × 2, 2 × 5, 4 × 5 y 3 × 7; 3 × 5 con dos pasadas no sale todavía; ver «Cómo se hizo la geometría» de T8 en el plan)
+  - [x] Escena, impresión (el terminado girado media vuelta) y hoja con el tubo desenrollado; nudos publicados idénticos (11 nov: el tubo en `render/escena.js`, `Tubo.voltear` para el terminado por detrás, `mapa` en `nudos/hoja.py`, encuadre y texto provisional en `specs/cabeza-de-turco.yaml`; en el remate el extremo corto metido todavía no se resalta; ver «Cómo se hizo la escena, la impresión y la hoja» de T8 en el plan)
+  - [x] Gabriel revisa en las imágenes el extremo corto a media diagonal y su remate bajo la banda del seno vecino (con la escena) (11 nov: no entendió el nudo de esta manera y duda que un tubo más grueso lo arregle; la deja para el final)
+  - [x] Mientras tanto, la cabeza de turco no sale en el sitio: `construir_sitio` construía todas las especificaciones de `specs/`, y la suya tiene texto provisional (11 nov, aprobado por Gabriel: el sitio lleva solo los nudos de `publicados.txt`, y `python -m nudos sitio --con <slug>` agrega uno al sitio local; ver el Punto de control B en el plan)
+  - [ ] Al volver: ver con Gabriel qué no se entiende en las imágenes, antes de tocar la geometría
+  - [ ] Error construido y `specs/cabeza-de-turco.yaml` con el texto de la ficha; la ficha cabe
+  - [ ] Gabriel revisa el texto de la ficha
+  - [ ] Filtro 1: Gabriel la ata con un cordón y un tubo, siguiendo la ficha impresa
+  - [ ] Registrar el filtro 1 y publicar el sitio con la cabeza de turco en `publicados.txt`
+- [x] Punto de control B (11 nov, con los cuatro nudos publicados; la cabeza de turco, al final):
+  - [x] Los nudos del piloto están publicados, sin la cabeza de turco (11 nov: Gabriel la dejó para el final; los otros cuatro ya están publicados)
+  - [x] El formato de especificación v1 está congelado
+    - [x] Propuesta en `docs/formato-spec.md`, en «Versiones»: los cambios compatibles no llevan migración y los incompatibles sí; la cabeza de turco queda provisional (11 nov; ver «Cómo se preparó» en el plan)
+    - [x] Gabriel aprueba la propuesta y decide si la cabeza de turco entra en v1 o queda provisional (11 nov: aprobada, con la cabeza de turco provisional)
+  - [x] Revisión contigo (11 nov: Gabriel aprobó las tres propuestas: el formato v1, la cabeza de turco provisional y el sitio solo con los nudos de `publicados.txt`)
+
+### Fase 3: el paso de IA y la operación
+
+- [x] T9 Skill nudo-nuevo, con pruebas doradas sobre el as de guía y la escota (M, depende del Punto de control B) (12 nov: ver T9 en el plan)
+  - [x] Diseño escrito en el plan (dónde vive la skill, qué hace, la hoja de revisión, las pruebas doradas a ciegas y el ocho) (12 nov)
+  - [x] Gabriel aprueba el diseño y responde las cuatro preguntas del final (12 nov: las cuatro propuestas)
+  - [x] Hoja de revisión (`python -m nudos revision`), comparación de las pruebas doradas (`nudos/dorados.py`) y la skill en `.claude/skills/nudo-nuevo/` (12 nov; ver «Cómo se hizo la hoja, la comparación y la skill» en el plan)
+  - [x] Corrida dorada a ciegas, en una sesión nueva con un worktree sin las especificaciones del as de guía y de la vuelta de escota (12 nov: borradores en la rama `claude/competent-aryabhata-2dc24a`, 4aa97d2; el as de guía da el mismo nudo y el mismo error con otra división de pasos; en la vuelta de escota la delgada cruza el seno en otro orden; ver «La corrida dorada» en T9 del plan)
+  - [x] Gabriel decide qué exigen las pruebas doradas (12 nov: el mismo nudo terminado, el mismo error y que cada paso sea un paso validado, sin la misma división; `nudos/dorados.py`)
+  - [x] Gabriel mira si la vuelta de escota del borrador es el mismo nudo (12 nov: sí; se acepta con sus tres diferencias exactas)
+  - [x] Borradores en `main`, en `tests/dorados/`, y sus pruebas en `tests/test_dorados.py`; la skill corregida con lo que le faltó (12 nov: 8cdee59 y a2148a3; el paso de preparar la cuerda, sin cruces, sí va)
+  - [x] Borrador del ocho con la skill y su hoja de revisión (12 nov: `specs/ocho.yaml` en `borrador`, 3 pasos y 4 cruces, sin fallas; la ficha cabe; hoja en `revision/ocho/index.html`; ver «El ocho» en T9 del plan)
+  - [x] Gabriel revisa la hoja del ocho; sus correcciones, anotadas en T9 del plan (12 nov: «todo bien», sin correcciones; el ocho pasa a `modelado`)
+- [x] T10 Estado de producción y registro de pruebas sin nombres (S, depende de T4) (11 nov: campo `estado` en el formato v1.1, `python -m nudos estado` con los 35 nudos de `config/edicion-1.yaml` y `tests/test_estado.py`; el as de guía en `publicado`, los otros tres publicados en `cuerda-ok` y la cabeza de turco en `borrador`; ver «Cómo se hizo» de T10 en el plan)
+- [x] Punto de control C (12 nov):
+  - [x] Un nudo nuevo salió de la skill con correcciones menores (12 nov: el ocho, sin correcciones; las pruebas doradas pasan)
+  - [x] Decisión sobre usar subagentes (12 nov: Gabriel aprobó sesiones aparte, una por nudo y cada una en su worktree, de dos o tres a la vez; el borrador entra a `main` cuando Gabriel aprueba su hoja)
+
+### Fase 4: producción de los 30 nudos restantes
+
+Cada nudo cumple la definición de terminado: pruebas automáticas, error común, imágenes, visor, ficha, filtro 1, filtro 2 y estado `publicado`. El filtro 2 está en pausa desde el 9 de noviembre (ver la definición de terminado en el plan).
+
+#### Tanda 1: libres, una cuerda
+- [ ] Simple (12 nov: Gabriel aprobó su hoja; en `main` y en `modelado`, 3 pasos sin fallas, la ficha cabe; filtro 1 aprobado el 12 nov, ficha c2627a8; está en `cuerda-ok`. En el sitio desde el 13 nov, en `publicados.txt`. Falta el filtro 2, en pausa. Por revisar en el texto: si ABOK 46 es su único número. Redibujado tallado en la rama `claude/tanda1-simple-327c2b`, b27513c: apretado, la cuerda del nudo baja de 47,9 a 38,9 diámetros; Gabriel aprobó la hoja nueva: en `main` (bd97a82); la ficha cabe)
+- [ ] Ocho (12 nov: en `modelado`, salió de la skill en T9; filtro 1 aprobado el 12 nov, ficha c2627a8; está en `cuerda-ok`. En el sitio desde el 13 nov, en `publicados.txt`. Falta el filtro 2, en pausa)
+- [ ] Ocho doble (12 nov: Gabriel dice que es la gaza en ocho, de una sola gaza; las imágenes R1 a R5 de `entradas/ocho-doble` la atan, y desde la R6 siguen con el de dos gazas, que no va. Borrador en la rama `claude/tanda1-ocho-doble-ac4c81`, 8fe248a: 4 pasos sin fallas; los cruces 9 a 16, del seno por la vuelta, no se ven en las fotos. Redibujado tallado: apretado, baja de 160,6 a 145,0 diámetros. Gabriel aprobó la hoja: en `main` y en `modelado`; para que la ficha cupiera se acortaron los pasos 1 y 4, dos criterios de verificación, una precaución y una alternativa, y se quitó el error sin imagen del chicote corto, que ya dice la verificación. Filtro 1 aprobado el 12 nov, ficha c2627a8, con los cruces 9 a 16 confirmados; está en `cuerda-ok`. En el sitio desde el 13 nov, en `publicados.txt`. Falta el filtro 2, en pausa)
+- [ ] As de guía español (13 nov: borrador en la rama `claude/dreamy-wozniak-5561ff`, 74bff22: 7 pasos y 15 cruces, sin fallas, con `dos_firmes`; la ficha cabe; apretado, baja de 164,8 a 143,9 diámetros. El error común, subir los lados al revés, no está comprobado con cuerda. Gabriel aprobó la hoja: en `main` y en `modelado`, la ficha cabe. Filtro 1 aprobado el 13 nov, ficha eb656c7, con el error confirmado; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
+- [ ] Mariposa alpina (12 nov: borrador en la rama `claude/tanda1-mariposa-ed24c1`, atada sobre la mesa. Redibujada tallada y con un paso 7, «Saca la gaza», con los cruces 11 a 14 que se leen en R10: sin él, la gaza quedaba encerrada bajo el cruce 1 y el apretado se la comía. 7 pasos y 14 cruces sin fallas, 7333d26; apretado, la cuerda del nudo baja de 167,0 a 142,5 diámetros y la gaza queda larga. Gabriel aprobó la hoja: en `main` y en `modelado`; para que la ficha cupiera se acortaron «para qué sirve» y el paso 1. Con `dos_firmes` (formato v1.2), sus dos extremos llevan «Firme» y no «Chicote», y el texto dice «el otro firme»; la cuerda y los cruces no cambian. Filtro 1 aprobado el 12 nov, ficha c2627a8; está en `cuerda-ok`. En el sitio desde el 13 nov, en `publicados.txt`. Falta el filtro 2, en pausa)
+- [ ] Margarita (13 nov: borrador en la rama `claude/elegant-elion-0084bf`, b0b9629: 6 pasos y 10 cruces, sin fallas, con `dos_firmes`; la ficha cabe. Gabriel aprobó la hoja con su familia nueva, «De acortamiento», y su seguridad corta por lo que puede caer: en `main` y en `modelado`, la ficha cabe. Filtro 1 aprobado el 13 nov, ficha eb656c7; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
+- [ ] Arnés de hombre (13 nov: borrador en la rama `claude/suspicious-boyd-67faff`, d73fcf5: 5 pasos y 7 cruces, sin fallas, con `dos_firmes`; la ficha cabe. La fuente es una sola imagen con cinco dibujos, así que el filtro 1 importa más; ABOK 153 sin confirmar. Gabriel aprobó la hoja: en `main` y en `modelado`, la ficha cabe. Filtro 1 aprobado el 13 nov, ficha eb656c7; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
+- [ ] Silla de bombero (requiere D1) (13 nov: borrador en la rama `claude/tanda1-silla-c99584`, 36e68d4: 7 pasos y 18 cruces, sin fallas, con `dos_firmes`; la ficha cabe; apretado, baja de 187,3 a 174,5 diámetros. Son 7 pasos y no 6, porque cada paso resalta un solo tramo; el 5 y el 6 se pueden juntar. ABOK 1100 sin confirmar. Gabriel aprobó la hoja: en `main` y en `modelado`, la ficha cabe, y su seguridad dice que se practica sin carga o con un objeto (D1). Filtro 1 aprobado el 13 nov, ficha eb656c7; en `cuerda-ok` y en el sitio desde el 13 nov. Falta el filtro 2, en pausa)
+- [x] Punto de control de la tanda 1 (13 nov)
+  - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (13 nov; el filtro 2 sigue en pausa)
+  - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (13 nov: 398 pruebas)
+  - [x] Revisión con Gabriel (13 nov: cerró el punto de control y pidió arrancar la tanda 2; siguen abiertos los números ABOK sin confirmar del simple, el arnés de hombre y la silla, el paso de preparar del ocho y el filtro 2)
+
+#### Tanda 2: libres, dos cuerdas o dos extremos
+- [ ] Rizo (14 nov: borrador en la rama `claude/friendly-ishizaka-2fd396`, ab4fe90: 5 pasos y 6 cruces sin fallas, con dos cuerdas, una por cada punta; la ficha cabe. Familia «De ligadura»; error, el nudo de vaca. Gabriel aprobó la hoja: en `main` y en `modelado`. Filtro 1 aprobado el 15 nov, ficha 6005d98; en `cuerda-ok` y en el sitio desde el 15 nov. Falta el filtro 2, en pausa)
+- [ ] Pescador (el sencillo, como el manual de la Tropa; Gabriel, 13 nov) (14 nov: borrador en la rama `claude/lucid-poincare-388d17`, d0215af: 6 pasos sin fallas; la ficha cabe. Los encima/debajo salen de las fotos del doble, porque los dibujos del manual son muy chicos. Gabriel aprobó la hoja: en `main` y en `modelado`. Filtro 1 aprobado el 15 nov, ficha 6005d98, con los encima/debajo confirmados; en `cuerda-ok` y en el sitio desde el 15 nov. Falta el filtro 2, en pausa)
+- [ ] Pescador doble (el de las imágenes de Animated Knots, después del sencillo; Gabriel, 13 nov) (14 nov: borrador en la misma rama, d8d7201: 6 pasos sin fallas; la ficha cabe, con imágenes chicas porque el nudo es ancho. Gabriel aprobó la hoja: en `main` y en `modelado`. Filtro 1 aprobado el 15 nov, ficha 6005d98; en `cuerda-ok` y en el sitio desde el 15 nov. Falta el filtro 2, en pausa)
+- [ ] Nudo aguja (el del manual de la Tropa) (13 nov: Gabriel eligió un anfitrión nuevo para el destorcedor, un cilindro corto parado sobre la mesa, que puede servir también para la estaca del tensor ajustable. Es una tarea de código, como T5: su sesión propone el diseño, Gabriel lo aprueba y después se dibuja el nudo. 14 nov: Gabriel aprobó el diseño, `anfitrion: {tipo: destorcedor}` (formato v1.3); anfitrión y borrador en la rama `claude/nice-kepler-d00550`, 693d369 y 81d68f0; los 12 publicados quedan iguales. Falta que Gabriel revise la hoja. 15 nov: en `main` y en `modelado`, con el destorcedor (formato v1.3); los 12 publicados quedan iguales. Filtro 1 aprobado el 15 nov, ficha 6005d98, con las vueltas y el cruce 1 confirmados; en `cuerda-ok` y en el sitio desde el 15 nov. Falta el filtro 2, en pausa)
+- [x] Punto de control de la tanda 2 (15 nov)
+  - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (15 nov; el filtro 2 sigue en pausa)
+  - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (15 nov: 416 pruebas)
+  - [x] Revisión con Gabriel (15 nov: cerró el punto de control y pidió arrancar la tanda 3 como se propuso; siguen abiertos los números ABOK sin confirmar, el paso de preparar del ocho y el filtro 2)
+
+#### Tanda 3: sobre anfitrión
+- [x] Menos tokens por borrador (15 nov: Gabriel aprobó las cuatro medidas; ver «Gastar menos tokens en los borradores» en el plan)
+- [ ] Ballestrinque doble (*rolling hitch*, entrada en el manual de la Tropa) (15 nov: sobre el poste, decidido en el punto de control de la tanda 2; borrador en su propia sesión. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`, con la versión del palo sobre el poste. Falta el filtro 1, con la ficha. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Leñador o vuelta de braza (15 nov: sobre el poste; borrador en su propia sesión. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son los cruces 1, 3, 4 y 6. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Media llave y dos cotes (16 nov: sobre el poste; borrador en la rama `claude/tanda3-media-llave-c941f4`, 3c5b8dd, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son el sentido de las vueltas al poste y el cruce 3. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Fugitivo (16 nov: sobre el poste, de radio 4,5; borrador en la rama `claude/tanda3-fugitivo-44b52d`, 7acec93, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son los cruces 3 a 7. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Tensor (*trucker's hitch*) (16 nov: sobre el poste; borrador en la rama `claude/tanda3-tensor-6dc616`, 1063a4a, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja, también esa versión; en `main` y en `modelado`. Falta el filtro 1, con la ficha. La fuente es el tensor de liberación rápida; las dudas son los cruces 3 a 6 y el remate, que no se dibuja. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Tensor ajustable (*tautline hitch*, sobre una estaca) (15 nov: Gabriel aprobó el diseño de la estaca, `anfitrion: {tipo: estaca}` (formato v1.4); anfitrión y borrador en la rama `claude/tanda3-estaca-45866b`; los 16 publicados quedan iguales. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`, con la estaca. Falta el filtro 1, con la ficha; la duda principal es el cruce 8, el remate. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Constrictor (16 nov: sobre el poste, con el chicote; borrador en la rama `claude/tanda3-constrictor-0cc820`, 556c649, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; la duda es el cruce 3, la familia y el número ABOK. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Nudo de liberación rápida (*mooring hitch*) (16 nov: sobre el poste; borrador en la rama `claude/tanda3-liberacion-rapida-a8d91f`, 2f2a044, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; la duda principal es el cruce 2, y después el 7 y el 9. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Presilla de alondra (16 nov: sobre el poste, con el chicote; borrador en la rama `claude/tanda3-presilla-alondra-d2d429`, fd0adff, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son el cruce 1 y el error común. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [ ] Prusik (16 nov: libre, con dos cuerdas; borrador en la rama `claude/tanda3-prusik-c4499a`, 45368be, sin fallas y con la ficha que cabe. 16 nov: Gabriel aprobó la hoja; en `main` y en `modelado`. Falta el filtro 1, con la ficha; las dudas son los cruces 1 y 4, que traban el nudo, y los de la primera pasada. Filtro 1 aprobado el 16 nov; en `cuerda-ok` y en el sitio desde el 16 nov. Falta el filtro 2, en pausa)
+- [x] Punto de control de la tanda 3 (16 nov)
+  - [x] Todos los nudos de la tanda están en el sitio, con filtro 1 (16 nov; el filtro 2 sigue en pausa)
+  - [x] Toda la suite pasa, sin regresiones en los nudos anteriores (16 nov: 457 pruebas)
+  - [x] Revisión con Gabriel (16 nov: cerró el punto de control y aprobó la propuesta de la tanda 4, que está en el plan)
+
+#### Tanda 4: plantillas
+- [ ] Amarre redondo (17 nov: anfitrión `palos` y plantilla `amarre-redondo`, formato v1.6; 6 vueltas y 2 ahorcados, 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
+- [ ] Amarre diagonal (17 nov: plantilla `amarre-diagonal` y formato v1.5 en la rama `claude/tanda4-amarre-diagonal-065be5`; 9 pasos y el error sin fallas, 75 cruces; los 26 publicados iguales. 17 nov: Gabriel eligió 7 pasos y la ficha cabe. 17 nov: Gabriel aprobó imágenes, texto y los cambios al diseño; en `modelado`. Falta el filtro 1, con la ficha; ver «Cómo se hizo» del amarre diagonal en el plan. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
+- [ ] Amarre trípode (17 nov: plantilla `amarre-tripode` sobre tres `palos`, formato v1.6; 6 vueltas y 2 ahorcados por hueco, 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
+- [ ] Refuerzo de cabo (17 nov: anfitrión `cabo` y plantilla `refuerzo-de-cabo`, formato v1.7; 7 pasos sin fallas. Gabriel aprobó imágenes y texto; en `modelado`. 17 nov: en `main` (bab9c59); los 26 publicados iguales y la suite pasa. Falta el filtro 1, con la ficha. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
+- [x] Construir con todos los núcleos (17 nov: `nudos/procesos.py` relaja a la vez los pasos, el error, el reverso y el apretado, y la suite construye una sola vez todos los nudos de `modelado` o más; con pytest-xdist, `-n 4 --dist loadfile`. En `main` (6a4028e): los 26 `modelo.json` publicados iguales byte a byte; tres imágenes difirieron en 1 nivel, dos salen iguales impresas solas y la del tensor ajustable sale igual desde 3843a16, así que la variación era de la referencia. La suite pasa: 583 pruebas y 1 se salta, en 13 min 28 s con otra sesión usando la computadora; las cuatro fichas de la tanda 4 se arman. Ver «Construir con todos los núcleos» en el plan)
+- [ ] Adujado (17 nov: Gabriel aprobó el diseño. Plantilla `adujado`, la primera sin anfitrión, formato v1.8, en la rama `claude/adujado-8fbe75`; 4 senos y 4 vueltas, sin relajar, 7 pasos y el error sin fallas. Gabriel aprobó imágenes y texto; en `modelado` (eac11dd). 17 nov: en `main` (7a5ccdb), con el código en paralelo; los publicados iguales y la ficha cabe; ver «Cómo se hizo» del adujado en el plan. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
+- [ ] Puño de mono (17 nov: Gabriel aprobó el diseño. Plantilla `puno-de-mono` sin anfitrión, formato v1.9 (v1.8 en su rama), en la rama `claude/puno-de-mono-368ca9`; 3 vueltas por juego, 7 pasos y el error sin fallas, 57 cruces; los 30 publicados y de la tanda 4 iguales; la ficha cabe. 17 nov: Gabriel pidió los dedos dibujados y sin el paso del nudo simple: 6 pasos en dos dedos, sin fallas. Gabriel aprobó imágenes y texto; en `modelado` (126d0ec). 17 nov: en `main` (65f4fde), después del adujado, con el formato renumerado a v1.9; ver «Cómo se hizo» del puño de mono en el plan. 18 nov: filtro 1 aprobado (con fecha del 17 nov); en `cuerda-ok` y en el sitio desde el 18 nov. Falta el filtro 2, en pausa)
+- [ ] Punto de control de la tanda 4
+
+#### Tanda 5: anfitriones especiales
+- [ ] Eslinga de barril
+- [ ] Eslinga de andamio (requiere D1)
+- [ ] Vuelta de cornamusa (*cleat hitch*, sobre una cornamusa)
+- [ ] Punto de control de la tanda 5
+
+### Fase 5: libro y primera edición
+
+- [ ] T11 Material inicial: portada, "cómo leer una ficha", glosario, seguridad e índice (S, depende de D1 y la tanda 1)
+- [ ] T12 Anexos de la Wak y de la Tropa (S, depende de D3 y T11)
+- [ ] T13 Edición 1: PDF completo, colofón, registro de cambios, etiqueta en git e impresión (S, depende de la fase 4, T11 y T12)
+- [ ] Punto de control final: edición 1 impresa y todos sus QR responden

@@ -130,9 +130,10 @@ def cruces_que_saltan(resultados: list[Resultado]) -> list[str]:
     return fallas
 
 
-def guardar(modelo: Modelo) -> Path:
-    """Escribe build/<slug>/modelo.json y devuelve su ruta."""
-    destino = BUILD / modelo.spec.slug / "modelo.json"
+def guardar(modelo: Modelo, destino: Path | None = None) -> Path:
+    """Escribe build/<slug>/modelo.json, o `destino`, y devuelve su ruta."""
+    if destino is None:
+        destino = BUILD / modelo.spec.slug / "modelo.json"
     destino.parent.mkdir(parents=True, exist_ok=True)
     with open(destino, "w", encoding="utf-8") as f:
         json.dump(datos_json(modelo), f, ensure_ascii=False, separators=(",", ":"))

@@ -1,7 +1,7 @@
 """Pruebas doradas de la skill nudo-nuevo: un borrador contra la especificación validada.
 
 La skill corre a ciegas sobre las entradas de un nudo ya validado, y su borrador se guarda
-en tests/dorados/ (ver T9 en el plan). Aquí se compara con la especificación validada. No
+en tests/dorados/ (ver T9 en tasks/historial.md). Aquí se compara con la especificación validada. No
 importa cómo se llama cada cruce: las secuencias se comparan con los cruces numerados en
 el orden en que aparecen.
 

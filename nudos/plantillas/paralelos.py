@@ -1,6 +1,6 @@
 """Plantillas del amarre redondo y del trípode, sobre palos paralelos (anfitrión «palos»).
 
-El método es el del diseño de «Los palos paralelos» (tanda 4) en tasks/plan.md: un
+El método es el del diseño de «Los palos paralelos» (tanda 4) en tasks/historial.md: un
 ballestrinque en el palo de delante, a la izquierda; las vueltas alrededor de todos los palos,
 de izquierda a derecha, una junto a otra; los ahorcados de cada hueco entre dos palos,
 alrededor de las vueltas (en el trípode, primero el hueco de atrás), y un ballestrinque de

@@ -1,6 +1,6 @@
 """Plantilla de la cabeza de turco, tejida sobre un tubo (anfitrión «tubo»).
 
-El método es el del diseño de T8 en tasks/plan.md: la cuerda se teje vuelta por vuelta, y
+El método es el del diseño de T8 en tasks/historial.md: la cuerda se teje vuelta por vuelta, y
 cada vuelta pasa por encima o por debajo de lo que ya está, como queda en el nudo terminado.
 Da tantas vueltas al tubo como cabos y hace tantos senos en cada borde como senos. Cada
 pasada más sigue el mismo camino junto a la primera, y al final los dos extremos se esconden

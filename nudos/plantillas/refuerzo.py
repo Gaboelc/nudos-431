@@ -1,6 +1,6 @@
 """Plantilla del refuerzo de cabo, sobre la punta de un cabo (anfitrión «cabo»).
 
-El método es el del diseño de la tanda 4 en tasks/plan.md («El cabo y el refuerzo de cabo»):
+El método es el del diseño de la tanda 4 en tasks/historial.md («El cabo y el refuerzo de cabo»):
 el cordel se pone a lo largo del cabo, con el extremo corto hacia la punta; con el largo se
 dan unas vueltas hacia la punta, sobre el extremo corto; ese extremo se dobla en un seno que
 queda sobre las vueltas, con la curva hacia la punta; se dan otras tantas vueltas sobre las
@@ -33,7 +33,7 @@ _CAMPOS = {"tipo", "vueltas"}
 
 CABO = 1   # zona: sobre el cabo. Lo que cuelga hasta la mesa va en MESA.
 
-# Medidas en diámetros de cordel; ver el diseño en tasks/plan.md.
+# Medidas en diámetros de cordel; ver el diseño en tasks/historial.md.
 PASO_VUELTA = 1.1     # entre dos vueltas vecinas, a lo largo del cabo
 CENTRO = 45.0         # el ángulo del medio del seno, de frente a la cámara de los pasos
 ANCHO = 7.0           # el arco entre las dos ramas del seno

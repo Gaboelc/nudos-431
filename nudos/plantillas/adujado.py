@@ -1,6 +1,6 @@
 """Plantilla del adujado: una aduja de cuerda libre sobre la mesa, sin anfitrión.
 
-El método es el del diseño de la tanda 4 en tasks/plan.md («El adujado»): se hacen senos que se
+El método es el del diseño de la tanda 4 en tasks/historial.md («El adujado»): se hacen senos que se
 cierran sobre el extremo, uno por encima y el siguiente por debajo; la aduja se junta por la
 mitad; con la cuerda que queda se dan vueltas alrededor de la mitad, hacia la derecha; un seno
 de la cuerda pasa por el ojo de la derecha, se abre, se pasa por encima de la punta y queda
@@ -37,7 +37,7 @@ SENOS = (3, 6)
 VUELTAS = (3, 8)
 _CAMPOS = {"tipo", "senos", "vueltas"}
 
-# Medidas en diámetros; ver el diseño en tasks/plan.md.
+# Medidas en diámetros; ver el diseño en tasks/historial.md.
 LARGO = 15.0          # media longitud del primer seno (x de su punta izquierda: -LARGO)
 ANCHO_ABIERTO = 6.5   # medio ancho del primer seno con la aduja abierta
 G = 1.05              # entre dos tramos vecinos de la banda

@@ -351,7 +351,7 @@ En todo el texto del nudo, `{cabos}`, `{senos}` y `{pasadas}` se reemplazan por 
 
 Ningún paso tiene firme: el extremo corto se sujeta contra el tubo y se trabaja con la parte larga, que lleva «Chicote» en su punta en todos los pasos. Los dos extremos llevan remate.
 
-Lo que hace la plantilla con esas medidas (`nudos/plantillas/cabeza_turco.py`; ver «Cómo se hizo la geometría» de T8 en el plan):
+Lo que hace la plantilla con esas medidas (`nudos/plantillas/cabeza_turco.py`; ver «Cómo se hizo la geometría» de T8 en `tasks/historial.md`):
 
 - **La onda.** El ancho de la onda depende del ángulo con que las cuerdas cruzan la dirección en que se rodea el tubo. La plantilla elige el menor entre 45° y 70°, de 5 en 5, con el que la cuerda ideal (las pasadas cerradas, sin los extremos) queda a 1 diámetro de las demás y con un radio de curvatura de al menos 1,2. Si no cabe con ninguno, ningún paso se construye y la falla dice el radio mínimo del tubo para esas medidas.
 - **Los extremos** salen por un mismo seno de un borde, el seno A. El extremo corto llega desde fuera del nudo, a lo largo del tubo, y entra a la primera pasada a media diagonal del brazo que sale de A, lejos de los cruces. Al volver a A, después de su último cruce, cada pasada se corre a la siguiente por dentro del seno, sobre el ápice, antes de llegar a donde entra el extremo corto, así que no lo cruza. La última pasada termina, en el paso de `pasadas`, a media diagonal antes de su último cruce.
@@ -385,7 +385,7 @@ El método es el de la fuente: el cordel va a lo largo del cabo con el extremo c
 
 `hasta` puede ser, en este orden: `colocar` (el cordel a lo largo del cabo, sin vueltas), `vuelta-1` … `vuelta-<n>`, `seno`, `seno-vuelta-1` … `seno-vuelta-<n>`, `por-el-seno`, `tirar` y `cortar`. `vueltas` es lo mismo que `vuelta-<n>` y `seno-vueltas` que `seno-vuelta-<n>`. Cada paso llega más lejos que el anterior y el último llega a `cortar`. En el texto, `{vueltas}` sale en letras.
 
-Lo que hace la plantilla (`nudos/plantillas/refuerzo.py`; ver «El cabo y el refuerzo de cabo» en el plan):
+Lo que hace la plantilla (`nudos/plantillas/refuerzo.py`; ver «El cabo y el refuerzo de cabo» en `tasks/historial.md`):
 
 - **Las vueltas** van a 1,1 una de otra, hacia la punta, y por delante del cabo bajan. El seno va de frente a la cámara de los pasos: sus ramas a 7 diámetros de arco una de otra, el extremo corto a 106° y la rama que vuelve a −16°, con una curva plana de esquinas de radio 1,2.
 - **Al pasar el chicote,** la última vuelta pasa otra vez sobre la rama que vuelve y el chicote gira hacia la punta en el medio del seno, pasa bajo su curva y cae a la mesa por delante del corte. Con `n` vueltas son 4n + 2 cruces.
@@ -435,7 +435,7 @@ Es la única plantilla sin anfitrión: la aduja va libre sobre la mesa y la espe
 
 `hasta` puede ser, en este orden: `seno-1` … `seno-<n>`, `juntar` (la aduja juntada, sin vueltas), `vuelta-1` … `vuelta-<m>`, `por-el-ojo`, `por-encima` y `tirar`. `senos` es lo mismo que `seno-<n>` y `vueltas` que `vuelta-<m>`. Cada paso llega más lejos que el anterior y el último llega a `tirar`. En el texto, `{senos}` y `{vueltas}` salen en letras.
 
-Lo que hace la plantilla (`nudos/plantillas/adujado.py`; ver «El adujado» en el plan):
+Lo que hace la plantilla (`nudos/plantillas/adujado.py`; ver «El adujado» en `tasks/historial.md`):
 
 - **La aduja juntada es una banda plana:** bajo las vueltas, los tramos de los senos van uno junto a otro sobre la mesa, así que todos los cruces se buscan desde arriba, como en un nudo libre. Por abajo, cada vuelta va media vuelta más a la derecha que por arriba, para que las dos no se junten en una sola línea vista desde arriba.
 - **La cuerda de cada paso se traza entera,** porque juntar la aduja cambia el principio de la cuerda, y la plantilla dice qué tramo se resalta. La altura de cada tramo sale de lo que tiene debajo, con subidas y bajadas suaves. La cuerda no se relaja: ya va trazada sin que nada se toque ni se doble de más.
@@ -449,7 +449,7 @@ El método es el de la fuente, en los dedos y sin bola en el centro: con el chic
 
 `hasta` puede ser, en este orden: `vuelta-1-1` … `vuelta-1-<n>`, `vuelta-2-1` … `vuelta-2-<n>`, `vuelta-3-1` … `vuelta-3-<n>` y `apretar`. `juego-<j>` es lo mismo que `vuelta-<j>-<n>`. Cada paso llega más lejos que el anterior y el último llega a `apretar`. En el texto, `{vueltas}` sale en letras.
 
-Lo que hace la plantilla (`nudos/plantillas/puno.py`; ver «El puño de mono» en el plan):
+Lo que hace la plantilla (`nudos/plantillas/puno.py`; ver «El puño de mono» en `tasks/historial.md`):
 
 - **Los juegos** van alrededor de z (el primero, con las vueltas una sobre otra, acostado en la mesa), de x (el segundo) y de y (el tercero). Cada juego va encima de otro en dos caras opuestas y debajo del tercero en otras dos: el segundo sobre el primero en ±y, el tercero sobre el segundo en ±z y el primero sobre el tercero en ±x. Donde va encima, una vuelta va 1,05 más lejos del centro. Las vueltas de un juego van a 1,1 una de otra.
 - **En los dedos.** En los pasos de las vueltas, el puño se ata en dos dedos parados sobre la mesa, que se dibujan: el primer juego los rodea a los dos; el segundo abraza al primero por la mitad, entre los dedos, y el tercero abraza al segundo por arriba y por abajo, entre los dedos y por dentro del primero. Cada juego es una vuelta de esquinas redondeadas alrededor de lo que rodea. Al apretar, los dedos ya no están y el puño es una esfera, con el nudo simple en el centro.
