@@ -21,7 +21,7 @@ import yaml
 from . import RAIZ
 from .anfitrion import solido
 from .construir import Modelo, _resultado_json, datos_json
-from .hoja import ANCHO, _altura, _encuadre, hoja
+from .hoja import ANCHO, _altura, _encuadre, hoja, mapa as desenrollado
 from .libre import LIMITES, Resultado
 
 DESTINO = RAIZ / "revision"   # fuera de git (.gitignore)
@@ -146,6 +146,13 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
             f'diámetros ({1 - despues / antes:.0%}).</p><div class="fila"><div class="render">{celdas}'
             f'</div></div>{_medidas(modelo.apretado)}</section>')
 
+    if modelo.spec.anfitrion is not None and modelo.spec.anfitrion.tipo == "barril":
+        # El costado del barril desenrollado: ahí van los cruces que desde arriba no se ven.
+        desenrollado(datos, solido(modelo.spec.anfitrion)).save(destino / "costado.png")
+        bloques.append('<section><h2>El costado del barril, desenrollado</h2><p>Cada paso, con el '
+                       'frente en el medio y la altura hacia arriba. Lo que va encima se ve más '
+                       'oscuro.</p><div class="render"><figure><img src="costado.png" alt="">'
+                       '</figure></div></section>')
     arriba = duda("general")
     if not mapa["pasos"]:
         todas = sorted(str(p.relative_to(fuente)).replace(os.sep, "/") for p in fuente.rglob("*")

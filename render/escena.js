@@ -319,6 +319,10 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   if (est && est.tipo === "estaca") {
     for (const x of [-est.radio, est.radio]) for (const y of [-est.radio, est.radio]) esquinas.push(new THREE.Vector3(x, y, est.alto));
   }
+  // El barril, igual: se encuadra su tapa.
+  if (est && est.tipo === "barril") {
+    for (const x of [-est.radio, est.radio]) for (const y of [-est.radio, est.radio]) esquinas.push(new THREE.Vector3(x, y, est.base + est.alto));
+  }
   const centroFit = new THREE.Vector3(cx, cy, 0.5);
   // Donde la cuerda entra al encuadre se pone el nombre «Firme».
   const e = modelo.encuadre;
@@ -468,6 +472,26 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     }
     const h = a.largo / 2 - a.radio;
     ejesPalos.push({ a: [-h, 0, a.z], b: [h, 0, a.z], radio: a.radio });
+  }
+  // El barril de la eslinga de barril, de madera: un cilindro parado en x = y = 0, de «base» a
+  // «base» + «alto», con los bordes de la tapa y de la base redondeados con radio «canto». Su
+  // perfil, del centro de la base al de la tapa por el costado, se gira alrededor del eje: la
+  // LatheGeometry gira alrededor de y, que se lleva a z.
+  if (a && a.tipo === "barril") {
+    const c = a.canto, rc = a.radio - c, perfil = [new THREE.Vector2(0, 0)];
+    for (const [z0, f0] of [[c, -Math.PI / 2], [a.alto - c, 0]]) {
+      for (let k = 0; k <= 8; k++) {
+        const f = f0 + (k / 8) * (Math.PI / 2);
+        perfil.push(new THREE.Vector2(rc + c * Math.cos(f), z0 + c * Math.sin(f)));
+      }
+    }
+    perfil.push(new THREE.Vector2(0, a.alto));
+    const m = new THREE.Mesh(new THREE.LatheGeometry(perfil, 96), madera());
+    m.rotation.x = Math.PI / 2;
+    m.position.set(0, 0, a.base);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+    ejesPalos.push({ a: [0, 0, a.base], b: [0, 0, a.base + a.alto], radio: a.radio });
   }
   // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
   // la mesa en x = y = 0, de la mesa hasta «alto». El destorcedor es corto y gris acero, para

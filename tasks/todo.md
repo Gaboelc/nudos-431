@@ -38,8 +38,8 @@ Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos 
 - [x] Propuesta de diseño de los tres anfitriones, en el plan (23 nov)
 - [x] Gabriel revisa la propuesta y responde sus ocho preguntas (23 nov: aprobada)
 - [x] El tablón (v1.11), en una sola sesión de código con la cornamusa y el barril (23 nov: código y pruebas; Gabriel lo aprobó el mismo día)
-- [x] La cornamusa (v1.12) (23 nov: código y pruebas; falta que Gabriel la vea)
-- [ ] El barril (v1.13)
+- [x] La cornamusa (v1.12) (23 nov: código y pruebas; Gabriel la aprobó el mismo día)
+- [x] El barril (v1.13) (23 nov: código y pruebas; falta que Gabriel lo vea)
 - [ ] Eslinga de barril
 - [ ] Eslinga de andamio (requiere D1)
 - [ ] Vuelta de cornamusa (*cleat hitch*, sobre una cornamusa)

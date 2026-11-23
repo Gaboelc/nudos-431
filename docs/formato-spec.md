@@ -1,4 +1,4 @@
-# Formato de especificación de nudo (v1.12)
+# Formato de especificación de nudo (v1.13)
 
 Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.5 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
@@ -58,11 +58,11 @@ Los índices se cuentan sobre el segmento tal como está definido. Dos puntos se
 
 ## Anfitrión
 
-Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres, los palos paralelos, el tubo de la cabeza de turco, el cabo del refuerzo de cabo, el destorcedor, la estaca y el tablón; los demás (argolla, barril, cornamusa, cuerda anfitriona) se agregan con el primer nudo que los necesite.
+Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la cruz de los amarres, los palos paralelos, el tubo de la cabeza de turco, el cabo del refuerzo de cabo, el destorcedor, la estaca, el tablón, la cornamusa y el barril; los demás (argolla, cuerda anfitriona) se agregan con el primer nudo que los necesite.
 
 | Campo | Qué es |
 |---|---|
-| `tipo` | `poste`, `cruz`, `palos`, `tubo`, `cabo`, `destorcedor`, `estaca`, `tablon` o `cornamusa`. |
+| `tipo` | `poste`, `cruz`, `palos`, `tubo`, `cabo`, `destorcedor`, `estaca`, `tablon`, `cornamusa` o `barril`. |
 | `radio` | Radio del poste, en diámetros de cuerda. Un palo de escoba con una cuerda de 8 mm da alrededor de 1,5. |
 | `desde`, `hasta` | Dónde empieza y termina el poste a lo largo de x. |
 
@@ -137,6 +137,25 @@ anfitrion: {tipo: cornamusa, radio: 1, largo: 16}
 ```
 
 Los cuernos son una barra con las puntas redondas, con el eje a la altura `radio + 1`: como el poste, se apoya en la cuerda que pasa bajo un cuerno. En el medio, un pie de 5 diámetros de largo, del ancho de la barra y con las puntas redondas vistas desde arriba, la une a la mesa; por ahí no pasa la cuerda, y un punto dentro del pie, sobre la mesa o rodeando la barra por debajo, es un error al cargar. Lo que va pegado a la barra se escribe `{cornamusa: [[x, ángulo], ...]}`, como sobre el poste; lo demás, `[x, y]` sobre la mesa. Los cruces se buscan todos desde arriba: donde un tramo pasa sobre un cuerno y otro por debajo, el de arriba va encima, y ese cruce no se eleva al construir, porque la barra ya separa las dos pasadas. Dos pasadas a menos de 3 diámetros a lo largo de la cuerda no cuentan como cruce. Al subir de la mesa a la barra o bajar de ella, conviene que la cuerda llegue con espacio (unos 2,5 diámetros) y salga por debajo del cuerno, no por su frente. El nudo terminado se aprieta y se mira como sobre el poste. En las imágenes y en el visor es de metal gris; en la hoja de revisión, gris.
+
+El barril es el de la eslinga de barril: un cilindro parado, con el eje vertical en x = y = 0.
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `barril`. |
+| `radio` | Su radio, de 3 a 12 diámetros de cuerda. |
+| `alto` | Su alto, de al menos 4. |
+
+```yaml
+anfitrion: {tipo: barril, radio: 6, alto: 10}
+```
+
+Con una cuerda de 8 mm, 6 y 10 son una lata de 10 cm de ancho: con un barril de verdad, la cuerda se vería como un hilo en la ficha. Se apoya sobre la cuerda que pasa por debajo, así que su base queda a la altura 1, como el poste, y los bordes de la tapa y de la base van redondeados con radio 0,6, fijo: la cuerda que los rodea se dobla con radio 1,1. La cuerda le pasa por tres caras:
+- Por debajo, sobre la mesa, `[x, y]`, como siempre.
+- Por el costado, `{barril: [[ángulo, altura], ...]}`. El ángulo va alrededor del eje: 0 hacia quien ata, 90 a la derecha, 180 al fondo y 270 a la izquierda, sin volver a 0, como en el poste. La altura es la del eje de la cuerda sobre la mesa, entre los dos bordes redondeados: con `alto: 10`, de 1,6 a 10,4. Ojo con el orden: los grados van primero.
+- Por la tapa, `{tapa: [[x, y], ...]}`, dentro de su parte plana (con `radio: 6`, hasta 5,4 del centro).
+
+Lo que va por el costado se densifica sobre él, como sobre el poste. Entre el costado y la tapa, la cuerda sube (o baja) por el costado en el ángulo del punto del costado más cercano hasta el borde, lo rodea y sigue por la tapa; por eso conviene que ese punto esté en el ángulo por donde se quiere cruzar el borde. Entre el costado y un punto de la mesa debajo del barril, rodea igual el borde de la base. Desde la mesa, fuera del barril, sube sola. De la tapa a la mesa no se pasa sin un segmento por el costado: es un error al cargar. Cerca del barril no hay gravedad, así que lo que rodea el costado se queda a la altura dibujada. El nudo terminado se aprieta y se mira como sobre el poste. En las imágenes y en el visor es de madera; en la hoja de revisión, color madera, y la hoja lleva además su costado desenrollado, con cada cruce.
 
 El destorcedor es el ojo de un destorcedor de pesca, como en el nudo aguja: un cilindro corto, parado sobre la mesa, con el eje vertical en x = y = 0. La cuerda le da la vuelta a ras de la mesa y nunca pasa por encima de él.
 
@@ -617,7 +636,7 @@ Cada nudo avanza así: `borrador → modelado → cuerda-ok → novato-ok → pu
    - la secuencia del nudo por detrás es la del último paso con todos los cruces al revés. El amarre volteado con sus palos no se construye otra vez: es un giro rígido del último paso.
 6. El nudo terminado apretado, por delante y por detrás, tiene la secuencia del último paso (por detrás, invertida) y cumple los mismos límites. Lo garantiza cómo se elige: entre las rondas que los cumplen (ver «El nudo apretado»).
 
-**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. En el adujado también, aunque la aduja sea de varias capas: la plantilla la traza como una banda plana. Con el destorcedor y la estaca también, porque la cuerda no sale de la mesa. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Sobre el tubo y el cabo, igual, en la superficie desenrollada del cilindro. Sobre el tablón, igual, en su superficie desenrollada (x y el largo a lo largo del contorno), donde encima es lo más lejos de la superficie del tablón. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación.
+**Dónde se buscan los cruces.** Sobre la mesa, en la proyección vista desde arriba: encima es lo más alto. En el adujado también, aunque la aduja sea de varias capas: la plantilla la traza como una banda plana. Con el destorcedor y la estaca también, porque la cuerda no sale de la mesa. Con varias cuerdas, se buscan dentro de cada una y entre ellas, nunca en el salto entre el final de una cuerda y el comienzo de la siguiente. Sobre el poste, en su superficie desenrollada (x y el arco alrededor del eje, comparando cada par en la vuelta más cercana): encima es lo más lejos del eje. Sobre el tubo y el cabo, igual, en la superficie desenrollada del cilindro. Sobre el tablón, igual, en su superficie desenrollada (x y el largo a lo largo del contorno), donde encima es lo más lejos de la superficie del tablón. Un tramo cuenta como «sobre el poste» si sale de un segmento sobre el poste. Los cruces entre un tramo del poste y uno de la mesa no se buscan; ahí solo se comprueba la separación. Sobre la cornamusa se buscan todos desde arriba (ver «Anfitrión»). Sobre el barril hay tres zonas: el costado, en su superficie desenrollada (la altura y el arco alrededor del eje), donde encima es lo más lejos del eje, y la tapa y la mesa, cada una desde arriba. Entre una zona y otra, y donde la cuerda rodea un borde, no se buscan.
 
 Sobre los palos paralelos hay una zona por palo, otra por cada hueco entre dos palos, los costados de los ahorcados y la mesa. En cada palo los cruces se buscan en su superficie desenrollada, como en el poste: ahí van los ballestrinques y los arcos de las vueltas. En cada hueco, en la superficie de un cilindro acostado a lo largo de y, con el eje en el medio de las vueltas (x = 0) a la altura de los ejes de los palos, como la cintura de la cruz acostada: ahí van las rectas de las vueltas que pasan de un palo al otro por encima y por debajo del hueco, y las partes de los ahorcados que pasan sobre y bajo ellas. Encima es lo más lejos del eje. Donde los ahorcados bajan por el hueco, uno junto a otro a lo largo de x, no se buscan cruces: es una zona sin mapa, y ahí solo se comprueba la separación.
 
@@ -629,7 +648,7 @@ En el puño de mono, sin anfitrión, hay tres zonas. Las vueltas se buscan en el
 
 ## Versiones
 
-Este es el formato v1.12. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.13. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -647,11 +666,11 @@ La cabeza de turco no entra en v1: el anfitrión `tubo`, la plantilla `cabeza-de
 Son cambios compatibles que ya se conocen:
 
 - `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
-- Los anfitriones que faltan (argolla, barril, cuerda anfitriona), con el primer nudo que los use.
+- Los anfitriones que faltan (argolla, cuerda anfitriona), con el primer nudo que los use.
 - Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
 
-Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris; la estaca, el poste, la cruz, los palos paralelos y el tablón color madera, y el cabo color crema. El poste, los palos, el cabo y el tablón se cortan en el encuadre, más un margen. Del tablón dibuja además, en `revision`, el nudo apretado volteado con él, que muestra la cara de abajo. Del tubo de la cabeza de turco y del cabo del refuerzo dibuja además su superficie desenrollada, con cada cruce, del adujado, la aduja vista desde abajo, y del puño de mono, el puño desenrollado mirado desde su centro. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
+Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) dibuja la cuerda y el anfitrión: el destorcedor en gris; la estaca, el poste, la cruz, los palos paralelos, el tablón y el barril color madera, y el cabo color crema. El poste, los palos, el cabo y el tablón se cortan en el encuadre, más un margen. Del tablón dibuja además, en `revision`, el nudo apretado volteado con él, que muestra la cara de abajo. Del tubo de la cabeza de turco y del cabo del refuerzo dibuja además su superficie desenrollada, con cada cruce, del barril, su costado desenrollado, del adujado, la aduja vista desde abajo, y del puño de mono, el puño desenrollado mirado desde su centro. La vista inclinada se centra a la altura de la cuerda, la misma en todos los pasos, para que un nudo sobre el poste no salga del cuadro.
 
 ### Registro
 
@@ -666,5 +685,6 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) di
 - **v1.8** (17 de noviembre de 2026): la plantilla `adujado`, la primera sin anfitrión, con su variante de error `sin-alternar`, para el adujado (fase 4, tanda 4). Una plantilla puede ir sin anfitrión (`ANFITRION = None`), libre sobre la mesa. Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.9** (17 de noviembre de 2026; entró a `main` después del adujado): la plantilla `puno-de-mono`, con su variante de error `tercero-por-fuera`, para el puño de mono (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.10** (23 de noviembre de 2026): `dos_firmes` en una cuerda de un nudo de varias, para el cordino del prusik, que no lleva «Chicote» en el tramo que va al pescador doble. Es un cambio compatible: sin él, todo sigue igual, y los demás nudos dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.13** (23 de noviembre de 2026): el anfitrión `barril`, un cilindro parado con los bordes redondeados, y sus segmentos `{barril: …}` por el costado y `{tapa: …}` por la tapa, para la eslinga de barril (fase 4, tanda 5). Es un cambio compatible.
 - **v1.12** (23 de noviembre de 2026): el anfitrión `cornamusa`, una barra con dos cuernos sobre un pie, y sus segmentos `{cornamusa: …}`, para la vuelta de cornamusa (fase 4, tanda 5). Es un cambio compatible.
 - **v1.11** (23 de noviembre de 2026): el anfitrión `tablon`, una tabla con los cantos redondeados, y sus segmentos `{tablon: …}`, para la eslinga de andamio (fase 4, tanda 5). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos hechos dan el mismo `modelo.json` y las mismas imágenes.

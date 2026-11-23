@@ -37,7 +37,7 @@ AMBAR = np.array([0.95, 0.55, 0.12])
 REMATE = np.array([0.35, 0.06, 0.06])
 GRIS = np.array([0.62, 0.64, 0.67])   # el destorcedor
 MADERA = np.array([0.78, 0.64, 0.48])  # la estaca, como los palos de render/escena.js
-COLOR_PARADO = {"destorcedor": GRIS, "estaca": MADERA}
+COLOR_PARADO = {"destorcedor": GRIS, "estaca": MADERA, "barril": MADERA}
 RADIO_SUPERFICIE = 0.25   # las esferas con que se dibuja la superficie del anfitrión parado
 RADIO_PALO, PASO_PALO = 0.7, 0.2   # las del poste y la cruz, más grandes: son más largos
 MARGEN_PALO = 2.0         # diámetros de palo que se dibujan fuera del encuadre
@@ -129,15 +129,17 @@ def _cuerdas(datos: dict, p: dict) -> list[tuple[np.ndarray, float, np.ndarray, 
 
 
 def _parado(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray, float] | None:
-    """Puntos sobre la superficie del destorcedor o la estaca, para dibujarla con esferas de
-    RADIO_SUPERFICIE: el costado, en anillos, y la tapa, en anillos concéntricos, con su
-    color y el radio de esas esferas. None si el nudo no tiene ninguno de los dos."""
+    """Puntos sobre la superficie del destorcedor, la estaca o el barril, para dibujarla con
+    esferas de RADIO_SUPERFICIE: el costado, en anillos, y la tapa, en anillos concéntricos, con
+    su color y el radio de esas esferas. El barril empieza en su «base», sobre la cuerda que le
+    pasa por debajo. None si el nudo no tiene ninguno de los tres."""
     if not anfitrion or anfitrion.get("tipo") not in COLOR_PARADO:
         return None
     rs, paso = RADIO_SUPERFICIE, 0.12
-    r, alto = anfitrion["radio"] - rs, anfitrion["alto"] - rs
+    base = anfitrion.get("base", 0.0)
+    r, alto = anfitrion["radio"] - rs, base + anfitrion["alto"] - rs
     puntos = []
-    for z in np.arange(rs, alto + 1e-9, paso):
+    for z in np.arange(base + rs, alto + 1e-9, paso):
         a = np.linspace(0, 2 * math.pi, max(12, int(2 * math.pi * r / paso)), endpoint=False)
         puntos.append(np.column_stack([r * np.cos(a), r * np.sin(a), np.full(len(a), z)]))
     for ri in np.arange(r, 0, -paso):
@@ -417,6 +419,70 @@ CORTE_CABO = 230.0     # dónde da la vuelta el mapa del cabo, en grados: atrás
 
 
 def mapa(datos: dict, tubo, senos: int | None = None) -> Image.Image:
+    """El tubo o el cabo desenrollado (_mapa_tubo), o el costado del barril (_mapa_barril)."""
+    if hasattr(tubo, "ztapa"):
+        return _mapa_barril(datos, tubo)
+    return _mapa_tubo(datos, tubo, senos)
+
+
+def _juntar(cuadros: list[Image.Image], W: int, H: int) -> Image.Image:
+    filas = (len(cuadros) + COLUMNAS_MAPA - 1) // COLUMNAS_MAPA
+    out = Image.new("RGB", (COLUMNAS_MAPA * W, filas * H), (255, 255, 255))
+    for k, c in enumerate(cuadros):
+        out.paste(c, ((k % COLUMNAS_MAPA) * W, (k // COLUMNAS_MAPA) * H))
+    return out
+
+
+def _mapa_barril(datos: dict, barril) -> Image.Image:
+    """Un cuadro por paso con el costado del barril desenrollado: alrededor del barril hacia la
+    derecha, con el frente en el medio, y la altura hacia arriba. Las rayas de arriba y de abajo
+    son los bordes de la tapa y de la base. Lo que va más lejos del eje se dibuja encima, más
+    oscuro; lo que agrega el paso, en ámbar; cada cruce del costado lleva su etiqueta."""
+    C = 2 * math.pi * barril.rb
+    z0, z1 = barril.zb - 1.5, barril.zt + 1.5
+    W, H = int((C + 2) * PPD_MAPA), int((z1 - z0) * PPD_MAPA)
+    cuadros = []
+    for p in datos["pasos"]:
+        im = Image.new("RGB", (W, H), (246, 246, 243))
+        d = ImageDraw.Draw(im)
+        X = np.asarray(p["puntos"], float)
+        z, th, r = barril.cilindricas(X)
+        u = (th * barril.rb + C / 2) % C        # 0 atrás a la izquierda; el frente, en el medio
+        en = (r < barril.rb + 1.8) & (z >= barril.zb - 0.5) & (z <= barril.zt + 0.5)
+        s = np.arange(len(X)) * p["h"]
+        hl = p["resaltado"] or [-1, -1]
+
+        def px(ui, zi):
+            return ((ui + 1) * PPD_MAPA, (z1 - zi) * PPD_MAPA)
+        for borde in (barril.zb, barril.zt):
+            d.line([px(-1, borde), px(C + 1, borde)], fill=(205, 205, 200), width=1)
+        d.line([px(C / 2, z0), px(C / 2, z1)], fill=(225, 225, 220), width=1)
+        tramos = [((r[i] + r[i + 1]) / 2, i) for i in range(len(X) - 1)
+                  if en[i] and en[i + 1] and abs(u[i + 1] - u[i]) < C / 2]
+        for alto, i in sorted(tramos):
+            k = float(np.clip(alto - barril.rb, 0, 1))
+            base = AMBAR if hl[0] <= s[i] <= hl[1] else AZUL
+            color = base * (0.55 + 0.45 * (1 - k)) + (1 - k) * 0.35 * (1 - base)
+            c = tuple(int(255 * v) for v in np.clip(color, 0, 1))
+            d.line([px(u[i], z[i]), px(u[i + 1], z[i + 1])], fill=(40, 40, 40), width=int(PPD_MAPA * 0.95))
+            d.line([px(u[i], z[i]), px(u[i + 1], z[i + 1])], fill=c, width=int(PPD_MAPA * 0.75))
+        for et, (cx, cy) in p.get("cruces", {}).items():
+            # Los cruces se guardan en la mesa: los del costado, en el punto de la cuerda sobre
+            # el costado más cercano a ese lugar. Los de la tapa y la mesa no van aquí.
+            if math.hypot(cx, cy) < barril.radio - 0.5:
+                continue
+            d2 = np.where(en, (X[:, 0] - cx) ** 2 + (X[:, 1] - cy) ** 2, np.inf)
+            i = int(d2.argmin())
+            a, b = px(u[i], z[i])
+            d.rectangle([a - 9, b - 7, a + 9, b + 7], fill=(255, 255, 255), outline=(60, 60, 60))
+            d.text((a - 6 if len(et) > 1 else a - 3, b - 6), et, fill=(150, 20, 20))
+        d.text((10, 8), f"Paso {p['n']} · costado del barril desenrollado, el frente en el medio",
+               fill=(30, 30, 30))
+        cuadros.append(im)
+    return _juntar(cuadros, W, H)
+
+
+def _mapa_tubo(datos: dict, tubo, senos: int | None = None) -> Image.Image:
     """Un cuadro por paso con el tubo desenrollado: alrededor del tubo hacia la derecha, desde
     el seno A, y a lo largo del eje hacia arriba. Se ve el nudo entero aunque en el paso esté
     girado. Lo que va más lejos del eje se dibuja encima, más oscuro; lo que agrega el paso,
@@ -484,11 +550,7 @@ def mapa(datos: dict, tubo, senos: int | None = None) -> Image.Image:
         titulo = "cabo desenrollado, desde atrás" if cabo else "tubo desenrollado, desde el seno A"
         d.text((10, 8), f"Paso {p['n']} · {titulo}", fill=(30, 30, 30))
         cuadros.append(im)
-    filas = (len(cuadros) + COLUMNAS_MAPA - 1) // COLUMNAS_MAPA
-    out = Image.new("RGB", (COLUMNAS_MAPA * W, filas * H), (255, 255, 255))
-    for k, c in enumerate(cuadros):
-        out.paste(c, ((k % COLUMNAS_MAPA) * W, (k // COLUMNAS_MAPA) * H))
-    return out
+    return _juntar(cuadros, W, H)
 
 
 # --------------------------------------------------------------------------

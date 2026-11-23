@@ -246,7 +246,7 @@ Después de cada tanda hay un punto de control:
 - **Después, en los dos casos:** Gabriel hace el filtro 1 con la ficha impresa. El nudo pasa a `cuerda-ok`, con su bloque `filtros` (como en `specs/rizo.yaml`), entra a `publicados.txt` y se publica el sitio. Al cerrar el diseño y el «Cómo se hizo» de una tarea, su bloque pasa a `tasks/historial.md`.
 
 **Lo pendiente de la fase 4.**
-- **La tanda 5, anfitriones especiales:** la eslinga de barril, la eslinga de andamio (requiere D1) y la vuelta de cornamusa, sobre una cornamusa. Su propuesta está abajo; Gabriel la aprobó el 23 nov, y el código empieza por el tablón.
+- **La tanda 5, anfitriones especiales:** la eslinga de barril, la eslinga de andamio (requiere D1) y la vuelta de cornamusa, sobre una cornamusa. Su propuesta está abajo; Gabriel la aprobó el 23 nov. El tablón y la cornamusa están aprobados y el barril está hecho, en la rama `claude/tanda-5-propuesta-7431fd`.
 - **T8, la cabeza de turco,** al final del plan: ver qué no se entiende en las imágenes antes de tocar la geometría (ver T8 en el historial).
 
 **Propuesta de la tanda 5: anfitriones especiales (23 nov; Gabriel la aprobó el mismo día, con las respuestas que están al final).** Son tres nudos, y cada uno necesita un anfitrión nuevo: el barril, el tablón y la cornamusa. Ninguno necesita plantilla: los tres se dibujan con segmentos, como el ballestrinque sobre el poste, y su borrador lo escribe la skill `nudo-nuevo` cuando su anfitrión esté en `main`. Cada anfitrión es una tarea de código con la forma de T5 y del destorcedor: Gabriel aprueba su diseño, se programa, se comprueba con `referencia` y `comparar` que los 32 nudos hechos no cambian, y después se dibuja el nudo. Las medidas van en diámetros de cuerda y se ajustan al dibujar, como el radio del destorcedor.
@@ -378,7 +378,19 @@ El orden: primero el tablón, que es el poste con otro perfil (ahí se separa lo
 - **El nudo de prueba** (`tests/test_cornamusa.py`) no es del libro: el firme sube a la barra y la cruza en diagonal, rodea el cuerno derecho por debajo y, en el paso 2, vuelve por delante y pasa bajo el cuerno izquierdo, por debajo de la diagonal. Construye sin fallas. Sus imágenes están en `revision/cornamusa/`, fuera de git.
 - **Los nudos hechos no cambian:** los 32 `modelo.json` son iguales byte a byte a la referencia de 9898f79. Seis nudos diferían en 1 o 2 niveles en 1 a 12 píxeles al imprimir los 32 juntos. Reimpresos, o impresos desde 9898f79 o solos, salen iguales: es la variación del navegador.
 - **Pasan 675 pruebas y 1 se salta** (`tests/test_cornamusa.py` es nueva).
-- **Falta:** que Gabriel vea la cornamusa y, después, el barril (v1.13).
+- **Gabriel aprobó la cornamusa el 23 nov** y pidió seguir con el barril.
+
+**Cómo se hizo el barril (23 nov; falta que Gabriel lo vea).** En la misma rama, como en la propuesta, salvo lo que sigue.
+- **El sólido** (`Barril`, en `nudos/anfitrion.py`) es un cilindro parado con la base a la altura 1 y los bordes de la tapa y de la base redondeados con radio 0,6 (`CANTO_BARRIL`, en `nudos/spec.py`). Empuja la cuerda fuera de él por la cara o el borde más cercano, y su «distancia al eje» es la de la superficie más rb, así que cerca del barril no hay gravedad, también sobre la tapa y bajo la base.
+- **Lo que depende de la forma va en el barril:** su curva (`Barril.curva`), cómo se separa el tramo de encima en un cruce (`separar`: hacia arriba en la mesa, hacia afuera de la superficie en el barril) y los cruces (`cruces`). `_curva` y `construir_paso` los usan si el sólido los tiene; el poste, el tablón y la cornamusa siguen por su camino de siempre.
+- **Al pasar de una cara a otra, la cuerda rodea el borde sola,** en el ángulo del punto del costado más cercano: sube por el costado hasta el borde, lo rodea y sigue por la tapa, o sale por el borde de la base si el punto de la mesa está debajo del barril. Desde la mesa, fuera del barril, sube sola. De la tapa a la mesa sin pasar por el costado es un error al cargar, y también un punto del costado fuera de los bordes o de la tapa fuera de su parte plana.
+- **Las zonas** de cada punto son la mesa, el costado, la tapa o un borde. Los cruces se buscan en las tres primeras, como en la propuesta; en los bordes, no.
+- **En la especificación,** el costado se escribe `[ángulo, altura]`: los grados van primero, al revés que en el poste. Los segmentos `{tapa: …}` llevan `tapa` en `Segmento` y en `Paso`.
+- **La hoja** lo dibuja color madera y, como el tubo, lleva su costado desenrollado, con el frente en el medio (`python -m nudos hoja` y `revision`).
+- **El nudo de prueba** (`tests/test_barril.py`) no es del libro: el firme pasa por debajo del barril, sube, cruza la tapa dos veces (un cruce en la tapa) y rodea el costado sobre la subida (un cruce en el costado). Construye sin fallas a la primera. Sus imágenes están en `revision/barril/`, fuera de git, con la hoja y el costado desenrollado.
+- **Los nudos hechos no cambian:** los 32 `modelo.json` son iguales byte a byte a la referencia de 9898f79. Las imágenes que diferían en 1 nivel en 1 a 4 píxeles salen iguales impresas desde 9898f79 (el pescador, el pescador doble, el prusik y la presilla de alondra) o reimpresas: es la variación del navegador.
+- **Pasan 692 pruebas y 1 se salta** (`tests/test_barril.py` es nueva).
+- **Falta:** que Gabriel vea el barril. Con eso, el código de la tanda 5 está hecho; los tres borradores pueden ir cada uno en su sesión, con esfuerzo medio, cuando la gestora integre la rama en `main`.
 
 
 ### Fase 5: libro y primera edición

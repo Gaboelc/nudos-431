@@ -1,9 +1,11 @@
 """Nudos sobre un anfitrión rígido: el poste, un cilindro horizontal, la cruz, los dos
 palos del amarre cuadrado, los palos paralelos del redondo y el trípode, el tubo de la cabeza
-de turco, y el destorcedor y la estaca, dos cilindros parados sobre la mesa. Los pasos sobre
-la cruz, los palos y el tubo los construye su plantilla
-(nudos/plantillas/pasos.py), y los del destorcedor y la estaca, el generador libre
-(nudos/libre.py), porque todo el nudo va sobre la mesa; aquí están solo como sólidos.
+de turco, el tablón, la cornamusa, el barril, y el destorcedor y la estaca, dos cilindros
+parados sobre la mesa. Los pasos sobre la cruz, los palos y el tubo los construye su
+plantilla (nudos/plantillas/pasos.py), y los del destorcedor y la estaca, el generador libre
+(nudos/libre.py), porque todo el nudo va sobre la mesa; aquí están solo como sólidos. El
+tablón, la cornamusa y el barril van por el camino del poste, con lo que depende de su forma
+en su clase.
 
 Sobre el poste, cada paso se construye como en el generador libre (nudos/libre.py), con tres
 diferencias:
@@ -26,7 +28,7 @@ import numpy as np
 
 from .cruces import Cruce, cruces_2d, emparejar, encimas
 from .libre import R, Resultado, TrazadoError, _resultado, catmull_rom, elevar, relajar, remuestrear
-from .spec import HUECO_CORNAMUSA, PIE_CORNAMUSA, Anfitrion, Paso
+from .spec import BASE_BARRIL, CANTO_BARRIL, HUECO_CORNAMUSA, PIE_CORNAMUSA, Anfitrion, Paso
 
 ARCO_DENSO = 0.6       # cada cuánto se toma un punto sobre la superficie del poste, en diámetros
 PENETRACION_MAX = 0.05  # cuánto puede entrar el eje de la cuerda en el poste, en diámetros
@@ -630,6 +632,233 @@ class Cornamusa:
                 "pie": PIE_CORNAMUSA}
 
 
+# Las zonas de la cuerda sobre el barril: dónde se buscan sus cruces (Barril.cruces).
+MESA, COSTADO, TAPA, BORDE = 0, 1, 2, 3
+
+
+class Barril:
+    """El barril de la eslinga de barril: un cilindro parado, con el eje vertical en x = y = 0,
+    de `radio` y `alto`, con los bordes de la tapa y de la base redondeados con radio
+    CANTO_BARRIL. Se apoya sobre la cuerda que pasa por debajo, así que su base queda a la
+    altura BASE_BARRIL, como el poste.
+
+    La cuerda le pasa por debajo, sobre la mesa, [x, y]; por el costado, [ángulo, altura], con
+    el ángulo alrededor del eje (0 hacia quien ata, 90 a la derecha, 180 al fondo) y la altura
+    del eje de la cuerda, y por la tapa, [x, y]. Al pasar del costado a la tapa, o de debajo
+    del barril al costado, la cuerda rodea el borde sola, en el ángulo del punto del costado
+    (`curva`). Se construye por el camino del poste, con lo que depende de la forma aquí:
+    la curva, cómo se separa la cuerda en un cruce (`separar`) y los cruces, que se buscan en
+    tres zonas (`cruces`): el costado desenrollado, donde encima es lo más lejos del eje, y la
+    tapa y la mesa, desde arriba. Entre una zona y otra, y en los bordes, no se buscan."""
+    MEDIDA = ("penetracion_barril", "en el barril")
+
+    def __init__(self, a: Anfitrion):
+        self.radio, self.alto = a.radio, a.alto
+        self.rc = a.radio - CANTO_BARRIL                 # radio del núcleo, sin los bordes
+        self.zb = BASE_BARRIL + CANTO_BARRIL             # el núcleo va de zb a zt
+        self.zt = BASE_BARRIL + a.alto - CANTO_BARRIL
+        self.e0 = CANTO_BARRIL + R                       # del núcleo al eje de una cuerda que lo toca
+        self.rb = a.radio + R                            # del eje del barril al de una cuerda en el costado
+        self.ztapa = BASE_BARRIL + a.alto + R            # altura de una cuerda sobre la tapa
+
+    # Puntos sobre la superficie --------------------------------------------------------
+    def costado(self, grados, z, r=None) -> np.ndarray:
+        """De [ángulo, altura] sobre el costado a [x, y, z]. `r` es la distancia al eje."""
+        th, z, r = np.broadcast_arrays(np.radians(grados), np.asarray(z, float),
+                                       self.rb if r is None else np.asarray(r, float))
+        return np.stack([r * np.sin(th), -r * np.cos(th), z], axis=-1)
+
+    def _borde(self, grados: float, desde: float, hasta: float, arriba: bool) -> np.ndarray:
+        """Puntos sobre el borde redondeado de la tapa (`arriba`) o de la base, en el ángulo
+        `grados`, desde el ángulo del borde `desde` hasta `hasta` (0 es el costado, 90 la tapa
+        y -90 la base), sin el primero."""
+        n = max(2, int(math.ceil(abs(math.radians(hasta - desde)) * self.e0 / ARCO_DENSO)))
+        psi = np.radians(np.linspace(desde, hasta, n + 1)[1:])
+        zc = self.zt if arriba else self.zb
+        return self.costado(grados, zc + self.e0 * np.sin(psi), self.rc + self.e0 * np.cos(psi))
+
+    def _subir(self, grados: float, z0: float, z1: float) -> np.ndarray:
+        """Puntos sobre el costado, en el ángulo `grados`, de la altura z0 a z1, sin el primero."""
+        n = int(math.ceil(abs(z1 - z0) / ARCO_DENSO))
+        if n == 0:
+            return np.zeros((0, 3))
+        return self.costado(grados, np.linspace(z0, z1, n + 1)[1:])
+
+    # El sólido --------------------------------------------------------------------------
+    def _nucleo(self, X):
+        """El punto más cercano del núcleo (el barril sin los bordes redondeados), la normal
+        hacia afuera y la distancia con signo, negativa dentro del núcleo."""
+        rho = np.hypot(X[:, 0], X[:, 1])
+        lejos = rho > 1e-9
+        ux = np.where(lejos, X[:, 0] / np.where(lejos, rho, 1.0), 0.0)
+        uy = np.where(lejos, X[:, 1] / np.where(lejos, rho, 1.0), -1.0)
+        qr, qz = np.minimum(rho, self.rc), np.clip(X[:, 2], self.zb, self.zt)
+        vr, vz = rho - qr, X[:, 2] - qz
+        d = np.hypot(vr, vz)
+        fuera = d > 1e-12
+        div = np.where(fuera, d, 1.0)
+        nr, nz = np.where(fuera, vr / div, 0.0), np.where(fuera, vz / div, 0.0)
+        # Dentro del núcleo, la cara más cercana: el costado, la tapa o la base.
+        caras = np.column_stack([self.rc - rho, self.zt - X[:, 2], X[:, 2] - self.zb])
+        c = np.argmin(caras, axis=1)
+        dentro = ~fuera
+        nr = np.where(dentro & (c == 0), 1.0, nr)
+        nz = np.where(dentro & (c == 1), 1.0, np.where(dentro & (c == 2), -1.0, nz))
+        qr = np.where(dentro & (c == 0), self.rc, qr)
+        qz = np.where(dentro & (c == 1), self.zt, np.where(dentro & (c == 2), self.zb, qz))
+        d = np.where(dentro, -caras[np.arange(len(X)), c], d)
+        Q = np.column_stack([qr * ux, qr * uy, qz])
+        N = np.column_stack([nr * ux, nr * uy, nz])
+        return Q, N, d
+
+    def cilindricas(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """La altura, el ángulo alrededor del eje en radianes (0 hacia quien ata, entre -π y
+        π) y la «distancia al eje»: rb más lo que el punto se aleja de la superficie que sigue
+        el eje de una cuerda que toca el barril (de eso depende dónde no hay gravedad)."""
+        _, _, d = self._nucleo(X)
+        return X[:, 2], np.arctan2(X[:, 0], -X[:, 1]), self.rb + (d - self.e0)
+
+    def empujar(self, X, libre) -> None:
+        """Saca del barril los puntos que entraron, por la cara o el borde más cercano."""
+        Q, N, d = self._nucleo(X)
+        m = libre & (d < self.e0)
+        if m.any():
+            X[m] = Q[m] + N[m] * self.e0
+
+    def penetracion(self, X) -> float:
+        """Cuánto entra la cuerda en el barril (0 si no entra)."""
+        _, _, d = self._nucleo(X)
+        return float(max(0.0, (self.e0 - d).max()))
+
+    def separar(self, X, zona, extra) -> np.ndarray:
+        """El tramo de encima de cada cruce, separado del de abajo: sobre la mesa, hacia
+        arriba; sobre el barril, hacia afuera de su superficie."""
+        X = X.copy()
+        mesa = zona == MESA
+        X[mesa, 2] += extra[mesa]
+        _, N, _ = self._nucleo(X)
+        X[~mesa] += N[~mesa] * extra[~mesa, None]
+        return X
+
+    # La curva ---------------------------------------------------------------------------
+    def curva(self, paso: Paso):
+        """La línea central muestreada cada h, la posición a lo largo de la cuerda de cada
+        punto de control y la zona de cada punto (MESA, COSTADO, TAPA o BORDE).
+
+        Lo que va por el costado se densifica sobre él, como sobre el poste. Entre el costado
+        y la tapa, la cuerda sube por el costado en el ángulo de su punto más cercano hasta el
+        borde, lo rodea y sigue por la tapa; entre el costado y la mesa, si el punto de la mesa
+        está debajo del barril, rodea igual el borde de la base. Lo que rodea un borde no es de
+        ninguna zona."""
+        P = paso.puntos
+        n = len(P)
+        sobre = np.zeros(n, bool) if paso.sobre is None else paso.sobre
+        tapa = np.zeros(n, bool) if paso.tapa is None else paso.tapa
+        cara = np.where(tapa, TAPA, np.where(sobre, COSTADO, MESA))
+        aumentados: list[np.ndarray] = []
+        zonas: list[int] = []
+        origen: list[int] = []
+
+        def poner(puntos, zona):
+            puntos = np.atleast_2d(puntos)
+            aumentados.extend(puntos)
+            zonas.extend([zona] * len(puntos))
+
+        def de_lado(i):
+            """Del punto del costado i, su ángulo y su altura."""
+            return float(P[i, 0]), float(P[i, 1])
+
+        i = 0
+        while i < n:
+            j = i
+            while j + 1 < n and cara[j + 1] == cara[i]:
+                j += 1
+            if i > 0:
+                self._rodear(P, cara, i - 1, i, poner, de_lado)
+            if cara[i] == COSTADO:
+                Q = np.column_stack([np.radians(P[i:j + 1, 0]) * self.rb, P[i:j + 1, 1]])
+                D, ctrl = (Q, [0]) if len(Q) == 1 else catmull_rom(Q)
+                largo = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(D, axis=0), axis=1))])
+                tomar, ultimo = set(ctrl), -math.inf
+                for k, s in enumerate(largo):
+                    if s - ultimo >= ARCO_DENSO:
+                        tomar.add(k)
+                        ultimo = s
+                for k in sorted(tomar):
+                    if k in ctrl:
+                        origen.append(len(aumentados))
+                    poner(self.costado(np.degrees(D[k, 0] / self.rb), D[k, 1]), COSTADO)
+            else:
+                z = self.ztapa if cara[i] == TAPA else R
+                for k in range(i, j + 1):
+                    origen.append(len(aumentados))
+                    poner([P[k, 0], P[k, 1], z], int(cara[i]))
+            i = j + 1
+        A = np.asarray(aumentados, float)
+        D, ctrl_aug = catmull_rom(A)
+        X, h, s_aug = remuestrear(D, ctrl_aug)
+        zonas = np.asarray(zonas)
+        s = np.arange(len(X)) * h
+        tramo = np.clip(np.searchsorted(s_aug, s, side="right") - 1, 0, len(A) - 1)
+        siguiente = np.minimum(tramo + 1, len(A) - 1)
+        zona = np.where(zonas[tramo] == zonas[siguiente], zonas[tramo], BORDE)
+        return X, h, s_aug[origen], zona
+
+    def _rodear(self, P, cara, a: int, b: int, poner, de_lado) -> None:
+        """Lo que la cuerda rodea entre el punto de control a, de una cara, y el b, de otra."""
+        ca, cb = int(cara[a]), int(cara[b])
+        if COSTADO not in (ca, cb):
+            return
+        lado, otro = (a, b) if ca == COSTADO else (b, a)
+        grados, z = de_lado(lado)
+        if TAPA in (ca, cb):
+            subir = self._subir(grados, z, self.zt)
+            borde = self._borde(grados, 0.0, 90.0, arriba=True)
+            alto = [(subir, COSTADO), (borde[:-1], BORDE), (borde[-1:], TAPA)]
+        elif np.hypot(P[otro, 0], P[otro, 1]) < self.radio:
+            # Debajo del barril: la cuerda sale por el borde de la base.
+            subir = self._subir(grados, z, self.zb)
+            borde = self._borde(grados, 0.0, -90.0, arriba=False)
+            alto = [(subir, COSTADO), (borde[:-1], BORDE), (borde[-1:], MESA)]
+        else:
+            return   # desde la mesa, fuera del barril, la cuerda sube sola
+        if ca == COSTADO:
+            for puntos, zona in alto:
+                if len(puntos):
+                    poner(puntos, zona)
+        else:
+            for puntos, zona in reversed(alto):
+                if len(puntos):
+                    poner(puntos[::-1], zona)
+
+    # Los cruces -------------------------------------------------------------------------
+    def cruces(self, X, h, zona) -> tuple[list[Cruce], list[tuple[float, float]]]:
+        """Los cruces y la «altura» de sus dos pasadas, en tres zonas: el costado, en su
+        superficie desenrollada (la altura y el arco alrededor del eje), donde encima es lo
+        más lejos del eje, y la tapa y la mesa, desde arriba, donde encima es lo más alto."""
+        s = np.arange(len(X)) * h
+        u = np.unwrap(np.arctan2(X[:, 0], -X[:, 1])) * self.rb
+        rho = np.hypot(X[:, 0], X[:, 1])
+        mapas = [(cruces_2d(np.column_stack([X[:, 2], u]), (zona[:-1] == COSTADO) & (zona[1:] == COSTADO),
+                            h, periodo=2 * math.pi * self.rb), rho)]
+        for z in (TAPA, MESA):
+            mapas.append((cruces_2d(X[:, :2], (zona[:-1] == z) & (zona[1:] == z), h), X[:, 2]))
+        cruces, alturas = [], []
+        for encontrados, valor in mapas:
+            for sa, sb, seno, _ in encontrados:
+                p = (float(np.interp(sa, s, X[:, 0])), float(np.interp(sa, s, X[:, 1])))
+                cruces.append(Cruce(sa, sb, p, seno))
+                alturas.append((float(np.interp(sa, s, valor)), float(np.interp(sb, s, valor))))
+        orden = sorted(range(len(cruces)), key=lambda k: cruces[k].sa)
+        return [cruces[k] for k in orden], [alturas[k] for k in orden]
+
+    def datos(self) -> dict:
+        """Lo que necesita render/escena.js para dibujarlo: el barril va de «base» a «base» +
+        «alto», con los bordes redondeados con radio «canto»."""
+        return {"tipo": "barril", "radio": self.radio, "alto": self.alto, "canto": CANTO_BARRIL,
+                "base": BASE_BARRIL}
+
+
 class Parado:
     """Un cilindro parado sobre la mesa, con el eje vertical en x = y = 0, de la mesa hasta
     `alto`: el destorcedor y la estaca. La cuerda le da la vuelta a ras de la mesa y nunca
@@ -680,16 +909,17 @@ class Estaca(Parado):
     MEDIDA = ("penetracion_estaca", "en la estaca")
 
 
-def solido(a: Anfitrion) -> Poste | Cruz | Palos | Tubo | Cabo | Tablon | Cornamusa | Parado:
+def solido(a: Anfitrion) -> Poste | Cruz | Palos | Tubo | Cabo | Tablon | Cornamusa | Barril | Parado:
     """El anfitrión de la especificación como sólido."""
     return {"cruz": Cruz, "palos": Palos, "tubo": Tubo, "cabo": Cabo, "destorcedor": Destorcedor,
-            "estaca": Estaca, "tablon": Tablon, "cornamusa": Cornamusa}.get(a.tipo, Poste)(a)
+            "estaca": Estaca, "tablon": Tablon, "cornamusa": Cornamusa,
+            "barril": Barril}.get(a.tipo, Poste)(a)
 
 
-def sobre_superficie(a: Anfitrion) -> Poste | Tablon | Cornamusa:
-    """El sólido de un nudo con segmentos sobre su superficie, [x, ángulo]: el poste, el
-    tablón o la cornamusa. Se construyen por el mismo camino (construir_paso, apretar_paso)."""
-    return {"tablon": Tablon, "cornamusa": Cornamusa}.get(a.tipo, Poste)(a)
+def sobre_superficie(a: Anfitrion) -> Poste | Tablon | Cornamusa | Barril:
+    """El sólido de un nudo con segmentos sobre su superficie: el poste, el tablón, la
+    cornamusa o el barril. Se construyen por el mismo camino (construir_paso, apretar_paso)."""
+    return {"tablon": Tablon, "cornamusa": Cornamusa, "barril": Barril}.get(a.tipo, Poste)(a)
 
 
 def _buscar(X, h, sobre, poste):
@@ -722,10 +952,13 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
         cruces = [c for c, e in zip(cruces, elevar_k) if e]
         arriba = [a for a, e in zip(arriba, elevar_k) if e]
     extra = elevar(np.zeros((len(X), 2)), h, cruces, arriba)[:, 2] - R
-    X = X.copy()
-    x, th, r = poste.cilindricas(X)
-    X[sobre] = poste.punto(x[sobre], np.degrees(th[sobre]), r[sobre] + extra[sobre])
-    X[~sobre, 2] += extra[~sobre]
+    if hasattr(poste, "separar"):
+        X = poste.separar(X, sobre, extra)   # el barril, con sus zonas
+    else:
+        X = X.copy()
+        x, th, r = poste.cilindricas(X)
+        X[sobre] = poste.punto(x[sobre], np.degrees(th[sobre]), r[sobre] + extra[sobre])
+        X[~sobre, 2] += extra[~sobre]
 
     resaltado = None
     if paso.resaltar is not None:
@@ -740,7 +973,7 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
                       buscar=lambda Y: _buscar(Y, h, sobre, poste), medir=_medir(paso.n, poste))
 
 
-def _medir(n: int, poste: Poste | Tablon | Cornamusa | Parado):
+def _medir(n: int, poste: Poste | Tablon | Cornamusa | Barril | Parado):
     """La comprobación propia del anfitrión: cuánto entra la cuerda en él."""
     clave, donde = poste.MEDIDA
 
@@ -788,9 +1021,12 @@ def apretar_paso(paso: Paso, anfitrion: Anfitrion, final: Resultado, rondas: int
 # --------------------------------------------------------------------------
 # Curva
 # --------------------------------------------------------------------------
-def _curva(paso: Paso, poste: Poste | Tablon | Cornamusa):
+def _curva(paso: Paso, poste: Poste | Tablon | Cornamusa | Barril):
     """La línea central muestreada cada h, la posición a lo largo de la cuerda de cada punto
-    de control y qué puntos van sobre el poste."""
+    de control y qué puntos van sobre el poste. El barril tiene su propia curva, con zonas
+    (Barril.curva)."""
+    if hasattr(poste, "curva"):
+        return poste.curva(paso)
     P = paso.puntos
     sobre_ctrl = np.zeros(len(P), bool) if paso.sobre is None else paso.sobre
     aumentados, origen, es_poste = [], [], []

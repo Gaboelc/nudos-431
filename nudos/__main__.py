@@ -9,7 +9,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 from . import BUILD, RAIZ
-from .anfitrion import Cabo, Tubo, solido
+from .anfitrion import Tubo, solido
 from .construir import construir, guardar
 from .diagnostico import ampliar, diagnostico, leer_pasos
 from .estado import nudos, probadores, tabla
@@ -300,10 +300,11 @@ def _hoja(slug: str, vista: str, pasos: str = "") -> int:
         destino = origen.parent / f"hoja-{vista}-pasos-{pasos.replace(',', '_')}.png"
     imagen = hoja(datos, vista, None if spec.anfitrion is None else solido(spec.anfitrion).datos())
     abajo = None
-    if spec.anfitrion is not None and spec.anfitrion.tipo in ("tubo", "cabo"):
-        # Sobre el tubo y el cabo, la hoja lleva además su superficie desenrollada, con cada cruce.
+    if spec.anfitrion is not None and spec.anfitrion.tipo in ("tubo", "cabo", "barril"):
+        # Sobre el tubo, el cabo y el barril, la hoja lleva además su superficie desenrollada,
+        # con cada cruce: en el barril, su costado.
         abajo = (mapa(datos, Tubo(spec.anfitrion), spec.plantilla.senos)
-                 if spec.anfitrion.tipo == "tubo" else mapa(datos, Cabo(spec.anfitrion)))
+                 if spec.anfitrion.tipo == "tubo" else mapa(datos, solido(spec.anfitrion)))
     elif isinstance(spec.plantilla, PunoDeMono):
         # El puño de mono, desenrollado y mirado desde su centro, con cada cruce de las vueltas.
         abajo = mapa_del_puno_de_mono(datos, spec)
