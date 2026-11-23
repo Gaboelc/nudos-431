@@ -37,8 +37,8 @@ Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos 
 ### Tanda 5: anfitriones especiales
 - [x] Propuesta de diseño de los tres anfitriones, en el plan (23 nov)
 - [x] Gabriel revisa la propuesta y responde sus ocho preguntas (23 nov: aprobada)
-- [x] El tablón (v1.11), en una sola sesión de código con la cornamusa y el barril (23 nov: código y pruebas; falta que Gabriel lo vea)
-- [ ] La cornamusa (v1.12): código y pruebas hechos (23 nov); falta comparar con la referencia, la suite completa y que Gabriel la vea
+- [x] El tablón (v1.11), en una sola sesión de código con la cornamusa y el barril (23 nov: código y pruebas; Gabriel lo aprobó el mismo día)
+- [x] La cornamusa (v1.12) (23 nov: código y pruebas; falta que Gabriel la vea)
 - [ ] El barril (v1.13)
 - [ ] Eslinga de barril
 - [ ] Eslinga de andamio (requiere D1)
