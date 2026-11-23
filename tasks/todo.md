@@ -33,8 +33,6 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 
 Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos con el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado del piloto). A todos les falta el filtro 2.
 
-- [ ] Prusik: el otro tramo del cordino dice «Chicote» (tarea de código)
-- [ ] Punto de control de la tanda 4
 
 ### Tanda 5: anfitriones especiales
 - [ ] Eslinga de barril

@@ -1,4 +1,4 @@
-# Formato de especificación de nudo (v1.9)
+# Formato de especificación de nudo (v1.10)
 
 Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.5 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
@@ -156,7 +156,7 @@ Algunos nudos se atan en medio de la cuerda, sin usar sus extremos, como la mari
 - En las imágenes y en el visor, los dos extremos llevan «Firme» y ninguno lleva «Chicote». El primero va donde la cuerda entra al encuadre y el otro donde sale o, si no sale, junto a su final. Las imágenes del error común también llevan los dos.
 - Solo cambian los nombres. La cuerda, los cruces, el remate del final y el nudo apretado son los de siempre: después de su último cruce, el otro firme es la cola, que el nudo arrastra al apretarse (ver «El nudo apretado»).
 - En el texto, el otro firme no se llama «chicote». Puede ser «el otro firme» o «el firme de la izquierda».
-- Por ahora, solo un nudo de una sola cuerda y sin plantilla lleva `dos_firmes`. Con varias cuerdas, cada una ya lleva su nombre junto a su firme, y en un nudo de plantilla es la plantilla la que dice qué nombres lleva cada paso.
+- `dos_firmes` en la especificación es de un nudo de una sola cuerda y sin plantilla. Con varias cuerdas va en la cuerda que termina en otro firme, dentro de `cuerdas` (ver «Varias cuerdas»), y en un nudo de plantilla es la plantilla la que dice qué nombres lleva cada paso.
 
 ## Varias cuerdas
 
@@ -173,6 +173,7 @@ cuerdas:
 | `nombre` | Nombre de la cuerda, con minúsculas, números y guiones. Es la clave de esa cuerda en el trazado y la secuencia de cada paso. |
 | `grosor` | Diámetro de la cuerda, relativo al de la cuerda de siempre, que mide 1. |
 | `color` | `azul` o `crema`. Cada cuerda lleva uno distinto. El ámbar queda para el tramo que se mueve en cada paso; en gris, el crema queda claro, el ámbar medio y el azul oscuro. |
+| `dos_firmes` | Opcional. `true` en una cuerda que termina en otro firme y no en un chicote, como el cordino del prusik, cuyos dos tramos van al pescador doble que lo cierra. Ningún extremo de esa cuerda lleva «Chicote»: su nombre va junto a su firme, como en las demás, y el otro extremo no lleva nombre. Sin él, `false`. |
 
 En cada paso, `trazado` y `secuencia` pasan a ser mapas con todas las cuerdas:
 
@@ -595,7 +596,7 @@ En el puño de mono, sin anfitrión, hay tres zonas. Las vueltas se buscan en el
 
 ## Versiones
 
-Este es el formato v1.9. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.10. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -631,3 +632,4 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) di
 - **v1.7** (17 de noviembre de 2026; entró a `main` después de los palos paralelos): el anfitrión `cabo` y la plantilla `refuerzo-de-cabo`, con su variante de error `por-fuera-del-seno`, para el refuerzo de cabo (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes. Si otro anfitrión de la tanda 4 entra antes, este pasa a ser el número siguiente.
 - **v1.8** (17 de noviembre de 2026): la plantilla `adujado`, la primera sin anfitrión, con su variante de error `sin-alternar`, para el adujado (fase 4, tanda 4). Una plantilla puede ir sin anfitrión (`ANFITRION = None`), libre sobre la mesa. Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.9** (17 de noviembre de 2026; entró a `main` después del adujado): la plantilla `puno-de-mono`, con su variante de error `tercero-por-fuera`, para el puño de mono (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.10** (23 de noviembre de 2026): `dos_firmes` en una cuerda de un nudo de varias, para el cordino del prusik, que no lleva «Chicote» en el tramo que va al pescador doble. Es un cambio compatible: sin él, todo sigue igual, y los demás nudos dan el mismo `modelo.json` y las mismas imágenes.

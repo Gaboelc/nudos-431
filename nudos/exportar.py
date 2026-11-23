@@ -54,7 +54,8 @@ def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado]
     Con una cuerda, cada paso lleva sus puntos («p») y su tramo resaltado («hl»). Con
     varias, la lista de cuerdas va aparte y cada paso lleva los puntos y el resaltado de
     cada una, y cuál lleva el nombre «Chicote»: la que se mueve en ese paso o, en uno sin
-    resaltado (el nudo terminado), la última que se movió.
+    resaltado (el nudo terminado), la última que se movió. Ninguna, si esa cuerda termina en
+    otro firme («dos_firmes» de la cuerda, como el cordino del prusik).
 
     En un nudo de plantilla se ven los dos extremos de la cuerda, y los dos llevan remate
     («dos_remates»). Ver _paso_de_plantilla.
@@ -73,8 +74,7 @@ def datos_escena(modelo: Modelo, e: Encuadre | None, resultados: list[Resultado]
             continue
         cuerdas = [{"p": _puntos(r.puntos[i0:i1 + 1]), "hl": _resaltado(r, i0, i1)}
                    for i0, i1 in r.reparto.tramos]
-        chicote = mueve if r.resaltado is None else _cuerda_resaltada(r)
-        pasos.append({"n": r.n, "cuerdas": cuerdas, "chicote": chicote})
+        pasos.append({"n": r.n, "cuerdas": cuerdas, "chicote": cuerda_chicote(s, r, mueve)})
     if anfitrion is None and s.anfitrion is not None:
         anfitrion = solido(s.anfitrion).datos()
     datos = {
@@ -137,6 +137,13 @@ def cuerda_que_se_mueve(resultados: list[Resultado]) -> int | None:
         if r.resaltado is not None:
             return _cuerda_resaltada(r)
     return len(resultados[0].reparto.tramos) - 1
+
+
+def cuerda_chicote(s, r: Resultado, mueve: int | None) -> int | None:
+    """En un nudo de varias cuerdas, la que lleva «Chicote» en el paso r: la que se mueve o,
+    sin resaltado, `mueve`. None si esa cuerda termina en otro firme (`dos_firmes`)."""
+    k = mueve if r.resaltado is None else _cuerda_resaltada(r)
+    return None if k is None or s.cuerdas[k].dos_firmes else k
 
 
 def _cuerda_resaltada(r: Resultado) -> int:

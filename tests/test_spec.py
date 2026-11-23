@@ -271,9 +271,16 @@ def test_dos_firmes_es_true_o_false():
         desde_datos(datos(dos_firmes="sí"))
 
 
-def test_dos_firmes_es_de_una_sola_cuerda():
-    with pytest.raises(SpecError, match="«dos_firmes» es de un nudo de una sola cuerda"):
+def test_con_varias_cuerdas_dos_firmes_va_en_la_cuerda():
+    with pytest.raises(SpecError, match="con varias cuerdas, «dos_firmes» va en la cuerda"):
         desde_datos(datos_dos(dos_firmes=True))
+    assert [c.dos_firmes for c in desde_datos(datos_dos()).cuerdas] == [False, False]
+    cuerdas = [CUERDAS[0], {**CUERDAS[1], "dos_firmes": True}]
+    spec = desde_datos(datos_dos(cuerdas=cuerdas))
+    assert [c.dos_firmes for c in spec.cuerdas] == [False, True]
+    assert spec.dos_firmes is False
+    with pytest.raises(SpecError, match="cuerda 2: «dos_firmes» es true o false"):
+        desde_datos(datos_dos(cuerdas=[CUERDAS[0], {**CUERDAS[1], "dos_firmes": "sí"}]))
 
 
 def test_dos_firmes_no_va_en_una_plantilla():

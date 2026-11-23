@@ -82,6 +82,19 @@ def test_en_medio_de_la_cuerda_ningun_extremo_es_chicote(en_medio, modelo_as_de_
     assert "dos_firmes" not in datos_visor(modelo_as_de_guia)
 
 
+def test_el_cordino_del_prusik_no_lleva_chicote(modelos):
+    """El cordino del prusik termina en otro firme (sus dos tramos van al pescador doble):
+    lleva su nombre junto a su firme y ningún paso lleva «Chicote»."""
+    prusik = modelos["prusik"]
+    assert nombres(prusik) == ("cuerda-gruesa", "cuerda-cordino")
+    assert {i.nombres for i in imagenes(prusik)} == {("cuerda-gruesa", "cuerda-cordino")}
+    assert all(p["chicote"] is None for p in datos_visor(prusik)["pasos"])
+    # Las demás cuerdas que se mueven siguen llevando «Chicote», como en la vuelta de escota.
+    escota = modelos["vuelta-de-escota"]
+    assert nombres(escota)[-1] == "chicote"
+    assert all(p["chicote"] is not None for p in datos_visor(escota)["pasos"])
+
+
 def _nombres_visibles(img) -> list[str]:
     """Los nombres que quedan a la vista en la página de impresión, en el orden de la página."""
     with _servidor() as base, chrome() as navegador:
