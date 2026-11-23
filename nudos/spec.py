@@ -40,7 +40,10 @@ _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 _MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "largo"),
                       "tubo": ("radio", "largo"), "cabo": ("radio", "largo"),
                       "destorcedor": ("radio", "alto"), "estaca": ("radio", "alto"),
-                      "palos": ("cantidad", "radio", "largo")}
+                      "palos": ("cantidad", "radio", "largo"),
+                      "tablon": ("ancho", "grueso", "largo"),
+                      "cornamusa": ("radio", "largo"),
+                      "barril": ("radio", "alto")}
 TIPOS_ANFITRION = tuple(_MEDIDAS_ANFITRION)
 # Los anfitriones que solo se usan con una plantilla, con la plantilla de ejemplo.
 _SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco",
@@ -48,9 +51,32 @@ _SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco",
 # Cómo se nombra el anfitrión en los mensajes.
 _DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo", "cabo": "del cabo",
                   "destorcedor": "del destorcedor", "estaca": "de la estaca",
-                  "palos": "de los palos"}
+                  "palos": "de los palos", "tablon": "del tablón",
+                  "cornamusa": "de la cornamusa", "barril": "del barril"}
 # Cuántos palos puede tener el anfitrión «palos».
 CANTIDAD_PALOS = (2, 3)
+# Los anfitriones con segmentos sobre su superficie, [x, ángulo], y la clave con que se escriben:
+# {poste: …} o {tablon: …}. Se construyen por el camino del poste (nudos/anfitrion.py). El
+# barril tiene dos: su costado, {barril: [[ángulo, altura], ...]}, y su tapa, {tapa: [[x, y], ...]}.
+CLAVE_SOBRE = {"poste": "poste", "tablon": "tablon", "cornamusa": "cornamusa", "barril": "barril"}
+CLAVE_TAPA = "tapa"
+# El ancho y el grueso mínimos del tablón, en diámetros: con menos, sus cantos redondeados
+# (nudos/anfitrion.py, CANTO) no dejan cara plana.
+GROSOR_TABLON = 2.0
+# La cornamusa: el largo de su pie, el bloque del medio que la une a la mesa y por donde no
+# pasa la cuerda, y el hueco entre la mesa y cada cuerno, por donde sí pasa: el de una cuerda,
+# así que la barra se apoya sobre la cuerda que pasa bajo un cuerno, como el poste.
+PIE_CORNAMUSA = 5.0
+HUECO_CORNAMUSA = 1.0
+# Lo más corta que puede ser: el pie y, a cada lado, un cuerno bajo el que quepan dos pasadas.
+LARGO_MIN_CORNAMUSA = PIE_CORNAMUSA + 2 * 2.5
+# El barril: el radio que acepta, su alto mínimo y el radio de los bordes de su tapa y de su
+# base, fijo: la cuerda que los rodea se dobla con radio CANTO_BARRIL + 0,5. Se apoya sobre la
+# cuerda que pasa por debajo, así que su base queda a la altura BASE_BARRIL.
+RADIO_BARRIL = (3.0, 12.0)
+ALTO_MIN_BARRIL = 4.0
+CANTO_BARRIL = 0.6
+BASE_BARRIL = 1.0
 # Los anfitriones con los que todo el nudo va sobre la mesa: se construye, se voltea y se
 # aprieta como un nudo libre, y el anfitrión solo empuja la cuerda (nudos/anfitrion.py).
 EN_LA_MESA = ("destorcedor", "estaca")
@@ -83,6 +109,8 @@ class Paso:
     secuencia: tuple[str, ...]
     resaltar: tuple[int, int] | None   # índices de puntos de control, de una misma cuerda
     sobre: np.ndarray | None = None    # (N,) True si el punto va sobre el anfitrión
+    # (N,) True si el punto va sobre la tapa del barril, como [x, y]; None sin barril.
+    tapa: np.ndarray | None = None
     cuerda: np.ndarray | None = None   # (N,) índice en Spec.cuerdas; None con una sola cuerda
     pasadas: tuple[int, ...] | None = None
     # En un nudo de plantilla, hasta dónde llega el paso (un hito de la plantilla). Ahí no
@@ -131,17 +159,42 @@ class Anfitrion:
     el amarre redondo y el trípode. Están centrados en x = 0 y van a lo largo de y, simétricos
     alrededor de y = 0, con un hueco entre sus caras por donde pasan los ahorcados. Sus ejes
     quedan a la altura radio + 2: por debajo del hueco pasan dos capas de cuerda. Cada uno
-    mide `largo` (nudos/anfitrion.py, Palos)."""
+    mide `largo` (nudos/anfitrion.py, Palos).
+
+    Tablón: una tabla acostada a lo largo de x, de `ancho` (a lo largo de y) y `grueso`, con
+    los cantos redondeados, para la eslinga de andamio. La punta está en x = 0 y la tabla sigue
+    hacia x negativo hasta -`largo`. Se apoya sobre la cuerda que pasa por debajo, como el
+    poste. Sobre el tablón, un punto es [x, ángulo], como sobre el poste: el ángulo se reparte
+    parejo a lo largo del contorno, así que 0, 90, 180 y 270 caen en el medio de la cara de
+    arriba, la de delante, la de abajo y la de atrás (nudos/anfitrion.py, Tablon).
+
+    Cornamusa: la de la vuelta de cornamusa, fija a la mesa, a lo largo de x y centrada en
+    x = y = 0. Sus cuernos son una barra de `radio`, de `largo` de punta a punta, con las
+    puntas redondeadas y el eje a la altura HUECO_CORNAMUSA + radio, como el poste: bajo cada
+    cuerno pasa la cuerda. En el medio, un pie de PIE_CORNAMUSA de largo y del ancho de la barra
+    la une a la mesa. Lo que va pegado a la barra se escribe [x, ángulo], como sobre el poste, y
+    lo que va por la mesa, también bajo los cuernos y alrededor del pie, [x, y]
+    (nudos/anfitrion.py, Cornamusa).
+
+    Barril: un cilindro parado, con el eje vertical en x = y = 0, de `radio` y `alto`, con los
+    bordes de la tapa y de la base redondeados (CANTO_BARRIL), para la eslinga de barril. Se
+    apoya sobre la cuerda que pasa por debajo, así que su base queda a la altura BASE_BARRIL. La
+    cuerda le pasa por debajo, sobre la mesa, [x, y]; por el costado, [ángulo, altura], con el
+    ángulo alrededor del eje (0 hacia quien ata, 90 a la derecha, 180 al fondo, sin volver a 0)
+    y la altura del eje de la cuerda sobre la mesa, y por la tapa, [x, y]
+    (nudos/anfitrion.py, Barril)."""
     tipo: str
-    radio: float
+    radio: float | None = None   # todos menos el tablón
     desde: float | None = None   # poste: extremos a lo largo de x
     hasta: float | None = None
     largo: float | None = None   # cruz y palos: largo de cada palo; tubo: su largo
-    alto: float | None = None    # destorcedor y estaca: su alto desde la mesa
+    alto: float | None = None    # destorcedor, estaca y barril: su alto
     # Cruz: cuántas capas de cuerda pasan bajo el palo de abajo, donde se cruzan. No se
     # escribe en la especificación: lo dice la plantilla (CAPAS_DEBAJO), al cargarla.
     capas: int = 1
     cantidad: int | None = None  # palos: cuántos son, 2 o 3
+    ancho: float | None = None   # tablón: su ancho, a lo largo de y
+    grueso: float | None = None  # tablón: su grueso, de la cara de abajo a la de arriba
 
     @property
     def en_la_mesa(self) -> bool:
@@ -153,6 +206,7 @@ class Anfitrion:
 class Segmento:
     puntos: np.ndarray   # (N, 2)
     sobre: bool          # True: [x, ángulo] sobre el anfitrión; False: [x, y] sobre la mesa
+    tapa: bool = False   # True: [x, y] sobre la tapa del barril (y `sobre` también es True)
 
 
 @dataclass(frozen=True)
@@ -284,7 +338,9 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
                         f"{_SOLO_CON_PLANTILLA[anfitrion.tipo]}")
         segmentos = _segmentos(datos.get("segmentos"), anfitrion, falla)
         duenos: dict[str, tuple[int, int]] = {}
-        pasos = tuple(_paso(i + 1, p, segmentos, cuerdas, duenos, falla) for i, p in enumerate(pasos))
+        barril = anfitrion is not None and anfitrion.tipo == "barril"
+        pasos = tuple(_paso(i + 1, p, segmentos, cuerdas, duenos, falla, barril)
+                      for i, p in enumerate(pasos))
     else:
         if "segmentos" in datos:
             raise falla("un nudo de plantilla no lleva «segmentos»: la plantilla calcula la cuerda")
@@ -615,7 +671,7 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         if not isinstance(v, (int, float)) or isinstance(v, bool):
             raise af(f"falta «{clave}», en diámetros de cuerda")
         numeros[clave] = float(v)
-    if numeros["radio"] < 0.5:
+    if "radio" in numeros and numeros["radio"] < 0.5:
         raise af(f"el radio {_DEL_ANFITRION[tipo]} es de al menos medio diámetro de cuerda")
     if tipo == "poste" and numeros["desde"] >= numeros["hasta"]:
         raise af("«desde» va antes que «hasta»")
@@ -627,6 +683,24 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         raise af(f"el radio del cabo va de {RADIO_CABO[0]:g} a {RADIO_CABO[1]:g} diámetros de cordel")
     if tipo == "cabo" and numeros["largo"] <= 2 * numeros["radio"]:
         raise af("«largo» es el largo del cabo desde la punta; tiene que ser mayor que su grosor")
+    if tipo == "tablon":
+        for clave in ("ancho", "grueso"):
+            if numeros[clave] < GROSOR_TABLON:
+                raise af(f"«{clave}» {_DEL_ANFITRION[tipo]} es de al menos {GROSOR_TABLON:g} "
+                         "diámetros de cuerda")
+        if numeros["largo"] <= numeros["grueso"]:
+            raise af("«largo» es lo que se ve del tablón desde la punta; tiene que ser mayor que "
+                     "su grueso")
+    if tipo == "cornamusa" and numeros["largo"] < LARGO_MIN_CORNAMUSA:
+        raise af(f"«largo» es el de la cornamusa, de punta a punta; es de al menos "
+                 f"{LARGO_MIN_CORNAMUSA:g}, para que bajo cada cuerno quepa la cuerda")
+    if tipo == "barril":
+        if not RADIO_BARRIL[0] <= numeros["radio"] <= RADIO_BARRIL[1]:
+            raise af(f"el radio del barril va de {RADIO_BARRIL[0]:g} a {RADIO_BARRIL[1]:g} "
+                     "diámetros de cuerda")
+        if numeros["alto"] < ALTO_MIN_BARRIL:
+            raise af(f"«alto» es el alto del barril; es de al menos {ALTO_MIN_BARRIL:g} "
+                     "diámetros de cuerda")
     if tipo in EN_LA_MESA and numeros["alto"] <= 1:
         raise af(f"«alto» es el alto {_DEL_ANFITRION[tipo]} desde la mesa; tiene que ser mayor "
                  "que 1, el grosor de la cuerda que le da la vuelta")
@@ -676,26 +750,81 @@ def _segmentos(datos, anfitrion: Anfitrion | None, falla) -> dict[str, Segmento]
         if not isinstance(nombre, str) or not _NOMBRE.match(nombre):
             raise falla(f"segmento «{nombre}»: usa minúsculas, números y guiones")
         sobre = isinstance(puntos, dict)
+        tapa = False
+        barril = anfitrion is not None and anfitrion.tipo == "barril"
         if sobre:
-            if set(puntos) != {"poste"}:
+            clave = CLAVE_SOBRE.get(anfitrion.tipo, "poste") if anfitrion is not None else "poste"
+            if barril and set(puntos) == {CLAVE_TAPA}:
+                clave, tapa = CLAVE_TAPA, True
+            elif barril and set(puntos) != {clave}:
+                raise falla(f"segmento {nombre}: un segmento sobre el barril se escribe "
+                            "{barril: [[ángulo, altura], ...]} por el costado o {tapa: [[x, y], ...]} "
+                            "por la tapa")
+            elif set(puntos) != {clave}:
                 raise falla(f"segmento {nombre}: un segmento sobre el anfitrión se escribe "
-                            "{poste: [[x, ángulo], ...]}")
+                            f"{{{clave}: [[x, ángulo], ...]}}")
             if anfitrion is None:
                 raise falla(f"segmento {nombre}: va sobre el poste y la especificación no "
                             "declara «anfitrion»")
             if anfitrion.en_la_mesa:
                 raise falla(f"segmento {nombre}: va sobre el poste, y con el anfitrión "
                             f"{anfitrion.tipo} todo el nudo va sobre la mesa, como [x, y]")
-            puntos = puntos["poste"]
+            puntos = puntos[clave]
         try:
             arr = np.asarray(puntos, dtype=float)
         except (TypeError, ValueError):
             arr = None
         if arr is None or arr.ndim != 2 or arr.shape[1] != 2 or len(arr) == 0:
-            forma = "[x, ángulo]" if sobre else "[x, y]"
+            forma = ("[x, y]" if tapa or not sobre else "[ángulo, altura]" if barril
+                     else "[x, ángulo]")
             raise falla(f"segmento {nombre}: los puntos deben ser pares {forma}")
-        out[nombre] = Segmento(arr, sobre)
+        if anfitrion is not None and anfitrion.tipo == "cornamusa":
+            _sobre_la_cornamusa(nombre, arr, sobre, anfitrion, falla)
+        if barril and sobre:
+            _sobre_el_barril(nombre, arr, tapa, anfitrion, falla)
+        out[nombre] = Segmento(arr, sobre, tapa)
     return out
+
+
+def _sobre_la_cornamusa(nombre: str, arr: np.ndarray, sobre: bool, a: Anfitrion, falla) -> None:
+    """Sobre la cornamusa, la cuerda no puede pasar por el pie: ni sobre la mesa ni rodeando
+    la barra por debajo, donde está el pie."""
+    recto = PIE_CORNAMUSA / 2 - a.radio
+    if sobre:
+        # Por debajo de la barra, entre los dos cuernos, está el pie.
+        abajo = np.cos(np.radians(arr[:, 1])) < -0.5
+        dentro = abajo & (np.abs(arr[:, 0]) < PIE_CORNAMUSA / 2)
+        if dentro.any():
+            x, ang = arr[int(np.argmax(dentro))]
+            raise falla(f"segmento {nombre}: ({x:g}, {ang:g}) pasa por debajo de la barra donde "
+                        "está el pie de la cornamusa; la cuerda rodea la barra solo bajo los cuernos")
+        return
+    # El pie, visto desde arriba: un rectángulo con las puntas redondeadas, del ancho de la barra.
+    d = np.hypot(np.maximum(np.abs(arr[:, 0]) - recto, 0), arr[:, 1])
+    dentro = d < a.radio
+    if dentro.any():
+        x, y = arr[int(np.argmax(dentro))]
+        raise falla(f"segmento {nombre}: ({x:g}, {y:g}) está dentro del pie de la cornamusa; "
+                    "la cuerda pasa por debajo de los cuernos, alrededor del pie")
+
+
+def _sobre_el_barril(nombre: str, arr: np.ndarray, tapa: bool, a: Anfitrion, falla) -> None:
+    """Sobre el barril, la cuerda va por el costado entre los dos bordes redondeados, y por la
+    tapa dentro de su parte plana: al pasar de una cara a otra, rodea el borde sola."""
+    if tapa:
+        plano = a.radio - CANTO_BARRIL
+        fuera = np.hypot(arr[:, 0], arr[:, 1]) > plano + 1e-9
+        if fuera.any():
+            x, y = arr[int(np.argmax(fuera))]
+            raise falla(f"segmento {nombre}: ({x:g}, {y:g}) está fuera de la parte plana de la tapa, "
+                        f"que llega a {plano:g} del centro; el borde lo rodea la cuerda sola")
+        return
+    bajo, alto = BASE_BARRIL + CANTO_BARRIL, BASE_BARRIL + a.alto - CANTO_BARRIL
+    fuera = (arr[:, 1] < bajo - 1e-9) | (arr[:, 1] > alto + 1e-9)
+    if fuera.any():
+        ang, z = arr[int(np.argmax(fuera))]
+        raise falla(f"segmento {nombre}: [{ang:g}, {z:g}] va fuera del costado del barril; la altura "
+                    f"va de {bajo:g} a {alto:g}, entre los bordes redondeados")
 
 
 def _encuadre(datos, falla) -> Encuadre | None:
@@ -713,9 +842,10 @@ def _encuadre(datos, falla) -> Encuadre | None:
 
 
 def _paso(n: int, datos, segmentos: dict[str, Segmento], cuerdas: tuple[Cuerda, ...],
-          duenos: dict[str, tuple[int, int]], falla) -> Paso:
+          duenos: dict[str, tuple[int, int]], falla, barril: bool = False) -> Paso:
     """`duenos` guarda, de un paso al siguiente, en qué cuerda y en qué paso apareció por
-    primera vez cada segmento: un segmento es un tramo de una cuerda y no cambia de cuerda."""
+    primera vez cada segmento: un segmento es un tramo de una cuerda y no cambia de cuerda.
+    `barril` dice si el anfitrión es el barril, donde los grados van primero: [ángulo, altura]."""
     def pf(msg: str) -> SpecError:
         return falla(f"paso {n}: {msg}")
 
@@ -756,12 +886,23 @@ def _paso(n: int, datos, segmentos: dict[str, Segmento], cuerdas: tuple[Cuerda, 
 
     puntos = np.vstack([segmentos[nombre].puntos[indices] for nombre, indices, _ in partes])
     sobre = np.concatenate([np.full(len(indices), segmentos[nombre].sobre) for nombre, indices, _ in partes])
+    tapa = np.concatenate([np.full(len(indices), segmentos[nombre].tapa) for nombre, indices, _ in partes])
     cuerda = np.concatenate([np.full(len(indices), k) for _, indices, k in partes])
     # Entre dos puntos sobre el poste, la segunda coordenada son grados: 1° cuenta como
-    # 0,02 diámetros, más o menos lo que mide en la superficie de un poste delgado.
-    paso_xy = np.diff(puntos, axis=0) * np.where((sobre[1:] & sobre[:-1])[:, None], [1.0, 0.02], 1.0)
+    # 0,02 diámetros, más o menos lo que mide en la superficie de un poste delgado. Sobre el
+    # costado del barril, los grados son la primera.
+    grados = sobre & ~tapa
+    escala = [0.02, 1.0] if barril else [1.0, 0.02]
+    paso_xy = np.diff(puntos, axis=0) * np.where((grados[1:] & grados[:-1])[:, None], escala, 1.0)
+    misma = cuerda[1:] == cuerda[:-1]
     cerca = ((np.linalg.norm(paso_xy, axis=1) < DISTANCIA_MIN) & (sobre[1:] == sobre[:-1])
-             & (cuerda[1:] == cuerda[:-1]))
+             & (tapa[1:] == tapa[:-1]) & misma)
+    # Entre la tapa y la mesa, la cuerda pasa por el costado del barril.
+    salta = ((tapa[1:] & ~sobre[:-1]) | (tapa[:-1] & ~sobre[1:])) & misma
+    if salta.any():
+        p = puntos[int(np.argmax(salta)) + 1]
+        raise pf(f"de la tapa a la mesa, la cuerda baja por el costado del barril: falta un "
+                 f"segmento {{barril: …}} junto a ({p[0]:g}, {p[1]:g})")
     if cerca.any():
         p = puntos[int(np.argmax(cerca))]
         raise pf(f"hay dos puntos seguidos casi iguales cerca de ({p[0]:g}, {p[1]:g})")
@@ -788,6 +929,7 @@ def _paso(n: int, datos, segmentos: dict[str, Segmento], cuerdas: tuple[Cuerda, 
         secuencia=tuple(t for sec in leidas.values() for t in sec),
         resaltar=_resaltar(datos.get("resaltar"), partes, segmentos, cuerda, pf),
         sobre=sobre if sobre.any() else None,
+        tapa=tapa if tapa.any() else None,
         cuerda=cuerda if cuerdas else None,
         pasadas=tuple(len(sec) for sec in leidas.values()) if cuerdas else None,
     )

@@ -82,8 +82,8 @@ def trazado(spec: Spec, paso) -> tuple[np.ndarray, float, np.ndarray, Reparto | 
     """La línea central antes de relajar, su paso h, la posición a lo largo de ella de cada
     punto de control y, con varias cuerdas, el reparto. Es la misma que construye el paso."""
     if spec.anfitrion is not None and not spec.anfitrion.en_la_mesa:
-        from .anfitrion import Poste, _curva
-        X, h, ctrl_s, _ = _curva(paso, Poste(spec.anfitrion))
+        from .anfitrion import _curva, sobre_superficie
+        X, h, ctrl_s, _ = _curva(paso, sobre_superficie(spec.anfitrion))
         return X, h, np.asarray(ctrl_s, float), None
     from .libre import _curva
     X, h, ctrl_s, reparto = _curva(paso, spec.cuerdas)

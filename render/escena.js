@@ -277,9 +277,10 @@ function altoDeEncuadre(modelo, B) {
       }
     }
   }
-  if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos" || a.tipo === "cabo")) alto = Math.max(alto, a.z + a.radio);
+  if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos" || a.tipo === "cabo" || a.tipo === "cornamusa")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   if (a && a.tipo === "destorcedor") alto = Math.max(alto, a.alto);
+  if (a && a.tipo === "tablon") alto = Math.max(alto, a.z + a.grueso / 2);
   for (const d of dedos) alto = Math.max(alto, d.alto);
   return alto;
 }
@@ -317,6 +318,10 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const est = modelo.anfitrion;
   if (est && est.tipo === "estaca") {
     for (const x of [-est.radio, est.radio]) for (const y of [-est.radio, est.radio]) esquinas.push(new THREE.Vector3(x, y, est.alto));
+  }
+  // El barril, igual: se encuadra su tapa.
+  if (est && est.tipo === "barril") {
+    for (const x of [-est.radio, est.radio]) for (const y of [-est.radio, est.radio]) esquinas.push(new THREE.Vector3(x, y, est.base + est.alto));
   }
   const centroFit = new THREE.Vector3(cx, cy, 0.5);
   // Donde la cuerda entra al encuadre se pone el nombre «Firme».
@@ -414,6 +419,89 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       scene.add(tapa);
     }
     ejesPalos.push({ a: [-a.largo, 0, a.z], b: [0, 0, a.z], radio: a.radio });
+  }
+  // El tablón de la eslinga de andamio: una tabla de madera a lo largo de x, de «desde» a
+  // «hasta», con el corte de «ancho» × «grueso» centrado en «y» y a la altura «z» y los
+  // cantos apenas redondeados, con radio «canto». El corte se dibuja en el plano de la forma y se
+  // extruye a lo largo de su z, que se lleva a x.
+  if (a && a.tipo === "tablon") {
+    const ay = a.ancho / 2 - a.canto, az = a.grueso / 2 - a.canto, c = a.canto;
+    const forma = new THREE.Shape();
+    forma.moveTo(-ay, -az - c);
+    forma.lineTo(ay, -az - c);
+    forma.absarc(ay, -az, c, -Math.PI / 2, 0, false);
+    forma.lineTo(ay + c, az);
+    forma.absarc(ay, az, c, 0, Math.PI / 2, false);
+    forma.lineTo(-ay, az + c);
+    forma.absarc(-ay, az, c, Math.PI / 2, Math.PI, false);
+    forma.lineTo(-ay - c, -az);
+    forma.absarc(-ay, -az, c, Math.PI, 1.5 * Math.PI, false);
+    const geo = new THREE.ExtrudeGeometry(forma, { depth: a.hasta - a.desde, bevelEnabled: false, curveSegments: 12 });
+    geo.applyMatrix4(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)));
+    // Las dos testas (el grupo 0 de ExtrudeGeometry) van más oscuras, como la madera cortada
+    // a través de la veta: así se lee como una tabla y no como un palo.
+    const testa = new THREE.MeshStandardMaterial({ color: 0x9c7650, roughness: 0.85, metalness: 0 });
+    const m = new THREE.Mesh(geo, [testa, madera()]);
+    m.position.set(a.desde, a.y, a.z);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+    // Para la sombra de contacto, el eje con el radio de la mitad del grueso: es la distancia
+    // de la cara de abajo, sobre la que va la cuerda, a su centro.
+    ejesPalos.push({ a: [a.desde, a.y, a.z], b: [a.hasta, a.y, a.z], radio: a.grueso / 2 });
+  }
+  // La cornamusa de la vuelta de cornamusa, de metal como el destorcedor: los cuernos, una
+  // barra de «radio» a lo largo de x, de «largo» de punta a punta, con las puntas redondas y
+  // el eje a la altura «z», y el pie, un bloque de «pie» de largo y del ancho de la barra, con
+  // las puntas redondas vistas desde arriba, que va de la mesa a la barra.
+  if (a && a.tipo === "cornamusa") {
+    const metal = new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38, metalness: 0.55 });
+    const barra = new THREE.Mesh(new THREE.CapsuleGeometry(a.radio, a.largo - 2 * a.radio, 16, 48), metal);
+    barra.rotation.z = Math.PI / 2;
+    barra.position.set(0, 0, a.z);
+    const recto = a.pie / 2 - a.radio;
+    const forma = new THREE.Shape();
+    forma.moveTo(-recto, -a.radio);
+    forma.lineTo(recto, -a.radio);
+    forma.absarc(recto, 0, a.radio, -Math.PI / 2, Math.PI / 2, false);
+    forma.lineTo(-recto, a.radio);
+    forma.absarc(-recto, 0, a.radio, Math.PI / 2, 1.5 * Math.PI, false);
+    const pie = new THREE.Mesh(new THREE.ExtrudeGeometry(forma, { depth: a.z, bevelEnabled: false, curveSegments: 16 }), metal);
+    for (const m of [barra, pie]) {
+      m.castShadow = true; m.receiveShadow = true;
+      scene.add(m);
+    }
+    const h = a.largo / 2 - a.radio;
+    ejesPalos.push({ a: [-h, 0, a.z], b: [h, 0, a.z], radio: a.radio });
+  }
+  // El barril de la eslinga de barril, con forma de cubeta de plástico: amarilla, con la tapa
+  // crema. Roja, en gris, se oscurecía tanto como la cuerda azul. «perfil» es su superficie,
+  // del centro de la base al de la tapa, como [distancia al eje, altura] (nudos/anfitrion.py,
+  // Barril), y se gira alrededor del eje: la LatheGeometry gira alrededor de y, que se lleva a
+  // z. Desde la altura «tapa» hacia arriba es la tapa.
+  if (a && a.tipo === "barril") {
+    const cuerpo = [], tapa = [];
+    for (let k = 0; k < a.perfil.length; k++) {
+      const [r, z] = a.perfil[k];
+      if (z < a.tapa) cuerpo.push(new THREE.Vector2(r, z));
+      else {
+        if (!tapa.length && k > 0) {
+          // El corte exacto, para que el cuerpo y la tapa no dejen rendija.
+          const [r0, z0] = a.perfil[k - 1];
+          const p = new THREE.Vector2(r0 + ((a.tapa - z0) / (z - z0)) * (r - r0), a.tapa);
+          cuerpo.push(p.clone());
+          tapa.push(p);
+        }
+        tapa.push(new THREE.Vector2(r, z));
+      }
+    }
+    const plastico = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0 });
+    for (const [perfil, color] of [[cuerpo, 0xf7d64a], [tapa, 0xf2ecdc]]) {
+      const m = new THREE.Mesh(new THREE.LatheGeometry(perfil, 96), plastico(color));
+      m.rotation.x = Math.PI / 2;
+      m.castShadow = true; m.receiveShadow = true;
+      scene.add(m);
+    }
+    ejesPalos.push({ a: [0, 0, a.base], b: [0, 0, a.base + a.alto], radio: a.radio });
   }
   // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
   // la mesa en x = y = 0, de la mesa hasta «alto». El destorcedor es corto y gris acero, para
