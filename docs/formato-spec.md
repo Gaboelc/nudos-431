@@ -1,4 +1,4 @@
-# Formato de especificación de nudo (v1.11)
+# Formato de especificación de nudo (v1.12)
 
 Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.5 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
@@ -62,7 +62,7 @@ Algunos nudos se atan alrededor de un objeto rígido. Por ahora son el poste, la
 
 | Campo | Qué es |
 |---|---|
-| `tipo` | `poste`, `cruz`, `palos`, `tubo`, `cabo`, `destorcedor`, `estaca` o `tablon`. |
+| `tipo` | `poste`, `cruz`, `palos`, `tubo`, `cabo`, `destorcedor`, `estaca`, `tablon` o `cornamusa`. |
 | `radio` | Radio del poste, en diámetros de cuerda. Un palo de escoba con una cuerda de 8 mm da alrededor de 1,5. |
 | `desde`, `hasta` | Dónde empieza y termina el poste a lo largo de x. |
 
@@ -123,6 +123,20 @@ anfitrion: {tipo: tablon, ancho: 12, grueso: 3, largo: 30}
 Va a lo largo de x, centrado en y = 0. La punta está en x = 0, a la derecha, y el tablón sigue hacia x negativo hasta `-largo`, como el cabo. Se apoya sobre la cuerda que pasa por debajo, así que su cara de abajo queda a la altura 1, como el poste. Sus cantos, también los de la punta, están apenas redondeados, con radio 0,45 (en el código, no en la especificación): en un canto vivo la cuerda se doblaría con radio 0,5, y el mínimo es 0,9; con 0,45 se dobla con 0,95.
 
 Un segmento sobre el tablón se escribe `{tablon: [[x, ángulo], ...]}`, igual que sobre el poste: 0 arriba, 90 hacia quien ata, 180 abajo y 270 atrás, sin volver a 0. El ángulo se reparte parejo a lo largo del contorno que sigue el eje de una cuerda que toca el tablón, así que 0, 90, 180 y 270 caen en el medio de cada cara, y un ángulo cuenta más en las caras anchas que en las angostas. Un segmento `{poste: …}` sobre el tablón es un error, y uno `{tablon: …}` sobre el poste también. Todo lo demás es como en el poste. En las imágenes y en el visor es de madera, con las testas más oscuras, para que se lea como una tabla y no como un palo; en la hoja de revisión, color madera.
+
+La cornamusa es la de la vuelta de cornamusa, fija a la mesa, a lo largo de x y centrada en x = y = 0.
+
+| Campo | Qué es |
+|---|---|
+| `tipo` | `cornamusa`. |
+| `radio` | Radio de la barra de los cuernos, en diámetros de cuerda. |
+| `largo` | Largo de punta a punta, de al menos 10. |
+
+```yaml
+anfitrion: {tipo: cornamusa, radio: 1, largo: 16}
+```
+
+Los cuernos son una barra con las puntas redondas, con el eje a la altura `radio + 1`: como el poste, se apoya en la cuerda que pasa bajo un cuerno. En el medio, un pie de 5 diámetros de largo, del ancho de la barra y con las puntas redondas vistas desde arriba, la une a la mesa; por ahí no pasa la cuerda, y un punto dentro del pie, sobre la mesa o rodeando la barra por debajo, es un error al cargar. Lo que va pegado a la barra se escribe `{cornamusa: [[x, ángulo], ...]}`, como sobre el poste; lo demás, `[x, y]` sobre la mesa. Los cruces se buscan todos desde arriba: donde un tramo pasa sobre un cuerno y otro por debajo, el de arriba va encima, y ese cruce no se eleva al construir, porque la barra ya separa las dos pasadas. Dos pasadas a menos de 3 diámetros a lo largo de la cuerda no cuentan como cruce. Al subir de la mesa a la barra o bajar de ella, conviene que la cuerda llegue con espacio (unos 2,5 diámetros) y salga por debajo del cuerno, no por su frente. El nudo terminado se aprieta y se mira como sobre el poste. En las imágenes y en el visor es de metal gris; en la hoja de revisión, gris.
 
 El destorcedor es el ojo de un destorcedor de pesca, como en el nudo aguja: un cilindro corto, parado sobre la mesa, con el eje vertical en x = y = 0. La cuerda le da la vuelta a ras de la mesa y nunca pasa por encima de él.
 
@@ -615,7 +629,7 @@ En el puño de mono, sin anfitrión, hay tres zonas. Las vueltas se buscan en el
 
 ## Versiones
 
-Este es el formato v1.11. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.12. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -633,7 +647,7 @@ La cabeza de turco no entra en v1: el anfitrión `tubo`, la plantilla `cabeza-de
 Son cambios compatibles que ya se conocen:
 
 - `secciones`, en qué progresión de cada sección está el nudo y quién lo valora, para los anexos (T12).
-- Los anfitriones que faltan (argolla, barril, cornamusa, cuerda anfitriona), con el primer nudo que los use.
+- Los anfitriones que faltan (argolla, barril, cuerda anfitriona), con el primer nudo que los use.
 - Varias cuerdas sobre un anfitrión, y cruces entre un tramo sobre un anfitrión y uno sobre la mesa.
 - Nudos que se voltean sobre la mesa: voltear invierte todos los cruces, y hoy eso obligaría a usar etiquetas nuevas.
 
@@ -652,4 +666,5 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) di
 - **v1.8** (17 de noviembre de 2026): la plantilla `adujado`, la primera sin anfitrión, con su variante de error `sin-alternar`, para el adujado (fase 4, tanda 4). Una plantilla puede ir sin anfitrión (`ANFITRION = None`), libre sobre la mesa. Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.9** (17 de noviembre de 2026; entró a `main` después del adujado): la plantilla `puno-de-mono`, con su variante de error `tercero-por-fuera`, para el puño de mono (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.10** (23 de noviembre de 2026): `dos_firmes` en una cuerda de un nudo de varias, para el cordino del prusik, que no lleva «Chicote» en el tramo que va al pescador doble. Es un cambio compatible: sin él, todo sigue igual, y los demás nudos dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.12** (23 de noviembre de 2026): el anfitrión `cornamusa`, una barra con dos cuernos sobre un pie, y sus segmentos `{cornamusa: …}`, para la vuelta de cornamusa (fase 4, tanda 5). Es un cambio compatible.
 - **v1.11** (23 de noviembre de 2026): el anfitrión `tablon`, una tabla con los cantos redondeados, y sus segmentos `{tablon: …}`, para la eslinga de andamio (fase 4, tanda 5). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos hechos dan el mismo `modelo.json` y las mismas imágenes.

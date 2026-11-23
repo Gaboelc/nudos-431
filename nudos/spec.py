@@ -41,7 +41,8 @@ _MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "l
                       "tubo": ("radio", "largo"), "cabo": ("radio", "largo"),
                       "destorcedor": ("radio", "alto"), "estaca": ("radio", "alto"),
                       "palos": ("cantidad", "radio", "largo"),
-                      "tablon": ("ancho", "grueso", "largo")}
+                      "tablon": ("ancho", "grueso", "largo"),
+                      "cornamusa": ("radio", "largo")}
 TIPOS_ANFITRION = tuple(_MEDIDAS_ANFITRION)
 # Los anfitriones que solo se usan con una plantilla, con la plantilla de ejemplo.
 _SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco",
@@ -49,15 +50,23 @@ _SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco",
 # Cómo se nombra el anfitrión en los mensajes.
 _DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo", "cabo": "del cabo",
                   "destorcedor": "del destorcedor", "estaca": "de la estaca",
-                  "palos": "de los palos", "tablon": "del tablón"}
+                  "palos": "de los palos", "tablon": "del tablón",
+                  "cornamusa": "de la cornamusa"}
 # Cuántos palos puede tener el anfitrión «palos».
 CANTIDAD_PALOS = (2, 3)
 # Los anfitriones con segmentos sobre su superficie, [x, ángulo], y la clave con que se escriben:
 # {poste: …} o {tablon: …}. Se construyen por el camino del poste (nudos/anfitrion.py).
-CLAVE_SOBRE = {"poste": "poste", "tablon": "tablon"}
+CLAVE_SOBRE = {"poste": "poste", "tablon": "tablon", "cornamusa": "cornamusa"}
 # El ancho y el grueso mínimos del tablón, en diámetros: con menos, sus cantos redondeados
 # (nudos/anfitrion.py, CANTO) no dejan cara plana.
 GROSOR_TABLON = 2.0
+# La cornamusa: el largo de su pie, el bloque del medio que la une a la mesa y por donde no
+# pasa la cuerda, y el hueco entre la mesa y cada cuerno, por donde sí pasa: el de una cuerda,
+# así que la barra se apoya sobre la cuerda que pasa bajo un cuerno, como el poste.
+PIE_CORNAMUSA = 5.0
+HUECO_CORNAMUSA = 1.0
+# Lo más corta que puede ser: el pie y, a cada lado, un cuerno bajo el que quepan dos pasadas.
+LARGO_MIN_CORNAMUSA = PIE_CORNAMUSA + 2 * 2.5
 # Los anfitriones con los que todo el nudo va sobre la mesa: se construye, se voltea y se
 # aprieta como un nudo libre, y el anfitrión solo empuja la cuerda (nudos/anfitrion.py).
 EN_LA_MESA = ("destorcedor", "estaca")
@@ -145,7 +154,15 @@ class Anfitrion:
     hacia x negativo hasta -`largo`. Se apoya sobre la cuerda que pasa por debajo, como el
     poste. Sobre el tablón, un punto es [x, ángulo], como sobre el poste: el ángulo se reparte
     parejo a lo largo del contorno, así que 0, 90, 180 y 270 caen en el medio de la cara de
-    arriba, la de delante, la de abajo y la de atrás (nudos/anfitrion.py, Tablon)."""
+    arriba, la de delante, la de abajo y la de atrás (nudos/anfitrion.py, Tablon).
+
+    Cornamusa: la de la vuelta de cornamusa, fija a la mesa, a lo largo de x y centrada en
+    x = y = 0. Sus cuernos son una barra de `radio`, de `largo` de punta a punta, con las
+    puntas redondeadas y el eje a la altura HUECO_CORNAMUSA + radio, como el poste: bajo cada
+    cuerno pasa la cuerda. En el medio, un pie de PIE_CORNAMUSA de largo y del ancho de la barra
+    la une a la mesa. Lo que va pegado a la barra se escribe [x, ángulo], como sobre el poste, y
+    lo que va por la mesa, también bajo los cuernos y alrededor del pie, [x, y]
+    (nudos/anfitrion.py, Cornamusa)."""
     tipo: str
     radio: float | None = None   # todos menos el tablón
     desde: float | None = None   # poste: extremos a lo largo de x
@@ -651,6 +668,9 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         if numeros["largo"] <= numeros["grueso"]:
             raise af("«largo» es lo que se ve del tablón desde la punta; tiene que ser mayor que "
                      "su grueso")
+    if tipo == "cornamusa" and numeros["largo"] < LARGO_MIN_CORNAMUSA:
+        raise af(f"«largo» es el de la cornamusa, de punta a punta; es de al menos "
+                 f"{LARGO_MIN_CORNAMUSA:g}, para que bajo cada cuerno quepa la cuerda")
     if tipo in EN_LA_MESA and numeros["alto"] <= 1:
         raise af(f"«alto» es el alto {_DEL_ANFITRION[tipo]} desde la mesa; tiene que ser mayor "
                  "que 1, el grosor de la cuerda que le da la vuelta")
@@ -719,8 +739,32 @@ def _segmentos(datos, anfitrion: Anfitrion | None, falla) -> dict[str, Segmento]
         if arr is None or arr.ndim != 2 or arr.shape[1] != 2 or len(arr) == 0:
             forma = "[x, ángulo]" if sobre else "[x, y]"
             raise falla(f"segmento {nombre}: los puntos deben ser pares {forma}")
+        if anfitrion is not None and anfitrion.tipo == "cornamusa":
+            _sobre_la_cornamusa(nombre, arr, sobre, anfitrion, falla)
         out[nombre] = Segmento(arr, sobre)
     return out
+
+
+def _sobre_la_cornamusa(nombre: str, arr: np.ndarray, sobre: bool, a: Anfitrion, falla) -> None:
+    """Sobre la cornamusa, la cuerda no puede pasar por el pie: ni sobre la mesa ni rodeando
+    la barra por debajo, donde está el pie."""
+    recto = PIE_CORNAMUSA / 2 - a.radio
+    if sobre:
+        # Por debajo de la barra, entre los dos cuernos, está el pie.
+        abajo = np.cos(np.radians(arr[:, 1])) < -0.5
+        dentro = abajo & (np.abs(arr[:, 0]) < PIE_CORNAMUSA / 2)
+        if dentro.any():
+            x, ang = arr[int(np.argmax(dentro))]
+            raise falla(f"segmento {nombre}: ({x:g}, {ang:g}) pasa por debajo de la barra donde "
+                        "está el pie de la cornamusa; la cuerda rodea la barra solo bajo los cuernos")
+        return
+    # El pie, visto desde arriba: un rectángulo con las puntas redondeadas, del ancho de la barra.
+    d = np.hypot(np.maximum(np.abs(arr[:, 0]) - recto, 0), arr[:, 1])
+    dentro = d < a.radio
+    if dentro.any():
+        x, y = arr[int(np.argmax(dentro))]
+        raise falla(f"segmento {nombre}: ({x:g}, {y:g}) está dentro del pie de la cornamusa; "
+                    "la cuerda pasa por debajo de los cuernos, alrededor del pie")
 
 
 def _encuadre(datos, falla) -> Encuadre | None:

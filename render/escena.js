@@ -277,7 +277,7 @@ function altoDeEncuadre(modelo, B) {
       }
     }
   }
-  if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos" || a.tipo === "cabo")) alto = Math.max(alto, a.z + a.radio);
+  if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos" || a.tipo === "cabo" || a.tipo === "cornamusa")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   if (a && a.tipo === "destorcedor") alto = Math.max(alto, a.alto);
   if (a && a.tipo === "tablon") alto = Math.max(alto, a.z + a.grueso / 2);
@@ -444,6 +444,30 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     // Para la sombra de contacto, el eje con el radio de la mitad del grueso: es la distancia
     // de la cara de abajo, sobre la que va la cuerda, a su centro.
     ejesPalos.push({ a: [a.desde, a.y, a.z], b: [a.hasta, a.y, a.z], radio: a.grueso / 2 });
+  }
+  // La cornamusa de la vuelta de cornamusa, de metal como el destorcedor: los cuernos, una
+  // barra de «radio» a lo largo de x, de «largo» de punta a punta, con las puntas redondas y
+  // el eje a la altura «z», y el pie, un bloque de «pie» de largo y del ancho de la barra, con
+  // las puntas redondas vistas desde arriba, que va de la mesa a la barra.
+  if (a && a.tipo === "cornamusa") {
+    const metal = new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38, metalness: 0.55 });
+    const barra = new THREE.Mesh(new THREE.CapsuleGeometry(a.radio, a.largo - 2 * a.radio, 16, 48), metal);
+    barra.rotation.z = Math.PI / 2;
+    barra.position.set(0, 0, a.z);
+    const recto = a.pie / 2 - a.radio;
+    const forma = new THREE.Shape();
+    forma.moveTo(-recto, -a.radio);
+    forma.lineTo(recto, -a.radio);
+    forma.absarc(recto, 0, a.radio, -Math.PI / 2, Math.PI / 2, false);
+    forma.lineTo(-recto, a.radio);
+    forma.absarc(-recto, 0, a.radio, Math.PI / 2, 1.5 * Math.PI, false);
+    const pie = new THREE.Mesh(new THREE.ExtrudeGeometry(forma, { depth: a.z, bevelEnabled: false, curveSegments: 16 }), metal);
+    for (const m of [barra, pie]) {
+      m.castShadow = true; m.receiveShadow = true;
+      scene.add(m);
+    }
+    const h = a.largo / 2 - a.radio;
+    ejesPalos.push({ a: [-h, 0, a.z], b: [h, 0, a.z], radio: a.radio });
   }
   // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
   // la mesa en x = y = 0, de la mesa hasta «alto». El destorcedor es corto y gris acero, para

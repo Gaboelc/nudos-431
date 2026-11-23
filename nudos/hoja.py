@@ -56,7 +56,8 @@ def hoja(datos: dict, vista: str = "arriba", anfitrion: dict | None = None,
     estos pasos (_altura). Quien dibuja los pasos uno por uno la pasa, para que el cuadro
     no salte de un paso a otro."""
     x0, x1, y0, y1 = _encuadre(datos)
-    solido = _parado(anfitrion) or _palos(anfitrion, x0, x1, y0, y1) or _tablon(anfitrion, x0, x1)
+    solido = (_parado(anfitrion) or _palos(anfitrion, x0, x1, y0, y1) or _tablon(anfitrion, x0, x1)
+              or _cornamusa(anfitrion))
     ppd = ANCHO / (x1 - x0)
     alto = int(round((y1 - y0) * ppd))
     angulo = "arriba" if vista == "arriba" else float(vista)
@@ -219,6 +220,40 @@ def _tablon(anfitrion: dict | None, x0: float, x1: float) -> tuple[np.ndarray, n
             xe = extremo + rs if extremo == anfitrion["desde"] else extremo - rs
             puntos.append(np.column_stack([np.full(k, xe), y0 + gy[dentro], z0 + gz[dentro]]))
     return np.vstack(puntos), MADERA, RADIO_SUPERFICIE
+
+
+def _cornamusa(anfitrion: dict | None) -> tuple[np.ndarray, np.ndarray, float] | None:
+    """Puntos sobre la superficie de la cornamusa, en gris como el destorcedor, para dibujarla
+    con esferas de RADIO_SUPERFICIE: la barra de los cuernos, con sus puntas redondas, y el
+    costado del pie. None si el nudo no la tiene."""
+    if not anfitrion or anfitrion.get("tipo") != "cornamusa":
+        return None
+    rs, paso = RADIO_SUPERFICIE, 0.15
+    r, z = anfitrion["radio"] - rs, anfitrion["z"]
+    punta = anfitrion["largo"] / 2 - anfitrion["radio"]
+    puntos = []
+    # La barra: anillos a lo largo de x y, en cada punta, media esfera.
+    ang = np.linspace(0, 2 * math.pi, max(12, int(2 * math.pi * r / paso)), endpoint=False)
+    for x in np.arange(-punta, punta + 1e-9, paso):
+        puntos.append(np.column_stack([np.full(len(ang), x), r * np.cos(ang), z + r * np.sin(ang)]))
+    for lado in (-1, 1):
+        for f in np.arange(paso / r, math.pi / 2 + 1e-9, paso / r):
+            ri = r * math.cos(f)
+            k = max(6, int(2 * math.pi * ri / paso))
+            t = np.linspace(0, 2 * math.pi, k, endpoint=False)
+            puntos.append(np.column_stack([np.full(k, lado * (punta + r * math.sin(f))),
+                                           ri * np.cos(t), z + ri * np.sin(t)]))
+    # El pie: su contorno visto desde arriba, a cada altura entre la mesa y la barra.
+    recto = anfitrion["pie"] / 2 - anfitrion["radio"]
+    borde = [np.column_stack([np.arange(-recto, recto + 1e-9, paso), np.full(int(2 * recto / paso) + 1, s * r)])
+             for s in (-1, 1)]
+    t = np.linspace(-math.pi / 2, math.pi / 2, max(6, int(math.pi * r / paso)))
+    borde += [np.column_stack([recto + r * np.cos(t), r * np.sin(t)]),
+              np.column_stack([-recto - r * np.cos(t), r * np.sin(t)])]
+    borde = np.vstack(borde)
+    for zi in np.arange(rs, z, paso):
+        puntos.append(np.column_stack([borde, np.full(len(borde), zi)]))
+    return np.vstack(puntos), GRIS, RADIO_SUPERFICIE
 
 
 def _palo(eje: str, a: float, b: float, lado: float, z: float, radio: float,

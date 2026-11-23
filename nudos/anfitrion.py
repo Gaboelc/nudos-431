@@ -26,7 +26,7 @@ import numpy as np
 
 from .cruces import Cruce, cruces_2d, emparejar, encimas
 from .libre import R, Resultado, TrazadoError, _resultado, catmull_rom, elevar, relajar, remuestrear
-from .spec import Anfitrion, Paso
+from .spec import HUECO_CORNAMUSA, PIE_CORNAMUSA, Anfitrion, Paso
 
 ARCO_DENSO = 0.6       # cada cuánto se toma un punto sobre la superficie del poste, en diámetros
 PENETRACION_MAX = 0.05  # cuánto puede entrar el eje de la cuerda en el poste, en diámetros
@@ -531,6 +531,105 @@ class Tablon:
         return volteado, self.datos(z=alto - self.zc, desde=0.0)
 
 
+CERCA_CORNAMUSA = 3.0   # dos pasadas a menos de esto a lo largo de la cuerda no son un cruce
+
+
+class Cornamusa:
+    """La cornamusa de la vuelta de cornamusa, fija a la mesa, a lo largo de x y centrada en
+    x = y = 0. Tiene dos partes:
+    - Los cuernos: una barra de `radio`, de `largo` de punta a punta y con las puntas
+      redondeadas, con el eje en y = 0 y a la altura HUECO_CORNAMUSA + radio: bajo cada cuerno
+      pasa la cuerda, y la barra se apoya en ella, como el poste.
+    - El pie: un bloque en el medio, de PIE_CORNAMUSA de largo y del ancho de la barra, que va
+      de la mesa a la barra. Visto desde arriba, sus puntas son redondas, así que la cuerda que
+      le da la vuelta bajo un cuerno se dobla con radio de al menos `radio` + R.
+
+    Lo que va pegado a la barra, por encima o rodeando un cuerno, se escribe [x, ángulo], como
+    sobre el poste: `punto` y `cilindricas` son los del poste, alrededor del eje de la barra. Lo
+    demás va sobre la mesa. Los cruces se buscan todos desde arriba, como sobre la mesa
+    (`cruces`): la cornamusa es baja, y donde un tramo pasa sobre un cuerno y otro por debajo de
+    él, hay un cruce de verdad, con encima el de arriba. Esos cruces no se elevan al construir:
+    la barra ya separa sus dos pasadas (`separados`)."""
+    MEDIDA = ("penetracion_cornamusa", "en la cornamusa")
+
+    def __init__(self, a: Anfitrion):
+        self.radio, self.largo = a.radio, a.largo
+        self.zc = HUECO_CORNAMUSA + a.radio          # altura del eje de la barra
+        self.rb = a.radio + R                        # distancia al eje de una cuerda que la toca
+        self.punta = a.largo / 2 - a.radio           # centro de la punta redonda de cada cuerno
+        self.pie = PIE_CORNAMUSA / 2 - a.radio       # mitad del tramo recto del pie
+
+    def punto(self, x, grados, r=None) -> np.ndarray:
+        """De [x, ángulo] sobre la barra a [x, y, z]. 0° arriba, 90° hacia quien ata."""
+        th = np.radians(grados)
+        r = self.rb if r is None else r
+        return np.stack([np.asarray(x, float) + 0 * th, -r * np.sin(th), self.zc + r * np.cos(th)], axis=-1)
+
+    def cilindricas(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """x, ángulo en radianes (entre -π y π) y distancia al eje de la barra, contando sus
+        puntas redondas: más allá de un cuerno, la cuerda está lejos de la cornamusa aunque
+        quede a la altura de la barra (de eso depende dónde no hay gravedad)."""
+        dy, dz = X[:, 1], X[:, 2] - self.zc
+        dx = np.maximum(np.abs(X[:, 0]) - self.punta, 0.0)
+        return X[:, 0], np.arctan2(-dy, dz), np.sqrt(dx * dx + dy * dy + dz * dz)
+
+    def _partes(self, X):
+        """El punto más cercano de la barra y del pie (sus ejes) y la distancia a cada uno."""
+        Qb = np.column_stack([np.clip(X[:, 0], -self.punta, self.punta),
+                              np.zeros(len(X)), np.full(len(X), self.zc)])
+        # El pie: el segmento de su eje, a cada altura entre la mesa y la barra.
+        Qp = np.column_stack([np.clip(X[:, 0], -self.pie, self.pie), np.zeros(len(X)),
+                              np.clip(X[:, 2], -math.inf, self.zc)])
+        return Qb, np.linalg.norm(X - Qb, axis=1), Qp, np.linalg.norm(X - Qp, axis=1)
+
+    def empujar(self, X, libre) -> None:
+        """Saca de la barra y del pie los puntos que entraron, hacia afuera de cada uno."""
+        for _ in range(2):   # lo que sale del pie puede quedar en la barra, y al revés
+            for k in (0, 2):   # la barra y el pie
+                partes = self._partes(X)
+                Q, d = partes[k], partes[k + 1]
+                m = libre & (d < self.rb)
+                if m.any():
+                    V = X[m] - Q[m]
+                    n = np.linalg.norm(V, axis=1)
+                    # Un punto justo en el eje sale hacia delante.
+                    V[n < 1e-9] = [0.0, -1.0, 0.0]
+                    n[n < 1e-9] = 1.0
+                    X[m] = Q[m] + V / n[:, None] * self.rb
+
+    def penetracion(self, X) -> float:
+        """Cuánto entra la cuerda en la cornamusa (0 si no entra)."""
+        _, db, _, dp = self._partes(X)
+        return float(max(0.0, (self.rb - np.minimum(db, dp)).max()))
+
+    def cruces(self, X, h, sobre) -> tuple[list[Cruce], list[tuple[float, float]]]:
+        """Los cruces desde arriba, con la altura de sus dos pasadas. Dos pasadas a menos de
+        CERCA_CORNAMUSA a lo largo de la cuerda no cuentan: donde la cuerda baja casi vertical
+        por el costado de la barra, vista desde arriba se pliega sobre sí misma."""
+        s = np.arange(len(X)) * h
+        cruces, alturas = [], []
+        for sa, sb, seno, p in cruces_2d(X[:, :2], np.ones(len(X) - 1, bool), h):
+            if abs(sb - sa) < CERCA_CORNAMUSA:
+                continue
+            cruces.append(Cruce(sa, sb, p, seno))
+            alturas.append((float(np.interp(sa, s, X[:, 2])), float(np.interp(sb, s, X[:, 2]))))
+        orden = sorted(range(len(cruces)), key=lambda k: cruces[k].sa)
+        return [cruces[k] for k in orden], [alturas[k] for k in orden]
+
+    def separados(self, X, h, sobre, c: Cruce) -> bool:
+        """Si las dos pasadas del cruce ya están separadas en altura, como una que pasa sobre
+        un cuerno y otra por debajo de él. Esas no se elevan como las de la mesa, que parten
+        las dos de la misma altura."""
+        s = np.arange(len(X)) * h
+        za, zb = (float(np.interp(v, s, X[:, 2])) for v in (c.sa, c.sb))
+        return abs(za - zb) >= 2 * R
+
+    def datos(self) -> dict:
+        """Lo que necesita render/escena.js para dibujarla."""
+        return {"tipo": "cornamusa", "radio": self.radio, "largo": self.largo, "z": self.zc,
+                "pie": PIE_CORNAMUSA}
+
+
 class Parado:
     """Un cilindro parado sobre la mesa, con el eje vertical en x = y = 0, de la mesa hasta
     `alto`: el destorcedor y la estaca. La cuerda le da la vuelta a ras de la mesa y nunca
@@ -581,22 +680,30 @@ class Estaca(Parado):
     MEDIDA = ("penetracion_estaca", "en la estaca")
 
 
-def solido(a: Anfitrion) -> Poste | Cruz | Palos | Tubo | Cabo | Tablon | Parado:
+def solido(a: Anfitrion) -> Poste | Cruz | Palos | Tubo | Cabo | Tablon | Cornamusa | Parado:
     """El anfitrión de la especificación como sólido."""
     return {"cruz": Cruz, "palos": Palos, "tubo": Tubo, "cabo": Cabo, "destorcedor": Destorcedor,
-            "estaca": Estaca, "tablon": Tablon}.get(a.tipo, Poste)(a)
+            "estaca": Estaca, "tablon": Tablon, "cornamusa": Cornamusa}.get(a.tipo, Poste)(a)
 
 
-def sobre_superficie(a: Anfitrion) -> Poste | Tablon:
-    """El sólido de un nudo con segmentos sobre su superficie, [x, ángulo]: el poste o el
-    tablón. Los dos se construyen por el mismo camino (construir_paso, apretar_paso)."""
-    return Tablon(a) if a.tipo == "tablon" else Poste(a)
+def sobre_superficie(a: Anfitrion) -> Poste | Tablon | Cornamusa:
+    """El sólido de un nudo con segmentos sobre su superficie, [x, ángulo]: el poste, el
+    tablón o la cornamusa. Se construyen por el mismo camino (construir_paso, apretar_paso)."""
+    return {"tablon": Tablon, "cornamusa": Cornamusa}.get(a.tipo, Poste)(a)
+
+
+def _buscar(X, h, sobre, poste):
+    """Los cruces y sus alturas: los que el sólido busca él mismo, como la cornamusa desde
+    arriba, o en los dos mapas del poste (_cruces)."""
+    if hasattr(poste, "cruces"):
+        return poste.cruces(X, h, sobre)
+    return _cruces(X, h, sobre, poste)
 
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
     poste = sobre_superficie(anfitrion)
     X, h, ctrl_s, sobre = _curva(paso, poste)
-    cruces, _ = _cruces(X, h, sobre, poste)
+    cruces, _ = _buscar(X, h, sobre, poste)
     declarados = len(paso.secuencia) // 2
     if len(cruces) != declarados:
         raise TrazadoError(
@@ -607,7 +714,14 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
             f"Paso {paso.n}: los cruces del trazado aparecen en otro orden que en la secuencia.")
     # Cuánto sube cada punto: lo mismo que en el generador libre, pero sobre el poste
     # se aplica hacia afuera del eje.
-    extra = elevar(np.zeros((len(X), 2)), h, cruces, encimas(cruces, paso.secuencia))[:, 2] - R
+    arriba = encimas(cruces, paso.secuencia)
+    if hasattr(poste, "separados"):
+        # Sobre la cornamusa, un tramo que pasa bajo un cuerno ya está separado por él del que
+        # pasa por encima: ese cruce no se eleva.
+        elevar_k = [not poste.separados(X, h, sobre, c) for c in cruces]
+        cruces = [c for c, e in zip(cruces, elevar_k) if e]
+        arriba = [a for a, e in zip(arriba, elevar_k) if e]
+    extra = elevar(np.zeros((len(X), 2)), h, cruces, arriba)[:, 2] - R
     X = X.copy()
     x, th, r = poste.cilindricas(X)
     X[sobre] = poste.punto(x[sobre], np.degrees(th[sobre]), r[sobre] + extra[sobre])
@@ -623,10 +737,10 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
     Xr = relajar(X, h, anfitrion=poste, gravedad=r0 > poste.rb + DISTANCIA_SIN_GRAVEDAD,
                  pasadas_largo=PASADAS_LARGO)
     return _resultado(paso.n, Xr, h, paso.secuencia, resaltado,
-                      buscar=lambda Y: _cruces(Y, h, sobre, poste), medir=_medir(paso.n, poste))
+                      buscar=lambda Y: _buscar(Y, h, sobre, poste), medir=_medir(paso.n, poste))
 
 
-def _medir(n: int, poste: Poste | Tablon | Parado):
+def _medir(n: int, poste: Poste | Tablon | Cornamusa | Parado):
     """La comprobación propia del anfitrión: cuánto entra la cuerda en él."""
     clave, donde = poste.MEDIDA
 
@@ -664,7 +778,7 @@ def apretar_paso(paso: Paso, anfitrion: Anfitrion, final: Resultado, rondas: int
         raise ValueError(f"Paso {paso.n}: el paso construido no es el de la especificación.")
 
     def buscar(Y, hY, u):
-        return _cruces(Y, hY, sobre[np.clip(np.round(u / h).astype(int), 0, len(sobre) - 1)], poste)
+        return _buscar(Y, hY, sobre[np.clip(np.round(u / h).astype(int), 0, len(sobre) - 1)], poste)
 
     return apretar(final, paso.secuencia, rondas=rondas, anfitrion=poste,
                    gravedad=lambda Y: poste.cilindricas(Y)[2] > poste.rb + DISTANCIA_SIN_GRAVEDAD,
@@ -674,7 +788,7 @@ def apretar_paso(paso: Paso, anfitrion: Anfitrion, final: Resultado, rondas: int
 # --------------------------------------------------------------------------
 # Curva
 # --------------------------------------------------------------------------
-def _curva(paso: Paso, poste: Poste | Tablon):
+def _curva(paso: Paso, poste: Poste | Tablon | Cornamusa):
     """La línea central muestreada cada h, la posición a lo largo de la cuerda de cada punto
     de control y qué puntos van sobre el poste."""
     P = paso.puntos
