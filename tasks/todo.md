@@ -10,8 +10,8 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 - [x] D4 GitHub Pages en la cuenta personal (`Gaboelc`), repositorio público
 - [x] D5 Se trabaja desde la app de Claude con la computadora vinculada
 - [ ] D8 Especificaciones de la imprenta: sangrado, color y formato (antes de T13)
-- [ ] D10 Render en Blender y compra de Studio in a Folder (se decide con la página de prueba de T14)
-- [ ] D11 Pila del motor de física (se decide en T15a)
+- [ ] D10 Render en Blender y compra de Studio in a Folder (se decide en el punto de control E, con T14b)
+- [ ] D11 Pila del motor de física (se propone en T14a y se decide en el punto de control E)
 
 ## Pendientes de Gabriel
 
@@ -47,29 +47,34 @@ Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos 
 - [ ] Vuelta de cornamusa (*cleat hitch*, sobre una cornamusa)
 - [ ] Punto de control de la tanda 5
 
-## Fase 5: libro y primera edición
+## Fase 5: render en Blender, motor de física y videos (propuesta del 23 nov)
 
-- [ ] T11 Material inicial: portada, "cómo leer una ficha", glosario, seguridad e índice (S, depende de D1 y la tanda 1)
-- [ ] T12 Anexos de la Wak y de la Tropa (S, depende de D3 y T11)
-- [ ] T13 Edición 1: PDF completo, colofón, registro de cambios, etiqueta en git e impresión (S, depende de la fase 4, T11, T12, T15 y, si D10 sale a favor de Blender, T16)
-- [ ] Punto de control final: edición 1 impresa y todos sus QR responden
+El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en ramas que no entran a `main`; con las dos aprobadas, la implementación, probada con los nudos piloto; y al final todos los nudos a la vez, sin tandas.
 
-## Fase 6: render en Blender, cuerda que se ajusta y videos (propuesta del 23 nov, por aprobar)
-
-El orden lo eligió Gabriel: la prueba, la cuerda, las fichas y los videos.
-
-- [ ] Gabriel aprueba la propuesta de la fase 6 en `tasks/plan.md`
-- [ ] T14 Prueba de Blender: `render/blender/escena.py` y `python -m nudos prueba-blender`, la página de prueba en color y en gris (M)
-- [ ] Gabriel imprime la prueba y decide D10
-- [ ] T15 Motor de física de la cuerda (XL; Gabriel lo pidió el 23 nov, lo mejor posible)
-  - [ ] T15a La espiga: probar `ipctk`, `numba` y Warp en esta computadora y decidir D11 (S)
+- [ ] Gabriel aprueba la propuesta de la fase 5 en `tasks/plan.md`
+- [ ] T14a Prueba de concepto del motor (rama `poc/motor`): las bibliotecas, la varilla, el contacto y el roce mínimos; el amarre cuadrado y el as de guía asentados; la página de prueba (L)
+- [ ] Punto de control D: Gabriel aprueba la prueba del motor
+- [ ] T14b Prueba de concepto del render en Blender y del video, con la cuerda del motor (rama `poc/render-motor`): la página de prueba, los nombres sobre las imágenes y los videos del amarre y del as de guía, horizontal y vertical (L)
+- [ ] Punto de control E: Gabriel decide D10, D11 y la compra del paquete, y aprueba la implementación
+- [ ] T15 Motor de física de la cuerda (XL)
+  - [ ] T15a La pila elegida en `nudos/fisica/` y `pyproject.toml` (S)
   - [ ] T15b La varilla: estiramiento, flexión, torsión y peso, con la catenaria y la elástica (M)
   - [ ] T15c El contacto y el roce sin atravesarse (IPC y CCD), con el cabrestante y la tabla inclinada (L)
   - [ ] T15d Asentar y apretar dentro de `construir`, con los pilotos de la fase 2 y su página de prueba (L)
   - [ ] T15e Calibrar con cuerda real: Gabriel mide la cuerda y fotografía cuatro nudos apretados (S)
-  - [ ] T15f Migrar todos los nudos al motor, por tandas, y borrar `relajar()` y `apretar()` (L)
+  - [ ] T15f `construir` usa el motor en cualquier nudo y anfitrión, comprobado con los pilotos (M)
   - [ ] T15g La sección aplastada y la torsión en el render, con T16 (M)
-- [ ] T16 Las fichas se renderizan en Blender y se rehacen todas, si D10 sale a favor (M)
+- [ ] T16 Las fichas se renderizan en Blender, si D10 sale a favor, probado con los pilotos (M)
 - [ ] T17 Animación entre pasos con el modo «atar» del motor, con el as de guía y el amarre cuadrado de piloto (L)
-- [ ] T18 Videos: horizontal en el visor, vertical para redes (M)
-- [ ] Punto de control de la fase 6
+- [ ] T18 Videos: horizontal en el visor y vertical para redes, con los pilotos (M)
+- [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L)
+- [ ] Punto de control de la fase 5
+
+## Fase 6: libro y primera edición
+
+Va después de la fase 5: las fichas del libro salen con la cuerda del motor y el render nuevo.
+
+- [ ] T11 Material inicial: portada, "cómo leer una ficha", glosario, seguridad e índice (S, depende de D1 y la tanda 1)
+- [ ] T12 Anexos de la Wak y de la Tropa (S, depende de D3 y T11)
+- [ ] T13 Edición 1: PDF completo, colofón, registro de cambios, etiqueta en git e impresión (S, depende de la fase 4, la fase 5 (T19), T11 y T12)
+- [ ] Punto de control final: edición 1 impresa y todos sus QR responden
