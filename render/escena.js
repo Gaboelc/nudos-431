@@ -418,7 +418,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   }
   // El tablón de la eslinga de andamio: una tabla de madera a lo largo de x, de «desde» a
   // «hasta», con el corte de «ancho» × «grueso» centrado en «y» y a la altura «z» y los
-  // cantos redondeados con radio «canto». El corte se dibuja en el plano de la forma y se
+  // cantos apenas redondeados, con radio «canto». El corte se dibuja en el plano de la forma y se
   // extruye a lo largo de su z, que se lleva a x.
   if (a && a.tipo === "tablon") {
     const ay = a.ancho / 2 - a.canto, az = a.grueso / 2 - a.canto, c = a.canto;
@@ -434,7 +434,10 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     forma.absarc(-ay, -az, c, Math.PI, 1.5 * Math.PI, false);
     const geo = new THREE.ExtrudeGeometry(forma, { depth: a.hasta - a.desde, bevelEnabled: false, curveSegments: 12 });
     geo.applyMatrix4(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)));
-    const m = new THREE.Mesh(geo, madera());
+    // Las dos testas (el grupo 0 de ExtrudeGeometry) van más oscuras, como la madera cortada
+    // a través de la veta: así se lee como una tabla y no como un palo.
+    const testa = new THREE.MeshStandardMaterial({ color: 0x9c7650, roughness: 0.85, metalness: 0 });
+    const m = new THREE.Mesh(geo, [testa, madera()]);
     m.position.set(a.desde, a.y, a.z);
     m.castShadow = true; m.receiveShadow = true;
     scene.add(m);

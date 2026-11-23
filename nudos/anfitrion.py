@@ -362,7 +362,8 @@ class Cabo:
         return volteado, {**self.datos(), "z": self.zc - bajar}
 
 
-CANTO = 0.6   # radio de los cantos del tablón: la cuerda que los rodea se dobla con radio 1,1
+CANTO = 0.45  # radio de los cantos del tablón: casi vivos, y la cuerda que los rodea se dobla con
+#               radio 0,95, apenas más que el mínimo (0,9). Un canto vivo la doblaría con 0,5.
 
 
 class Tablon:

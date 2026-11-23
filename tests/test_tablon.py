@@ -45,6 +45,26 @@ def datos(anfitrion=LISTON):
     return d
 
 
+def datos_vueltas():
+    """Dos vueltas y media sobre un tablón de 12 × 3, como el primer paso de la eslinga de
+    andamio: el firme sube por la cara de delante, la cuerda pasa tres veces por arriba y el
+    chicote cae por detrás."""
+    x0, sep = -10.0, 2.5   # la primera pasada por arriba y la distancia entre pasadas
+    vuelta = [[round(x0 + sep * (-a / 360), 4), float(a)] for a in range(100, -821, -20)]
+    return {
+        "slug": "vueltas-en-un-tablon", "nombre": "Prueba", "familia": "Amarres",
+        "anfitrion": {"tipo": "tablon", "ancho": 12, "grueso": 3, "largo": 30},
+        "encuadre": {"x": [-17.0, 3.0], "y": [-13.0, 13.0]},
+        "segmentos": {
+            "firme": [[vuelta[0][0] - 0.4, -16.0], [vuelta[0][0] - 0.1, -10.0]],
+            "vuelta": {"tablon": vuelta},
+            "chicote": [[vuelta[-1][0] + 0.1, 10.0], [vuelta[-1][0] + 0.4, 16.0]],
+        },
+        "pasos": [{"titulo": "Da dos vueltas y media", "texto": "Prueba.",
+                   "trazado": ["firme", "vuelta", "chicote"], "secuencia": ""}],
+    }
+
+
 @pytest.fixture(scope="module")
 def modelo():
     return construir(desde_datos(datos()))
@@ -127,6 +147,18 @@ def test_construye_sin_fallas_y_la_cuerda_no_entra(modelo):
     for r in modelo.pasos + [modelo.error, modelo.apretado]:
         assert r.medidas["penetracion_tablon"] <= PENETRACION_MAX
         assert t.penetracion(r.puntos) <= PENETRACION_MAX
+
+
+def test_las_vueltas_sobre_un_tablon_ancho_rodean_sus_cantos():
+    m = construir(desde_datos(datos_vueltas()))
+    assert m.fallas == []
+    r = m.pasos[0]
+    # La cuerda pasa por los cantos casi vivos y se dobla apenas más que el mínimo.
+    assert 0.9 <= r.medidas["curvatura_min"] < 1.0
+    t = Tablon(m.spec.anfitrion)
+    _, th, _ = t.cilindricas(r.puntos)
+    arriba = np.abs(np.degrees(th)) < 5
+    assert len(np.unique(np.round(r.puntos[arriba, 0] / 2.5))) == 3   # tres pasadas por arriba
 
 
 def test_como_sobre_el_poste_no_hay_reverso_y_si_apretado(modelo):
