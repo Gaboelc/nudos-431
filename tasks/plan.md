@@ -165,6 +165,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
   - **El *tautline hitch* se llama «tensor ajustable»**, para no confundirlo con el tensor (*trucker's hitch*).
   - **El *mooring hitch* se llama «nudo de liberación rápida».** En el manual v0.1 era «nudo de amarre de liberación rápida»; se quitó «amarre» para no confundirlo con los amarres.
 - **D10 Render en Blender:** si las imágenes de las fichas pasan de three.js con Edge a Blender, y si Gabriel compra Studio in a Folder. Se decide con la página de prueba de T14 (fase 6). Si sale a favor, reemplaza la decisión de arquitectura 5 en lo que toca a la impresión; el visor sigue en three.js.
+- **D11 Pila del motor de física:** con qué bibliotecas se arma el motor de T15 (`ipctk` con `numba`, NVIDIA Warp o código propio). Se decide en T15a, con la prueba de velocidad, de que repita el resultado y de que nunca se atraviese.
 
 ### Lo hecho
 
@@ -468,7 +469,11 @@ El orden: primero el tablón, que es el poste con otro perfil (ahí se separa lo
 - **Lo que no hace:** no simula cuerdas ni nudos. Sus películas son de productos rígidos.
 
 **Qué resuelve y qué no.**
-- **La cuerda tiesa no es del render, es de la geometría.** Un nudo de plantilla no se aprieta nunca (`nudos/apretar.py`): la plantilla traza las vueltas y los ahorcados con su forma ideal, y en `modelo.json` del amarre cuadrado `apretado` es `None`. En Blender se vería mejor iluminado, pero igual de tieso. Eso es T15, y mejora a la vez el visor, las fichas y los videos.
+- **La cuerda tiesa no es del render, es de la geometría.** Un nudo de plantilla no se aprieta nunca (`nudos/apretar.py`): la plantilla traza las vueltas y los ahorcados con su forma ideal, y en `modelo.json` del amarre cuadrado `apretado` es `None`. En Blender se vería mejor iluminado, pero igual de tieso. Eso es T15, el motor de física de la cuerda, y mejora a la vez el visor, las fichas y los videos.
+
+**Lo que mostraron las pruebas de concepto (23 nov).** Están en dos ramas que no entran a `main`, cada una con su `LEEME.md`:
+- **`poc/blender`:** las imágenes de la ficha en Blender tardan unos 3 s cada una a 300 ppp en la RTX 4070, y en gris se leen tan bien como las de hoy. Un video de 10 s del amarre, en 1280 × 720, tarda 19 minutos.
+- **`poc/cuerda-ajustada`:** apretar con `apretar()` llega a un 7 % y después cambia un cruce o pasa el límite de curvatura, porque acerca cada punto al medio de sus vecinos en vez de tirar de los extremos. Cambiar las medidas de la plantilla da un amarre menos tieso, con las mismas secuencias, pero no arregla el lazo de delante ni le da cintura a los ahorcados. Gabriel lo vio y pidió un motor de física (23 nov), lo mejor posible.
 - **Las imágenes de las fichas** sí pueden mejorar mucho con Cycles: luz suave, sombras de contacto reales y la trenza con relieve. Es T16.
 - **Los videos son lo nuevo y lo más difícil.** Hoy cada paso es una pose fija. Animar es calcular cómo se mueve la cuerda entre un paso y el siguiente sin atravesarse, y eso es nuestro, no del paquete. Es T17, y el video armado es T18.
 - **El visor sigue en three.js.** Blender no corre en el navegador. Lo que el visor gana es la geometría de T15 y, en T18, el video.
@@ -479,6 +484,7 @@ El orden: primero el tablón, que es el poste con otro perfil (ahí se separa lo
 3. **Edge se queda para armar los PDF** (`ficha.html` y el libro); Blender reemplaza solo a las imágenes.
 4. **El orden lo eligió Gabriel:** la prueba, la cuerda, las fichas y al final los videos. Y él decide la compra del paquete después de ver la prueba.
 5. **Todas las fichas se rehacen** con el render nuevo (Gabriel, 23 nov), también las de los nudos aprobados y publicados.
+6. **La forma de la cuerda la da un motor de física propio, en Python** (T15), no la física de Blender. Blender no tiene un simulador de cuerda: se arma con *cloth* o con cadenas de cuerpos rígidos, y una cuerda delgada que choca consigo misma se atraviesa, y en un nudo eso cambia los cruces sin avisar. Además, el visor, las fichas y la comprobación de cruces viven en Python. El motor reemplaza a la relajación y al apretado, y también sirve para animar (T17).
 
 #### T14: Prueba de Blender
 
@@ -495,17 +501,62 @@ El orden: primero el tablón, que es el poste con otro perfil (ahí se separa lo
 
 **Dependencias:** ninguna. **Tamaño:** M. **Sesión:** el diseño del render va con el modelo grande; si se compra el paquete, se lee su método de luz y material antes de ajustar la escena.
 
-#### T15: La cuerda se ajusta en las plantillas
+#### T15: Motor de física de la cuerda (propuesta, 23 nov)
 
-**Descripción:** que los amarres, el adujado, el refuerzo de cabo y el puño de mono dejen de verse tiesos. Las vueltas se apoyan en los palos y entre sí, y los ahorcados las aprietan hacia el centro, como pasa al tensarlos. La idea de partida es apretar con el método de `apretar.py` (acortar sin cruzar) también los nudos de plantilla, con el anfitrión empujando la cuerda fuera de los palos. Pero cada paso es el comienzo de la cuerda entera, y las vueltas del paso 3 no pueden verse apretadas por ahorcados que todavía no existen: el diseño propone cómo apretar cada paso con lo que tiene. Se escribe como bloque de este plan y Gabriel lo aprueba antes de programarlo.
+**Para qué.** Que cada paso y cada nudo terminado tengan la forma que toma una cuerda real al atarla: tensa donde se tira, floja donde no, apoyada en los palos, deslizándose o trabada por el roce, y sin atravesarse nunca. Hoy la forma sale de la plantilla o del trazado, y la relajación y el apretado solo la corrigen. Con el motor, la plantilla y el trazado dan solo el punto de partida, con la topología correcta, y la forma final la da la física.
 
-**Criterios de aceptación:**
-- [ ] Los pasos, el error y el terminado de cada plantilla conservan su secuencia de cruces, y las pruebas lo comprueban.
-- [ ] `referencia` y `comparar` muestran que los nudos libres no cambian.
-- [ ] Una página de prueba pone cada amarre como está hoy y ajustado, y Gabriel la aprueba en papel.
-- [ ] Como la topología no cambia, los filtros 1 siguen valiendo. Gabriel decide si alguno se repite.
+**El criterio (Gabriel, 23 nov: «lo más complejo para el mejor resultado»).** El motor modela todo lo que cambia cómo se ve una cuerda en un nudo: que no se estira, que se dobla y se tuerce con su propia rigidez, que pesa, que roza y que nunca se atraviesa. Cada fenómeno entra con una prueba que lo mide contra la física conocida o contra cuerda real. Lo que no se nota en el papel ni en el video no entra, como en T7b: complejidad que no se ve es costo sin resultado.
 
-**Dependencias:** ninguna en código; va después de T14 por el orden que eligió Gabriel. **Tamaño:** L. **Sesión:** modelo grande, como las plantillas.
+**El modelo físico.**
+- **La cuerda es una varilla elástica discreta** (*Discrete Elastic Rods*, Bergou y otros, 2008 y 2010): nodos en la línea central y, en cada tramo entre dos nodos, un marco material que dice cuánto está torcida la cuerda. Su energía tiene cuatro partes:
+  - **Estiramiento:** casi no se estira; la rigidez a la tracción es muy alta.
+  - **Flexión:** la rigidez de doblarse (EI), con la curvatura discreta en cada nodo. Opcional: una curvatura natural, para la «memoria» de una cuerda que estuvo enrollada.
+  - **Torsión:** la rigidez de torcerse (GJ). Hace que una vuelta se acueste distinto, y en el render gira la trenza y el hilo trazador.
+  - **Peso:** la gravedad, con la densidad de la cuerda.
+- **El contacto nunca se atraviesa** (*Incremental Potential Contact*, IPC: Li y otros, 2020; la versión para varillas y telas delgadas, 2021). Entre dos tramos de cuerda hay una barrera que crece sin límite cuando su distancia se acerca a la suma de los radios. Cada paso del integrador se recorta con detección continua de colisiones (CCD), así que ningún tramo atraviesa a otro, ni siquiera entre dos iteraciones. Es lo que garantiza que la topología no cambia, y es lo más importante para el libro.
+- **El roce es el de Coulomb, estático y dinámico,** con el método suavizado de IPC: la cuerda se traba hasta que la fuerza supera el roce y después desliza. Hay un coeficiente para cada par: cuerda con cuerda, cuerda con madera y cuerda con metal (el destorcedor y la cornamusa).
+- **Los anfitriones son cuerpos rígidos** descritos por su distancia con signo: los cilindros de los palos, el poste y el tubo, la mesa y las mallas del barril, la cornamusa y el destorcedor, con la misma barrera y el mismo roce.
+- **Las manos son condiciones de borde:** puntos fijos (el firme que se sostiene), fuerzas (tirar del chicote con una tensión dada) y trayectorias (llevar el chicote por un camino, para animar).
+
+**El integrador.** Newton implícito con búsqueda en línea filtrada por la CCD. En modo cuasiestático, para los pasos y el terminado, minimiza la energía total mientras la tensión de las manos sube de a poco. En modo dinámico, para los videos, usa Euler implícito con un paso de tiempo por cuadro y subpasos. El Hessiano es disperso (la varilla es una banda, más los pares en contacto), se proyecta a semidefinido positivo y se resuelve con Cholesky disperso. Todo en `float64`, en CPU y con un orden fijo, para que construir dos veces dé lo mismo byte a byte, como hoy.
+
+**Lo que tiene que dar en cada modo.**
+1. **Asentar un paso (reemplaza a `relajar()`).** Parte del trazado o de la plantilla, como hoy. El firme queda sostenido, el chicote con la tensión que diga el paso (por omisión, «ajustado»: lo que deja una mano al acomodar el nudo) y todo lo demás cae, se apoya y roza. Después se comprueba como hoy: la secuencia de cruces, la separación, la curvatura y la consistencia entre pasos.
+2. **Apretar el terminado (reemplaza a `apretar()`).** El mismo paso, con los extremos tirados fuerte, hasta que la cuerda deja de moverse. Así se aprietan también los nudos de plantilla: los ahorcados tiran de las vueltas porque la tensión recorre la cuerda, y no porque se acorte un tramo.
+3. **Atar (T17).** El chicote va por un camino hacia la pose del paso siguiente, el resto se mueve con la dinámica y cada cuadro se guarda para Blender. Al final de cada paso, la pose se asienta y tiene que ser la misma que la de la ficha.
+
+**La secuencia declarada sigue mandando.** La IPC garantiza que la cuerda no se atraviesa, pero la secuencia es una vista desde arriba (o desde el palo), y un tramo puede correrse por encima de otro sin atravesarlo. Si al asentar cambia la secuencia, el paso falla como hoy, y se corrige con menos tensión, con otra mano que sostenga o con otro punto de partida. Nunca se cambia la secuencia para que coincida.
+
+**Cómo se arma.**
+- Un paquete nuevo, `nudos/fisica/`: `varilla.py` (energías, gradientes y Hessianos de la varilla), `contacto.py` (barrera, CCD y roce con la cuerda y los anfitriones), `integrador.py` (Newton y búsqueda en línea), `manos.py` (condiciones de borde), `asentar.py` y `atar.py` (los modos) y `materiales.py` (los parámetros de cada cuerda).
+- **Las bibliotecas se eligen en T15a** con una prueba de velocidad. Las candidatas son `ipctk` (IPC Toolkit, en C++ con enlace a Python; barreras, CCD y roce para tramos y triángulos), `numba` (las energías de la varilla en CPU) y `warp-lang` (NVIDIA Warp, en la GPU). La preferida es `ipctk` con `numba`, porque garantiza el no atravesarse y repite el resultado. Warp sirve si la CPU es demasiado lenta para los videos.
+- **Los parámetros de la cuerda** van en `config/cuerdas.yaml`, uno por tipo de cuerda (la de 8 mm de los nudos libres, el cordino del prusik, el cordón de la cabeza de turco), calibrados en T15f. Una especificación puede pedir la tensión de cada paso (`tension: suelta | ajustada | apretada`), con «ajustada» por omisión: es la v1.14 del formato.
+- **`modelo.json` no cambia de forma:** sigue con los puntos de cada paso, y gana, opcional, la torsión de cada tramo y la presión de contacto en cada punto, para el render (T16). El visor los ignora.
+
+**Lo que cuesta (a confirmar en T15a).** El amarre cuadrado tiene unos 2300 nodos y el as de guía unos 500. Si un paso de Newton con contactos tarda de 0,05 a 0,2 s, asentar un paso son de 200 a 1000 pasos: de 1 a 3 minutos. Un nudo serían de 10 a 30 minutos, y los 40 nudos, una noche o dos. Gabriel ya aceptó ese costo.
+
+**Las subtareas, en orden.** Cada una termina con sus pruebas pasando y se revisa antes de seguir.
+
+- **T15a, la espiga (S):** instalar y probar las bibliotecas candidatas en esta computadora (Python 3.14, Windows), con una cuerda sobre un palo y un nudo simple apretado. Se mide la velocidad, si repite el resultado byte a byte y si alguna vez se atraviesa. Sale la pila del motor (D11).
+- **T15b, la varilla (M):** estiramiento, flexión, torsión y peso, con gradientes y Hessianos comprobados contra diferencias finitas. Pruebas: la catenaria (una cuerda colgada entre dos puntos toma la forma del coseno hiperbólico) y la elástica (un voladizo cae lo que dice la fórmula).
+- **T15c, el contacto y el roce (L):** la barrera y la CCD entre tramos y con los anfitriones, y el roce. Pruebas:
+  - Dos cuerdas lanzadas una contra otra nunca se atraviesan.
+  - La ecuación del cabrestante (Euler-Eytelwein): una cuerda sobre un palo sostiene un peso con una tensión del otro lado que crece como e^(μθ) con el ángulo abrazado θ.
+  - Un bloque sobre una tabla inclinada desliza recién pasado el ángulo del roce.
+- **T15d, asentar y apretar (L):** los modos 1 y 2 dentro de `construir`, detrás de una opción, primero con los pilotos de la fase 2: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Una página de prueba pone cada uno como está hoy y con el motor, en color y en gris, y Gabriel la aprueba en papel. El nudo simple apretado se compara con el largo de cuerda publicado para los nudos ideales apretados (Pieranski y otros).
+- **T15e, calibrar con cuerda real (S, con Gabriel):** con la cuerda de los filtros, se mide el diámetro, el peso por metro, la flexión (cuánto cae un voladizo de 20 cm), el roce con madera (en una tabla inclinada) y, con un peso colgado de un palo, el roce en vuelta. Gabriel saca fotos de cuatro nudos apretados desde vistas marcadas, y el motor los asienta con esos parámetros para compararlos.
+- **T15f, migrar los nudos (L):** todos los nudos pasan por el motor, por tandas, con `referencia` y `comparar`. Donde la secuencia de un paso no cambia, el filtro 1 sigue valiendo. Donde cambia, el paso se corrige (ver «La secuencia declarada sigue mandando») y Gabriel decide si repite el filtro. `relajar()` y `apretar()` se borran cuando ningún nudo los use.
+- **T15g, lo que el motor le da al render (M, va con T16):** la presión de contacto aplana la sección de la cuerda donde aprieta, como una cuerda real, y la torsión gira la trenza y el hilo trazador. Entra solo lo que se note en la página de prueba impresa.
+
+**Fuera, salvo que una prueba en papel diga lo contrario:** simular los 16 hilos de la trenza (a 58 mm de ancho no se ven; la textura con relieve ya los dibuja) y la pelusa de las fibras.
+
+**Criterios de aceptación de T15:**
+- [ ] Las pruebas de física (la catenaria, la elástica, el cabrestante, la tabla inclinada y las cuerdas que no se atraviesan) pasan.
+- [ ] Construir dos veces da los mismos `modelo.json` byte a byte.
+- [ ] Todos los nudos construyen sin fallas con el motor, con la secuencia declarada en cada paso.
+- [ ] Gabriel aprueba en papel la página de prueba de los pilotos y, después, cada tanda.
+
+**Dependencias:** ninguna en código; va después de T14 por el orden que eligió Gabriel. **Tamaño:** XL, en siete subtareas. **Sesión:** el modelo grande para T15a a T15d y T15g; T15f por tandas, como la fase 4.
 
 #### T16: Las fichas se renderizan en Blender
 
@@ -516,21 +567,21 @@ El orden: primero el tablón, que es el poste con otro perfil (ahí se separa lo
 - [ ] Las fichas siguen cabiendo y se leen en gris.
 - [ ] Gabriel revisa en papel las fichas rehechas de los nudos ya aprobados.
 
-**Dependencias:** T14 (D10) y T15. **Tamaño:** M, más el tiempo de render de unos 40 nudos.
+**Dependencias:** T14 (D10) y T15; T15g se hace junto con esta. **Tamaño:** M, más el tiempo de render de unos 40 nudos: unos 3 s por imagen (`poc/blender`).
 
 #### T17: Animación entre pasos
 
-**Descripción:** calcular el movimiento continuo de la cuerda de un paso al siguiente.
-- En una plantilla, cada paso es un comienzo más largo de la misma cuerda, así que la animación avanza el chicote por su camino final.
-- En un nudo libre, la cola cambia de forma entre pasos, y el tramo que se mueve tiene que viajar sin atravesar ninguna cuerda: en cada cuadro se relaja con las colisiones de `libre.py`, y se comprueba que la cuerda no pasa a través de otra entre dos cuadros.
+**Descripción:** calcular el movimiento continuo de la cuerda de un paso al siguiente con el modo «atar» del motor (T15). Una mano lleva el chicote por un camino que sigue, con un margen, la cuerda del paso siguiente, desde su punta, como al pasarla por un lazo. El resto de la cuerda se mueve con la dinámica, el peso y el roce, y al final se asienta en la pose de la ficha. Como el motor nunca deja que la cuerda se atraviese, tampoco entre dos cuadros, la animación hereda esa garantía.
+- En una plantilla, cada paso es un comienzo más largo de la misma cuerda: la mano lleva el chicote por el camino final (como el video de `poc/blender`), pero ahora la cuerda que ya está se aprieta con cada vuelta nueva.
+- En un nudo libre, la cola cambia de forma entre pasos: la mano la lleva por fuera de todo y la hace entrar por donde dice el paso.
 
-Al llegar a cada pose, la secuencia de cruces es la del paso. El diseño va como bloque de este plan, con un nudo libre (el as de guía) y una plantilla (el amarre cuadrado) de piloto.
+El diseño de los caminos de la mano va como bloque de este plan, con un nudo libre (el as de guía) y una plantilla (el amarre cuadrado) de piloto.
 
 **Criterios de aceptación:**
-- [ ] Ningún cuadro tiene una cuerda atravesando otra, y la pose final de cada paso tiene su secuencia declarada.
+- [ ] Ningún cuadro tiene una cuerda atravesando otra (la CCD del motor), y la pose final de cada paso es la de la ficha, con su secuencia declarada.
 - [ ] Gabriel aprueba la prueba de 10 segundos en movimiento del as de guía y del amarre (la puerta del método de elasthic).
 
-**Dependencias:** T15. **Tamaño:** L. Es la tarea de más riesgo de la fase.
+**Dependencias:** T15 (al menos T15d). **Tamaño:** L. Es la tarea de más riesgo de la fase.
 
 #### T18: Videos
 
@@ -543,11 +594,11 @@ Al llegar a cada pose, la secuencia de cruces es la del paso. El diseño va como
 - [ ] El visor del as de guía muestra su video, y la URL del QR no cambia.
 - [ ] Gabriel aprueba el video del as de guía antes de renderizar los demás.
 
-**Dependencias:** T17. **Tamaño:** M, más el tiempo de render. Según el paquete, en una RTX 4090 se tarda de 5 a 8 segundos por cuadro, y en la 4070 serán unas dos o tres veces más: del orden de horas por nudo.
+**Dependencias:** T17. **Tamaño:** M, más el tiempo de render: en `poc/blender`, 3,8 s por cuadro a 1280 × 720 con 64 muestras, unos 20 minutos por cada 10 s de video. El vertical se renderiza con su propia cámara: recortar el horizontal corta el nudo.
 
 #### Punto de control de la fase 6
 
-- [ ] D10 decidida, las plantillas ajustadas, todas las fichas rehechas (si D10 sale a favor) y un video por nudo en el visor.
+- [ ] D10 y D11 decididas, todos los nudos construidos con el motor, todas las fichas rehechas (si D10 sale a favor) y un video por nudo en el visor.
 
 ## Riesgos y mitigaciones
 
@@ -568,7 +619,11 @@ Al llegar a cada pose, la secuencia de cruces es la del paso. El diseño va como
 | Aparecen términos de una sola sección en las fichas | Medio | Prueba automática de vocabulario por sección; esos términos solo van en los anexos |
 | El proyecto no cierra porque no hay fecha | Medio | La edición 1 se define como los 36 nudos; tabla de estado; puntos de control con revisión |
 | El render de Blender no repite la misma imagen y `comparar` deja de servir | Medio | Semilla fija y un solo denoiser; si aun así cambia, una tolerancia documentada en `comparar` (T16) |
-| Animar los nudos libres resulta más difícil de lo previsto (la cuerda se atraviesa entre cuadros) | Alto | Pilotos con el as de guía y el amarre cuadrado en T17 antes de comprometer los 36 videos; las fichas y el visor no dependen de los videos |
+| Animar los nudos libres resulta más difícil de lo previsto (la cuerda se atraviesa entre cuadros) | Alto | El motor de T15 no deja que la cuerda se atraviese (IPC con CCD); pilotos con el as de guía y el amarre cuadrado en T17 antes de comprometer los 36 videos; las fichas y el visor no dependen de los videos |
+| El motor de física es lento, no converge o no repite el resultado | Alto | T15a mide las bibliotecas antes de comprometerse; Newton con búsqueda en línea y CCD, en `float64` y en CPU; si es lento para los videos, Warp en la GPU solo para animar |
+| Al asentar con el motor, la secuencia de un paso cambia (un tramo se corre por encima de otro sin atravesarlo) | Medio | La secuencia declarada sigue mandando: el paso falla y se corrige con la tensión o las manos, nunca cambiando la secuencia; donde cambia, Gabriel decide si repite el filtro 1 |
+| Las bibliotecas del motor no tienen versión para Python 3.14 en Windows | Medio | T15a lo comprueba primero; las alternativas son compilar `ipctk`, usar Warp o escribir la barrera y la CCD de tramo con tramo en `numba` |
+| Complejidad que no se ve en el papel | Medio | Cada fenómeno entra con su prueba física y, si cambia la imagen, con la página de prueba impresa (la regla de T7b) |
 | Código o texto de un paquete de pago entra al repositorio público | Alto | El paquete vive fuera de git y solo se usa como referencia; los scripts de Blender del libro son propios |
 | El render de los videos ocupa la computadora por días | Bajo | Gabriel acepta el costo; se renderiza por tandas, de noche, empezando por una vista previa a media resolución |
 

@@ -11,6 +11,7 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 - [x] D5 Se trabaja desde la app de Claude con la computadora vinculada
 - [ ] D8 Especificaciones de la imprenta: sangrado, color y formato (antes de T13)
 - [ ] D10 Render en Blender y compra de Studio in a Folder (se decide con la página de prueba de T14)
+- [ ] D11 Pila del motor de física (se decide en T15a)
 
 ## Pendientes de Gabriel
 
@@ -60,8 +61,15 @@ El orden lo eligió Gabriel: la prueba, la cuerda, las fichas y los videos.
 - [ ] Gabriel aprueba la propuesta de la fase 6 en `tasks/plan.md`
 - [ ] T14 Prueba de Blender: `render/blender/escena.py` y `python -m nudos prueba-blender`, la página de prueba en color y en gris (M)
 - [ ] Gabriel imprime la prueba y decide D10
-- [ ] T15 La cuerda se ajusta en las plantillas: el diseño como bloque del plan, la aprobación de Gabriel y el código (L)
+- [ ] T15 Motor de física de la cuerda (XL; Gabriel lo pidió el 23 nov, lo mejor posible)
+  - [ ] T15a La espiga: probar `ipctk`, `numba` y Warp en esta computadora y decidir D11 (S)
+  - [ ] T15b La varilla: estiramiento, flexión, torsión y peso, con la catenaria y la elástica (M)
+  - [ ] T15c El contacto y el roce sin atravesarse (IPC y CCD), con el cabrestante y la tabla inclinada (L)
+  - [ ] T15d Asentar y apretar dentro de `construir`, con los pilotos de la fase 2 y su página de prueba (L)
+  - [ ] T15e Calibrar con cuerda real: Gabriel mide la cuerda y fotografía cuatro nudos apretados (S)
+  - [ ] T15f Migrar todos los nudos al motor, por tandas, y borrar `relajar()` y `apretar()` (L)
+  - [ ] T15g La sección aplastada y la torsión en el render, con T16 (M)
 - [ ] T16 Las fichas se renderizan en Blender y se rehacen todas, si D10 sale a favor (M)
-- [ ] T17 Animación entre pasos, con el as de guía y el amarre cuadrado de piloto (L)
+- [ ] T17 Animación entre pasos con el modo «atar» del motor, con el as de guía y el amarre cuadrado de piloto (L)
 - [ ] T18 Videos: horizontal en el visor, vertical para redes (M)
 - [ ] Punto de control de la fase 6
