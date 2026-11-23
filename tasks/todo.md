@@ -37,6 +37,8 @@ Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos 
 - [ ] Punto de control de la tanda 4
 
 ### Tanda 5: anfitriones especiales
+- [x] Propuesta de diseño de los tres anfitriones, en el plan (23 nov)
+- [ ] Gabriel revisa la propuesta y responde sus ocho preguntas
 - [ ] Eslinga de barril
 - [ ] Eslinga de andamio (requiere D1)
 - [ ] Vuelta de cornamusa (*cleat hitch*, sobre una cornamusa)

@@ -247,8 +247,113 @@ Después de cada tanda hay un punto de control:
 
 **Lo pendiente de la fase 4.**
 - **El punto de control de la tanda 4.** Los seis nudos están en el sitio desde el 18 nov.
-- **La tanda 5, anfitriones especiales:** la eslinga de barril, la eslinga de andamio (requiere D1) y la vuelta de cornamusa, sobre una cornamusa. Su propuesta se escribe aquí, como la de la tanda 4, que está en el historial.
+- **La tanda 5, anfitriones especiales:** la eslinga de barril, la eslinga de andamio (requiere D1) y la vuelta de cornamusa, sobre una cornamusa. Su propuesta está abajo y espera a que Gabriel la revise.
 - **T8, la cabeza de turco,** al final del plan: ver qué no se entiende en las imágenes antes de tocar la geometría (ver T8 en el historial).
+
+**Propuesta de la tanda 5: anfitriones especiales (23 nov; falta que Gabriel la revise).** Son tres nudos, y cada uno necesita un anfitrión nuevo: el barril, el tablón y la cornamusa. Ninguno necesita plantilla: los tres se dibujan con segmentos, como el ballestrinque sobre el poste, y su borrador lo escribe la skill `nudo-nuevo` cuando su anfitrión esté en `main`. Cada anfitrión es una tarea de código con la forma de T5 y del destorcedor: Gabriel aprueba su diseño, se programa, se comprueba con `referencia` y `comparar` que los 32 nudos hechos no cambian, y después se dibuja el nudo. Las medidas van en diámetros de cuerda y se ajustan al dibujar, como el radio del destorcedor.
+
+Lo común a los tres:
+- **La cuerda va pegada al sólido, no solo sobre la mesa.** El poste ya lo resuelve para un cilindro acostado: puntos `[x, ángulo]` que se densifican sobre su superficie, relajación sin gravedad a menos de 2,5 diámetros de él, cruces en su superficie desenrollada y el apretado con la penetración en cada ronda. El tablón es ese mismo camino con otro perfil, y la cornamusa y el barril lo reusan con otra forma. Por eso el primero que se programe separa del poste lo que depende de la forma (`punto`, la superficie desenrollada, `empujar` y `penetracion`) de lo que no (densificar, elevar en los cruces, relajar y comprobar), y los otros dos se apoyan en eso. Los nudos del poste tienen que quedar iguales byte a byte.
+- **Los cantos se redondean.** En un canto vivo, la cuerda se dobla con radio 0,5 y el mínimo es 0,9. Los cantos del tablón y los bordes de la tapa y de la base del barril llevan un radio de 0,6, fijo en el código: la cuerda que los rodea se dobla con radio 1,1.
+- **El as de guía de las eslingas no se dibuja.** Las dos eslingas terminan uniendo los extremos con un as de guía, por encima de la carga, para colgarla. Ese nudo va en el aire, y la escena no puede sostener cuerda en el aire. Pasa lo mismo que con el pescador doble que cierra el prusik: el último paso lo nombra en el texto y remite a su ficha, y los extremos quedan sobre la mesa, saliendo del encuadre.
+- **Por detrás, cada anfitrión sigue a uno que ya existe:** el barril y la cornamusa, que no se voltean, se miran desde el otro lado, como el poste; el tablón se voltea como los palos.
+
+**Eslinga de barril.** La entrada son 13 fotos de Animated Knots (*barrel hitch*: R1 a R8 son el primer método, y R9 a R13, el segundo) y la página 25 del manual de la Tropa. Las dos fuentes atan lo mismo:
+- El barril se para sobre la cuerda, y los dos extremos suben por los costados y se cruzan sobre la tapa en un medio nudo.
+- El medio nudo se abre, y sus dos asas bajan por el borde hasta abrazar el barril cerca de arriba.
+- Los extremos se unen con un as de guía, y el barril se levanta.
+
+Sobre el nombre: lo que Animated Knots llama *barrel sling* es otro nudo (el barril acostado, con una presilla de alondra; ABOK 2163), y la entrada no tiene fotos suyas. El del manual es el *barrel hitch* (ABOK 2176), y es el que se propone.
+- **El anfitrión:** `anfitrion: {tipo: barril, radio: 6, alto: 10}`. Es un cilindro de eje vertical en x = y = 0, como el destorcedor y la estaca, pero aquí la cuerda le pasa por debajo, por el costado y por encima. Ninguno de los anfitriones que hay sirve: `Parado` empuja la cuerda solo hacia los lados, porque con él nunca pasa por encima.
+  - Se apoya sobre la cuerda que pasa por debajo, así que su base queda a la altura 1, como el poste.
+  - `radio` va de 3 a 12, y `alto` es de 4 o más. Con 6 y 10, y una cuerda de 8 mm, es una lata de 10 cm de ancho: más chica que un barril, pero con uno de verdad la cuerda se vería como un hilo en la ficha. El texto dice «un barril, un balde o una lata».
+- **Los segmentos** son de tres clases:
+  - Sobre la mesa, `[x, y]`, como siempre, también bajo el barril.
+  - Sobre el costado, `{barril: [[ángulo, altura], ...]}`. El ángulo se mide alrededor del eje vertical: 0 hacia quien ata, 90 a la derecha, 180 al fondo y 270 a la izquierda. Como en el poste, no vuelve a 0, así que el sentido de cada vuelta queda escrito en los números. La altura se mide desde la mesa.
+  - Sobre la tapa, `{tapa: [[x, y], ...]}`.
+  - Se densifican sobre la superficie, como en el poste, y al pasar de una cara a otra la cuerda rodea el canto redondeado.
+- **Cómo se construye:** por el camino del poste. Cerca del barril va sin gravedad (si no, el anillo resbalaría hasta la mesa), y con gravedad en los extremos que van sobre la mesa. Lo que entra en el barril sale por la cara más cercana: el costado, la tapa o la base. La medida es `penetracion_barril`, con el máximo de siempre, 0,05.
+- **Los cruces** se buscan en tres zonas: el costado, en su superficie desenrollada (el arco alrededor del eje y la altura), donde encima es lo más lejos del eje, y la tapa y la mesa, desde arriba. Entre una zona y otra no se buscan, así que ningún cruce va justo en un canto.
+- **Los pasos** son tres:
+  1. «Pon el barril sobre la cuerda»: la cuerda va a lo largo de x por debajo del centro de la base, con los extremos hacia los lados. No tiene cruces.
+  2. «Cruza los extremos sobre la tapa»: los extremos suben por los costados izquierdo y derecho y se cruzan sobre la tapa en un medio nudo flojo, con sus dos cruces cerca del borde, como en el primer dibujo del manual. Son los cruces 1 y 2: en uno, el extremo izquierdo va por encima, y en el otro, por debajo.
+  3. «Baja las asas por el borde»: las dos asas bajan por el borde y abrazan el costado, a un diámetro y medio de la tapa. Los cruces quedan en el costado, a la izquierda y a la derecha, donde el extremo que sube se engancha con el asa que llega. Son los mismos dos cruces, pero bajan más de 2,5 diámetros, así que llevan etiquetas nuevas, 3 y 4, como los que se mueven en el paso de tirar del refuerzo de cabo. El texto termina: une los extremos con un as de guía por encima del barril y levanta despacio.
+- **Los nombres:** «Firme» en el extremo izquierdo y «Chicote» en el derecho. Los dos extremos trabajan igual y al final los dos cargan. Se proponen así para no tocar el formato: con `dos_firmes`, los dos dirían «Firme».
+- **El error común** (`invierte: [3]`, en el paso 3) es «Las asas sin enganchar». Con un cruce al revés, los extremos no se enganchan: solo se apoyan uno sobre otro. Al levantar, el anillo se abre y el barril se cae. En `otros` van dos: el anillo muy abajo (por debajo del centro, el barril se voltea) o muy arriba (se sale por el borde), y la cuerda que no pasa por el centro de la base.
+- **Encuadre y terminado:** los pasos se miran a 40°, como siempre, y el encuadre abarca el barril y unos 8 diámetros de cuerda a cada lado. Un barril parado no se voltea: el nudo terminado se aprieta como sobre el poste y se mira por delante y desde el otro lado («Por detrás es como lo ves desde el otro lado del barril»). Los enganches quedan en los costados, de perfil. Si no se leen bien, se gira todo el nudo unos 30° en la especificación, sin tocar el código.
+- **Escena y hoja:** de madera, como la estaca. La hoja de revisión lo dibuja color madera, con el costado desenrollado, como el tubo.
+- **Seguridad (D1):** la eslinga levanta objetos, no personas. En `precauciones`: nadie se pone debajo de la carga, y se levanta despacio y parejo. No lleva `seguridad`.
+- **El formato** suma el tipo `barril` y los segmentos `{barril: …}` y `{tapa: …}`. Es un cambio compatible, y su versión depende de cuándo entre (ver «El orden y las sesiones», abajo).
+
+**Eslinga de andamio.** La entrada es una sola imagen con cuatro dibujos, su `info.txt` y la página 25 del manual de la Tropa. Los «usos comunes» del `info.txt` son de otro nudo (un mosquetón, un anzuelo) y no se usan. Las dos fuentes atan lo mismo:
+- Se dan dos vueltas y media al tablón, de modo que la cuerda pasa tres veces por la cara de arriba: la 1, la 2 y la 3, desde el firme hacia la punta del tablón.
+- La 1 pasa por encima de la 2 y queda entre la 2 y la 3.
+- La 2 pasa por encima de la 1 y de la 3, por la punta del tablón y por debajo de él.
+- Se tira de los dos extremos, que suben uno por delante y otro por detrás del tablón y se unen arriba con un as de guía.
+
+Para colgar un tablón se ata una eslinga en cada punta.
+- **El anfitrión:** `anfitrion: {tipo: tablon, ancho: 12, grueso: 3, largo: 30}`. Es una tabla acostada a lo largo de x, con los cantos redondeados. La punta está en x = 0, a la derecha, hacia donde avanzan las vueltas, y el resto sigue hacia x negativo hasta `-largo`, como el cabo.
+  - Va centrada en y = 0. Se apoya sobre la cuerda que pasa por debajo, así que su cara de abajo queda a la altura 1, como el poste.
+  - `ancho` y `grueso` son de 2 o más. Con una cuerda de 8 mm es una tabla de 10 × 2,4 cm.
+  - Reusa el poste: es el mismo camino con otro perfil. Los segmentos sobre el tablón se escriben `{tablon: [[x, ángulo], ...]}`, como en el poste: 0 arriba, 90 hacia quien ata, 180 abajo y 270 atrás, sin volver a 0. El ángulo se reparte parejo a lo largo del contorno, así que 0, 90, 180 y 270 caen en el medio de cada cara.
+- **Construcción y cruces:** como en el poste. La medida es `penetracion_tablon`. Los cruces se buscan en la superficie desenrollada (x y el largo a lo largo del contorno), donde encima es lo más lejos de la superficie del tablón, no del eje. Los de la mesa se buscan desde arriba.
+- **Los pasos** son cuatro:
+  1. «Da dos vueltas y media al tablón»: el firme llega por delante, sobre la mesa, y sube por la cara de delante. Las tres pasadas por arriba van a unos 2,5 diámetros una de otra, cerca de la punta, y el chicote cae por detrás. No tiene cruces: las vueltas van una junto a otra.
+  2. «Pasa la 1 por encima de la 2»: la 1 sube sobre la 2 y queda entre la 2 y la 3. Tiene el cruce 1, arriba, con la 1 sobre la 2, y probablemente el 2, debajo del tablón, donde se cruzan los tramos de abajo de la 1 y la 2. El borrador los cuenta.
+  3. «Pasa la 2 por encima de la 1 y de la 3»: el seno de la 2 sale hacia la punta, por encima de la 1 y la 3, y queda sobre la mesa, más allá de la punta del tablón, como en el tercer dibujo de la entrada. Son los cruces 3 a 6: cada rama del seno pasa sobre la 1 y sobre la 3.
+  4. «Mete el seno por debajo y tira de los extremos»: el seno da la vuelta a la punta y queda debajo del tablón, abrazando la 1 y la 3. Sus cruces bajan de la cara de arriba a la de abajo, más de 2,5 diámetros, así que llevan etiquetas nuevas, de la 7 a la 10, como en el barril. El texto termina: une los extremos con un as de guía por encima del tablón, y ata otra eslinga igual en la otra punta.
+- **Los nombres:** «Firme» en el extremo de delante y «Chicote» en el de detrás.
+- **El error común** (`invierte: [3, 4, 5, 6]`, en el paso 3) es «La 2 por debajo»: el seno pasa por debajo de la 1 y la 3, no las aprieta, y el tablón resbala o se voltea. Se ve desde arriba, porque en ese paso el seno todavía va sobre la cara de arriba. En `otros` van dos: las vueltas muy separadas o lejos de la punta, y colgar el tablón de una sola eslinga.
+- **Encuadre y terminado:** el encuadre abarca la punta del tablón y unos 12 diámetros hacia dentro. El nudo terminado se aprieta como sobre el poste y se voltea con el tablón como la página de un libro, como sobre los palos: es un giro rígido, así que la secuencia no cambia. Por detrás se ve la cara de abajo, la que en los pasos queda contra la mesa, donde el seno abraza las vueltas. La ficha dice: «Por detrás es como lo ves si volteas el tablón como la página de un libro».
+- **Escena y hoja:** de madera. Se corta en el encuadre, como el cabo, y la hoja lo dibuja color madera.
+- **Seguridad (D1):** D1 dice que la eslinga de andamio se practica sin carga o con un objeto. La ficha lleva `seguridad`: en las actividades del grupo no sostiene personas, ni como andamio ni como columpio. Sirve para colgar un tablón como repisa o para subir materiales. Los andamios colgantes de trabajo los arma gente capacitada, con equipo certificado. El manual de la Tropa dice que sirve para subir «hasta personas»: eso no va en la ficha ni en el anexo.
+- **El formato** suma el tipo `tablon` y los segmentos `{tablon: …}`.
+
+**Vuelta de cornamusa.** La entrada son 9 fotos (R1 a R9), una vuelta sobre una cornamusa de driza, y su `info.txt`:
+- El firme llega a lo largo de la cornamusa y pasa por debajo del cuerno lejano.
+- Da la vuelta al pie por debajo del otro cuerno.
+- Cruza por encima en diagonal hacia el cuerno lejano y pasa por debajo de él.
+- Vuelve en otra diagonal, que cruza a la primera: es el ocho.
+- Termina con un cote: una gaza torcida que se engancha en el cuerno cercano, con el chicote por debajo.
+
+El `info.txt` dice que se suelen dar más diagonales que una y que lo esencial es poder soltarla rápido.
+- **El anfitrión:** `anfitrion: {tipo: cornamusa, largo: 16, radio: 1}`. Va fija a la mesa, a lo largo de x y centrada en x = y = 0. Con una cuerda de 10 mm es una cornamusa de 16 cm.
+  - Los cuernos son una barra de radio `radio`, con las puntas redondeadas. Su eje queda a la altura 1,6 + `radio`, así que bajo cada cuerno queda un hueco de 1,6 diámetros por donde pasa la cuerda.
+  - El pie es un bloque en el medio, de 5 diámetros de largo (fijo en el código) y del ancho de la barra, que va de la mesa a la barra. Por ahí no pasa la cuerda.
+  - Reusa del poste la forma de escribir lo que pasa sobre la barra, y del destorcedor, la de buscar los cruces desde arriba.
+- **Los segmentos:** lo que va bajo los cuernos y alrededor del pie va sobre la mesa, `[x, y]`, y lo que pasa por encima de la barra, `{cornamusa: [[x, ángulo], ...]}`, como en el poste, con el ángulo solo por arriba, entre 90 y −90. Un punto de la mesa bajo el pie es un error al cargar.
+- **Construcción:** por el camino del poste, sin gravedad cerca de la cornamusa. Lo que entra en la barra o en el pie sale por la cara más cercana. La medida es `penetracion_cornamusa`.
+- **Los cruces se buscan todos desde arriba,** como sobre la mesa: la cornamusa es baja, y donde un tramo pasa sobre un cuerno y otro por debajo de él, hay un cruce de verdad, con encima el de arriba. Es el primer nudo sobre un anfitrión con cruces entre un tramo sobre el anfitrión y uno sobre la mesa, que está en «Lo que se agregará». Donde la cuerda baja casi vertical por el costado de la barra, dos pasadas a menos de 3 diámetros a lo largo de la cuerda no cuentan como cruce, como en el tubo. Si desde arriba no alcanza, lo que va sobre la barra se busca en su superficie desenrollada, como en el poste, y se ve con Gabriel.
+- **La orientación:** en las fotos, la cornamusa está a lo largo de y y la driza baja desde el fondo. Así, el cuerno de delante taparía el hueco del de atrás. Se propone ponerla a lo largo de x, con el firme desde la izquierda, por delante de ella, como una driza que baja paralela; el cuerno lejano es el derecho.
+- **Los pasos** son cinco. El borrador cuenta los cruces con las fotos: son unos diez.
+  1. «Pasa la cuerda por debajo del cuerno lejano»: el firme pasa bajo el cuerno derecho, de delante hacia atrás. No tiene cruces.
+  2. «Rodea el pie por debajo del otro cuerno»: la cuerda va por detrás hasta el cuerno izquierdo, pasa por debajo de él hacia delante y cruza sobre el firme (cruce 1).
+  3. «Cruza por encima hacia el cuerno lejano»: va en diagonal por encima de la barra, desde delante a la izquierda hasta detrás a la derecha, y pasa bajo el cuerno derecho, más cerca de la punta que la primera vez. Cruza sobre el tramo de detrás.
+  4. «Vuelve a cruzar por encima»: va en diagonal hacia el cuerno izquierdo, cruza sobre la primera diagonal en el medio de la barra y pasa bajo el cuerno izquierdo.
+  5. «Engancha un cote en el cuerno»: tuerce una gaza de modo que el chicote quede por debajo y engánchala en el cuerno izquierdo. La gaza pasa sobre el cuerno, encima de lo que va debajo de él.
+- **Los nombres:** «Firme» en el que viene de la carga (la driza o el cabo del bote) y «Chicote» en el que queda suelto.
+- **El error común** (`invierte`, los cruces del cote, en el paso 5) es «El cote al revés»: si la gaza se tuerce hacia el otro lado, el chicote queda encima, no se traba y la vuelta se suelta. En `otros` van dos: empezar por el cuerno cercano, y llenarla de cotes o de vueltas, que se atasca y no se suelta rápido.
+- **Encuadre y terminado:** el encuadre abarca la cornamusa y unos 6 diámetros alrededor. El nudo terminado se aprieta y se mira como sobre el poste: por delante y desde el otro lado («Por detrás es como lo ves desde el otro lado de la cornamusa»).
+- **Escena y hoja:** de metal gris, como el destorcedor.
+- **Seguridad:** D1 no aplica. En `precauciones`: con carga, los dedos no van entre la cuerda y la cornamusa.
+- **El formato** suma el tipo `cornamusa` y los segmentos `{cornamusa: …}`.
+
+**El orden y las sesiones.** Se propone una sola sesión para los tres anfitriones, uno detrás de otro, y no tres en paralelo:
+- **Los tres tocan el mismo código, no solo las mismas listas.** Los tres extienden el camino del poste (`construir_paso`, `_curva` y `_cruces` de `nudos/anfitrion.py`, la relajación y el apretado). En la tanda 4, los palos y el cabo se programaron en paralelo y al integrar chocaron solo en listas (los anfitriones, la escena, la hoja, el formato), porque cada uno tenía su propio camino. Aquí, tres sesiones separarían del poste lo que depende de la forma tres veces y de tres maneras, y al integrar habría que rehacer el diseño, no juntar listas.
+- **Cada cambio al camino del poste toca los nudos ya hechos sobre él,** como el ballestrinque. Con una sesión, se comprueba con `referencia` y `comparar` una vez por anfitrión, sobre lo mismo.
+- **El paralelo casi no acorta la tanda:** lo que marca el ritmo es el filtro 1, que Gabriel hace de a un nudo, y una sesión que ya tiene el poste en contexto hace el segundo y el tercer anfitrión más rápido.
+
+El orden: primero el tablón, que es el poste con otro perfil (ahí se separa lo que depende de la forma); después la cornamusa, que reusa la barra del poste y busca los cruces desde arriba, y al final el barril, el más distinto, con su eje vertical y su tapa. Cada anfitrión sube el formato una versión: el tablón, la v1.10; la cornamusa, la v1.11, y el barril, la v1.12. La sesión de código va con el modelo grande y el esfuerzo de siempre, y se detiene después de cada anfitrión para que Gabriel lo vea. El borrador de cada nudo puede ir en una sesión aparte, con esfuerzo medio, apenas su anfitrión entra a `main`: solo toca su especificación, así que no choca con el código del siguiente.
+
+**Preguntas para Gabriel:**
+1. **Barril, el método:** ¿el del manual, con el medio nudo abierto sobre la tapa, o el segundo de Animated Knots, con el medio nudo tendido en el suelo y el barril encima? Se propone el del manual.
+2. **Barril, el nombre:** ¿va «Eslinga de barril», como en el manual, con el ABOK 2176 del *barrel hitch*? El *barrel sling* de Animated Knots es otro nudo.
+3. **Las dos eslingas, el as de guía:** ¿está bien que no se dibuje y que el último paso remita a su ficha?
+4. **Las dos eslingas, los nombres:** ¿«Firme» y «Chicote», o los dos extremos como firmes?
+5. **Andamio, la cara de abajo:** la entrada no muestra cómo queda el seno 2 bajo el tablón, y de eso dependen el paso 4 y el terminado por detrás. ¿Puedes atarla en una tabla y dejar en `entradas/eslinga-de-andamio/` unas fotos de arriba y de abajo?
+6. **Andamio, D1:** ¿confirmas que la ficha dice que no se usa ni como andamio ni como columpio para personas, y que se practica sin carga o con un objeto?
+7. **Cornamusa:** ¿a lo largo de x, con el firme desde la izquierda, y con dos diagonales antes del cote, como en las fotos?
+8. **Sesiones:** ¿una sola sesión de código para los tres anfitriones, en el orden de arriba?
 
 
 ### Fase 5: libro y primera edición
