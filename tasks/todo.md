@@ -10,6 +10,7 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 - [x] D4 GitHub Pages en la cuenta personal (`Gaboelc`), repositorio público
 - [x] D5 Se trabaja desde la app de Claude con la computadora vinculada
 - [ ] D8 Especificaciones de la imprenta: sangrado, color y formato (antes de T13)
+- [ ] D10 Render en Blender y compra de Studio in a Folder (se decide con la página de prueba de T14)
 
 ## Pendientes de Gabriel
 
@@ -44,5 +45,18 @@ Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos 
 
 - [ ] T11 Material inicial: portada, "cómo leer una ficha", glosario, seguridad e índice (S, depende de D1 y la tanda 1)
 - [ ] T12 Anexos de la Wak y de la Tropa (S, depende de D3 y T11)
-- [ ] T13 Edición 1: PDF completo, colofón, registro de cambios, etiqueta en git e impresión (S, depende de la fase 4, T11 y T12)
+- [ ] T13 Edición 1: PDF completo, colofón, registro de cambios, etiqueta en git e impresión (S, depende de la fase 4, T11, T12, T15 y, si D10 sale a favor de Blender, T16)
 - [ ] Punto de control final: edición 1 impresa y todos sus QR responden
+
+## Fase 6: render en Blender, cuerda que se ajusta y videos (propuesta del 23 nov, por aprobar)
+
+El orden lo eligió Gabriel: la prueba, la cuerda, las fichas y los videos.
+
+- [ ] Gabriel aprueba la propuesta de la fase 6 en `tasks/plan.md`
+- [ ] T14 Prueba de Blender: `render/blender/escena.py` y `python -m nudos prueba-blender`, la página de prueba en color y en gris (M)
+- [ ] Gabriel imprime la prueba y decide D10
+- [ ] T15 La cuerda se ajusta en las plantillas: el diseño como bloque del plan, la aprobación de Gabriel y el código (L)
+- [ ] T16 Las fichas se renderizan en Blender y se rehacen todas, si D10 sale a favor (M)
+- [ ] T17 Animación entre pasos, con el as de guía y el amarre cuadrado de piloto (L)
+- [ ] T18 Videos: horizontal en el visor, vertical para redes (M)
+- [ ] Punto de control de la fase 6

@@ -19,7 +19,7 @@ Un solo libro de nudos para la Wak y la Tropa del Grupo 431, impreso por edicion
   - Verificación, escrita como criterios observables.
   - Seguridad, cuando aplique.
 - **Anexos:** uno por sección, con los nudos de su progresión y quién los valora.
-- **Formatos:** el impreso por ediciones es el principal. El digital es el PDF más un visor 3D por nudo, enlazado con QR desde la ficha.
+- **Formatos:** el impreso por ediciones es el principal. El digital es el PDF más un visor 3D por nudo, enlazado con QR desde la ficha. Desde el 23 de noviembre de 2026, cada nudo tendrá también un video de cómo atarlo, en su visor y en redes (fase 6).
 - **Fuentes:** Animated Knots y el manual de la Tropa son entrada, nunca contenido.
 - **Restricciones:**
   - No hay fecha límite.
@@ -28,7 +28,6 @@ Un solo libro de nudos para la Wak y la Tropa del Grupo 431, impreso por edicion
   - Una fuente nueva no obliga a cambiar el flujo.
 - **Fuera de alcance:**
   - Material de las fuentes dentro del libro.
-  - Animaciones del proceso de atar.
   - Una app con 3D que funcione sin conexión.
   - Venta o distribución fuera del grupo.
   - Versiones simplificadas por edad.
@@ -165,6 +164,7 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
   - **Ballestrinque doble:** su entrada es la página del manual de la Tropa. Por lo que describe (la cuerda tira a lo largo del mástil), es el *rolling hitch*.
   - **El *tautline hitch* se llama «tensor ajustable»**, para no confundirlo con el tensor (*trucker's hitch*).
   - **El *mooring hitch* se llama «nudo de liberación rápida».** En el manual v0.1 era «nudo de amarre de liberación rápida»; se quitó «amarre» para no confundirlo con los amarres.
+- **D10 Render en Blender:** si las imágenes de las fichas pasan de three.js con Edge a Blender, y si Gabriel compra Studio in a Folder. Se decide con la página de prueba de T14 (fase 6). Si sale a favor, reemplaza la decisión de arquitectura 5 en lo que toca a la impresión; el visor sigue en three.js.
 
 ### Lo hecho
 
@@ -302,7 +302,7 @@ Después de cada tanda hay un punto de control:
 - [ ] `python -m nudos libro`
 - [ ] Manual: escanear todos los QR del ejemplar impreso.
 
-**Dependencias:** fase 4, T11, T12 y D8
+**Dependencias:** fase 4, T11, T12 y D8. También T15 y, si D10 sale a favor de Blender, T16: la edición 1 se imprime con las imágenes nuevas.
 
 **Archivos:** `nudos/libro.py`, `libro/colofon.html`, `CHANGELOG.md`
 
@@ -311,6 +311,99 @@ Después de cada tanda hay un punto de control:
 #### Punto de control final
 
 - [ ] Se cumplen todos los criterios y la edición 1 está impresa.
+
+### Fase 6: render en Blender, cuerda que se ajusta y videos (propuesta, 23 nov)
+
+**De dónde sale.** Gabriel vio los reels de elasthic y su paquete *Studio in a Folder* (Patreon), y pidió evaluar si sirve para el libro: mejores imágenes, una cuerda menos tiesa (sobre todo al ahorcar los amarres) y un video de cómo atar cada nudo.
+
+**Qué es el paquete** (según `00_Start_Here.pdf` y `10_Cheat_Sheet.pdf`, la muestra gratis, v1.1):
+- Un método de dirección de arte y un estudio de código: un agente como Claude Code escribe Python para Blender, Blender renderiza cada cuadro con Cycles y un comando arma cada película con ffmpeg. Nada es video generado con IA.
+- Trae 11 volúmenes (unas 800 páginas), 15 skills, 8 películas de productos y 24 estilos. Su método pasa por puertas: el brief, un cuadro final aprobado (*hero frame*), una prueba de 10 segundos en movimiento y el máster. Una de sus revisiones es mirar el cuadro en gris, como las fichas.
+- Pide Blender 5.2, Python 3.11 y ffmpeg con libx264, y está probado en Windows 11 con una NVIDIA RTX. Esta computadora tiene los tres (Blender 5.2.0 LTS, ffmpeg 9.1 y la RTX 4070).
+- **Licencia:** lo que se hace con él es de quien lo compra, también para trabajo pagado; el paquete es solo para esa persona. Así que su código y su texto no entran a este repositorio, que es público. Si se compra, vive en una carpeta fuera de git y se usa como referencia.
+- **Lo que no hace:** no simula cuerdas ni nudos. Sus películas son de productos rígidos.
+
+**Qué resuelve y qué no.**
+- **La cuerda tiesa no es del render, es de la geometría.** Un nudo de plantilla no se aprieta nunca (`nudos/apretar.py`): la plantilla traza las vueltas y los ahorcados con su forma ideal, y en `modelo.json` del amarre cuadrado `apretado` es `None`. En Blender se vería mejor iluminado, pero igual de tieso. Eso es T15, y mejora a la vez el visor, las fichas y los videos.
+- **Las imágenes de las fichas** sí pueden mejorar mucho con Cycles: luz suave, sombras de contacto reales y la trenza con relieve. Es T16.
+- **Los videos son lo nuevo y lo más difícil.** Hoy cada paso es una pose fija. Animar es calcular cómo se mueve la cuerda entre un paso y el siguiente sin atravesarse, y eso es nuestro, no del paquete. Es T17, y el video armado es T18.
+- **El visor sigue en three.js.** Blender no corre en el navegador. Lo que el visor gana es la geometría de T15 y, en T18, el video.
+
+**Decisiones de esta fase.**
+1. **La geometría se sigue calculando en `nudos`.** Blender solo lee `build/<slug>/modelo.json` y dibuja. La especificación sigue siendo la fuente de verdad y las comprobaciones de cruces no cambian.
+2. **Blender corre sin interfaz desde Python**, como hoy Edge: `blender --background --python render/blender/escena.py -- <argumentos>`. La ruta sale de `NUDOS_BLENDER`, como la de Edge sale de `NUDOS_CHROME`, y la versión queda fija (5.2 LTS), como three.js en `sitio/vendor/`.
+3. **Edge se queda para armar los PDF** (`ficha.html` y el libro); Blender reemplaza solo a las imágenes.
+4. **El orden lo eligió Gabriel:** la prueba, la cuerda, las fichas y al final los videos. Y él decide la compra del paquete después de ver la prueba.
+5. **Todas las fichas se rehacen** con el render nuevo (Gabriel, 23 nov), también las de los nudos aprobados y publicados.
+
+#### T14: Prueba de Blender
+
+**Descripción:** un script de Blender propio, `render/blender/escena.py`, que lee `modelo.json` y dibuja la cuerda (un tubo por la línea central, con la trenza, el hilo trazador y el resaltado de los colores de `nudos/spec.py`), la mesa, el anfitrión y la luz. Con él se arma una página de prueba como la de T7b: el paso 7 del as de guía, el par del error del ballestrinque y el paso de los ahorcados y el terminado del amarre cuadrado, cada uno como sale hoy y en Blender, a su tamaño impreso, en color y en gris.
+
+**Criterios de aceptación:**
+- [ ] `python -m nudos prueba-blender` arma `build/blender/prueba.pdf` desde un clon con los nudos construidos.
+- [ ] Cada imagen dice cuánto tardó, para estimar el costo de T16 y de los videos.
+- [ ] Gabriel imprime la página en la Epson y decide D10: si el render pasa a Blender y si compra el paquete.
+
+**Verificación:**
+- [ ] `python -m pytest`
+- [ ] Manual: la página impresa, en color y en gris.
+
+**Dependencias:** ninguna. **Tamaño:** M. **Sesión:** el diseño del render va con el modelo grande; si se compra el paquete, se lee su método de luz y material antes de ajustar la escena.
+
+#### T15: La cuerda se ajusta en las plantillas
+
+**Descripción:** que los amarres, el adujado, el refuerzo de cabo y el puño de mono dejen de verse tiesos. Las vueltas se apoyan en los palos y entre sí, y los ahorcados las aprietan hacia el centro, como pasa al tensarlos. La idea de partida es apretar con el método de `apretar.py` (acortar sin cruzar) también los nudos de plantilla, con el anfitrión empujando la cuerda fuera de los palos. Pero cada paso es el comienzo de la cuerda entera, y las vueltas del paso 3 no pueden verse apretadas por ahorcados que todavía no existen: el diseño propone cómo apretar cada paso con lo que tiene. Se escribe como bloque de este plan y Gabriel lo aprueba antes de programarlo.
+
+**Criterios de aceptación:**
+- [ ] Los pasos, el error y el terminado de cada plantilla conservan su secuencia de cruces, y las pruebas lo comprueban.
+- [ ] `referencia` y `comparar` muestran que los nudos libres no cambian.
+- [ ] Una página de prueba pone cada amarre como está hoy y ajustado, y Gabriel la aprueba en papel.
+- [ ] Como la topología no cambia, los filtros 1 siguen valiendo. Gabriel decide si alguno se repite.
+
+**Dependencias:** ninguna en código; va después de T14 por el orden que eligió Gabriel. **Tamaño:** L. **Sesión:** modelo grande, como las plantillas.
+
+#### T16: Las fichas se renderizan en Blender
+
+**Descripción:** solo si D10 sale a favor. `python -m nudos imprimir` dibuja con Blender los pasos, el error junto al paso correcto y el nudo terminado por delante y por detrás, y `ficha` las sigue armando con Edge. Después se vuelven a imprimir todas las fichas y se publica el sitio.
+
+**Criterios de aceptación:**
+- [ ] Imprimir dos veces da las mismas imágenes, o diferencias que `comparar` declara ruido. Cycles con semilla fija y un solo denoiser; si la GPU no repite el resultado bit a bit, `comparar` gana una tolerancia documentada.
+- [ ] Las fichas siguen cabiendo y se leen en gris.
+- [ ] Gabriel revisa en papel las fichas rehechas de los nudos ya aprobados.
+
+**Dependencias:** T14 (D10) y T15. **Tamaño:** M, más el tiempo de render de unos 40 nudos.
+
+#### T17: Animación entre pasos
+
+**Descripción:** calcular el movimiento continuo de la cuerda de un paso al siguiente.
+- En una plantilla, cada paso es un comienzo más largo de la misma cuerda, así que la animación avanza el chicote por su camino final.
+- En un nudo libre, la cola cambia de forma entre pasos, y el tramo que se mueve tiene que viajar sin atravesar ninguna cuerda: en cada cuadro se relaja con las colisiones de `libre.py`, y se comprueba que la cuerda no pasa a través de otra entre dos cuadros.
+
+Al llegar a cada pose, la secuencia de cruces es la del paso. El diseño va como bloque de este plan, con un nudo libre (el as de guía) y una plantilla (el amarre cuadrado) de piloto.
+
+**Criterios de aceptación:**
+- [ ] Ningún cuadro tiene una cuerda atravesando otra, y la pose final de cada paso tiene su secuencia declarada.
+- [ ] Gabriel aprueba la prueba de 10 segundos en movimiento del as de guía y del amarre (la puerta del método de elasthic).
+
+**Dependencias:** T15. **Tamaño:** L. Es la tarea de más riesgo de la fase.
+
+#### T18: Videos
+
+**Descripción:** un video por nudo, renderizado en Blender y armado con ffmpeg, con el título de cada paso en pantalla (el texto propio de la especificación, en tuteo y sin términos de sección).
+- **En el visor:** horizontal, en la página del QR. El sitio hoy no acepta imágenes ni video, así que la lista de tipos de la decisión de arquitectura 7 gana `.mp4`, con un tope de tamaño. El video vive dentro del sitio, sin YouTube, para que el visor no dependa de servicios externos.
+- **En redes:** vertical. Dónde y cuándo se publica lo decide Gabriel.
+
+**Criterios de aceptación:**
+- [ ] `python -m nudos video <slug>` arma los dos formatos.
+- [ ] El visor del as de guía muestra su video, y la URL del QR no cambia.
+- [ ] Gabriel aprueba el video del as de guía antes de renderizar los demás.
+
+**Dependencias:** T17. **Tamaño:** M, más el tiempo de render. Según el paquete, en una RTX 4090 se tarda de 5 a 8 segundos por cuadro, y en la 4070 serán unas dos o tres veces más: del orden de horas por nudo.
+
+#### Punto de control de la fase 6
+
+- [ ] D10 decidida, las plantillas ajustadas, todas las fichas rehechas (si D10 sale a favor) y un video por nudo en el visor.
 
 ## Riesgos y mitigaciones
 
@@ -330,10 +423,14 @@ Después de cada tanda hay un punto de control:
 | El formato de especificación cambia después de modelar muchos nudos | Medio | Formato congelado en el Punto de control B; cualquier cambio posterior lleva un script de migración |
 | Aparecen términos de una sola sección en las fichas | Medio | Prueba automática de vocabulario por sección; esos términos solo van en los anexos |
 | El proyecto no cierra porque no hay fecha | Medio | La edición 1 se define como los 36 nudos; tabla de estado; puntos de control con revisión |
+| El render de Blender no repite la misma imagen y `comparar` deja de servir | Medio | Semilla fija y un solo denoiser; si aun así cambia, una tolerancia documentada en `comparar` (T16) |
+| Animar los nudos libres resulta más difícil de lo previsto (la cuerda se atraviesa entre cuadros) | Alto | Pilotos con el as de guía y el amarre cuadrado en T17 antes de comprometer los 36 videos; las fichas y el visor no dependen de los videos |
+| Código o texto de un paquete de pago entra al repositorio público | Alto | El paquete vive fuera de git y solo se usa como referencia; los scripts de Blender del libro son propios |
+| El render de los videos ocupa la computadora por días | Bajo | Gabriel acepta el costo; se renderiza por tandas, de noche, empezando por una vista previa a media resolución |
 
 ## Preguntas abiertas
 
-- **D3 y D8:** las decisiones previas que siguen abiertas.
+- **D3, D8 y D10:** las decisiones previas que siguen abiertas.
 - **D7:** si la dirigencia de la Tropa participa en la revisión de su anexo y en conseguir probadores.
 
 ## Lo que se reutilizó del prototipo
