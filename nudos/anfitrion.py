@@ -362,6 +362,174 @@ class Cabo:
         return volteado, {**self.datos(), "z": self.zc - bajar}
 
 
+CANTO = 0.6   # radio de los cantos del tablón: la cuerda que los rodea se dobla con radio 1,1
+
+
+class Tablon:
+    """El tablón de la eslinga de andamio: una tabla acostada a lo largo de x, de `ancho` y
+    `grueso`, con los cantos redondeados con radio CANTO. La punta está en x = 0 y la tabla
+    sigue hacia x negativo hasta -`largo`. Se apoya sobre la cuerda que pasa por debajo, así
+    que su cara de abajo queda a la altura 1, como el poste.
+
+    Es el poste con otro perfil: un punto sobre él es [x, ángulo], y el ángulo se reparte parejo
+    a lo largo del contorno que sigue el eje de una cuerda que lo toca (a CANTO + R del núcleo,
+    el rectángulo sin los cantos). Así 0, 90, 180 y 270 caen en el medio de la cara de arriba,
+    la de delante, la de abajo y la de atrás. `rb` es el radio de un círculo del mismo
+    perímetro que ese contorno, y `cilindricas` da la «distancia al eje» como rb más lo que el
+    punto se aleja del contorno: con eso, todo lo del poste (_curva, _cruces, construir_paso,
+    apretar_paso) vale igual, y encima es lo más lejos de la superficie del tablón."""
+    MEDIDA = ("penetracion_tablon", "en el tablón")
+
+    def __init__(self, a: Anfitrion):
+        self.ancho, self.grueso, self.largo = a.ancho, a.grueso, a.largo
+        self.zc = a.grueso / 2 + 2 * R           # altura del centro
+        self.ay = a.ancho / 2 - CANTO            # medio núcleo, a lo largo de y
+        self.az = a.grueso / 2 - CANTO           # y a lo largo de z
+        self.e0 = CANTO + R                      # del núcleo al eje de una cuerda que lo toca
+        # Los tramos del contorno, desde el medio de la cara de arriba hacia delante: la mitad
+        # de la cara de arriba, un canto, la cara de delante, un canto, la de abajo, un canto,
+        # la de atrás, un canto y la otra mitad de la de arriba.
+        cuarto = self.e0 * math.pi / 2
+        self._largos = np.array([self.ay, cuarto, 2 * self.az, cuarto, 2 * self.ay, cuarto,
+                                 2 * self.az, cuarto, self.ay])
+        self._inicios = np.concatenate([[0.0], np.cumsum(self._largos)[:-1]])
+        self.perimetro = float(self._largos.sum())
+        self.rb = self.perimetro / (2 * math.pi)
+
+    # Del ángulo al contorno y de vuelta -------------------------------------------------
+    def _contorno(self, s):
+        """Para cada largo s a lo largo del contorno (0 en el medio de la cara de arriba,
+        hacia delante), el punto del núcleo más cercano (qy, qz) y la normal (ny, nz)."""
+        s = np.mod(np.asarray(s, float), self.perimetro)
+        k = np.clip(np.searchsorted(self._inicios, s, side="right") - 1, 0, 8)
+        t = s - self._inicios[k]
+        ay, az, e0 = self.ay, self.az, self.e0
+        cara = [k == 0, k == 2, k == 4, k == 6, k == 8]
+        fi = np.select([k == 1, k == 3, k == 5, k == 7],
+                       [t / e0, math.pi / 2 + t / e0, math.pi + t / e0, 1.5 * math.pi + t / e0], 0.0)
+        esquina = np.array([[-ay, az], [-ay, -az], [ay, -az], [ay, az]])[np.clip((k - 1) // 2, 0, 3)]
+        uno = np.ones_like(t)
+        qy = np.select(cara, [-t, -ay * uno, -ay + t, ay * uno, ay - t], esquina[..., 0])
+        qz = np.select(cara, [az * uno, az - t, -az * uno, -az + t, az * uno], esquina[..., 1])
+        ny = np.select(cara, [0 * uno, -uno, 0 * uno, uno, 0 * uno], -np.sin(fi))
+        nz = np.select(cara, [uno, 0 * uno, -uno, 0 * uno, uno], np.cos(fi))
+        return qy, qz, ny, nz
+
+    def punto(self, x, grados, r=None) -> np.ndarray:
+        """De [x, ángulo] sobre el tablón a [x, y, z]. 0° arriba, 90° hacia quien ata. `r`, si
+        se da, es la «distancia al eje» de cilindricas: rb toca el tablón."""
+        grados = np.asarray(grados, float)
+        qy, qz, ny, nz = self._contorno(np.radians(grados) * self.rb)
+        lejos = self.e0 + (0.0 if r is None else np.asarray(r, float) - self.rb)
+        return np.stack([np.asarray(x, float) + 0 * grados, qy + ny * lejos,
+                         self.zc + qz + nz * lejos], axis=-1)
+
+    def _corte(self, dy, dz):
+        """En el corte (y, z): el punto del núcleo más cercano, la normal hacia afuera y la
+        distancia con signo al núcleo, negativa si el punto está dentro de él."""
+        ay, az = self.ay, self.az
+        qy, qz = np.clip(dy, -ay, ay), np.clip(dz, -az, az)
+        vy, vz = dy - qy, dz - qz
+        d = np.hypot(vy, vz)
+        fuera = d > 1e-12
+        div = np.where(fuera, d, 1.0)
+        ny, nz = np.where(fuera, vy / div, 0.0), np.where(fuera, vz / div, 0.0)
+        # Dentro del núcleo, la cara más cercana.
+        fy, fz = ay - np.abs(dy), az - np.abs(dz)
+        arriba_o_abajo = ~fuera & (fz <= fy)
+        de_lado = ~fuera & ~arriba_o_abajo
+        sz, sy = np.where(dz >= 0, 1.0, -1.0), np.where(dy >= 0, 1.0, -1.0)
+        qz = np.where(arriba_o_abajo, sz * az, qz)
+        nz = np.where(arriba_o_abajo, sz, nz)
+        qy = np.where(de_lado, sy * ay, qy)
+        ny = np.where(de_lado, sy, ny)
+        d = np.where(arriba_o_abajo, -fz, np.where(de_lado, -fy, d))
+        return qy, qz, ny, nz, d
+
+    def cilindricas(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """x, ángulo en radianes (entre -π y π) y «distancia al eje»: rb más lo que el punto
+        se aleja del contorno de una cuerda que toca el tablón."""
+        ay, az, e0 = self.ay, self.az, self.e0
+        qy, qz, ny, nz, d = self._corte(X[:, 1], X[:, 2] - self.zc)
+        # El largo a lo largo del borde del núcleo, desde el medio de arriba hacia delante,
+        # más lo que gira la normal (e0 por radián), es el largo a lo largo del contorno.
+        arriba_delante = (qz >= az) & (qy <= 0)
+        delante = ~arriba_delante & (qy <= -ay)
+        abajo = ~arriba_delante & ~delante & (qz <= -az)
+        atras = ~arriba_delante & ~delante & ~abajo & (qy >= ay)
+        arriba_atras = ~arriba_delante & ~delante & ~abajo & ~atras
+        borde = np.select([arriba_delante, delante, abajo, atras],
+                          [-qy, ay + (az - qz), ay + 2 * az + (qy + ay), 3 * ay + 2 * az + (qz + az)],
+                          3 * ay + 4 * az + (ay - qy))
+        fi = np.mod(np.arctan2(-ny, nz), 2 * math.pi)
+        # En la mitad de atrás de la cara de arriba, la normal ya dio la vuelta entera.
+        fi = np.where(arriba_atras & (fi < math.pi), 2 * math.pi, fi)
+        th = (borde + e0 * fi) / self.rb
+        th = np.where(th > math.pi, th - 2 * math.pi, th)
+        return X[:, 0], th, self.rb + (d - e0)
+
+    # El sólido --------------------------------------------------------------------------
+    def _caja(self, X):
+        """En 3D, el punto más cercano del núcleo (el tablón sin los cantos, también en la
+        punta y en el otro extremo), la normal y la distancia con signo."""
+        lo = np.array([-self.largo + CANTO, -self.ay, self.zc - self.az])
+        hi = np.array([-CANTO, self.ay, self.zc + self.az])
+        Q = np.clip(X, lo, hi)
+        V = X - Q
+        d = np.linalg.norm(V, axis=1)
+        fuera = d > 1e-12
+        N = np.zeros_like(X)
+        N[fuera] = V[fuera] / d[fuera, None]
+        dentro = ~fuera
+        if dentro.any():
+            P = X[dentro]
+            caras = np.column_stack([P - lo, hi - P])          # x-, y-, z-, x+, y+, z+
+            c = np.argmin(caras, axis=1)
+            i = np.arange(len(P))
+            eje = c % 3
+            Nd = np.zeros_like(P)
+            Nd[i, eje] = np.where(c < 3, -1.0, 1.0)
+            Qd = P.copy()
+            Qd[i, eje] = np.where(c < 3, lo[eje], hi[eje])
+            N[dentro], Q[dentro], d[dentro] = Nd, Qd, -caras[i, c]
+        return Q, N, d
+
+    def empujar(self, X, libre) -> None:
+        """Saca del tablón los puntos que entraron, hacia la cara o el canto más cercano."""
+        Q, N, d = self._caja(X)
+        m = libre & (d < self.e0)
+        if m.any():
+            X[m] = Q[m] + N[m] * self.e0
+
+    def penetracion(self, X) -> float:
+        """Cuánto entra la cuerda en el tablón (0 si no entra)."""
+        _, _, d = self._caja(X)
+        return float(max(0.0, (self.e0 - d).max()))
+
+    def datos(self, z: float | None = None, desde: float | None = None) -> dict:
+        """Lo que necesita render/escena.js para dibujarlo: va de «desde» a «hasta» a lo largo
+        de x, con el centro del corte en y = 0 y a la altura «z»."""
+        desde = -self.largo if desde is None else desde
+        return {"tipo": "tablon", "ancho": self.ancho, "grueso": self.grueso, "canto": CANTO,
+                "desde": desde, "hasta": desde + self.largo, "y": 0.0,
+                "z": self.zc if z is None else z}
+
+    def voltear(self, r: Resultado) -> tuple[Resultado, dict]:
+        """La eslinga terminada, vista por detrás: el tablón y la cuerda, juntos, se voltean
+        como una página, con media vuelta alrededor del eje y, y se apoyan en lo que queda más
+        abajo, como los palos. Se ve la cara de abajo, la que en los pasos queda contra la
+        mesa. Es un giro rígido: la cuerda no se relaja otra vez y, como los cruces se miden
+        respecto al tablón, la secuencia no cambia. Devuelve el paso volteado y los datos del
+        tablón volteado para render/escena.js."""
+        X = r.puntos
+        alto = max(float((X[:, 2] + R).max()), self.zc + self.grueso / 2)
+        Y = np.column_stack([-X[:, 0], X[:, 1], alto - X[:, 2]])
+        volteado = replace(r, puntos=Y, resaltado=None,
+                           cruces={et: (-x, y) for et, (x, y) in r.cruces.items()},
+                           medidas={**r.medidas, "altura_max": float(Y[:, 2].max())})
+        return volteado, self.datos(z=alto - self.zc, desde=0.0)
+
+
 class Parado:
     """Un cilindro parado sobre la mesa, con el eje vertical en x = y = 0, de la mesa hasta
     `alto`: el destorcedor y la estaca. La cuerda le da la vuelta a ras de la mesa y nunca
@@ -412,14 +580,20 @@ class Estaca(Parado):
     MEDIDA = ("penetracion_estaca", "en la estaca")
 
 
-def solido(a: Anfitrion) -> Poste | Cruz | Palos | Tubo | Cabo | Parado:
+def solido(a: Anfitrion) -> Poste | Cruz | Palos | Tubo | Cabo | Tablon | Parado:
     """El anfitrión de la especificación como sólido."""
     return {"cruz": Cruz, "palos": Palos, "tubo": Tubo, "cabo": Cabo, "destorcedor": Destorcedor,
-            "estaca": Estaca}.get(a.tipo, Poste)(a)
+            "estaca": Estaca, "tablon": Tablon}.get(a.tipo, Poste)(a)
+
+
+def sobre_superficie(a: Anfitrion) -> Poste | Tablon:
+    """El sólido de un nudo con segmentos sobre su superficie, [x, ángulo]: el poste o el
+    tablón. Los dos se construyen por el mismo camino (construir_paso, apretar_paso)."""
+    return Tablon(a) if a.tipo == "tablon" else Poste(a)
 
 
 def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
-    poste = Poste(anfitrion)
+    poste = sobre_superficie(anfitrion)
     X, h, ctrl_s, sobre = _curva(paso, poste)
     cruces, _ = _cruces(X, h, sobre, poste)
     declarados = len(paso.secuencia) // 2
@@ -451,7 +625,7 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
                       buscar=lambda Y: _cruces(Y, h, sobre, poste), medir=_medir(paso.n, poste))
 
 
-def _medir(n: int, poste: Poste | Parado):
+def _medir(n: int, poste: Poste | Tablon | Parado):
     """La comprobación propia del anfitrión: cuánto entra la cuerda en él."""
     clave, donde = poste.MEDIDA
 
@@ -483,7 +657,7 @@ def apretar_paso(paso: Paso, anfitrion: Anfitrion, final: Resultado, rondas: int
     apretado lo toma de donde estaba ahí, por su coordenada material, aunque la cuerda se
     acorte."""
     from .apretar import apretar
-    poste = Poste(anfitrion)
+    poste = sobre_superficie(anfitrion)
     X, h, _, sobre = _curva(paso, poste)
     if len(X) != len(final.puntos) or h != final.h:
         raise ValueError(f"Paso {paso.n}: el paso construido no es el de la especificación.")
@@ -499,7 +673,7 @@ def apretar_paso(paso: Paso, anfitrion: Anfitrion, final: Resultado, rondas: int
 # --------------------------------------------------------------------------
 # Curva
 # --------------------------------------------------------------------------
-def _curva(paso: Paso, poste: Poste):
+def _curva(paso: Paso, poste: Poste | Tablon):
     """La línea central muestreada cada h, la posición a lo largo de la cuerda de cada punto
     de control y qué puntos van sobre el poste."""
     P = paso.puntos
@@ -551,7 +725,7 @@ def _curva(paso: Paso, poste: Poste):
 # --------------------------------------------------------------------------
 # Cruces
 # --------------------------------------------------------------------------
-def _cruces(X, h, sobre, poste: Poste) -> tuple[list[Cruce], list[tuple[float, float]]]:
+def _cruces(X, h, sobre, poste: Poste | Tablon) -> tuple[list[Cruce], list[tuple[float, float]]]:
     """Los cruces de la cuerda y, para cada uno, la «altura» de sus dos pasadas: distancia
     al eje sobre el poste, altura sobre la mesa."""
     x, th, r = poste.cilindricas(X)

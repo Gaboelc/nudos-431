@@ -280,6 +280,7 @@ function altoDeEncuadre(modelo, B) {
   if (a && (a.tipo === "poste" || a.tipo === "tubo" || a.tipo === "palos" || a.tipo === "cabo")) alto = Math.max(alto, a.z + a.radio);
   if (a && a.tipo === "cruz") alto = Math.max(alto, Math.max(a.z_abajo, a.z_arriba) + a.radio);
   if (a && a.tipo === "destorcedor") alto = Math.max(alto, a.alto);
+  if (a && a.tipo === "tablon") alto = Math.max(alto, a.z + a.grueso / 2);
   for (const d of dedos) alto = Math.max(alto, d.alto);
   return alto;
 }
@@ -414,6 +415,32 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       scene.add(tapa);
     }
     ejesPalos.push({ a: [-a.largo, 0, a.z], b: [0, 0, a.z], radio: a.radio });
+  }
+  // El tablón de la eslinga de andamio: una tabla de madera a lo largo de x, de «desde» a
+  // «hasta», con el corte de «ancho» × «grueso» centrado en «y» y a la altura «z» y los
+  // cantos redondeados con radio «canto». El corte se dibuja en el plano de la forma y se
+  // extruye a lo largo de su z, que se lleva a x.
+  if (a && a.tipo === "tablon") {
+    const ay = a.ancho / 2 - a.canto, az = a.grueso / 2 - a.canto, c = a.canto;
+    const forma = new THREE.Shape();
+    forma.moveTo(-ay, -az - c);
+    forma.lineTo(ay, -az - c);
+    forma.absarc(ay, -az, c, -Math.PI / 2, 0, false);
+    forma.lineTo(ay + c, az);
+    forma.absarc(ay, az, c, 0, Math.PI / 2, false);
+    forma.lineTo(-ay, az + c);
+    forma.absarc(-ay, az, c, Math.PI / 2, Math.PI, false);
+    forma.lineTo(-ay - c, -az);
+    forma.absarc(-ay, -az, c, Math.PI, 1.5 * Math.PI, false);
+    const geo = new THREE.ExtrudeGeometry(forma, { depth: a.hasta - a.desde, bevelEnabled: false, curveSegments: 12 });
+    geo.applyMatrix4(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)));
+    const m = new THREE.Mesh(geo, madera());
+    m.position.set(a.desde, a.y, a.z);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+    // Para la sombra de contacto, el eje con el radio de la mitad del grueso: es la distancia
+    // de la cara de abajo, sobre la que va la cuerda, a su centro.
+    ejesPalos.push({ a: [a.desde, a.y, a.z], b: [a.hasta, a.y, a.z], radio: a.grueso / 2 });
   }
   // El destorcedor del nudo aguja y la estaca del tensor ajustable: un cilindro parado sobre
   // la mesa en x = y = 0, de la mesa hasta «alto». El destorcedor es corto y gris acero, para

@@ -20,7 +20,7 @@ import yaml
 
 from . import RAIZ
 from .anfitrion import solido
-from .construir import Modelo, datos_json
+from .construir import Modelo, _resultado_json, datos_json
 from .hoja import ANCHO, _altura, _encuadre, hoja
 from .libre import LIMITES, Resultado
 
@@ -66,17 +66,18 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
     # todos los pasos. Un nudo sobre el poste queda muy por encima de la mesa.
     altura = _altura(datos, *_encuadre(datos))
 
-    def dibujos(dibujo: dict, nombre: str, volteado: bool = False) -> str:
+    def dibujos(dibujo: dict, nombre: str, volteado: bool = False, con: dict | None = None) -> str:
         """`dibujo` es el paso como lo trae modelo.json. El nudo por detrás está volteado sobre
         el eje y, así que se dibuja con el encuadre volteado, como en la ficha (imprimir.espejo):
-        un nudo que va a un lado del eje, como el tensor ajustable, queda del otro."""
+        un nudo que va a un lado del eje, como el tensor ajustable, queda del otro. `con` es
+        otro anfitrión, como el tablón volteado."""
         base = datos
         if volteado and datos.get("encuadre"):
             (x0, x1), y = datos["encuadre"]["x"], datos["encuadre"]["y"]
             base = {**datos, "encuadre": {"x": [-x1, -x0], "y": y}}
         celdas = []
         for vista in VISTAS:
-            im = hoja({**base, "pasos": [dibujo]}, vista, anfitrion, altura)
+            im = hoja({**base, "pasos": [dibujo]}, vista, con or anfitrion, altura)
             im = im.crop((0, 0, ANCHO, im.height))
             archivo = f"{nombre}-{vista}.png"
             im.save(destino / archivo)
@@ -134,6 +135,11 @@ def revision(modelo: Modelo, destino: Path | None = None, entradas: Path | None 
         celdas = dibujos(datos["apretado"], "apretado")
         if modelo.reverso_apretado is not None:
             celdas += dibujos(datos["reverso_apretado"], "reverso-apretado", volteado=True)
+        if modelo.spec.anfitrion is not None and modelo.spec.anfitrion.tipo == "tablon":
+            # La eslinga por detrás: volteada con el tablón, como en la ficha. Es la cara de
+            # abajo, que en los pasos queda contra la mesa.
+            volteado, tablon = solido(modelo.spec.anfitrion).voltear(modelo.apretado)
+            celdas += dibujos(_resultado_json(volteado), "apretado-volteado", volteado=True, con=tablon)
         bloques.append(
             '<section><h2>Nudo terminado apretado</h2><p>Es el que va en la ficha, por delante y '
             f'por detrás. Al apretarlo, la cuerda del nudo bajó de {antes:.1f} a {despues:.1f} '

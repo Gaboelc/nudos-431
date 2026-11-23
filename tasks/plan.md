@@ -360,6 +360,15 @@ El orden: primero el tablón, que es el poste con otro perfil (ahí se separa lo
 - Pregunta 5: no habrá fotos de la eslinga de andamio. La sesión deduce la cara de abajo del tablón, y Gabriel la revisa en la hoja y en el filtro 1.
 - La v1.10 del formato ya es `dos_firmes` por cuerda, para el prusik, así que los anfitriones son la v1.11 (el tablón), la v1.12 (la cornamusa) y la v1.13 (el barril).
 
+**Cómo se hizo el tablón (23 nov; falta que Gabriel lo vea).** Está como en la propuesta, en la rama `claude/tanda-5-propuesta-7431fd`, salvo lo que sigue.
+- **El camino del poste no se partió en dos:** bastó con que el tablón (`Tablon`, en `nudos/anfitrion.py`) tenga la misma cara que el poste. Su `rb` es el radio de un círculo del mismo perímetro que el contorno que sigue el eje de una cuerda que lo toca, y `cilindricas` da como «distancia al eje» rb más lo que el punto se aleja de ese contorno. Con eso, `_curva`, `_cruces`, `construir_paso` y `apretar_paso` sirven igual, sin cambiar: solo eligen el sólido con `sobre_superficie`. La cornamusa y el barril no podrán hacer lo mismo del todo (la cornamusa busca los cruces desde arriba y el barril tiene tres zonas), así que lo que dependa de la forma se separa cuando llegue su turno.
+- **El sólido:** empuja y mide la penetración en 3D, con los cantos redondeados (`CANTO` = 0,6) también en la punta. `Anfitrion` lleva ahora `ancho` y `grueso`, y `radio` es opcional, porque el tablón no lo tiene. Los segmentos sobre él se escriben `{tablon: …}` (`CLAVE_SOBRE`, en `nudos/spec.py`).
+- **Por detrás** se voltea el nudo apretado con el tablón, como los palos (`Tablon.voltear`). La hoja de revisión lo dibuja además en `revision`, porque ahí es donde Gabriel revisa la cara de abajo de la eslinga.
+- **El nudo de prueba** (`tests/test_tablon.py`) es el ballestrinque de `specs/` sobre un listón de 4 × 2,4, corrido 8 diámetros hacia dentro: los mismos segmentos, con `{tablon: …}`. Construye sin fallas. Con un listón de 4 × 2, el error común quedaba en el límite de separación (0,97).
+- **Los nudos hechos no cambian.** La referencia se armó desde `main` (9898f79) en un worktree aparte. Los 32 `modelo.json` son iguales byte a byte. Tres nudos (el pescador, el pescador doble y el prusik) diferían en 1 nivel en 1 a 12 píxeles, también con `--reimprimir`. Impresos otra vez desde 9898f79, salen iguales a la rama, así que la variación era de la primera corrida de referencia.
+- **Pasan 658 pruebas y 1 se salta** (`tests/test_tablon.py` es nueva).
+- **Falta:** que Gabriel vea el tablón en las imágenes y, después, la cornamusa (v1.12) y el barril (v1.13). El borrador de la eslinga de andamio puede ir en su sesión apenas el tablón esté en `main`.
+
 
 ### Fase 5: libro y primera edición
 

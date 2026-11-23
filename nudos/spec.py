@@ -40,7 +40,8 @@ _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 _MEDIDAS_ANFITRION = {"poste": ("radio", "desde", "hasta"), "cruz": ("radio", "largo"),
                       "tubo": ("radio", "largo"), "cabo": ("radio", "largo"),
                       "destorcedor": ("radio", "alto"), "estaca": ("radio", "alto"),
-                      "palos": ("cantidad", "radio", "largo")}
+                      "palos": ("cantidad", "radio", "largo"),
+                      "tablon": ("ancho", "grueso", "largo")}
 TIPOS_ANFITRION = tuple(_MEDIDAS_ANFITRION)
 # Los anfitriones que solo se usan con una plantilla, con la plantilla de ejemplo.
 _SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco",
@@ -48,9 +49,15 @@ _SOLO_CON_PLANTILLA = {"cruz": "amarre-cuadrado", "tubo": "cabeza-de-turco",
 # Cómo se nombra el anfitrión en los mensajes.
 _DEL_ANFITRION = {"poste": "del poste", "cruz": "de los palos", "tubo": "del tubo", "cabo": "del cabo",
                   "destorcedor": "del destorcedor", "estaca": "de la estaca",
-                  "palos": "de los palos"}
+                  "palos": "de los palos", "tablon": "del tablón"}
 # Cuántos palos puede tener el anfitrión «palos».
 CANTIDAD_PALOS = (2, 3)
+# Los anfitriones con segmentos sobre su superficie, [x, ángulo], y la clave con que se escriben:
+# {poste: …} o {tablon: …}. Se construyen por el camino del poste (nudos/anfitrion.py).
+CLAVE_SOBRE = {"poste": "poste", "tablon": "tablon"}
+# El ancho y el grueso mínimos del tablón, en diámetros: con menos, sus cantos redondeados
+# (nudos/anfitrion.py, CANTO) no dejan cara plana.
+GROSOR_TABLON = 2.0
 # Los anfitriones con los que todo el nudo va sobre la mesa: se construye, se voltea y se
 # aprieta como un nudo libre, y el anfitrión solo empuja la cuerda (nudos/anfitrion.py).
 EN_LA_MESA = ("destorcedor", "estaca")
@@ -131,9 +138,16 @@ class Anfitrion:
     el amarre redondo y el trípode. Están centrados en x = 0 y van a lo largo de y, simétricos
     alrededor de y = 0, con un hueco entre sus caras por donde pasan los ahorcados. Sus ejes
     quedan a la altura radio + 2: por debajo del hueco pasan dos capas de cuerda. Cada uno
-    mide `largo` (nudos/anfitrion.py, Palos)."""
+    mide `largo` (nudos/anfitrion.py, Palos).
+
+    Tablón: una tabla acostada a lo largo de x, de `ancho` (a lo largo de y) y `grueso`, con
+    los cantos redondeados, para la eslinga de andamio. La punta está en x = 0 y la tabla sigue
+    hacia x negativo hasta -`largo`. Se apoya sobre la cuerda que pasa por debajo, como el
+    poste. Sobre el tablón, un punto es [x, ángulo], como sobre el poste: el ángulo se reparte
+    parejo a lo largo del contorno, así que 0, 90, 180 y 270 caen en el medio de la cara de
+    arriba, la de delante, la de abajo y la de atrás (nudos/anfitrion.py, Tablon)."""
     tipo: str
-    radio: float
+    radio: float | None = None   # todos menos el tablón
     desde: float | None = None   # poste: extremos a lo largo de x
     hasta: float | None = None
     largo: float | None = None   # cruz y palos: largo de cada palo; tubo: su largo
@@ -142,6 +156,8 @@ class Anfitrion:
     # escribe en la especificación: lo dice la plantilla (CAPAS_DEBAJO), al cargarla.
     capas: int = 1
     cantidad: int | None = None  # palos: cuántos son, 2 o 3
+    ancho: float | None = None   # tablón: su ancho, a lo largo de y
+    grueso: float | None = None  # tablón: su grueso, de la cara de abajo a la de arriba
 
     @property
     def en_la_mesa(self) -> bool:
@@ -615,7 +631,7 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         if not isinstance(v, (int, float)) or isinstance(v, bool):
             raise af(f"falta «{clave}», en diámetros de cuerda")
         numeros[clave] = float(v)
-    if numeros["radio"] < 0.5:
+    if "radio" in numeros and numeros["radio"] < 0.5:
         raise af(f"el radio {_DEL_ANFITRION[tipo]} es de al menos medio diámetro de cuerda")
     if tipo == "poste" and numeros["desde"] >= numeros["hasta"]:
         raise af("«desde» va antes que «hasta»")
@@ -627,6 +643,14 @@ def _anfitrion(datos, falla) -> Anfitrion | None:
         raise af(f"el radio del cabo va de {RADIO_CABO[0]:g} a {RADIO_CABO[1]:g} diámetros de cordel")
     if tipo == "cabo" and numeros["largo"] <= 2 * numeros["radio"]:
         raise af("«largo» es el largo del cabo desde la punta; tiene que ser mayor que su grosor")
+    if tipo == "tablon":
+        for clave in ("ancho", "grueso"):
+            if numeros[clave] < GROSOR_TABLON:
+                raise af(f"«{clave}» {_DEL_ANFITRION[tipo]} es de al menos {GROSOR_TABLON:g} "
+                         "diámetros de cuerda")
+        if numeros["largo"] <= numeros["grueso"]:
+            raise af("«largo» es lo que se ve del tablón desde la punta; tiene que ser mayor que "
+                     "su grueso")
     if tipo in EN_LA_MESA and numeros["alto"] <= 1:
         raise af(f"«alto» es el alto {_DEL_ANFITRION[tipo]} desde la mesa; tiene que ser mayor "
                  "que 1, el grosor de la cuerda que le da la vuelta")
@@ -677,16 +701,17 @@ def _segmentos(datos, anfitrion: Anfitrion | None, falla) -> dict[str, Segmento]
             raise falla(f"segmento «{nombre}»: usa minúsculas, números y guiones")
         sobre = isinstance(puntos, dict)
         if sobre:
-            if set(puntos) != {"poste"}:
+            clave = CLAVE_SOBRE.get(anfitrion.tipo, "poste") if anfitrion is not None else "poste"
+            if set(puntos) != {clave}:
                 raise falla(f"segmento {nombre}: un segmento sobre el anfitrión se escribe "
-                            "{poste: [[x, ángulo], ...]}")
+                            f"{{{clave}: [[x, ángulo], ...]}}")
             if anfitrion is None:
                 raise falla(f"segmento {nombre}: va sobre el poste y la especificación no "
                             "declara «anfitrion»")
             if anfitrion.en_la_mesa:
                 raise falla(f"segmento {nombre}: va sobre el poste, y con el anfitrión "
                             f"{anfitrion.tipo} todo el nudo va sobre la mesa, como [x, y]")
-            puntos = puntos["poste"]
+            puntos = puntos[clave]
         try:
             arr = np.asarray(puntos, dtype=float)
         except (TypeError, ValueError):

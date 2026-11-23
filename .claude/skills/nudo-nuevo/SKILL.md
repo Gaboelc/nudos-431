@@ -42,6 +42,7 @@ Uso: `/nudo-nuevo <slug>`. El slug es el del nudo en `config/edicion-1.yaml`, qu
 | Alrededor de un palo o una barra | libre con `anfitrion: {tipo: poste}` | `ballestrinque` |
 | Atado al ojo de un destorcedor, con una gaza que le da la vuelta sobre la mesa | libre con `anfitrion: {tipo: destorcedor}` | `nudo-aguja` |
 | Atado a una estaca clavada en el suelo, con una gaza que le da la vuelta a ras del suelo | libre con `anfitrion: {tipo: estaca}` | `tensor-ajustable` |
+| Alrededor de una tabla, como la eslinga de andamio | libre con `anfitrion: {tipo: tablon}` y segmentos `{tablon: [[x, ángulo], ...]}`, como sobre el poste | `ballestrinque` |
 | Amarre cuadrado: vueltas y ahorcados regulares sobre dos palos | `plantilla: {tipo: amarre-cuadrado}` | `amarre-cuadrado` |
 | Amarre diagonal: vuelta de braza, vueltas en las dos diagonales y ahorcados sobre dos palos | `plantilla: {tipo: amarre-diagonal}` | `amarre-cuadrado` |
 | Amarre redondo o trípode: vueltas y ahorcados sobre dos o tres palos uno junto al otro | `plantilla: {tipo: amarre-redondo}` o `{tipo: amarre-tripode}`, con `anfitrion: {tipo: palos}` | `amarre-cuadrado` |

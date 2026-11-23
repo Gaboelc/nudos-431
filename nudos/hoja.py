@@ -56,7 +56,7 @@ def hoja(datos: dict, vista: str = "arriba", anfitrion: dict | None = None,
     estos pasos (_altura). Quien dibuja los pasos uno por uno la pasa, para que el cuadro
     no salte de un paso a otro."""
     x0, x1, y0, y1 = _encuadre(datos)
-    solido = _parado(anfitrion) or _palos(anfitrion, x0, x1, y0, y1)
+    solido = _parado(anfitrion) or _palos(anfitrion, x0, x1, y0, y1) or _tablon(anfitrion, x0, x1)
     ppd = ANCHO / (x1 - x0)
     alto = int(round((y1 - y0) * ppd))
     angulo = "arriba" if vista == "arriba" else float(vista)
@@ -178,6 +178,47 @@ def _palos(anfitrion: dict | None, x0: float, x1: float, y0: float,
     if not puntos:
         return None
     return np.vstack(puntos), MADERA, RADIO_PALO
+
+
+def _tablon(anfitrion: dict | None, x0: float, x1: float) -> tuple[np.ndarray, np.ndarray, float] | None:
+    """Puntos sobre la superficie del tablón, color madera, para dibujarlo con esferas de
+    RADIO_SUPERFICIE: el contorno redondeado a lo largo de x, cortado en el encuadre más
+    MARGEN_PALO, y la tapa de cada extremo que cae dentro. None si el nudo no lo tiene."""
+    if not anfitrion or anfitrion.get("tipo") != "tablon":
+        return None
+    rs, paso = RADIO_SUPERFICIE, 0.2
+    a, b = max(anfitrion["desde"], x0 - MARGEN_PALO), min(anfitrion["hasta"], x1 + MARGEN_PALO)
+    if b <= a:
+        return None
+    ay, az = anfitrion["ancho"] / 2 - anfitrion["canto"], anfitrion["grueso"] / 2 - anfitrion["canto"]
+    e = anfitrion["canto"] - rs
+    y0, z0 = anfitrion["y"], anfitrion["z"]
+    # El contorno, a `e` del núcleo: las cuatro caras y los cuatro cantos.
+    corte = []
+    for (cy, cz), (ny, nz), (ty, tz), largo in (((-ay, -az), (-1, 0), (0, 1), 2 * az),
+                                                ((-ay, az), (0, 1), (1, 0), 2 * ay),
+                                                ((ay, az), (1, 0), (0, -1), 2 * az),
+                                                ((ay, -az), (0, -1), (-1, 0), 2 * ay)):
+        t = np.arange(0, largo + 1e-9, paso)
+        corte.append(np.column_stack([cy + ny * e + ty * t, cz + nz * e + tz * t]))
+    for cy, cz, f0 in ((-ay, az, 0.5), (ay, az, 0.0), (ay, -az, 1.5), (-ay, -az, 1.0)):
+        f = math.pi * np.linspace(f0, f0 + 0.5, max(3, int(math.pi / 2 * e / paso) + 1))
+        corte.append(np.column_stack([cy + e * np.cos(f), cz + e * np.sin(f)]))
+    corte = np.vstack(corte)
+    xs = np.arange(a + rs, b - rs + 1e-9, paso)
+    puntos = [np.column_stack([np.repeat(xs, len(corte)), y0 + np.tile(corte[:, 0], len(xs)),
+                               z0 + np.tile(corte[:, 1], len(xs))])]
+    # Las tapas: una rejilla dentro del contorno.
+    gy, gz = np.meshgrid(np.arange(-ay - e, ay + e + 1e-9, paso), np.arange(-az - e, az + e + 1e-9, paso))
+    gy, gz = gy.ravel(), gz.ravel()
+    dentro = np.hypot(np.maximum(np.abs(gy) - ay, 0), np.maximum(np.abs(gz) - az, 0)) <= e
+    for extremo, hay in ((anfitrion["desde"], anfitrion["desde"] >= x0 - MARGEN_PALO),
+                         (anfitrion["hasta"], anfitrion["hasta"] <= x1 + MARGEN_PALO)):
+        if hay:
+            k = int(dentro.sum())
+            xe = extremo + rs if extremo == anfitrion["desde"] else extremo - rs
+            puntos.append(np.column_stack([np.full(k, xe), y0 + gy[dentro], z0 + gz[dentro]]))
+    return np.vstack(puntos), MADERA, RADIO_SUPERFICIE
 
 
 def _palo(eje: str, a: float, b: float, lado: float, z: float, radio: float,

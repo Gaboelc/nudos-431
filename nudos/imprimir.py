@@ -30,7 +30,7 @@ from pathlib import Path
 from PIL import Image, ImageOps
 
 from . import RAIZ
-from .anfitrion import Cabo, Cruz, Palos, Tubo
+from .anfitrion import Cabo, Cruz, Palos, Tablon, Tubo
 from .construir import Modelo
 from .exportar import ESCENA, SITIO, cuerda_chicote, cuerda_que_se_mueve, datos_escena
 from .spec import Encuadre
@@ -149,11 +149,10 @@ def imagenes(modelo: Modelo) -> list[Imagen]:
 
 def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> list[Imagen]:
     """Las dos vistas del nudo terminado: `final` por delante y `reverso` por detrás. Sobre un
-    poste no hay reverso (se mira `final` desde el otro lado), sobre la cruz o los palos
-    paralelos se voltea `final` con los palos y sobre el tubo o el cabo se gira `final` media
-    vuelta con él. Con el
-    destorcedor o la estaca se mira como sin anfitrión: el reverso es el nudo volteado con él. Se llaman
-    <prefijo>-frente y <prefijo>-reverso."""
+    poste no hay reverso (se mira `final` desde el otro lado), sobre la cruz, los palos
+    paralelos o el tablón se voltea `final` con ellos y sobre el tubo o el cabo se gira `final`
+    media vuelta con él. Con el destorcedor o la estaca se mira como sin anfitrión: el reverso es
+    el nudo volteado con él. Se llaman <prefijo>-frente y <prefijo>-reverso."""
     s = modelo.spec
     todos = nombres(modelo)
     enc = s.terminado.encuadre or s.encuadre
@@ -183,10 +182,11 @@ def terminado(modelo: Modelo, final, reverso, prefijo: str = "terminado") -> lis
                        VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO),
                 Imagen(atras, "Terminado, por detrás", datos_escena(modelo, espejo(enc), [volteado]),
                        1, VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO)]
-    if s.anfitrion is not None and s.anfitrion.tipo in ("cruz", "palos"):
+    if s.anfitrion is not None and s.anfitrion.tipo in ("cruz", "palos", "tablon"):
         # El amarre se voltea entero, palos y cuerda, como un marco sobre la mesa, y por
-        # delante y por detrás se mira desde donde se ata.
-        solido = Cruz(s.anfitrion) if s.anfitrion.tipo == "cruz" else Palos(s.anfitrion)
+        # delante y por detrás se mira desde donde se ata. La eslinga se voltea igual con su
+        # tablón, para que se vea la cara de abajo.
+        solido = {"cruz": Cruz, "palos": Palos, "tablon": Tablon}[s.anfitrion.tipo](s.anfitrion)
         volteado, cruz = solido.voltear(final)
         return [Imagen(frente, "Terminado, por delante", datos_escena(modelo, enc, [final]), 1,
                        VISTA_PASOS, False, todos, reservado_mm=ESQUINA_SELLO),
