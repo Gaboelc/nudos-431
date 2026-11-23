@@ -1,0 +1,157 @@
+# Eslinga de andamio sobre un tablón. Borrador de la skill nudo-nuevo.
+# Unidades: diámetros de cuerda. x a la derecha, y hacia el fondo de la mesa, z hacia arriba.
+# El tablón va a lo largo de x, con la punta en x = 0 y el resto hacia x negativo. Sobre el
+# tablón, los puntos son [x, ángulo]: 0° arriba, 90° hacia quien ata, 180° abajo y 270° atrás.
+# Las vueltas cambian de x solo por debajo del tablón; por arriba van derechas, como en la fuente.
+slug: eslinga-de-andamio
+nombre: Eslinga de andamio
+familia: De sujeción
+abok: 1120
+estado: borrador
+
+usos: >-
+  Cuelga una tabla horizontal, como una repisa, o sube materiales sobre ella. Se ata una
+  eslinga en cada punta y se deshace fácil.
+materiales: >-
+  Dos cuerdas de 2 a 3 m, una por punta, y una tabla de unos 10 cm de ancho.
+verificacion:
+  - Por arriba ves solo dos pasadas, juntas y paralelas; ninguna cuerda pasa por la punta.
+  - El seno rodea el tablón junto a ellas y las abraza por delante y por detrás.
+  - Al tirar de los dos extremos hacia arriba, el tablón queda horizontal y no gira.
+precauciones:
+  - Antes de soltar el tablón, aprieta la eslinga tirando de los dos extremos a la vez.
+alternativas:
+  - nudo: Ballestrinque
+    cuando: Cuando solo quieres atar la cuerda a un palo o a una baranda.
+  - nudo: Eslinga de barril
+    cuando: Cuando quieres subir un barril o una cubeta, no una tabla.
+seguridad: >-
+  En las actividades del grupo no sostiene personas: no la uses como andamio ni como
+  columpio. Practícala sin carga o con un objeto. Los andamios colgantes los arman
+  personas capacitadas, con equipo certificado.
+
+anfitrion: {tipo: tablon, ancho: 12, grueso: 3, largo: 30}
+
+# Zona que se muestra: la punta del tablón y unos 14 diámetros hacia dentro.
+encuadre:
+  x: [-16.0, 8.0]
+  y: [-12.0, 12.0]
+
+segmentos:
+  # El firme llega por delante, sobre la mesa.
+  firme: [[-11, -16], [-11, -12.5], [-11, -9.5]]
+  # Paso 1: tres pasadas por arriba, en x = -11, -8 y -5; por debajo, la cuerda avanza en
+  # diagonal hacia la punta.
+  vuelta-1:
+    tablon: [[-11, 100], [-11, 80], [-11, 60], [-11, 40], [-11, 20], [-11, 0], [-11, -20],
+             [-11, -40], [-11, -60], [-11, -80], [-11, -100], [-11, -120]]
+  abajo-1:
+    tablon: [[-10.5, -140], [-10, -160], [-9.5, -180], [-9, -200], [-8.5, -220]]
+  # La 2, partida en tres para el seno de los pasos 3 y 4.
+  sube-2:
+    tablon: [[-8, -240], [-8, -260], [-8, -280], [-8, -300]]
+  arriba-2:
+    tablon: [[-8, -320], [-8, -340], [-8, -360], [-8, -380], [-8, -400], [-8, -420]]
+  baja-2:
+    tablon: [[-8, -440], [-8, -460], [-8, -480]]
+  abajo-2:
+    tablon: [[-7.5, -500], [-7, -520], [-6.5, -540], [-6, -560], [-5.5, -580]]
+  vuelta-3:
+    tablon: [[-5, -600], [-5, -620], [-5, -640], [-5, -660], [-5, -680], [-5, -700],
+             [-5, -720], [-5, -740], [-5, -760], [-5, -780], [-5, -800], [-5, -820]]
+  # El chicote cae por detrás, sobre la mesa.
+  chicote: [[-5, 9.5], [-5, 12.5], [-5, 16]]
+
+  # Paso 2: la 1 pasa por encima de la 2 y queda entre la 2 y la 3, en x = -6.5, con el
+  # firme, que sube derecho junto a ella, como en la foto. Cruza a la 2 por la parte baja de
+  # la cara de atrás (cruce 1), con la 1 por encima.
+  firme-b: [[-6.5, -16], [-6.5, -12.5], [-6.5, -9.5]]
+  vuelta-1b:
+    tablon: [[-6.5, 100], [-6.5, 80], [-6.5, 60], [-6.5, 40], [-6.5, 20],
+             [-6.5, 0], [-6.5, -20], [-6.5, -40], [-6.5, -55], [-6.5, -70], [-6.6, -80],
+             [-7.2, -92], [-8, -102], [-8.8, -112], [-9.3, -122], [-9.5, -132]]
+  abajo-1b:
+    tablon: [[-9.3, -150], [-9.05, -170], [-8.8, -190], [-8.5, -210], [-8.2, -228]]
+
+  # Paso 3: el seno de la 2 sale hacia la punta por encima de la 1 y la 3, en dos ramas, y
+  # queda sobre la mesa, más allá de la punta.
+  rama-a:
+    tablon: [[-8, -310], [-7.9, -320], [-7.5, -328], [-6.8, -333], [-6, -336], [-4.5, -338],
+             [-3, -339], [-1.5, -340]]
+  seno-mesa: [[2.5, -2.0], [4, -2.2], [5.5, -1.6], [6.2, 0], [5.5, 1.6], [4, 2.2], [2.5, 2.0]]
+  rama-b:
+    tablon: [[-1.5, -380], [-3, -381], [-4.5, -382], [-6, -384], [-6.8, -387], [-7.5, -392],
+             [-7.9, -400], [-8, -410], [-8, -420]]
+
+  # Paso 4: el seno pasa por encima de la punta y se desliza por debajo del tablón hasta las
+  # vueltas. Queda como un anillo alrededor del tablón, junto a la 3: sube por delante, corre
+  # hacia la punta por la cara de delante, por encima de la 1 y la 3 (cruces 6 y 7), pasa por
+  # debajo, sube por detrás y vuelve por la cara de atrás, por encima de la 3 y la 1 (cruces 8
+  # y 9). Abraza la 1 y la 3 por los costados, como en la foto del nudo apretado. Debajo del
+  # tablón no cruza nada: ahí cabe una sola capa de cuerda. Los ángulos siguen sin saltos
+  # desde abajo-1b, así que la 3 lleva aquí otros números que en los pasos 1 a 3.
+  sube-2d:
+    tablon: [[-8.3, -240], [-8.5, -252], [-8.4, -264], [-7.9, -272], [-7.2, -275]]
+  anillo:
+    tablon: [[-6.5, -275], [-5.75, -275], [-5, -275], [-4.3, -274], [-3.7, -268],
+             [-3.5, -258], [-3.5, -240], [-3.5, -220], [-3.5, -200], [-3.5, -180],
+             [-3.5, -160], [-3.5, -140], [-3.5, -120], [-3.5, -100], [-3.6, -86], [-4.1, -76],
+             [-4.8, -72], [-5.5, -72], [-6.5, -72], [-7.6, -73], [-8.3, -79], [-8.5, -90]]
+  baja-2d:
+    tablon: [[-8.5, -105], [-8.4, -120]]
+  abajo-2d:
+    tablon: [[-8, -140], [-7.4, -160], [-6.8, -180], [-6.2, -200], [-5.6, -220]]
+  vuelta-3d:
+    tablon: [[-5, -240], [-5, -260], [-5, -280], [-5, -300], [-5, -320], [-5, -340],
+             [-5, -360], [-5, -380], [-5, -400], [-5, -420], [-5, -440], [-5, -460]]
+
+pasos:
+  - titulo: Da dos vueltas y media
+    texto: >-
+      Deja el firme por delante y un chicote de un metro. Da vueltas al tablón cerca de la
+      punta hasta que la cuerda pase tres veces por arriba: la 1, la 2 y la 3, hacia la
+      punta. El chicote cae por detrás.
+    trazado: [firme, vuelta-1, abajo-1, sube-2, arriba-2, baja-2, abajo-2, vuelta-3, chicote]
+    secuencia: ""
+    resaltar: {desde: "vuelta-1[0]", hasta: "vuelta-3[-1]"}
+
+  - titulo: Pasa la 1 por encima de la 2
+    texto: >-
+      Lleva la 1 por encima de la 2 y déjala entre la 2 y la 3.
+    trazado: [firme-b, vuelta-1b, abajo-1b, sube-2, arriba-2, baja-2, abajo-2, vuelta-3, chicote]
+    secuencia: "1O 1U"
+    resaltar: {desde: "vuelta-1b[0]", hasta: "vuelta-1b[-1]"}
+
+  - titulo: Pasa la 2 por encima de la 1 y la 3
+    texto: >-
+      Tira de la 2 hacia la punta formando un seno, por encima de la 1 y la 3, y déjalo
+      más allá de la punta.
+    trazado: [firme-b, vuelta-1b, abajo-1b, sube-2, rama-a, seno-mesa, rama-b, baja-2, abajo-2,
+              vuelta-3, chicote]
+    secuencia: "2U 5U 1O 2O 3O 4O 5O 1U 3U 4U"
+    resaltar: {desde: "rama-a[0]", hasta: "rama-b[-1]"}
+
+  - titulo: Desliza el seno por debajo
+    texto: >-
+      Pasa el seno por la punta y deslízalo bajo el tablón hasta que abrace la 1 y la 3.
+      Tira de los extremos y únelos con un as de guía (mira su ficha).
+    trazado: [firme-b, vuelta-1b, abajo-1b, sube-2d, anillo, baja-2d, abajo-2d, vuelta-3d, chicote]
+    secuencia: "6U 9U 1O 6O 7O 8O 9O 1U 7U 8U"
+    resaltar: {desde: "anillo[0]", hasta: "anillo[-1]"}
+
+# El error más común: el seno pasa por debajo de la 1 y la 3, no por encima.
+error:
+  paso: 3
+  invierte: [2, 3, 4, 5]
+  titulo: El seno por debajo
+  texto: >-
+    El seno pasó por debajo de la 1 y la 3: no las abraza y el tablón se voltea.
+    Pásalo por encima de las dos.
+  otros:
+    - titulo: Las vueltas lejos de la punta
+      texto: >-
+        Si quedan separadas o lejos de la punta, el tablón se inclina. Júntalas a menos de
+        un palmo de la punta.
+    - titulo: Una sola eslinga
+      texto: >-
+        El tablón se voltea. Ata una en cada punta, a la misma altura.
