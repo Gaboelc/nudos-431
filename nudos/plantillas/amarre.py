@@ -112,6 +112,11 @@ RADIO_ESQUINA = 1.3     # radio con que se redondean las esquinas entre dos rect
 SEPARA_ENCIMA = 1.6     # en el error, entre dos ahorcados que pasan por encima del palo de arriba
 FUERA = 1.0             # en el error, cuánto por fuera del palo de arriba empieza a subirlo un ahorcado
 ABRE_FUERA = 0.5        # en el error, cuánto más lejos que el anterior empieza a subirlo cada ahorcado
+APILA = 1.1             # apilados, cuánto más alto que el anterior va cada ahorcado sobre el palo de abajo
+APILA_ARRIBA = 0.7      # apilados, lo mismo bajo el palo de arriba, donde además van CORRE más afuera
+BAJO_APILADOS = 0.05    # apilados, cuánto por debajo del palo de arriba pasa el último
+CORRE = 0.9             # apilados, cuánto más afuera que el anterior pasa cada uno por los palos
+SUBE_DESDE, SUBE_HASTA = -75.0, -20.0   # apilados, dónde sube cada uno al siguiente (grados)
 R_CUERDA = 0.5          # radio de la cuerda
 # Hacia dónde sale el resto de la cuerda en cada hito, sobre la mesa (antes de reflejar).
 SALIDAS = {"inicio-1": (-0.6, -0.8), "inicio": (0.6, -0.8), "vuelta": (1.0, 0.0),
@@ -321,7 +326,7 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
     F = firme.puntos()
 
     # --- Alturas de los ahorcados ---
-    alto = alturas_de_ahorcados(m, por_fuera, cruz)
+    alto = alturas_de_ahorcados(m, por_fuera, cruz, apilados=True)
 
     # Delante a la derecha, las esquinas que suben a la vuelta siguiente pasan por fuera del
     # firme más arriba de los ahorcados. Ahí el firme ya va en la zona del palo de arriba:
@@ -331,9 +336,18 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
     z_firme = min(float(firme.P1[2]) - 0.5, *[
         float(e.puntos()[ang(e.puntos()) > ang_firme - math.radians(4), 2].min()) - 0.4
         for (_, q), e in esq.items() if q == 4])
+    # Apilados, el primero cruza el firme más abajo: ahí el firme ya va en la cintura desde
+    # un poco más arriba del eje del palo de abajo, aunque el hito del inicio siga en z_baja.
+    # Si la banda no cabe entre eso y z_firme, van como antes.
+    junto_al_firme = [alto(j, ang_firme) for j in range(1, m + 1)]
+    if alto.apilados and (max(junto_al_firme) + 0.5 > z_firme or min(junto_al_firme) - 0.5 < zb + 0.5):
+        alto = alturas_de_ahorcados(m, por_fuera, cruz)
+    z_cintura = zb + 0.5 if alto.apilados else z_baja
     if max(alto(j, ang_firme) for j in range(1, m + 1)) + 0.5 > z_firme:
         raise ValueError("las esquinas de delante a la derecha pasan por fuera del firme a la "
                          "altura de los ahorcados")
+    if min(alto(j, ang_firme) for j in range(1, m + 1)) - 0.5 < z_cintura:
+        raise ValueError("los ahorcados pasan junto al firme por debajo de la cintura")
 
     t = Trazo()
 
@@ -357,8 +371,10 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
     t.marcar("inicio-1")
     t.puntos(pts[hito1 - 1:], ABAJO)
     i1 = int(np.argmax(F[:, 2] >= z_baja))
+    i0 = min(i1, int(np.argmax(F[:, 2] >= z_cintura)))
     i2 = int(np.argmax(F[:, 2] >= z_firme))
-    t.puntos(F[:i1 + 1], ABAJO)
+    t.puntos(F[:i0 + 1], ABAJO)
+    t.puntos(F[i0:i1 + 1], CINTURA)
     t.marcar("inicio")
     t.puntos(F[i1:i2 + 1], CINTURA)
     t.puntos(F[i2:], ARRIBA)
@@ -427,7 +443,7 @@ def cuerda(p: AmarreCuadrado, cruz, variante: str | None = None) -> Cuerda:
     return Cuerda(X, Z, hitos, restos, _secuencias(p, donde, bajan=por_fuera), alias)
 
 
-def alturas_de_ahorcados(m: int, por_fuera: bool, cruz):
+def alturas_de_ahorcados(m: int, por_fuera: bool, cruz, apilados: bool = False):
     """La altura del ahorcado j en el ángulo ang alrededor del cruce, alto(j, ang).
 
     Cada ahorcado pasa bajo el palo de arriba cerca de su cara de abajo y sobre el de abajo
@@ -435,13 +451,33 @@ def alturas_de_ahorcados(m: int, por_fuera: bool, cruz):
     que el anterior, así que en el mapa de la cintura no se cruzan. En el error (`por_fuera`)
     van al revés, cada uno más bajo: así cada ahorcado pasa por debajo de donde los anteriores
     suben al palo de arriba, y no por fuera de ellos. Con j = 0, un poco más alto que el
-    primero."""
+    primero.
+
+    Con `apilados` (el amarre cuadrado bien hecho), cada ahorcado va más alto que el anterior,
+    montado sobre él: juntos forman una sola banda pegada a las esquinas. Sobre el palo de
+    abajo, el primero va pegado al palo y los demás encima, APILA más arriba cada uno; bajo el
+    de arriba, el último va pegado al palo y los anteriores escalonados debajo. j puede tener decimales: en el último
+    cuadrante, cada ahorcado sube a la altura del siguiente (ver ahorcados_y_cierre)."""
     rb, zb, zt = cruz.rb, cruz.zb, cruz.zt
+
+    def apilado(j, ang):
+        # Bajo el palo de arriba, el último pasa pegado a él y los anteriores escalonados, un
+        # poco más abajo y más afuera cada uno: si fueran uno bajo otro, el primero empezaría
+        # por debajo de donde termina la última vuelta, y la cuerda se arrugaría ahí.
+        bajo = zt - rb - BAJO_APILADOS - APILA_ARRIBA * (m - j)
+        alto_ = zb + rb - 0.4 + APILA * (j - 1)
+        return bajo + (alto_ - bajo) * math.sin(ang) ** 2
+
+    # Si bajo el palo de arriba no caben (el primero tocaría la mesa), van como antes.
+    if apilados and not por_fuera and apilado(1, 0.0) >= 1.0:
+        apilado.apilados = True
+        return apilado
 
     def alto(j, ang):
         u = (m - j if por_fuera else j - 1) / (m - 1)
         bajo, alto_ = zt - rb - 0.9 + 0.8 * u, zb + rb - 0.4 + 0.8 * u
         return bajo + (alto_ - bajo) * math.sin(ang) ** 2
+    alto.apilados = False
     return alto
 
 
@@ -461,6 +497,10 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
     from .trazo import ABAJO, ARRIBA, CINTURA, MESA, Plano, _densa
     rb, zt = pal.rb, pal.zt
     ang = lambda P: np.arctan2(P[..., 1], P[..., 0])
+    # Apilados, cada ahorcado va montado sobre el anterior (alturas_de_ahorcados) y, en el
+    # último cuadrante, sube a la altura del siguiente. Ahí j es una función del ángulo.
+    apilados = getattr(alto, "apilados", False) and not por_fuera
+    nivel = lambda j, a: j(a) if callable(j) else j
 
     # --- Ahorcados: vueltas tensas entre los palos, por fuera de todo lo que ya está ---
     def cerca(j, cuadrante, extra=()):
@@ -474,7 +514,7 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
             P = np.vstack([P, extra])
         sx, sy = CUADRANTES[cuadrante]
         P = P[(sx * P[:, 0] > 0) & (sy * P[:, 1] > 0)]
-        dz = P[:, 2] - np.array([alto(j, x) for x in ang(P)])
+        dz = P[:, 2] - np.array([alto(nivel(j, x), x) for x in ang(P)])
         lejos = np.abs(dz) < LIBRE
         return P[lejos, :2], np.sqrt(LIBRE ** 2 - dz[lejos] ** 2)
 
@@ -496,12 +536,33 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
         return out
 
     planos = extremos(1)
+    if apilados:
+        # Cada uno pasa por los palos CORRE más afuera que el anterior, o más si a su altura
+        # las esquinas llegan más lejos.
+        de_cada = [planos]
+        for j in range(2, m + 1):
+            otro = extremos(j)
+            de_cada.append({k: max(otro[k], de_cada[-1][k] + CORRE) for k in planos})
     if por_fuera:
         # Por encima del palo de arriba, los ahorcados pasan por fuera de las vueltas.
         for lado in ("der", "izq"):
             planos[lado] = max(planos[lado], encima[lado] + SEPARA_ENCIMA)
     x_cierre = None
-    pasa_ab = lambda z: pal.ancho_abajo(z) + 0.5   # lo que se aparta del eje del palo al pasar
+
+    def pasa_ab(z, r=rb):
+        """Lo que se aparta del eje del palo de abajo al pasar sobre él; apilado, sobre los
+        anteriores, como si el palo tuviera radio r."""
+        return math.sqrt(max(0.0, r ** 2 - (z - pal.zb) ** 2)) + 0.5
+
+    def sobre_ab(z, Y, signo, j, r):
+        """El x donde el ahorcado j empieza o termina de pasar sobre el palo de abajo, en el
+        plano y = Y, por el lado `signo`. Apilado, con la altura que tiene ahí y no la de
+        encima del palo: lejos del palo baja, y tiene que quedar por fuera del radio r."""
+        x = pasa_ab(z, r)
+        if apilados:
+            for _ in range(30):
+                x = pasa_ab(alto(j, math.atan2(Y, signo * x)), r)
+        return signo * x
     if por_fuera:
         # Suben al palo de arriba y bajan de él en diagonal, desde un poco por delante o por
         # detrás de su cara; cada ahorcado, un poco más lejos que el anterior, para no tener
@@ -511,7 +572,8 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
         pasa_ar = lambda z, j: pal.ancho_arriba(z) + 0.5
 
     def punto(x, y, j):
-        return np.array([x, y, alto(j, math.atan2(y, x))])
+        a = math.atan2(y, x)
+        return np.array([x, y, alto(nivel(j, a), a)])
 
     def tramo(S, E, j, cuadrante, extra=(), entera=()):
         """El ahorcado j en un cuadrante, de S a E, tenso por fuera de lo que ya está. Las
@@ -520,7 +582,8 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
         C, R = cerca(j, cuadrante, extra)
         for Q in (S, E):
             if len(C) and (np.linalg.norm(C - Q[:2], axis=1) < R - 1e-6).any():
-                raise ValueError(f"el ahorcado {j} no cabe junto a los palos en el cuadrante {cuadrante}")
+                raise ValueError(f"el ahorcado {nivel(j, 0.0):.0f} no cabe junto a los palos en el "
+                                 f"cuadrante {cuadrante}")
         # Cada recta se parte en pedazos cortos, para que siga la altura de su ahorcado.
         cadena = _cadena(S[:2], E[:2], C, R)
         ultima = len(cadena) - 2
@@ -563,16 +626,20 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
         o, o_ar = (j - 1) * PASO_VUELTAS, (j - 1) * paso_ar
         Xr, Xl = planos["der"] + o_ar, planos["izq"] + o_ar
         Yt, Yd = planos["det"] + o, planos["del"] + o
+        r_ab = rb   # el radio con que pasa sobre el palo de abajo
+        if apilados:
+            Xr, Xl, Yt, Yd = (de_cada[j - 1][k] for k in ("der", "izq", "det", "del"))
+            r_ab = rb + APILA * (j - 1)   # sobre los anteriores
         # Bajo el palo de arriba (en el error, por encima), de delante a atrás, y por fuera de las
         # esquinas de detrás a la derecha.
         z = alto(j, 0.0)
         S = punto(Xr, pasa_ar(z, j), j)
         por_el_palo_de_arriba(Xr, S, +1)
         z = alto(j, math.pi / 2)
-        tramo(S, punto(pasa_ab(z), Yt, j), j, 1, entera=sale)
+        tramo(S, punto(sobre_ab(z, Yt, 1, j, r_ab), Yt, j), j, 1, entera=sale)
         # Sobre el palo de abajo, de derecha a izquierda, y detrás a la izquierda.
-        S = punto(-pasa_ab(z), Yt, j)
-        t.rodear(pal.centro_ab, Plano(1, Yt), S, +1, ABAJO, ABAJO, rb)
+        S = punto(sobre_ab(z, Yt, -1, j, r_ab), Yt, j)
+        t.rodear(pal.centro_ab, Plano(1, Yt), S, +1, ABAJO, ABAJO, r_ab)
         z = alto(j, math.pi)
         tramo(S, punto(-Xl, pasa_ar(z, j), j), j, 2, entera=llega)
         # Bajo el palo de arriba (en el error, por encima), de atrás a delante, y delante a la
@@ -580,14 +647,34 @@ def ahorcados_y_cierre(t, pal: _Palos, m: int, por_fuera: bool, alto, esquinas, 
         S = punto(-Xl, -pasa_ar(z, j), j)
         por_el_palo_de_arriba(-Xl, S, -1)
         z = alto(j, -math.pi / 2)
-        tramo(S, punto(-pasa_ab(z), -Yd, j), j, 3, entera=sale)
+        tramo(S, punto(sobre_ab(z, -Yd, -1, j, r_ab), -Yd, j), j, 3, entera=sale)
         # Sobre el palo de abajo, de izquierda a derecha, y delante a la derecha, hasta donde
         # pasa bajo el palo de arriba el ahorcado siguiente. El último lleva al firme del
         # ballestrinque de cierre, por fuera de su primera vuelta.
-        S = punto(pasa_ab(z), -Yd, j)
-        t.rodear(pal.centro_ab, Plano(1, -Yd), S, -1, ABAJO, ABAJO, rb)
+        S = punto(sobre_ab(z, -Yd, 1, j, r_ab), -Yd, j)
+        t.rodear(pal.centro_ab, Plano(1, -Yd), S, -1, ABAJO, ABAJO, r_ab)
         z = alto(j, 0.0)
         extra = ()
+        if apilados:
+            # Sube suave a la altura del siguiente, que pasa bajo el palo de arriba más afuera.
+            # El último sube igual, hacia el ballestrinque de cierre: si se quedara a su altura,
+            # cruzaría ahí al anterior, que ya subió a ella.
+            d0, d1 = math.radians(SUBE_DESDE), math.radians(SUBE_HASTA)
+
+            def jj(a, j=j):
+                u = min(1.0, max(0.0, (a - d0) / (d1 - d0)))
+                return j + u * u * (3 - 2 * u)
+            if j < m:
+                x_sig = de_cada[j]["der"]
+            else:
+                x_sig = Xr + PASO_VUELTAS + CARRIL
+                muro = np.linspace(-rb, 0.0, 12)
+                extra = np.column_stack([np.full(12, x_sig - CARRIL), muro,
+                                         [alto(jj(a), a) for a in np.arctan2(muro, x_sig)]])
+            tramo(S, punto(x_sig, -pasa_ar(alto(j + 1, 0.0), j + 1), j + 1), jj, 4, extra)
+            t.marcar(f"ahorcado-{j}")
+            x_cierre = x_sig
+            continue
         if j < m:
             x_sig = Xr + paso_ar
         else:

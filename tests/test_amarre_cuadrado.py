@@ -259,6 +259,25 @@ def test_la_secuencia_del_metodo(vueltas, ahorcados):
     assert len(c.secuencias["ahorcado-1"]) // 2 == 4 * vueltas + 2
 
 
+@pytest.mark.parametrize("ahorcados, apilados", [(2, True), (3, True), (6, True), (8, False)])
+def test_los_ahorcados_van_apilados_si_caben(ahorcados, apilados):
+    """Cada ahorcado va montado sobre el anterior, en una sola banda: APILA más alto sobre el
+    palo de abajo y APILA_ARRIBA bajo el de arriba, donde además van escalonados. Si bajo el
+    palo de arriba no caben (el primero tocaría la mesa), van como antes; también si no caben
+    junto al firme, pero eso lo decide cuerda(). El error y el amarre diagonal no los apilan."""
+    from nudos.plantillas.amarre import APILA, APILA_ARRIBA, alturas_de_ahorcados
+    c = Cruz(CRUZ)
+    alto = alturas_de_ahorcados(ahorcados, False, c, apilados=True)
+    assert alto.apilados == apilados
+    if apilados:
+        assert alto(2, np.pi / 2) - alto(1, np.pi / 2) == pytest.approx(APILA)
+        assert alto(2, 0.0) - alto(1, 0.0) == pytest.approx(APILA_ARRIBA)
+        for a in np.linspace(-np.pi, np.pi, 13):
+            assert alto(2, a) - alto(1, a) >= APILA_ARRIBA - 1e-9   # no se cruzan en la cintura
+    assert not alturas_de_ahorcados(ahorcados, True, c, apilados=True).apilados
+    assert not alturas_de_ahorcados(ahorcados, False, c).apilados
+
+
 def test_los_hitos_avanzan_por_la_misma_cuerda():
     c = la_cuerda()
     orden = list(AmarreCuadrado(3, 3, Extremo("abajo", "delante"), Extremo("arriba", "derecha")).hitos())

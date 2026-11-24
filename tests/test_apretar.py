@@ -181,7 +181,9 @@ HUELLAS = {
     "modelo_as_de_guia": "9b81be60982f4a5dee00f701a02b21ef4e024c54479c957ef58ba84fb1db4f36",
     "modelo_ballestrinque": "d062f96093e0247a4ef140bb9eb9438330700a8756dc6fc75c1f310e72664fc3",
     "modelo_vuelta_de_escota": "218211b0debab83824a633bb9e5fec051685247b493126bd7c96d854ea1731c3",
-    "modelo_amarre_cuadrado": "502240236d423bdbe557429b259d5d224e1c23d277fdf8307117e4d55b7247d0",
+    # El amarre cuadrado cambió a propósito el 24 de noviembre de 2026: los ahorcados apilados.
+    # Pide el filtro 1 de los pasos 4 a 7 otra vez.
+    "modelo_amarre_cuadrado": "e41b8f9779c18fbe98c7b069778684d8e71ac7398e71132133841ce9983458db",
 }
 
 
