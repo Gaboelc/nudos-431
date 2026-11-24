@@ -7,7 +7,7 @@ name = "nudos"
 version = "0.1.0"
 description = "Libro de nudos del Grupo 431: de la especificación de cada nudo a sus modelos"
 requires-python = ">=3.11"
-dependencies = ["numpy>=1.26", "scipy>=1.11", "pyyaml>=6", "pillow>=10", "segno>=1.5"]
+dependencies = ["numpy>=1.26", "scipy>=1.11", "pyyaml>=6", "pillow>=10", "segno>=1.5", "ipctk==1.6.1"]
 
 [project.optional-dependencies]
 # Playwright dibuja las imágenes de impresión con el Chrome instalado; zxing-cpp lee el QR en las pruebas;
@@ -15,7 +15,7 @@ dependencies = ["numpy>=1.26", "scipy>=1.11", "pyyaml>=6", "pillow>=10", "segno>
 dev = ["pytest>=8", "playwright>=1.40", "zxing-cpp>=2.2", "pytest-xdist>=3.6"]
 
 [tool.setuptools]
-packages = ["nudos", "nudos.plantillas"]
+packages = ["nudos", "nudos.plantillas", "nudos.fisica"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

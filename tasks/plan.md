@@ -406,6 +406,11 @@ Se implementa después del punto de control E, desde lo aprendido en T14a. Lo qu
 - **T15f, listo para todos los nudos (M):** `construir` usa el motor en cualquier nudo, libre o de plantilla, sobre cualquier anfitrión, y `referencia` y `comparar` sirven con él. Se comprueba con los pilotos; los demás nudos se calculan en T19.
 - **T15g, lo que el motor le da al render (M, va con T16):** la presión de contacto aplana la sección de la cuerda donde aprieta, como una cuerda real, y la torsión gira la trenza y el hilo trazador. Entra solo lo que se note en la página de prueba impresa.
 
+**Cómo se hizo T15a (24 de noviembre de 2026):**
+- `ipctk==1.6.1` va en `pyproject.toml` y en el venv de A: (pesa 4,4 MB; `scipy` ya estaba). La versión queda fija porque lo aprendido depende de ella.
+- `nudos/fisica/contacto.py` es la capa sobre `ipctk`: `MallaContacto` (la cuerda, los palos como cilindros de 64 lados y la mesa), con el filtro nativo de los vecinos, la distancia mínima sin el cuadrado y el paso sin atravesarse (CCD aditiva con LBVH). `tests/test_fisica_contacto.py` comprueba cada lección de T14a en menos de 1 s, y que calcular dos veces da lo mismo.
+- **Lo nuevo: la mesa de T14a no hacía fuerza.** Un `Hyperplane` de `ipctk` solo ve los nodos a menos de (dmin + dhat)/2 = 0,525, y la cuerda apoyada quedaba a 1,0: sin contacto, la sostenía solo la CCD, que recorta el paso sin empujar (por eso Newton avanzaba con pasos cortos sobre la mesa). Ahora la mesa es una malla de dos triángulos, que sí ve hasta dmin + dhat. Una prueba fija el comportamiento del plano, por si cambia con otra versión.
+
 **Fuera, salvo que una prueba en papel diga lo contrario:** simular los 16 hilos de la trenza (a 58 mm de ancho no se ven; la textura con relieve ya los dibuja) y la pelusa de las fibras.
 
 **Criterios de aceptación de T15:**
