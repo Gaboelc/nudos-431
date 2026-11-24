@@ -46,7 +46,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
 - [x] T14a y T14b, las pruebas de concepto del motor y del render y el video, con los puntos de control D y E (24 nov)
 - [ ] T15 Motor de física de la cuerda (XL)
   - [x] T15a La pila elegida en `nudos/fisica/` y `pyproject.toml` (S) (24 nov)
-  - [ ] T15b La varilla: estiramiento, flexión, torsión y peso, con la catenaria y la elástica (M)
+  - [x] T15b La varilla: estiramiento, flexión y peso (la torsión, medida y fuera), con la catenaria y la elástica (M) (24 nov)
   - [ ] T15c El contacto y el roce sin atravesarse (IPC y CCD), con el cabrestante y la tabla inclinada (L)
   - [ ] T15d Asentar y apretar dentro de `construir`, con los pilotos de la fase 2 y su página de prueba (L)
   - [ ] T15e Calibrar con cuerda real: Gabriel mide la cuerda y fotografía cuatro nudos apretados (S)

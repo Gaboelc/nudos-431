@@ -6,4 +6,8 @@ newtons para las fuerzas.
 
 - `contacto`: la malla de contacto de `ipctk` (la cuerda, los anfitriones y la mesa), la
   distancia mínima y el paso sin atravesarse (CCD).
+- `materiales`: los parámetros de cada cuerda (`CUERDA_8MM`).
+- `varilla`: la energía de la cuerda sin contacto (estiramiento, flexión y peso), con su
+  gradiente y su Hessiano disperso, y el marco material sin torsión.
+- `integrador`: Newton con búsqueda en línea y nodos fijos.
 """
