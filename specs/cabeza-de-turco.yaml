@@ -38,7 +38,8 @@ alternativas:
   - nudo: Puño de mono
     cuando: Cuando quieres una bola tejida en el extremo de una cuerda, como adorno o como peso.
 
-estado: borrador
+# Gabriel aprobó el borrador de los pasos 1 a 5 el 23 nov de 2026.
+estado: modelado
 
 encuadre:
   x: [-9.5, 7.0]

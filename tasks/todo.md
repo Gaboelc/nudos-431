@@ -27,9 +27,9 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 - [ ] T8 Cabeza de turco (provisional; Gabriel la deja para el final del plan)
   - [x] Al volver: Gabriel trajo un método plano; la propuesta está en el plan (T8 con el método plano)
   - [x] Gabriel aprueba el diseño plano y responde sus preguntas (23 nov)
-  - [ ] Borrador de los pasos 1 a 5 con la skill `nudo-nuevo` (esfuerzo medio); Gabriel revisa la hoja
+  - [x] Borrador de los pasos 1 a 5 con la skill `nudo-nuevo` (esfuerzo medio); Gabriel lo aprueba (23 nov) y pasa a `modelado`
   - [ ] El paso del anillo, el terminado sin apretar y el borrado de la plantilla y el tubo, con `referencia` y `comparar`
-  - [ ] Error construido y `specs/cabeza-de-turco.yaml` con el texto de la ficha; la ficha cabe
+  - [ ] Error construido y `specs/cabeza-de-turco.yaml` con el texto de la ficha; la ficha cabe (hecho con los pasos 1 a 5; falta comprobarlo con el anillo)
   - [ ] Gabriel revisa el texto de la ficha
   - [ ] Filtro 1: Gabriel la ata con un cordón, siguiendo la ficha impresa, y la prueba en una pañoleta
   - [ ] Registrar el filtro 1 y publicar el sitio con la cabeza de turco en `publicados.txt`

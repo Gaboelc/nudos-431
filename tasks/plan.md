@@ -308,6 +308,8 @@ Después de cada tanda hay un punto de control:
 2. El paso del anillo, el terminado sin apretar y el borrado de la plantilla: modelo grande, en su worktree, con `referencia` y `comparar`.
 3. El texto de la ficha y la ficha. Filtro 1 con un cordón, la ficha impresa y una pañoleta.
 
+**El borrador (23 nov de 2026).** Gabriel aprobó la hoja de revisión de los pasos 1 a 5 y el nudo pasó a `modelado`. Ya trae el error y el texto de la ficha, y la ficha de 5 pasos cabe. Para el código del anillo: la sombra del nudo es r = 4 + 2 cos(4t/3), con t como ángulo y el centro en (0, 0), girada 225°; la primera pasada va a 0,6 diámetros a la derecha del avance y la segunda, a 0,6 a la izquierda. El chicote termina dentro del seno de afuera por donde entra el firme.
+
 **Lo que decidió Gabriel (23 nov de 2026):**
 1. El método es el plano, con estos 6 pasos y estos cruces.
 2. El último paso es el anillo en 3D, con el código nuevo.

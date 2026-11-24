@@ -65,7 +65,7 @@ def test_los_nudos_del_piloto_estan_donde_se_espera():
     assert estados["as-de-guia"] == "publicado"
     for slug in ("ballestrinque", "vuelta-de-escota", "amarre-cuadrado"):
         assert estados[slug] == "cuerda-ok"   # el filtro 2 está en pausa desde el 9 nov
-    assert estados["cabeza-de-turco"] == "borrador"   # su texto es provisional
+    assert estados["cabeza-de-turco"] == "modelado"   # Gabriel aprobó el borrador plano (23 nov)
     sin_spec = [s for s in estados if not (SPECS / f"{s}.yaml").is_file()]
     # Desde la tanda 5 (23 nov), los 36 nudos de la edición 1 tienen especificación.
     assert all(estados[s] == SIN_ESPECIFICACION for s in sin_spec)
@@ -120,7 +120,7 @@ def test_lo_que_bloquea_es_lo_que_falta_para_el_estado_siguiente():
     por_slug = {n.slug: n for n in nudos()}
     assert por_slug["ballestrinque"].bloquea == ("falta el filtro 2",)
     assert por_slug["as-de-guia"].bloquea == ()
-    assert por_slug["cabeza-de-turco"].bloquea[0].startswith("le falta a la ficha:")
+    assert por_slug["cabeza-de-turco"].bloquea == ("falta el filtro 1",)
     for n in por_slug.values():
         if n.declarado == SIN_ESPECIFICACION:
             assert n.bloquea == ()   # la tabla ya dice «sin especificación»
