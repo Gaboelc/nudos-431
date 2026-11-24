@@ -25,7 +25,8 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 
 - [x] T1 a T7c y T9 a T10, con los puntos de control 1, A, 2, B y C
 - [ ] T8 Cabeza de turco (provisional; Gabriel la deja para el final del plan)
-  - [ ] Al volver: ver con Gabriel qué no se entiende en las imágenes, antes de tocar la geometría
+  - [x] Al volver: Gabriel trajo un método plano; la propuesta está en el plan (T8 con el método plano)
+  - [ ] Gabriel aprueba el diseño plano y responde sus preguntas
   - [ ] Error construido y `specs/cabeza-de-turco.yaml` con el texto de la ficha; la ficha cabe
   - [ ] Gabriel revisa el texto de la ficha
   - [ ] Filtro 1: Gabriel la ata con un cordón y un tubo, siguiendo la ficha impresa
