@@ -33,19 +33,8 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 
 ## Fase 4: producción de los 30 nudos restantes
 
-Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos con el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado del piloto). A todos les falta el filtro 2.
+Las tandas 1 a 5 están en el sitio, en `cuerda-ok` y con el filtro 1 (35 nudos con el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado del piloto). A todos les falta el filtro 2.
 
-
-### Tanda 5: anfitriones especiales
-- [x] Propuesta de diseño de los tres anfitriones, en el plan (23 nov)
-- [x] Gabriel revisa la propuesta y responde sus ocho preguntas (23 nov: aprobada)
-- [x] El tablón (v1.11), en una sola sesión de código con la cornamusa y el barril (23 nov: código y pruebas; Gabriel lo aprobó el mismo día)
-- [x] La cornamusa (v1.12) (23 nov: código y pruebas; Gabriel la aprobó el mismo día)
-- [x] El barril (v1.13) (23 nov: código y pruebas, con forma de cubeta amarilla; Gabriel lo aprobó el mismo día)
-- [ ] Eslinga de barril (23 nov: Gabriel aprobó el borrador; filtro 1 aprobado el mismo día; en `cuerda-ok` y en el sitio. Falta el filtro 2, en pausa)
-- [ ] Eslinga de andamio (23 nov: Gabriel aprobó el borrador; filtro 1 aprobado el mismo día; en `cuerda-ok` y en el sitio. Falta el filtro 2, en pausa)
-- [ ] Vuelta de cornamusa (23 nov: Gabriel aprobó el borrador; filtro 1 aprobado el mismo día; en `cuerda-ok` y en el sitio. Falta el filtro 2, en pausa)
-- [ ] Punto de control de la tanda 5
 
 ## Fase 5: render en Blender, motor de física y videos (propuesta del 23 nov)
 
