@@ -87,6 +87,10 @@ class Escena:
     proximal: float = 2.0               # N/d por nodo: amortiguación de cada paso
     eps_roce: float = 1e-3              # diámetros: debajo de esto el roce es estático
     roce: bool = True
+    # Tensión de atado, en N por tramo (N − 1): el largo de reposo de cada tramo se acorta
+    # T/EA, así que el tramo queda tenso sin que una mano lo empuje, como una vuelta que se tiró
+    # al darla y quedó así por el roce.
+    tension_atado: np.ndarray | None = None
 
 
 class Motor:
@@ -95,6 +99,8 @@ class Motor:
         X0 = np.asarray(e.X0, float)
         self.N = N = len(X0)
         self.l = np.linalg.norm(np.diff(X0, axis=0), axis=1)   # largos de reposo
+        if e.tension_atado is not None:
+            self.l = self.l * (1 - np.asarray(e.tension_atado, float) / e.material.EA)
         # La malla de colisión: la cuerda (sus tramos) y los sólidos (sus caras y aristas).
         V = [X0]
         E = [np.column_stack([np.arange(N - 1), np.arange(1, N)])]

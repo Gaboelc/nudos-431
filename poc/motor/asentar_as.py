@@ -32,10 +32,14 @@ SALIDA = RAIZ / "build" / "poc-motor"
 def main() -> int:
     a = argparse.ArgumentParser()
     a.add_argument("--tension", type=float, default=60.0)
+    a.add_argument("--desde-apretado", action="store_true", help="partir del terminado apretado de hoy (T7c)")
     args = a.parse_args()
     SALIDA.mkdir(parents=True, exist_ok=True)
     modelo = construir(cargar("as-de-guia"))
     r = modelo.pasos[-1]
+    if args.desde_apretado and modelo.apretado is not None:
+        # El terminado apretado de hoy (T7c), ya tallado: el motor solo lo asienta.
+        r = modelo.apretado
     X, h = r.puntos, r.h
     n = len(X)
     # El punto más bajo de la gaza: el de menor y en la mitad de la cuerda.
@@ -49,7 +53,7 @@ def main() -> int:
     m = Motor(e)
     t0 = time.time()
     Y = m.resolver(pasos=150, quieto=5e-4)
-    res = _resultado(r.n, Y, h, r.secuencia, None)
+    res = _resultado(r.n, Y, h, modelo.pasos[-1].secuencia, None)
     print(f"as de guía: {n} nodos, {len(m.registro)} pasos, {time.time() - t0:.0f} s")
     print(f"  largo {r.medidas['largo']:.1f} → {res.medidas['largo']:.1f}; separación {res.medidas['separacion_min']:.3f}; "
           f"curvatura {res.medidas['curvatura_min']:.3f}; estiramiento {res.medidas['estiramiento_max']:.4f}")

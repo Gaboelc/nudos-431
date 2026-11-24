@@ -87,6 +87,9 @@ def main() -> int:
     a.add_argument("--sin-roce", action="store_true")
     a.add_argument("--solo-punta", action="store_true", help="una sola mano, en la punta")
     a.add_argument("--sufijo", default="")
+    a.add_argument("--atado", action="store_true", help="sin manos: tensión de atado por tramo y los dos extremos fijos")
+    a.add_argument("--t-vueltas", type=float, default=60.0)
+    a.add_argument("--t-ahorcados", type=float, default=150.0)
     args = a.parse_args()
     if args.simultaneo:
         return simultaneo(args)
@@ -182,7 +185,18 @@ def simultaneo(args) -> int:
             d = X[min(i + 3, K)] - X[max(i - 3, 0)]
             fuerzas[i] = args.tension * d / np.linalg.norm(d)
         mat = Material(mu_cuerda=0.0, mu_madera=0.0) if args.sin_roce else Material()
-        e = Escena(Y, mat, solidos, mesa=0.0, fijos=np.arange(3), fuerzas=fuerzas, proximal=0.5, roce=not args.sin_roce)
+        fijos, atado = np.arange(3), None
+        if args.atado:
+            # Sin manos: los dos extremos fijos y cada tramo con su tensión de atado. Los
+            # ahorcados, más tensos que las vueltas, las juntan.
+            fuerzas = {}
+            fijos = np.r_[np.arange(3), np.arange(K - 2, K + 1)]
+            fin_v = hitos["vuelta-3"]
+            fin_a = hitos["ahorcado-3"]
+            i = np.arange(K)
+            atado = np.where((i >= fin_v) & (i < fin_a), args.t_ahorcados, args.t_vueltas)
+        e = Escena(Y, mat, solidos, mesa=0.0, fijos=fijos, fuerzas=fuerzas, proximal=0.5, roce=not args.sin_roce,
+                   tension_atado=atado)
         m = Motor(e)
         t0 = time.time()
         Y = m.resolver(pasos=args.pasos, kappa=args.kappa, quieto=args.quieto, mostrar=False)
