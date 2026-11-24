@@ -39,7 +39,14 @@ alternativas:
     cuando: Cuando quieres una bola tejida en el extremo de una cuerda, como adorno o como peso.
 
 # Gabriel aprobó el borrador de los pasos 1 a 5 el 23 nov de 2026.
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-23
+    resultado: aprobado
+    ficha: e1a2f47
 
 encuadre:
   x: [-9.5, 7.0]

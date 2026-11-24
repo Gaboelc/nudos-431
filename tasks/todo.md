@@ -30,9 +30,9 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
   - [x] Borrador de los pasos 1 a 5 con la skill `nudo-nuevo` (esfuerzo medio); Gabriel lo aprueba (23 nov) y pasa a `modelado`
   - [ ] El paso del anillo, el terminado sin apretar y el borrado de la plantilla y el tubo, con `referencia` y `comparar`
   - [ ] Error construido y `specs/cabeza-de-turco.yaml` con el texto de la ficha; la ficha cabe (hecho con los pasos 1 a 5; falta comprobarlo con el anillo)
-  - [ ] Gabriel revisa el texto de la ficha
-  - [ ] Filtro 1: Gabriel la ata con un cordón, siguiendo la ficha impresa, y la prueba en una pañoleta
-  - [ ] Registrar el filtro 1 y publicar el sitio con la cabeza de turco en `publicados.txt`
+  - [x] Gabriel revisa el texto de la ficha (23 nov, con los pasos 1 a 5)
+  - [x] Filtro 1 de los pasos 1 a 5, con la ficha de e1a2f47 (23 nov). Cuando entre el paso del anillo, Gabriel lo ata y se anota otra vez
+  - [x] Registrar el filtro 1 y publicar el sitio con la cabeza de turco en `publicados.txt` (23 nov, con los pasos 1 a 5)
 
 ## Fase 4: producción de los 30 nudos restantes
 

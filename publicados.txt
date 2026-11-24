@@ -37,3 +37,4 @@ puno-de-mono
 eslinga-de-barril
 eslinga-de-andamio
 vuelta-de-cornamusa
+cabeza-de-turco
