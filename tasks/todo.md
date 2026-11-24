@@ -54,7 +54,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [ ] T15g La sección aplastada y la torsión en el render, con T16 (M)
 - [ ] T16 Las fichas se renderizan en Blender, probado con los pilotos (M)
 - [ ] T17 Animación entre pasos con el modo «atar» del motor, con el as de guía y el amarre cuadrado de piloto (L)
-- [ ] T18 Videos: horizontal en el visor y vertical para redes, con los pilotos (M)
+- [ ] T18 Videos: horizontal en 4K a 60 fps y 68 Mbps (YouTube, y una copia en 1080p en el visor) y vertical en 1080 × 1920 a 60 fps (Instagram), con los pilotos (M)
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L)
 - [ ] Punto de control de la fase 5
 

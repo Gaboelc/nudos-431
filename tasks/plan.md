@@ -464,15 +464,19 @@ El diseño de los caminos de la mano va como bloque de este plan, con un nudo li
 #### T18: Videos
 
 **Descripción:** un video por nudo, renderizado en Blender y armado con ffmpeg, con el título de cada paso en pantalla (el texto propio de la especificación, en tuteo y sin términos de sección).
+- **El formato (Gabriel, 24 nov): lo mejor que acepta cada plataforma.**
+  - **Horizontal, para YouTube:** 3840 × 2160 a 60 cuadros por segundo y 68 Mbps, el tope de lo que YouTube recomienda para 4K a 60 fps en SDR (de 53 a 68 Mbps). H.264 en `.mp4` con el índice al principio (`-movflags +faststart`), color 4:2:0, tasa variable y la misma tasa de cuadros de punta a punta.
+  - **Vertical, para los reels de Instagram:** 1080 × 1920 a 60 fps, con una tasa alta (unos 20 Mbps) para que la recompresión de Instagram pierda poco. Instagram muestra los reels a 1080 × 1920 y baja a eso lo que se sube en 4K, así que renderizarlo en 4K costaría cuatro veces más sin que se vea.
+  - **En el visor:** una copia del horizontal en 1920 × 1080 a 60 fps y unos 8 Mbps, sacada del original en 4K con ffmpeg (unos 30 MB por cada 30 s). El original no cabe: 30 s a 68 Mbps son unos 255 MB, y GitHub no acepta archivos de más de 100 MB.
 - **En el visor:** horizontal, en la página del QR. El sitio hoy no acepta imágenes ni video, así que la lista de tipos de la decisión de arquitectura 7 gana `.mp4`, con un tope de tamaño. El video vive dentro del sitio, sin YouTube, para que el visor no dependa de servicios externos.
-- **En redes:** vertical. Dónde y cuándo se publica lo decide Gabriel.
+- **En redes:** el horizontal en YouTube y el vertical en Instagram. Dónde y cuándo se publica lo decide Gabriel.
 
 **Criterios de aceptación:**
 - [ ] `python -m nudos video <slug>` arma los dos formatos.
 - [ ] El visor del as de guía muestra su video, y la URL del QR no cambia.
 - [ ] Gabriel aprueba los videos de los pilotos; los de los demás nudos se arman en T19.
 
-**Dependencias:** T17. **Tamaño:** M, más el tiempo de render: unos 7 s por cuadro a 1280 × 720 con 64 muestras (T14b), unos 35 minutos por cada 10 s de video y formato; los 36 nudos en dos formatos, de 30 a 50 horas. El vertical se renderiza con su propia cámara: recortar el horizontal corta el nudo.
+**Dependencias:** T17. **Tamaño:** M, más el tiempo de render. T14b midió unos 7 s por cuadro a 1280 × 720 con 64 muestras, a 30 fps: los 36 nudos en dos formatos, de 30 a 50 horas. Con el formato de arriba, si el tiempo crece con los píxeles y los cuadros, el horizontal cuesta 18 veces eso (9 veces los píxeles y el doble de cuadros) y el vertical, 4,5 veces: de 340 a 560 horas, de dos a tres semanas de render seguido. T16 mide el tiempo real por cuadro en 4K y busca bajarlo (la GPU, menos muestras con el denoiser) antes de comprometer los 36 videos. El vertical se renderiza con su propia cámara: recortar el horizontal corta el nudo.
 
 #### T19: Todos los nudos a la vez
 
