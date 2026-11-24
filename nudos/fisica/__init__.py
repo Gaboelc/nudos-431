@@ -4,10 +4,11 @@ La cuerda es una varilla elástica discreta y su contacto es el de IPC (Incremen
 Contact), con `ipctk` (D11). Las unidades son diámetros de cuerda para las longitudes y
 newtons para las fuerzas.
 
-- `contacto`: la malla de contacto de `ipctk` (la cuerda, los anfitriones y la mesa), la
-  distancia mínima y el paso sin atravesarse (CCD).
+- `contacto`: la malla de contacto de `ipctk` (las cuerdas, los anfitriones y la mesa), la
+  distancia mínima, el paso sin atravesarse (CCD), la barrera y el roce.
 - `materiales`: los parámetros de cada cuerda (`CUERDA_8MM`).
 - `varilla`: la energía de la cuerda sin contacto (estiramiento, flexión y peso), con su
   gradiente y su Hessiano disperso, y el marco material sin torsión.
-- `integrador`: Newton con búsqueda en línea y nodos fijos.
+- `integrador`: Newton con búsqueda en línea y nodos fijos, y `Sistema.paso`, el paso de la
+  cuerda con su contacto (dinámico o cuasiestático).
 """
