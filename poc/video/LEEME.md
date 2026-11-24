@@ -44,8 +44,8 @@ python poc/video/pagina.py
 - Motor, amarre: 270 cuadros en 744 s (8 procesos). As de guía por pasos: unos minutos.
 - Blender, 64 muestras con reducción de ruido: 1280 × 720 unos 5 s por cuadro solo en la
   tarjeta, unos 11 s con dos renders a la vez. El amarre (270 cuadros, dos formatos) tomó
-  ~55 min; el as de guía (438 + 98 cuadros del fundido por formato), ~1 h 45 min por formato
-  compartiendo la tarjeta.
+  ~55 min; el as de guía (438 + 98 cuadros del fundido por formato), 1 h 40 min el horizontal
+  compartiendo la tarjeta y 1 h 0 min el vertical solo (~7 s por cuadro).
 - Una imagen de ficha a 256 muestras: 8 a 12 s.
 - Los videos pesan poco: ~1,2 MB el amarre (11,5 s) y ~0,7 MB el as de guía (15,6 s).
 
