@@ -149,4 +149,11 @@ terminado:
     y: [-9.0, 9.0]
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-23
+    resultado: aprobado
+    ficha: a466e91

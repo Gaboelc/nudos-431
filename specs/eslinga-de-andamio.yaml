@@ -7,7 +7,14 @@ slug: eslinga-de-andamio
 nombre: Eslinga de andamio
 familia: De sujeción
 abok: 1120
-estado: modelado
+estado: cuerda-ok
+
+# Los filtros humanos. El filtro 2 está en pausa desde el 9 de noviembre de 2026.
+filtros:
+  - filtro: 1
+    fecha: 2026-11-23
+    resultado: aprobado
+    ficha: a466e91
 
 usos: >-
   Cuelga una tabla horizontal, como una repisa, o sube materiales sobre ella. Se ata una

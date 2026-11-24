@@ -34,3 +34,6 @@ amarre-tripode
 refuerzo-de-cabo
 adujado
 puno-de-mono
+eslinga-de-barril
+eslinga-de-andamio
+vuelta-de-cornamusa
