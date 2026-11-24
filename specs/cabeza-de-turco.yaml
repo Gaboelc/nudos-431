@@ -1,70 +1,184 @@
-# Cabeza de turco: un nudo decorativo tejido alrededor de un tubo. Es la segunda plantilla:
-# la plantilla calcula la cuerda entera a partir de las medidas (nudos/plantillas/cabeza_turco.py),
-# y cada paso dice con «hasta» hasta dónde llega. El método es el del diseño de T8 en
-# tasks/plan.md: se teje vuelta por vuelta, sobre un tubo que se gira en la mano.
-# Unidades: diámetros de cuerda. El tubo va a lo largo de x, con el eje en y = 0.
+# Cabeza de turco de 3 cabos y 4 senos, atada plana sobre la mesa (método plano de T8, aprobado
+# por Gabriel el 23 nov de 2026). Borrador de la skill nudo-nuevo, pasos 1 a 5. Trazado propio:
+# los dibujos de la fuente solo se usaron para leer los cruces.
 #
-# El texto de los pasos y del error es provisional: falta escribir el de la ficha y que Gabriel
-# lo revise (T8 en tasks/todo.md).
+# La forma de los pasos 3 a 5 sale de la sombra de la cabeza de turco 3 × 4: la curva
+# r = 4 + 2 cos(4t/3), con t como ángulo, dada tres veces alrededor del centro. La primera
+# pasada va a 0,6 diámetros por un lado de esa curva y la segunda, a 0,6 por el otro, siempre
+# del mismo lado, así que cada cruce del paso 3 son cuatro cruces del paso 5. El firme entra y
+# el chicote sale por el mismo seno de afuera. Al terminar, el chicote queda dentro de ese
+# seno: para salir por fuera tendría que cruzar la primera pasada.
+#
+# En el paso 2, los cruces 1 y 2 cambian de orden a lo largo de la línea entre las gazas, como
+# en el dibujo. Para que ninguno se mueva más de 2,5 diámetros entre pasos, en los pasos 1 y 2
+# van juntos, cerca del seno de adentro; en el paso 3 se separan hasta su lugar.
+#
+# Falta el paso 6, «Dale forma de anillo»: enrolla el nudo plano del paso 5 en un anillo parado
+# sobre la mesa, con los mismos 32 cruces. Necesita código nuevo, que todavía no existe (la
+# tarea siguiente de T8 en tasks/plan.md), y por eso no está en este borrador.
 slug: cabeza-de-turco
 nombre: Cabeza de turco
 familia: Decorativos
+abok: 1303
 
-# La zona de la mesa que se muestra en los pasos y el terminado: el nudo, con el tubo, y el
-# comienzo de lo que cae a la mesa.
-encuadre: {x: [-7, 11], y: [-9, 9]}
+# Lo que dice la ficha. Texto propio, en tuteo y sin términos de ninguna sección.
+usos: >-
+  Un anillo tejido con una sola cuerda para sujetar la pañoleta: pasas las dos puntas por
+  dentro y lo subes hasta donde quieras. También sirve de adorno o para forrar un mango.
+materiales: >-
+  Un cordón de 3 a 4 mm de grosor y alrededor de 1 m de largo.
+verificacion:
+  - Todo el nudo va doble, con las dos cuerdas juntas y sin cruzarse entre ellas.
+  - Si recorres cualquier cuerda, pasa una vez por encima y la siguiente por debajo, siempre alternando.
+  - Tiene cuatro senos por fuera y cuatro por dentro, parecidos entre sí.
+precauciones:
+  - Si queda flojo, se corre solo. Ajústalo otra vez siguiendo la cuerda.
+  - Si sellas las puntas con fuego, ten cuidado. El nylon derretido quema.
+alternativas:
+  - nudo: Puño de mono
+    cuando: Cuando quieres una bola tejida en el extremo de una cuerda, como adorno o como peso.
 
-anfitrion: {tipo: tubo, radio: 4, largo: 24}
-plantilla:
-  tipo: cabeza-de-turco
-  cabos: 3
-  senos: 4
-  pasadas: 2
+# Gabriel aprobó el borrador de los pasos 1 a 5 el 23 nov de 2026.
+estado: modelado
+
+encuadre:
+  x: [-9.5, 7.0]
+  y: [-9.0, 7.0]
+
+segmentos:
+  # El firme llega desde abajo a la izquierda. «gazas» es el paso 1; «rodea-firme» y «rodea»,
+  # lo que cambia en el paso 2; «pasada-0», «pasada-1» y «teje», la primera pasada; «sale», el
+  # chicote del paso 3; «vuelve», el chicote que vuelve junto al firme, y «sigue-1» y
+  # «sigue-2», la segunda pasada.
+  firme: [[-11.04, -10.33], [-10.32, -9.84], [-9.61, -9.33], [-8.91, -8.81], [-8.21, -8.28],
+          [-7.52, -7.75], [-6.83, -7.21], [-6.13, -6.70], [-5.40, -6.22], [-4.62, -5.83],
+          [-3.77, -5.63]]
+  gazas: [[-2.07, -5.77], [-1.33, -5.38], [-0.92, -4.65], [-0.87, -3.82], [-1.14, -3.02],
+          [-1.10, -2.20], [-0.95, -1.38], [-1.22, -0.58], [-1.74, 0.07], [-2.48, 0.46],
+          [-3.31, 0.54], [-4.13, 0.33], [-4.80, -0.16], [-5.25, -0.87], [-5.38, -1.70],
+          [-5.17, -2.51], [-4.67, -3.18], [-3.96, -3.64], [-3.14, -3.74], [-2.34, -3.48],
+          [-1.65, -2.99], [-0.95, -2.59], [-0.11, -2.61], [0.73, -2.62], [1.58, -2.62],
+          [2.41, -2.53], [3.21, -2.26], [3.85, -1.72], [4.25, -0.98], [4.33, -0.15],
+          [4.10, 0.66], [3.58, 1.31], [2.86, 1.75], [2.03, 1.82], [1.25, 1.52], [0.67, 0.91],
+          [0.40, 0.12], [0.38, -0.72], [0.63, -1.52], [1.03, -2.26], [1.31, -3.05],
+          [1.49, -3.86], [1.90, -4.60], [2.36, -5.31], [2.88, -5.97], [3.43, -6.61]]
+  rodea-firme: [[-2.91, -5.74], [-2.11, -5.91], [-1.29, -5.94], [-0.49, -5.80], [0.23, -5.43],
+                [0.68, -4.76], [0.82, -3.95], [0.88, -3.14], [1.01, -2.33], [1.21, -1.54],
+                [1.55, -0.80], [2.09, -0.18], [2.62, 0.43]]
+  pasada-0: [[-2.91, -5.74], [-2.08, -5.92], [-1.23, -5.93], [-0.40, -5.78], [0.39, -5.48],
+             [1.10, -5.02], [1.72, -4.44], [2.20, -3.75], [2.54, -2.97], [2.72, -2.14],
+             [2.74, -1.30], [2.64, -0.45], [2.63, 0.39]]
+  pasada-1: [[2.74, 1.23], [2.73, 2.08], [2.56, 2.91], [2.23, 3.69], [1.76, 4.39], [1.15, 4.98],
+             [0.45, 5.45], [-0.34, 5.77], [-1.17, 5.93], [-2.02, 5.92], [-2.85, 5.76],
+             [-3.63, 5.43], [-4.34, 4.97], [-4.94, 4.37], [-5.41, 3.67], [-5.75, 2.89],
+             [-5.92, 2.06], [-5.93, 1.21], [-5.78, 0.38], [-5.47, -0.41], [-5.01, -1.12],
+             [-4.42, -1.73], [-3.73, -2.21], [-2.95, -2.55], [-2.12, -2.73], [-1.27, -2.74],
+             [-0.43, -2.64], [0.41, -2.63], [1.25, -2.74], [2.10, -2.73], [2.93, -2.56],
+             [3.71, -2.22], [4.41, -1.74], [5.00, -1.14], [5.46, -0.43], [5.77, 0.36],
+             [5.93, 1.19], [5.92, 2.04], [5.75, 2.87], [5.42, 3.65], [4.95, 4.35], [4.35, 4.95],
+             [3.65, 5.42], [2.87, 5.75], [2.04, 5.92], [1.19, 5.93], [0.36, 5.77], [-0.43, 5.46],
+             [-1.14, 5.00], [-1.74, 4.41], [-2.22, 3.71], [-2.56, 2.93]]
+  rodea: [[-2.33, 2.18], [-2.01, 1.37], [-1.42, 0.73], [-1.04, -0.02], [-0.94, -0.89],
+          [-0.77, -1.75], [-0.75, -2.62], [-0.92, -3.47], [-1.06, -4.34], [-0.83, -5.16],
+          [-0.09, -5.61], [0.74, -5.87], [1.61, -5.95], [2.48, -5.85], [3.31, -5.59]]
+  teje: [[-2.73, 2.10], [-2.74, 1.25], [-2.63, 0.41], [-2.64, -0.43], [-2.74, -1.27],
+         [-2.73, -2.12], [-2.55, -2.95], [-2.21, -3.73], [-1.73, -4.42], [-1.12, -5.01],
+         [-0.41, -5.47], [0.38, -5.78], [1.21, -5.93], [2.06, -5.92], [2.89, -5.75],
+         [3.67, -5.41], [4.37, -4.94], [4.97, -4.34], [5.43, -3.63], [5.76, -2.85],
+         [5.92, -2.02], [5.93, -1.17], [5.77, -0.34], [5.45, 0.45], [4.98, 1.15], [4.39, 1.76],
+         [3.69, 2.23], [2.91, 2.56], [2.08, 2.73], [1.23, 2.74], [0.39, 2.63], [-0.45, 2.64],
+         [-1.30, 2.74], [-2.14, 2.72], [-2.97, 2.54], [-3.75, 2.20], [-4.44, 1.72],
+         [-5.02, 1.10], [-5.48, 0.39], [-5.78, -0.40], [-5.93, -1.23], [-5.92, -2.08],
+         [-5.74, -2.91]]
+  sale: [[-5.63, -3.70], [-5.81, -4.48], [-6.24, -5.17], [-6.78, -5.77], [-7.38, -6.30],
+         [-8.02, -6.80], [-8.67, -7.28], [-9.32, -7.75]]
+  vuelve: [[-5.22, -3.70], [-4.41, -4.19], [-3.48, -4.41]]
+  sigue-1: [[-2.54, -4.60], [-1.71, -4.74], [-0.87, -4.67], [-0.08, -4.37], [0.60, -3.87],
+            [1.13, -3.21], [1.45, -2.44], [1.55, -1.60], [1.47, -0.76], [1.40, 0.09],
+            [1.50, 0.93], [1.55, 1.77], [1.40, 2.60], [1.03, 3.36], [0.47, 3.99], [-0.24, 4.45],
+            [-1.04, 4.70], [-1.88, 4.73], [-2.71, 4.54], [-3.45, 4.14], [-4.06, 3.55],
+            [-4.49, 2.83], [-4.72, 2.02], [-4.72, 1.17], [-4.50, 0.36], [-4.07, -0.37],
+            [-3.47, -0.96], [-2.73, -1.36], [-1.90, -1.54], [-1.06, -1.52], [-0.22, -1.41],
+            [0.62, -1.45], [1.46, -1.55], [2.31, -1.48], [3.10, -1.19], [3.78, -0.70],
+            [4.31, -0.03], [4.63, 0.74]]
+  sigue-2: [[4.75, 1.58], [4.63, 2.42], [4.30, 3.19], [3.78, 3.85], [3.10, 4.36], [2.32, 4.66],
+            [1.48, 4.74], [0.64, 4.61], [-0.12, 4.25], [-0.77, 3.71], [-1.24, 3.01],
+            [-1.50, 2.20], [-1.55, 1.36], [-1.44, 0.52], [-1.42, -0.32], [-1.53, -1.16],
+            [-1.53, -2.00], [-1.32, -2.82], [-0.90, -3.55], [-0.29, -4.14], [0.45, -4.54],
+            [1.27, -4.73], [2.12, -4.70], [2.92, -4.45], [3.63, -3.99], [4.20, -3.36],
+            [4.57, -2.61], [4.74, -1.78], [4.68, -0.94], [4.40, -0.14], [3.92, 0.55],
+            [3.27, 1.09], [2.50, 1.43], [1.67, 1.55], [0.82, 1.48], [-0.02, 1.40], [-0.86, 1.49],
+            [-1.70, 1.55], [-2.53, 1.42], [-3.30, 1.07], [-3.94, 0.53], [-4.42, -0.17],
+            [-4.69, -0.97], [-4.74, -1.81]]
+  chicote: [[-4.64, -2.70], [-4.44, -3.56], [-3.88, -4.17]]
 
 pasos:
-  - titulo: Da la primera vuelta
+  - titulo: Haz dos gazas
     texto: >-
-      Sujeta el extremo corto contra el tubo con el pulgar y da una vuelta al tubo, por
-      encima y hacia el fondo, cruzando en diagonal.
-    hasta: vuelta-1
-  - titulo: Cruza por encima
-    texto: >-
-      Da la segunda vuelta junto a la primera y crúzala {senos} menos una veces, siempre por
-      encima. Gira el tubo hacia ti para tener de frente lo que vas tejiendo.
-    hasta: vuelta-2
-  - titulo: Empieza a tejer
-    texto: >-
-      En la tercera vuelta, pasa por debajo del primer cruce, por encima del siguiente y por
-      debajo del otro.
-    hasta: vuelta-3-mitad
-  - titulo: Termina de tejer
-    texto: >-
-      Sigue alternando, por encima y por debajo, hasta llegar junto al comienzo.
-    hasta: vueltas
-  - titulo: Sigue el mismo camino
-    texto: >-
-      Pasa la cuerda junto a la primera pasada, siempre del mismo lado: por encima donde ella
-      va por encima y por debajo donde va por debajo. Da {pasadas} pasadas en total.
-    hasta: pasadas
-  - titulo: Esconde los chicotes
-    texto: >-
-      Pasa el chicote por debajo del último cruce. Mete el extremo corto por debajo de la
-      banda que baja del seno de al lado.
-    hasta: remate
+      Con el firme abajo a la izquierda, haz una gaza a la izquierda, con el firme por encima,
+      y otra a la derecha, que gire igual. El resto es el chicote.
+    trazado: [firme, gazas]
+    secuencia: "1O 1U 2O 2U"
+    resaltar: {desde: "gazas[0]", hasta: fin}
 
+  - titulo: Rodea el firme
+    texto: >-
+      Lleva el chicote por detrás del firme y tráelo por delante. La gaza de la derecha queda
+      bajo la de la izquierda.
+    trazado: [firme, rodea-firme, pasada-1, rodea]
+    secuencia: "4U 1O 3O 2O 1U 3U 2U 4O"
+    resaltar: {desde: "pasada-1[41]", hasta: fin}
+
+  - titulo: Teje el chicote
+    texto: >-
+      Lleva el chicote por fuera de la gaza de la derecha y vuelve por el medio: por debajo,
+      por encima, por debajo y por encima.
+    trazado: [firme, pasada-0, pasada-1, teje, sale]
+    secuencia: "4U 1O 6U 3O 8U 2O 1U 5O 3U 7O 2U 4O 5U 6O 7U 8O"
+    resaltar: {desde: "teje[13]", hasta: fin}
+
+  - titulo: Empieza a seguir la cuerda
+    texto: >-
+      Mete el chicote junto al firme y síguelo siempre del mismo lado, sin cruzarlo: por
+      encima y por debajo donde él pasa.
+    trazado: [firme, pasada-0, pasada-1, teje, vuelve, sigue-1]
+    secuencia: "4U 1O 16O 6U 3O 8U 2O 10U 1U 5O 3U 12U 7O 14U 2U 9O 4O 5U 6O 11O 7U 13O 8O 9U 10O 15O 11U 12O 13U 14O 15U 16U"
+    resaltar: {desde: "vuelve[0]", hasta: fin}
+
+  - titulo: Termina de seguirla
+    texto: >-
+      Sigue hasta dar la vuelta entera. Todo el nudo queda doble, con las cuerdas juntas.
+    trazado: [firme, pasada-0, pasada-1, teje, vuelve, sigue-1, sigue-2, chicote]
+    secuencia: "4U 24U 1O 16O 27U 6U 18O 3O 8U 32U 2O 22O 10U 1U 25O 5O 3U 12U 7O 30O 14U 2U 9O 4O 5U 17U 6O 11O 20U 7U 13O 8O 9U 23U 10O 15O 28U 11U 19O 12O 13U 31U 14O 21O 15U 16U 26O 17O 18U 19U 20O 29O 21U 22U 23O 24O 25U 26U 27O 28O 29U 30U 31O 32O"
+    resaltar: {desde: "sigue-2[0]", hasta: fin}
+
+# El error más común (lo eligió Gabriel): rodear el firme al revés en el paso 2, primero por
+# delante y después por detrás. La gaza de la derecha queda encima de la de la izquierda y el
+# chicote, bajo el firme.
 error:
-  paso: 3
-  variante: empieza-por-encima
-  titulo: Empezar a tejer por encima
+  paso: 2
+  invierte: [3, 4]
+  titulo: Rodear el firme al revés
   texto: >-
-    Si la tercera vuelta empieza por encima, todos sus cruces quedan al revés y el nudo no se
-    traba. Desármala y empieza por debajo.
+    El chicote pasó primero por delante del firme. La gaza de la derecha queda encima y
+    ningún tejido sale bien. Vuelve a las dos gazas y rodea el firme primero por detrás.
+  encuadre:
+    x: [-7.5, 7.0]
+    y: [-7.5, 7.0]
   otros:
-    - titulo: La segunda pasada cambia de lado
+    - titulo: Empezar a tejer por encima
       texto: >-
-        Cada pasada va siempre del mismo lado de la primera. Si cambia de lado o se monta
-        encima, el nudo queda desparejo.
+        Al tejer, el chicote empieza por debajo. Si empieza por encima, el nudo no se traba.
+    - titulo: Cruzar la primera pasada
+      texto: >-
+        Al seguir la cuerda, el chicote va siempre del mismo lado. Si la cruza o cambia de
+        lado, el nudo pierde su forma.
     - titulo: Apretar de una vez
       texto: >-
-        Si tiras de un chicote para apretarlo todo de una vez, el nudo se deforma. Apriétalo
-        de a poco, siguiendo la cuerda.
+        Si tiras fuerte de un extremo, el anillo se deforma. Apriétalo de a poco, siguiendo la
+        cuerda.
+
+terminado:
+  encuadre:
+    x: [-8.0, 7.0]
+    y: [-8.0, 7.0]
