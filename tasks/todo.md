@@ -42,9 +42,9 @@ Las tandas 1 a 4 están en el sitio, en `cuerda-ok` y con el filtro 1 (32 nudos 
 - [x] El tablón (v1.11), en una sola sesión de código con la cornamusa y el barril (23 nov: código y pruebas; Gabriel lo aprobó el mismo día)
 - [x] La cornamusa (v1.12) (23 nov: código y pruebas; Gabriel la aprobó el mismo día)
 - [x] El barril (v1.13) (23 nov: código y pruebas, con forma de cubeta amarilla; Gabriel lo aprobó el mismo día)
-- [ ] Eslinga de barril
-- [ ] Eslinga de andamio (requiere D1)
-- [ ] Vuelta de cornamusa (*cleat hitch*, sobre una cornamusa)
+- [ ] Eslinga de barril (23 nov: Gabriel aprobó el borrador; en `main` y en `modelado`. Falta el filtro 1)
+- [ ] Eslinga de andamio (23 nov: Gabriel aprobó el borrador; en `main` y en `modelado`. Falta el filtro 1)
+- [ ] Vuelta de cornamusa (23 nov: Gabriel aprobó el borrador; en `main` y en `modelado`. Falta el filtro 1)
 - [ ] Punto de control de la tanda 5
 
 ## Fase 5: render en Blender, motor de física y videos (propuesta del 23 nov)

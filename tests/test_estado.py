@@ -67,7 +67,8 @@ def test_los_nudos_del_piloto_estan_donde_se_espera():
         assert estados[slug] == "cuerda-ok"   # el filtro 2 está en pausa desde el 9 nov
     assert estados["cabeza-de-turco"] == "borrador"   # su texto es provisional
     sin_spec = [s for s in estados if not (SPECS / f"{s}.yaml").is_file()]
-    assert sin_spec and all(estados[s] == SIN_ESPECIFICACION for s in sin_spec)
+    # Desde la tanda 5 (23 nov), los 36 nudos de la edición 1 tienen especificación.
+    assert all(estados[s] == SIN_ESPECIFICACION for s in sin_spec)
 
 
 def test_publicado_sin_los_dos_filtros_es_un_problema():

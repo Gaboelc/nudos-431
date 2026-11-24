@@ -149,4 +149,4 @@ terminado:
     y: [-9.0, 9.0]
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
-estado: borrador
+estado: modelado
