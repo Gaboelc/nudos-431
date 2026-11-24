@@ -150,6 +150,9 @@ class Motor:
         for i, f in e.fuerzas.items():
             self.F_ext[3 * i:3 * i + 3] += f
         self.registro = []
+        # Objetivos: resortes que llevan nodos hacia un lugar (la mano, o la pose del paso
+        # siguiente en un video). {nodo: (lugar (3,), rigidez en N/d)}; se cambian entre pasos.
+        self.objetivos: dict[int, tuple[np.ndarray, float]] = {}
         # La CCD aditiva (la de IPC para varillas y telas delgadas) con LBVH: cien veces más
         # rápida que Tight Inclusion con dmin, y menos conservadora.
         self.bp, self.ccd = ipctk.LBVH(), ipctk.AdditiveCCD()
@@ -189,7 +192,13 @@ class Motor:
         gp = c * (x - x_prev)
         Etot = E + Eb + Eg + Ef + Ep
         gtot = g.ravel() + gb + gg.ravel() - self.F_ext + gp
-        Htot = Hs + self.Kb + c * sp.eye(3 * N)
+        diag = np.full(3 * N, c)
+        for i, (lugar, k) in self.objetivos.items():
+            d = x[3 * i:3 * i + 3] - lugar
+            Etot += 0.5 * k * d @ d
+            gtot[3 * i:3 * i + 3] += k * d
+            diag[3 * i:3 * i + 3] += k
+        Htot = Hs + self.Kb + sp.diags(diag)
         return Etot, gtot, Htot
 
     # --- Contacto y roce (ipctk), sobre toda la malla de colisión ---

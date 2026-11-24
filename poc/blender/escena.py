@@ -474,6 +474,26 @@ def construir(trabajo, revelar=None):
     return escena, cam, Ps, s, tapa_fin, centro, dist, polar, az
 
 
+def anclas(escena, cam, Ps, salida):
+    """Dónde caen en la imagen el firme (el primer punto de la cuerda dentro del cuadro) y el
+    chicote (el último), en px desde arriba a la izquierda, con hacia dónde va la cuerda ahí.
+    Las usa poc/video/nombres.py para poner los nombres, como hoy los pone render/impresion.js."""
+    W = escena.render.resolution_x * escena.render.resolution_percentage / 100
+    H = escena.render.resolution_y * escena.render.resolution_percentage / 100
+    pts = [world_to_camera_view(escena, cam, Vector(p)) for p in Ps]
+    dentro = [i for i, q in enumerate(pts) if 0.03 < q.x < 0.97 and 0.03 < q.y < 0.97 and q.z > 0]
+    out = {}
+    if dentro:
+        def px(i):
+            return [pts[i].x * W, (1 - pts[i].y) * H]
+        i0, i1 = dentro[0], dentro[-1]
+        out["firme"] = {"punto": px(i0), "hacia": px(min(i0 + 15, len(Ps) - 1))}
+        # La punta, o el último punto que se ve si la punta queda fuera del cuadro.
+        out["chicote"] = {"punto": px(i1), "hacia": px(max(i1 - 15, 0))}
+    with open(salida.rsplit(".", 1)[0] + ".anclas.json", "w", encoding="utf-8") as f:
+        json.dump(out, f)
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     ap = argparse.ArgumentParser()
@@ -501,6 +521,7 @@ def main():
     if not args.video:
         escena.render.filepath = args.salida
         bpy.ops.render.render(write_still=True)
+        anclas(escena, cam, Ps, args.salida)
         print(f"listo: {args.salida} en {time.time() - inicio:.1f} s con {dispositivo}")
         return
     # El video: la cuerda avanza por su camino y la cámara gira despacio, un solo movimiento.
@@ -531,4 +552,5 @@ def main():
     print(f"listo: {cuadros} cuadros en {time.time() - inicio:.1f} s con {dispositivo}")
 
 
-main()
+if __name__ == "__main__":
+    main()
