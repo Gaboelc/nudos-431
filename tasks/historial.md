@@ -1440,6 +1440,44 @@ Un paso solo no se reparte: para eso habría que tocar la física, y eso es otra
 - **Edge se actualizó solo el 18 nov a las 15:30, a la 158.0.4370.33,** y desde entonces todas las imágenes salen con cientos de píxeles distintos, de 2 a 4 niveles, aunque el código no cambie: 3843a16 impreso hoy da lo mismo que `main`, y los dos difieren de `ref-3843a16`. Los 26 `modelo.json` siguen iguales byte a byte. Por eso `referencia` anota la versión del navegador y `comparar` avisa si no coinciden, y las dos carpetas se arman el mismo día.
 - **Sesiones:** se archivaron las de T7, T8 (con ellas, en cascada, «Resto del plan» y la corrida dorada de T9) y las de la tanda 4 y la tanda 1 que ya estaban en `main`. Los cambios sin commit del worktree de T9 quedaron como parche en la carpeta de notas de la gestora (`t9-sin-commit.patch`). En `CLAUDE.md` quedaron el modelo y el esfuerzo por tipo de sesión y la regla de no encadenar sesiones para tareas cortas.
 
+### Fase 5: render en Blender, motor de física y videos
+
+#### T14a: Prueba de concepto del motor de física (rama `poc/motor`)
+
+**Descripción:** el motor de T15 en su versión mínima, para ver si da la forma que se busca antes de comprometer la implementación.
+- **La espiga:** instalar y probar las bibliotecas candidatas (`ipctk`, `numba` y Warp) en esta computadora, con Python 3.14 en Windows. Se mide la velocidad, si repiten el resultado y si la cuerda se atraviesa alguna vez. Es lo que decide D11.
+- **El mínimo que hace falta para asentar y apretar:** la varilla (estiramiento, flexión y peso; la torsión, si alcanza), el contacto con barrera y CCD y el roce.
+- **Los nudos:** el amarre cuadrado terminado y el paso de los ahorcados, que es lo que Gabriel ve tieso, y el as de guía terminado, como nudo libre. Cada uno parte de la plantilla o del trazado de hoy y se asienta tirando de los extremos.
+- **La página de prueba:** cada nudo como sale hoy, con la v2 de `poc/cuerda-ajustada` y con el motor, en color y en gris, dibujado con la escena de `poc/blender`. Dice también la secuencia de cada uno, si cumple los límites y cuánto tardó.
+
+**Criterios de aceptación:**
+- [x] El amarre y el as de guía asentados con el motor tienen la secuencia declarada y cumplen los límites.
+- [x] Una cuerda lanzada contra otra y contra un palo no los atraviesa.
+- [x] El `LEEME.md` de la rama dice qué biblioteca se propone para D11, cuánto tardó cada nudo y qué falta para la implementación.
+- [x] **Punto de control D:** Gabriel ve la página de prueba y aprueba seguir.
+
+**Dependencias:** ninguna. **Tamaño:** L. **Sesión:** modelo grande.
+
+#### T14b: Prueba de concepto del render y del video, con el motor (rama `poc/render-motor`)
+
+**Descripción:** lo de `poc/blender` (la escena de Blender, la página de prueba y el video), ahora con la cuerda que da el motor.
+- **Las imágenes de la ficha** de los nudos de T14a en Blender, a su tamaño impreso, en color y en gris, junto a las de hoy. Con la torsión del motor girando la trenza, si T14a la tiene.
+- **Un video** del amarre cuadrado y otro del as de guía, con el modo «atar» mínimo: una mano lleva el chicote por su camino y la cuerda se mueve con el motor. En horizontal para el visor y en vertical, con su propia cámara, para redes.
+- **Los nombres** «Firme» y «Chicote» sobre las imágenes, como en las fichas de hoy, que faltaban en `poc/blender`.
+
+**Criterios de aceptación:**
+- [x] La página de prueba impresa y los dos videos, en la rama, con cuánto tardó cada cosa.
+- [x] En el video ningún cuadro tiene la cuerda atravesada, y cada paso termina en la pose de su imagen.
+- [x] **Punto de control E:** Gabriel imprime la página y ve los videos. Decide D10 (el render en Blender), D11 (la pila del motor) y si compra el paquete, y aprueba que empiece la implementación.
+
+**Dependencias:** el punto de control D. **Tamaño:** L. **Sesión:** modelo grande.
+
+**Las exploraciones de antes** (23 nov), en las ramas `poc/blender` y `poc/cuerda-ajustada`, son la base de estas dos pruebas: la escena de Blender y la página de prueba, el video del amarre y lo que se aprendió al apretar y al cambiar la plantilla.
+
+**Cómo se hizo (23 y 24 de noviembre de 2026):**
+- **T14a** (rama `poc/motor`, c4253ef y 4304fbc; ver su `LEEME.md`): las tres bibliotecas instalan con Python 3.14 en Windows, en un venv fuera de A:. El motor usa `ipctk`, `numpy` y `scipy`: la varilla sin torsión, la barrera de IPC con `dmin` 0,95, el roce de Coulomb retrasado y pasos cuasiestáticos con Newton y la CCD aditiva. El cabrestante y el nudo simple apretado pasan. El as de guía asienta desde el apretado de hoy en 1 s, tallado. El amarre queda ceñido con la **tensión de atado** (el largo de reposo de cada tramo acortado T/EA: 60 N en las vueltas, 150 N en los ahorcados), de 4 a 14 s por paso; las manos en medio de la cuerda la pandeaban. En el cierre aparece un cruce de más, sin revisar. No se midió si repite el resultado bit a bit. Gabriel aprobó el punto de control D el 24 nov.
+- **T14b** (rama `poc/render-motor`, 9d1cbe1; ver `poc/video/LEEME.md`): el video del amarre se ata solo (la mano avanza por el camino y el motor asienta cada cuadro; 270 cuadros en 744 s con 8 procesos). El del as de guía muestra los pasos asentados con fundidos, porque llevar la cuerda al paso siguiente con resortes deja el cruce al revés: atar un nudo libre pide planear la mano (T17). Blender tarda unos 7 s por cuadro a 1280 × 720 con 64 muestras y de 8 a 12 s por imagen de ficha a 256. Los nombres se ponen con PIL sobre la imagen de Blender. Gabriel aprobó el punto de control E el 24 nov.
+
 ## La lista de tareas hasta el 22 de noviembre de 2026
 
 ## Tareas: Libro de nudos del Grupo 431

@@ -10,8 +10,8 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 - [x] D4 GitHub Pages en la cuenta personal (`Gaboelc`), repositorio público
 - [x] D5 Se trabaja desde la app de Claude con la computadora vinculada
 - [ ] D8 Especificaciones de la imprenta: sangrado, color y formato (antes de T13)
-- [ ] D10 Render en Blender y compra de Studio in a Folder (se decide en el punto de control E, con T14b)
-- [ ] D11 Pila del motor de física (se propone en T14a y se decide en el punto de control E)
+- [x] D10 Las fichas y los videos se renderizan en Blender; la compra del paquete no hace falta (24 nov)
+- [x] D11 El motor usa `ipctk` con `numpy` y `scipy` (24 nov)
 
 ## Pendientes de Gabriel
 
@@ -43,11 +43,7 @@ Las tandas 1 a 5 están en el sitio, en `cuerda-ok` y con el filtro 1 (35 nudos 
 
 El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en ramas que no entran a `main`; con las dos aprobadas, la implementación, probada con los nudos piloto; y al final todos los nudos a la vez, sin tandas.
 
-- [ ] Gabriel aprueba la propuesta de la fase 5 en `tasks/plan.md`
-- [ ] T14a Prueba de concepto del motor (rama `poc/motor`): las bibliotecas, la varilla, el contacto y el roce mínimos; el amarre cuadrado y el as de guía asentados; la página de prueba (L)
-- [ ] Punto de control D: Gabriel aprueba la prueba del motor
-- [ ] T14b Prueba de concepto del render en Blender y del video, con la cuerda del motor (rama `poc/render-motor`): la página de prueba, los nombres sobre las imágenes y los videos del amarre y del as de guía, horizontal y vertical (L)
-- [ ] Punto de control E: Gabriel decide D10, D11 y la compra del paquete, y aprueba la implementación
+- [x] T14a y T14b, las pruebas de concepto del motor y del render y el video, con los puntos de control D y E (24 nov)
 - [ ] T15 Motor de física de la cuerda (XL)
   - [ ] T15a La pila elegida en `nudos/fisica/` y `pyproject.toml` (S)
   - [ ] T15b La varilla: estiramiento, flexión, torsión y peso, con la catenaria y la elástica (M)
@@ -56,7 +52,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [ ] T15e Calibrar con cuerda real: Gabriel mide la cuerda y fotografía cuatro nudos apretados (S)
   - [ ] T15f `construir` usa el motor en cualquier nudo y anfitrión, comprobado con los pilotos (M)
   - [ ] T15g La sección aplastada y la torsión en el render, con T16 (M)
-- [ ] T16 Las fichas se renderizan en Blender, si D10 sale a favor, probado con los pilotos (M)
+- [ ] T16 Las fichas se renderizan en Blender, probado con los pilotos (M)
 - [ ] T17 Animación entre pasos con el modo «atar» del motor, con el as de guía y el amarre cuadrado de piloto (L)
 - [ ] T18 Videos: horizontal en el visor y vertical para redes, con los pilotos (M)
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L)

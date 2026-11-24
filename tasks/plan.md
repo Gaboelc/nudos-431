@@ -171,8 +171,8 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
   - **Ballestrinque doble:** su entrada es la página del manual de la Tropa. Por lo que describe (la cuerda tira a lo largo del mástil), es el *rolling hitch*.
   - **El *tautline hitch* se llama «tensor ajustable»**, para no confundirlo con el tensor (*trucker's hitch*).
   - **El *mooring hitch* se llama «nudo de liberación rápida».** En el manual v0.1 era «nudo de amarre de liberación rápida»; se quitó «amarre» para no confundirlo con los amarres.
-- **D10 Render en Blender:** si las imágenes de las fichas pasan de three.js con Edge a Blender, y si Gabriel compra Studio in a Folder. Se decide con la prueba de concepto del render y del video con el motor (T14b, fase 5). Si sale a favor, reemplaza la decisión de arquitectura 5 en lo que toca a la impresión; el visor sigue en three.js.
-- **D11 Pila del motor de física:** con qué bibliotecas se arma el motor de T15 (`ipctk` con `numba`, NVIDIA Warp o código propio). Se decide en la prueba de concepto del motor (T14a), con la prueba de velocidad, de que repita el resultado y de que nunca se atraviese.
+- **D10 Render en Blender (resuelta, 24 de noviembre de 2026):** las imágenes de las fichas pasan de three.js con Edge a Blender (T16), y los videos se renderizan en Blender (T18). Reemplaza la decisión de arquitectura 5 en lo que toca a la impresión; el visor sigue en three.js. La compra de Studio in a Folder no hace falta para la implementación, porque las pruebas de concepto no usaron nada del paquete: queda a criterio de Gabriel, y si lo compra, su código nunca entra al repositorio.
+- **D11 Pila del motor de física (resuelta, 24 de noviembre de 2026):** `ipctk` (la barrera, la CCD aditiva con LBVH y el roce de IPC) con `numpy` y `scipy`, como en T14a. `numba` entra solo si la varilla resulta lenta, y Warp no se usa.
 
 ### Lo hecho
 
@@ -353,37 +353,9 @@ Después de cada tanda hay un punto de control:
 5. **Todas las fichas se rehacen** con el render nuevo (Gabriel, 23 nov), también las de los nudos aprobados y publicados.
 6. **La forma de la cuerda la da un motor de física propio, en Python** (T15), no la física de Blender. Blender no tiene un simulador de cuerda: se arma con *cloth* o con cadenas de cuerpos rígidos, y una cuerda delgada que choca consigo misma se atraviesa, y en un nudo eso cambia los cruces sin avisar. Además, el visor, las fichas y la comprobación de cruces viven en Python. El motor reemplaza a la relajación y al apretado, y también sirve para animar (T17).
 
-#### T14a: Prueba de concepto del motor de física (rama `poc/motor`)
+#### T14a y T14b: las pruebas de concepto (cerradas)
 
-**Descripción:** el motor de T15 en su versión mínima, para ver si da la forma que se busca antes de comprometer la implementación.
-- **La espiga:** instalar y probar las bibliotecas candidatas (`ipctk`, `numba` y Warp) en esta computadora, con Python 3.14 en Windows. Se mide la velocidad, si repiten el resultado y si la cuerda se atraviesa alguna vez. Es lo que decide D11.
-- **El mínimo que hace falta para asentar y apretar:** la varilla (estiramiento, flexión y peso; la torsión, si alcanza), el contacto con barrera y CCD y el roce.
-- **Los nudos:** el amarre cuadrado terminado y el paso de los ahorcados, que es lo que Gabriel ve tieso, y el as de guía terminado, como nudo libre. Cada uno parte de la plantilla o del trazado de hoy y se asienta tirando de los extremos.
-- **La página de prueba:** cada nudo como sale hoy, con la v2 de `poc/cuerda-ajustada` y con el motor, en color y en gris, dibujado con la escena de `poc/blender`. Dice también la secuencia de cada uno, si cumple los límites y cuánto tardó.
-
-**Criterios de aceptación:**
-- [ ] El amarre y el as de guía asentados con el motor tienen la secuencia declarada y cumplen los límites.
-- [ ] Una cuerda lanzada contra otra y contra un palo no los atraviesa.
-- [ ] El `LEEME.md` de la rama dice qué biblioteca se propone para D11, cuánto tardó cada nudo y qué falta para la implementación.
-- [ ] **Punto de control D:** Gabriel ve la página de prueba y aprueba seguir.
-
-**Dependencias:** ninguna. **Tamaño:** L. **Sesión:** modelo grande.
-
-#### T14b: Prueba de concepto del render y del video, con el motor (rama `poc/render-motor`)
-
-**Descripción:** lo de `poc/blender` (la escena de Blender, la página de prueba y el video), ahora con la cuerda que da el motor.
-- **Las imágenes de la ficha** de los nudos de T14a en Blender, a su tamaño impreso, en color y en gris, junto a las de hoy. Con la torsión del motor girando la trenza, si T14a la tiene.
-- **Un video** del amarre cuadrado y otro del as de guía, con el modo «atar» mínimo: una mano lleva el chicote por su camino y la cuerda se mueve con el motor. En horizontal para el visor y en vertical, con su propia cámara, para redes.
-- **Los nombres** «Firme» y «Chicote» sobre las imágenes, como en las fichas de hoy, que faltaban en `poc/blender`.
-
-**Criterios de aceptación:**
-- [ ] La página de prueba impresa y los dos videos, en la rama, con cuánto tardó cada cosa.
-- [ ] En el video ningún cuadro tiene la cuerda atravesada, y cada paso termina en la pose de su imagen.
-- [ ] **Punto de control E:** Gabriel imprime la página y ve los videos. Decide D10 (el render en Blender), D11 (la pila del motor) y si compra el paquete, y aprueba que empiece la implementación.
-
-**Dependencias:** el punto de control D. **Tamaño:** L. **Sesión:** modelo grande.
-
-**Las exploraciones de antes** (23 nov), en las ramas `poc/blender` y `poc/cuerda-ajustada`, son la base de estas dos pruebas: la escena de Blender y la página de prueba, el video del amarre y lo que se aprendió al apretar y al cambiar la plantilla.
+Las dos pruebas de concepto y los puntos de control D y E están cerrados (24 nov). Su detalle está en el historial, y el código, en las ramas `poc/motor` y `poc/render-motor`, con su `LEEME.md`. Lo que aprendieron va abajo, en cada tarea.
 
 #### T15: Motor de física de la cuerda (propuesta, 23 nov)
 
@@ -419,11 +391,11 @@ Se implementa después del punto de control E, desde lo aprendido en T14a. Lo qu
 - **Los parámetros de la cuerda** van en `config/cuerdas.yaml`, uno por tipo de cuerda (la de 8 mm de los nudos libres, el cordino del prusik, el cordón de la cabeza de turco), calibrados en T15f. Una especificación puede pedir la tensión de cada paso (`tension: suelta | ajustada | apretada`), con «ajustada» por omisión: es la v1.14 del formato.
 - **`modelo.json` no cambia de forma:** sigue con los puntos de cada paso, y gana, opcional, la torsión de cada tramo y la presión de contacto en cada punto, para el render (T16). El visor los ignora.
 
-**Lo que cuesta (a confirmar en T14a).** El amarre cuadrado tiene unos 2300 nodos y el as de guía unos 500. Si un paso de Newton con contactos tarda de 0,05 a 0,2 s, asentar un paso son de 200 a 1000 pasos: de 1 a 3 minutos. Un nudo serían de 10 a 30 minutos, y los 40 nudos, una noche o dos. Gabriel ya aceptó ese costo.
+**Lo que cuesta (medido en T14a y T14b).** Asentar un paso del amarre cuadrado (unos 2300 nodos) con la tensión de atado tarda de 4 a 14 s, y el as de guía, 1 s. Un video del amarre son 270 asentamientos cortos: 744 s con 8 procesos. El costo grande es el render (T16 y T18), no el motor.
 
 **Las subtareas, en orden.** Cada una termina con sus pruebas pasando. Se prueban con los nudos piloto; todos los nudos se calculan juntos en T19.
 
-- **T15a, la pila (S):** lo que T14a aprendió de las bibliotecas pasa a `nudos/fisica/`, con sus dependencias en `pyproject.toml` y su instalación en `CLAUDE.md`. D11 ya está decidida.
+- **T15a, la pila (S):** `ipctk` (D11) pasa a `pyproject.toml` y su instalación a `CLAUDE.md`, y lo que T14a aprendió de la biblioteca (la tabla de `poc/motor/LEEME.md`: el orden de `Hyperplane`, los filtros nativos, la CCD aditiva, la rigidez baja de la barrera) queda en `nudos/fisica/` con una prueba cada uno. Se decide si `ipctk` va en el venv de A: o en uno fuera de Drive, como en T14a.
 - **T15b, la varilla (M):** estiramiento, flexión, torsión y peso, con gradientes y Hessianos comprobados contra diferencias finitas. Pruebas: la catenaria (una cuerda colgada entre dos puntos toma la forma del coseno hiperbólico) y la elástica (un voladizo cae lo que dice la fórmula).
 - **T15c, el contacto y el roce (L):** la barrera y la CCD entre tramos y con los anfitriones, y el roce. Pruebas:
   - Dos cuerdas lanzadas una contra otra nunca se atraviesan.
@@ -446,20 +418,26 @@ Se implementa después del punto de control E, desde lo aprendido en T14a. Lo qu
 
 #### T16: Las fichas se renderizan en Blender
 
-**Descripción:** solo si D10 sale a favor. `python -m nudos imprimir` dibuja con Blender los pasos, el error junto al paso correcto y el nudo terminado por delante y por detrás, y `ficha` las sigue armando con Edge. Se prueba con los nudos piloto; las fichas de todos los nudos se rehacen en T19.
+**Descripción:** D10 salió a favor (24 nov). `python -m nudos imprimir` dibuja con Blender los pasos, el error junto al paso correcto y el nudo terminado por delante y por detrás, y `ficha` las sigue armando con Edge. Se prueba con los nudos piloto; las fichas de todos los nudos se rehacen en T19.
+- **Los nombres** («Firme», «Chicote» y los de cada cuerda) salen de la misma regla que hoy (`nombresDe` en `render/escena.js`), no del primer punto que se ve, como en T14b: en el amarre, hoy va solo «Chicote».
 
 **Criterios de aceptación:**
 - [ ] Imprimir dos veces da las mismas imágenes, o diferencias que `comparar` declara ruido. Cycles con semilla fija y un solo denoiser; si la GPU no repite el resultado bit a bit, `comparar` gana una tolerancia documentada.
 - [ ] Las fichas siguen cabiendo y se leen en gris.
 - [ ] Gabriel revisa en papel las fichas de los pilotos.
 
-**Dependencias:** el punto de control E (D10) y T15; T15g se hace junto con esta. **Tamaño:** M, más el tiempo de render de unos 40 nudos: unos 3 s por imagen (`poc/blender`).
+**Dependencias:** el punto de control E (D10) y T15; T15g se hace junto con esta. **Tamaño:** M, más el tiempo de render de unos 40 nudos: de 8 a 12 s por imagen a 256 muestras (T14b).
 
 #### T17: Animación entre pasos
 
 **Descripción:** calcular el movimiento continuo de la cuerda de un paso al siguiente con el modo «atar» del motor (T15). Una mano lleva el chicote por un camino que sigue, con un margen, la cuerda del paso siguiente, desde su punta, como al pasarla por un lazo. El resto de la cuerda se mueve con la dinámica, el peso y el roce, y al final se asienta en la pose de la ficha. Como el motor nunca deja que la cuerda se atraviese, tampoco entre dos cuadros, la animación hereda esa garantía.
 - En una plantilla, cada paso es un comienzo más largo de la misma cuerda: la mano lleva el chicote por el camino final (como el video de `poc/blender`), pero ahora la cuerda que ya está se aprieta con cada vuelta nueva.
 - En un nudo libre, la cola cambia de forma entre pasos: la mano la lleva por fuera de todo y la hace entrar por donde dice el paso.
+
+Lo que mostró T14b:
+- **En un nudo libre, la mano tiene que planear por encima y por debajo.** Llevar la cuerda al paso siguiente con resortes, sin atravesarse, deja el chicote encima del tramo por el que debía pasar por debajo, y el cruce sale al revés. La mano tiene que levantar el tramo o meter el chicote por debajo, a una altura que sale de la secuencia declarada del paso siguiente.
+- **En una plantilla, avanzar la mano por el camino y asentar cada cuadro funciona** (el video del amarre de T14b), con la tensión de atado de T14a.
+- **La cámara va por tramos:** desde una sola vista, el ballestrinque inicial del amarre queda detrás del palo. Y el video necesita una pausa al final de cada paso: el amarre en 9 s va demasiado rápido.
 
 El diseño de los caminos de la mano va como bloque de este plan, con un nudo libre (el as de guía) y una plantilla (el amarre cuadrado) de piloto.
 
@@ -480,11 +458,11 @@ El diseño de los caminos de la mano va como bloque de este plan, con un nudo li
 - [ ] El visor del as de guía muestra su video, y la URL del QR no cambia.
 - [ ] Gabriel aprueba los videos de los pilotos; los de los demás nudos se arman en T19.
 
-**Dependencias:** T17. **Tamaño:** M, más el tiempo de render: en `poc/blender`, 3,8 s por cuadro a 1280 × 720 con 64 muestras, unos 20 minutos por cada 10 s de video. El vertical se renderiza con su propia cámara: recortar el horizontal corta el nudo.
+**Dependencias:** T17. **Tamaño:** M, más el tiempo de render: unos 7 s por cuadro a 1280 × 720 con 64 muestras (T14b), unos 35 minutos por cada 10 s de video y formato; los 36 nudos en dos formatos, de 30 a 50 horas. El vertical se renderiza con su propia cámara: recortar el horizontal corta el nudo.
 
 #### T19: Todos los nudos a la vez
 
-**Descripción:** con todo implementado y probado en los pilotos, una sola corrida calcula todos los nudos con el motor, dibuja todas sus fichas (en Blender, si D10 sale a favor) y arma todos sus videos. No hay tandas (Gabriel, 23 nov).
+**Descripción:** con todo implementado y probado en los pilotos, una sola corrida calcula todos los nudos con el motor, dibuja todas sus fichas en Blender y arma todos sus videos. No hay tandas (Gabriel, 23 nov).
 1. `referencia` de todos los nudos con el código de antes de la fase, para comparar.
 2. Todos los nudos construidos con el motor, a la vez y con todos los núcleos (`nudos/procesos.py`), de noche si hace falta.
 3. `comparar` dice qué cambió en cada nudo. Donde la secuencia de algún paso no es la declarada, el paso se corrige (ver «La secuencia declarada sigue mandando» en T15) y se vuelve a correr.
@@ -501,11 +479,11 @@ El diseño de los caminos de la mano va como bloque de este plan, con un nudo li
 
 #### Punto de control de la fase 5
 
-- [ ] D10 y D11 decididas, todos los nudos calculados con el motor en T19, todas las fichas rehechas (en Blender, si D10 sale a favor) y un video por nudo en el visor.
+- [ ] Todos los nudos calculados con el motor en T19, todas las fichas rehechas en Blender y un video por nudo en el visor.
 
 ### Fase 6: libro y primera edición
 
-Va después de la fase 5 (Gabriel, 23 nov): las fichas del libro salen con la cuerda del motor y, si D10 sale a favor, con el render de Blender.
+Va después de la fase 5 (Gabriel, 23 nov): las fichas del libro salen con la cuerda del motor y con el render de Blender.
 
 #### T11: Material inicial del libro
 
@@ -557,7 +535,7 @@ Va después de la fase 5 (Gabriel, 23 nov): las fichas del libro salen con la cu
 - [ ] `python -m nudos libro`
 - [ ] Manual: escanear todos los QR del ejemplar impreso.
 
-**Dependencias:** fase 4, la fase 5 (T19: todos los nudos con el motor y, si D10 sale a favor, con el render de Blender), T11, T12 y D8. La edición 1 se imprime con las imágenes nuevas.
+**Dependencias:** fase 4, la fase 5 (T19: todos los nudos con el motor y con el render de Blender), T11, T12 y D8. La edición 1 se imprime con las imágenes nuevas.
 
 **Archivos:** `nudos/libro.py`, `libro/colofon.html`, `CHANGELOG.md`
 
@@ -596,7 +574,7 @@ Va después de la fase 5 (Gabriel, 23 nov): las fichas del libro salen con la cu
 
 ## Preguntas abiertas
 
-- **D3, D8 y D10:** las decisiones previas que siguen abiertas.
+- **D3 y D8:** las decisiones previas que siguen abiertas.
 - **D7:** si la dirigencia de la Tropa participa en la revisión de su anexo y en conseguir probadores.
 
 ## Lo que se reutilizó del prototipo
