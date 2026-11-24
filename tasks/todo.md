@@ -26,10 +26,12 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 - [x] T1 a T7c y T9 a T10, con los puntos de control 1, A, 2, B y C
 - [ ] T8 Cabeza de turco (provisional; Gabriel la deja para el final del plan)
   - [x] Al volver: Gabriel trajo un método plano; la propuesta está en el plan (T8 con el método plano)
-  - [ ] Gabriel aprueba el diseño plano y responde sus preguntas
+  - [x] Gabriel aprueba el diseño plano y responde sus preguntas (23 nov)
+  - [ ] Borrador de los pasos 1 a 5 con la skill `nudo-nuevo` (esfuerzo medio); Gabriel revisa la hoja
+  - [ ] El paso del anillo, el terminado sin apretar y el borrado de la plantilla y el tubo, con `referencia` y `comparar`
   - [ ] Error construido y `specs/cabeza-de-turco.yaml` con el texto de la ficha; la ficha cabe
   - [ ] Gabriel revisa el texto de la ficha
-  - [ ] Filtro 1: Gabriel la ata con un cordón y un tubo, siguiendo la ficha impresa
+  - [ ] Filtro 1: Gabriel la ata con un cordón, siguiendo la ficha impresa, y la prueba en una pañoleta
   - [ ] Registrar el filtro 1 y publicar el sitio con la cabeza de turco en `publicados.txt`
 
 ## Fase 4: producción de los 30 nudos restantes

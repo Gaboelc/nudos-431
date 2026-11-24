@@ -256,7 +256,7 @@ Después de cada tanda hay un punto de control:
 **Lo pendiente de la fase 4.** Las tandas 1 a 5 están en el sitio (35 nudos); la propuesta y el «Cómo se hizo» de la tanda 5 están en el historial.
 - **T8, la cabeza de turco,** al final del plan, con el método plano de abajo. La versión sobre el tubo, que Gabriel no entendió, está en el historial (T8).
 
-#### T8 con el método plano (propuesta, 23 nov de 2026; falta que Gabriel la apruebe)
+#### T8 con el método plano (propuesta, 23 nov de 2026; Gabriel la aprobó el mismo día, ver «Lo que decidió Gabriel» al final)
 
 **Por qué otro método.** El 11 nov Gabriel no entendió el nudo tejido vuelta por vuelta sobre el tubo. Ahora trajo un método que se ata plano sobre la mesa (`entradas/cabeza-de-turco/nudo_cabeza_de_turco.pdf`, 5 dibujos, e `images.webp`, los mismos dibujos en color): dos gazas, el chicote rodea el firme, se teje, se sigue la cuerda para doblarla y al final se agranda el centro para darle forma de anillo. Es la misma cabeza de turco de 3 cabos y 4 senos, atada plana: el nudo del dibujo 3 tiene 8 cruces que alternan, y su secuencia es la de la cabeza de turco 3 × 4 (comprobado fuera del repositorio, comparando sus secuencias de cruces). Lo plano tiene dos ventajas sobre el tubo: cada paso se ve entero desde arriba, sin girar nada, y es un nudo libre como los que ya salen bien.
 
@@ -292,7 +292,7 @@ Después de cada tanda hay un punto de control:
 
 **Los extremos.** Al terminar, el firme y el chicote salen por el borde de afuera. En el anillo se cortan cortos y se esconden por dentro, bajo la cuerda de al lado. Propuesta: en el paso 6 se ven cortados, a 1,5 diámetros de su último cruce, y el texto dice cómo esconderlos.
 
-**Error común.** Con imagen, en el paso 3: el chicote empieza a tejer por encima en vez de por debajo (`invierte: [5]`). Es el error más fácil, porque acaba de pasar por encima del firme y lo natural es seguir igual. Quedan dos «por encima» seguidos, se ve en la imagen y el nudo no se traba. El resaltado empieza después del cruce 4, así que el chicote llega azul. Sin imagen (`error.otros`): que la segunda pasada cruce la primera o cambie de lado, y apretar de una vez tirando de un extremo, que deforma el anillo (se ajusta de a poco, siguiendo la cuerda).
+**Error común** (lo eligió Gabriel). Con imagen, en el paso 2: el chicote rodea el firme al revés, primero por delante y después por detrás (`invierte: [3, 4]`). La secuencia del error es `4O 1O 3U 2O 1U 3O 2U 4U`: la gaza derecha queda encima de la izquierda y el chicote, bajo el firme. Desde ahí ningún tejido sale bien. El resaltado es el del paso 2, el chicote desde antes del cruce 3, así que llega azul. Sin imagen (`error.otros`): empezar a tejer por encima en el paso 3 (dos «por encima» seguidos, y el nudo no se traba); que la segunda pasada cruce la primera o cambie de lado, y apretar de una vez tirando de un extremo, que deforma el anillo (se ajusta de a poco, siguiendo la cuerda).
 
 **Encuadre y terminado.**
 - Pasos 1 a 5: la vista de los nudos libres, desde arriba, con un mismo encuadre que el borrador elige para que quepa el nudo doblado y el comienzo del firme. El error, más cerca del cruce 5.
@@ -308,13 +308,13 @@ Después de cada tanda hay un punto de control:
 2. El paso del anillo, el terminado sin apretar y el borrado de la plantilla: modelo grande, en su worktree, con `referencia` y `comparar`.
 3. El texto de la ficha y la ficha. Filtro 1 con un cordón, la ficha impresa y una pañoleta.
 
-**Preguntas para Gabriel:**
-1. ¿Apruebas el método plano con estos 6 pasos y estos cruces?
-2. El último paso: ¿el anillo en 3D (código nuevo, lo recomiendo) o plano con el centro agrandado (sin código)?
-3. ¿El anillo solo, parado en la mesa (lo recomiendo), o sobre el tubo, como antes?
-4. ¿Dos pasadas (32 cruces), como el dibujo 4 y como habías decidido el 11 nov?
-5. El error con imagen: ¿empezar a tejer por encima (cruce 5), o rodear el firme al revés en el paso 2 (cruces 3 y 4)?
-6. ¿Borro la plantilla y el tubo actuales?
+**Lo que decidió Gabriel (23 nov de 2026):**
+1. El método es el plano, con estos 6 pasos y estos cruces.
+2. El último paso es el anillo en 3D, con el código nuevo.
+3. El anillo va solo, parado en la mesa, sin el tubo.
+4. Dos pasadas, 32 cruces.
+5. El error con imagen es rodear el firme al revés en el paso 2 (`invierte: [3, 4]`); empezar a tejer por encima pasa a los errores sin imagen.
+6. Se borran la plantilla `cabeza-de-turco` y el anfitrión `tubo`; del tubo se aprovecha el código de los cruces en la superficie desenrollada y el `mapa` de la hoja, para el anillo.
 
 ### Fase 5: render en Blender, motor de física y videos (propuesta, 23 nov)
 
