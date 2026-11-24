@@ -85,11 +85,12 @@ def cilindro(centro, eje, radio: float, largo: float, lados: int = LADOS, anillo
     return Solido(V, np.array(F, dtype=np.int32), mu)
 
 
-def mesa(altura: float = 0.0, dmin: float = DMIN, dhat: float = DHAT, medio: float = 500.0) -> Solido:
+def mesa(altura: float = 0.0, dmin: float = DMIN, dhat: float = DHAT, medio: float = 500.0,
+         radio: float = 0.5) -> Solido:
     """La mesa, como un cuadrado de 2·`medio` de lado en dos triángulos. Queda de modo que el
-    eje de una cuerda apoyada (z = altura + 0,5) esté a media franja de la barrera, a
-    dmin + dhat/2 de la malla."""
-    z = altura + 0.5 - dmin - dhat / 2
+    eje de una cuerda de `radio` apoyada (z = altura + radio) esté a media franja de la
+    barrera, a dmin + dhat/2 de la malla."""
+    z = altura + radio - dmin - dhat / 2
     V = np.array([[-medio, -medio, z], [medio, -medio, z], [medio, medio, z], [-medio, medio, z]])
     return Solido(V, np.array([[0, 1, 2], [0, 2, 3]], dtype=np.int32))
 
@@ -114,6 +115,10 @@ def _aristas(F: np.ndarray) -> np.ndarray:
 class MallaContacto:
     """La cuerda (N nodos en fila), los anfitriones fijos y, si hay, la mesa (`altura_mesa`).
 
+    Las distancias van en diámetros de una cuerda de grosor 1. Para otro grosor g, dmin, dhat
+    y `vecinos` se multiplican por g y `radio_cuerda` es g/2 (ver ContactoCompuesto). Con
+    `parches` (uno por nodo), solo chocan los nodos de parches distintos.
+
     `X0` da la forma de partida, solo para saber cuántos nodos tiene la cuerda y a qué
     distancia van; las posiciones de cada momento se pasan a cada llamada (`x`, (N, 3)).
     """
@@ -121,7 +126,8 @@ class MallaContacto:
     def __init__(self, X0, solidos=(), altura_mesa: float | None = None,
                  dmin: float = DMIN, dhat: float = DHAT, vecinos: float = VECINOS,
                  nodos_por_cuerda=None, mu_cuerda: float = CUERDA_8MM.mu_cuerda,
-                 mu_solidos: float = CUERDA_8MM.mu_madera):
+                 mu_solidos: float = CUERDA_8MM.mu_madera, radio_cuerda: float = 0.5,
+                 parches=None):
         X0 = np.asarray(X0, float)
         self.N = N = len(X0)
         self.dmin, self.dhat = dmin, dhat
@@ -130,7 +136,7 @@ class MallaContacto:
             raise ValueError("nodos_por_cuerda tiene que sumar los nodos de X0, al menos 2 por cuerda")
         self.cortes = cortes
         if altura_mesa is not None:
-            solidos = [*solidos, mesa(altura_mesa, dmin, dhat)]
+            solidos = [*solidos, mesa(altura_mesa, dmin, dhat, radio=radio_cuerda)]
         V = [X0]
         E = [np.column_stack([np.arange(a, b - 1), np.arange(a + 1, b)]) for a, b in zip(cortes[:-1], cortes[1:])]
         F = []
@@ -157,7 +163,13 @@ class MallaContacto:
             h = float(np.mean(np.linalg.norm(np.diff(X0[a:b], axis=0), axis=1)))
             k = max(2, math.ceil(vecinos / h))
             pares.update({(i, j): False for i in range(a, b) for j in range(i + 1, min(b, i + k + 1))})
-        self.malla.can_collide = ipctk.make_static_obstacle_filter(N) & ipctk.make_sparse_filter(pares, True)
+        filtro = ipctk.make_static_obstacle_filter(N) & ipctk.make_sparse_filter(pares, True)
+        if parches is not None:
+            # Solo chocan los nodos de parches distintos (ContactoCompuesto: los de dos grosores).
+            todos = np.concatenate([np.asarray(parches, np.int32),
+                                    np.full(len(self.V_fijos), -1, np.int32)])
+            filtro = filtro & ipctk.make_vertex_patches_filter(todos)
+        self.malla.can_collide = filtro
         self._bp, self._ccd = ipctk.LBVH(), ipctk.AdditiveCCD()
 
     def V(self, x) -> np.ndarray:
@@ -253,3 +265,85 @@ def _recortar(H, n: int) -> sp.csr_matrix:
     H = sp.csr_matrix(H)[:n, :n]
     H.sort_indices()
     return H
+
+
+class ContactoCompuesto:
+    """El contacto de cuerdas de distinto grosor (T15d), como la vuelta de escota. ipctk tiene
+    una sola distancia mínima por malla, así que va una malla por grosor (sus cuerdas entre sí y
+    con los anfitriones y la mesa, a la escala de ese grosor) y una por cada par de grosores
+    (solo los nodos de uno contra los del otro, a la suma de sus radios). Se usa como una
+    MallaContacto en `Sistema`: la barrera y el roce se suman y el paso libre es el menor.
+
+    `partes` son pares (malla, nodos): los nodos de la cuerda entera que lleva esa malla, en su
+    orden."""
+
+    def __init__(self, partes, N: int):
+        self.N = N
+        self.partes = []
+        for malla, nodos in partes:
+            nodos = np.asarray(nodos, int)
+            if malla.N != len(nodos):
+                raise ValueError("la malla no tiene los nodos que dice")
+            gl = (3 * nodos[:, None] + np.arange(3)).ravel()
+            P = sp.csr_matrix((np.ones(len(gl)), (np.arange(len(gl)), gl)), shape=(len(gl), 3 * N))
+            self.partes.append((malla, nodos, gl, P))
+
+    def _sub(self, x, nodos):
+        return np.asarray(x, float).reshape(self.N, 3)[nodos]
+
+    def barrera(self, x, kappa: float, orden: int = 2):
+        n = 3 * self.N
+        E, g, H = 0.0, np.zeros(n), sp.csr_matrix((n, n))
+        for malla, nodos, gl, P in self.partes:
+            r = malla.barrera(self._sub(x, nodos), kappa, orden)
+            if orden == 0:
+                E += r
+                continue
+            E += r[0]
+            g[gl] += r[1]
+            if orden == 2:
+                H = H + (P.T @ r[2] @ P).tocsr()
+        if orden == 0:
+            return E
+        if orden == 2:
+            H.sort_indices()
+        return E, g, (H if orden == 2 else None)
+
+    def roce_retrasado(self, x0, kappa: float, eps: float = EPS_ROCE) -> "RoceCompuesto":
+        return RoceCompuesto(self, [(malla.roce_retrasado(self._sub(x0, nodos), kappa, eps), nodos, gl, P)
+                                    for malla, nodos, gl, P in self.partes])
+
+    def paso_libre(self, x0, x1) -> float:
+        return min(malla.paso_libre(self._sub(x0, nodos), self._sub(x1, nodos))
+                   for malla, nodos, _, _ in self.partes)
+
+
+@dataclass
+class RoceCompuesto:
+    """El roce de un ContactoCompuesto: el de cada una de sus mallas."""
+    contacto: ContactoCompuesto
+    partes: list
+
+    def __len__(self):
+        return sum(len(r) for r, _, _, _ in self.partes)
+
+    def evaluar(self, x, orden: int = 2):
+        c = self.contacto
+        n = 3 * c.N
+        E, g, H = 0.0, np.zeros(n), sp.csr_matrix((n, n))
+        for roce, nodos, gl, P in self.partes:
+            if len(roce) == 0:
+                continue
+            r = roce.evaluar(c._sub(x, nodos), orden)
+            if orden == 0:
+                E += r
+                continue
+            E += r[0]
+            g[gl] += r[1]
+            if orden == 2:
+                H = H + (P.T @ r[2] @ P).tocsr()
+        if orden == 0:
+            return E
+        if orden == 2:
+            H.sort_indices()
+        return E, g, (H if orden == 2 else None)

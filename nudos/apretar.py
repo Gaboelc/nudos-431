@@ -35,6 +35,12 @@ sobre la delgada con radio 0,83. Es el nudo por detrás de siempre (el último p
 relajado), apretado igual, con la secuencia invertida.
 
 Un nudo de plantilla no se aprieta: su plantilla ya traza la cuerda tensa.
+
+Con la opción del motor (T15d), el apretado es el modo 2 del motor (nudos/fisica/asentar.py,
+`apretar`): el último paso asentado, con las manos de nudos/fisica/manos.py (`para_apretar`)
+tirando fuerte. Se comprueba como un paso, y sus fallas sí cuentan: el motor no busca la ronda que
+cumple, así que si algo falla, se ve. Si el motor todavía no tiene el anfitrión (T15f), se
+aprieta como siempre.
 """
 from __future__ import annotations
 
@@ -145,6 +151,9 @@ def de_otro_proceso(respuesta, base):
 def apretado_delante(spec: Spec, final: Resultado, rondas: int = RONDAS) -> Resultado:
     """El nudo terminado apretado, por delante (lo primero de apretado())."""
     paso: Paso = spec.pasos[-1]
+    r = _con_motor(spec, paso, final, paso.secuencia)
+    if r is not None:
+        return r
     if spec.anfitrion is not None and not spec.anfitrion.en_la_mesa:
         from .anfitrion import apretar_paso
         return apretar_paso(paso, spec.anfitrion, final, rondas)
@@ -157,8 +166,50 @@ def apretado_detras(spec: Spec, reverso: Resultado | None, rondas: int = RONDAS)
     paso: Paso = spec.pasos[-1]
     if reverso is None or (spec.anfitrion is not None and not spec.anfitrion.en_la_mesa):
         return None
+    r = _con_motor(spec, paso, reverso, invertida(paso.secuencia))
+    if r is not None:
+        return r
     return apretar(reverso, invertida(paso.secuencia), paso.pasadas, rondas=rondas,
                    **_mesa(spec, paso))
+
+
+def _con_motor(spec: Spec, paso: Paso, base: Resultado, secuencia) -> Resultado | None:
+    """`base` apretado con el motor, si está la opción y el motor tiene su anfitrión; si no,
+    None."""
+    from .fisica import usar_motor
+    if not usar_motor():
+        return None
+    from .fisica.asentar import SinMotor, apretar as apretar_motor
+    from .libre import LIMITES_MOTOR
+    solido = buscar = medir = None
+    a = spec.anfitrion
+    if a is not None and a.en_la_mesa:
+        m = _mesa(spec, paso)
+        solido, medir = m["anfitrion"], m["medir"]
+    elif a is not None:
+        from .anfitrion import _buscar, _curva, _medir, sobre_superficie
+        solido = sobre_superficie(a)
+        X, h, _, sobre = _curva(paso, solido)
+        if len(X) != len(base.puntos):
+            return None
+
+        def buscar(Y):
+            return _buscar(Y, base.h, sobre, solido)
+        medir = _medir(paso.n, solido)
+
+    def comprobar(Y):
+        return _resultado(base.n, Y, base.h, secuencia, None, buscar=buscar, medir=medir,
+                          reparto=base.reparto, pasadas=paso.pasadas, limites=LIMITES_MOTOR)
+
+    # Apretado del todo, un nudo se para sobre la mesa y, visto desde arriba, puede mostrar
+    # otro diagrama: queda lo más apretado que todavía se ve como en la ficha (la secuencia
+    # declarada y los límites), como en apretar().
+    try:
+        r = apretar_motor(base.puntos, base.reparto, solido, base.cruces.values(),
+                          aceptar=lambda Y: not comprobar(Y).fallas)
+    except SinMotor:
+        return None
+    return base if r.aceptado == 0 else comprobar(r.X)
 
 
 def _mesa(spec: Spec, paso: Paso) -> dict:

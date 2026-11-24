@@ -48,7 +48,9 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [x] T15a La pila elegida en `nudos/fisica/` y `pyproject.toml` (S) (24 nov)
   - [x] T15b La varilla: estiramiento, flexión y peso (la torsión, medida y fuera), con la catenaria y la elástica (M) (24 nov)
   - [x] T15c El contacto y el roce sin atravesarse (IPC y CCD), con el cabrestante y la tabla inclinada (L) (24 nov)
-  - [ ] T15d Asentar y apretar dentro de `construir`, con los pilotos de la fase 2 y su página de prueba (L)
+  - [x] T15d Asentar y apretar dentro de `construir` (`--motor`), con los pilotos de la fase 2 y su página de prueba (L) (24 nov)
+    - [ ] Gabriel revisa en papel `build/motor/prueba.pdf` (`python -m nudos prueba-motor`)
+    - [ ] Las fallas de curvatura de la vuelta de escota con el motor (radio 0,87 en el último paso, 0,85 en el error y 0,77 en el reverso), en T15f
   - [ ] T15e Calibrar con cuerda real: Gabriel mide la cuerda y fotografía cuatro nudos apretados (S)
   - [ ] T15f `construir` usa el motor en cualquier nudo y anfitrión, comprobado con los pilotos (M)
   - [ ] T15g La sección aplastada y la torsión en el render, con T16 (M)

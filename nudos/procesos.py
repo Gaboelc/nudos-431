@@ -22,7 +22,7 @@ import sys
 import threading
 from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor
 
-_ejecutores: dict[int, ProcessPoolExecutor] = {}   # uno por tamaño; ninguno se cierra a medias
+_ejecutores: dict[tuple[int, str], ProcessPoolExecutor] = {}   # ninguno se cierra a medias
 _candado = threading.Lock()
 _en_trabajador = False   # True dentro de un proceso del grupo: ahí no se abre otro grupo
 
@@ -99,10 +99,13 @@ def ejecutor(tareas: int = 2):
     if tareas < 2 or not en_paralelo():
         return EN_LINEA
     n = cuantos()
+    # Un grupo por tamaño y por la opción del motor (T15d): los procesos heredan NUDOS_MOTOR al
+    # arrancar, así que un grupo abierto sin el motor no lo usa aunque después se pida.
+    clave = (n, os.environ.get("NUDOS_MOTOR", ""))
     with _candado:
-        if n not in _ejecutores:
-            _ejecutores[n] = ProcessPoolExecutor(n, mp_context=_Contexto(), initializer=_marcar)
-        return _ejecutores[n]
+        if clave not in _ejecutores:
+            _ejecutores[clave] = ProcessPoolExecutor(n, mp_context=_Contexto(), initializer=_marcar)
+        return _ejecutores[clave]
 
 
 def mapa(fn, argumentos: list[tuple]) -> list[Future]:

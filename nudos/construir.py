@@ -97,9 +97,14 @@ def _construir_plantilla(spec: Spec) -> Modelo:
     El error común es la cuerda de una variante del método, construida como un paso más. Sobre
     un anfitrión, el nudo terminado por detrás no se construye: es un giro rígido del último paso
     (Cruz.voltear). Sin anfitrión, como el adujado, se voltea como una página, sin relajar."""
-    from .plantillas.pasos import construir_error as error_de_plantilla, construir_pasos, voltear_sin_relajar
-    ex = ejecutor(len(spec.pasos) + 1)
+    from .plantillas.pasos import (apretado_con_motor, construir_error as error_de_plantilla,
+                                   construir_pasos, voltear_sin_relajar)
+    from .fisica import usar_motor
+    motor = usar_motor()
+    ex = ejecutor(len(spec.pasos) + 1 + motor)
     f_error = ex.submit(error_de_plantilla, spec)   # a la vez que los pasos
+    # Con el motor (T15d), un amarre se aprieta: el último paso con la tensión «apretada».
+    f_apretado = ex.submit(apretado_con_motor, spec) if motor else None
     resultados, fallas_pasos, secuencias = construir_pasos(spec, ex)
     error, fallas_error = f_error.result()
     fallas = consistencia(secuencias) + fallas_pasos + cruces_que_saltan(resultados) + fallas_error
@@ -110,7 +115,10 @@ def _construir_plantilla(spec: Spec) -> Modelo:
             and resultados[-1].n == len(spec.pasos)):
         reverso = voltear_sin_relajar(resultados[-1], secuencias[-1][1])
         fallas.extend(f"Reverso del nudo terminado: {f}" for f in reverso.fallas)
-    return Modelo(spec, resultados, fallas, error, reverso)
+    apretado = None if f_apretado is None else f_apretado.result()
+    if apretado is not None:
+        fallas.extend(f"Nudo terminado apretado: {f}" for f in apretado.fallas)
+    return Modelo(spec, resultados, fallas, error, reverso, apretado)
 
 
 def cruces_que_saltan(resultados: list[Resultado]) -> list[str]:

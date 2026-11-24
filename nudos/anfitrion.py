@@ -27,7 +27,8 @@ from dataclasses import replace
 import numpy as np
 
 from .cruces import Cruce, cruces_2d, emparejar, encimas
-from .libre import R, Resultado, TrazadoError, _resultado, catmull_rom, elevar, relajar, remuestrear
+from .libre import (R, Resultado, TrazadoError, _resultado, asentar_o_relajar, catmull_rom, elevar,
+                    remuestrear)
 from .spec import BASE_BARRIL, CANTO_BARRIL, HUECO_CORNAMUSA, PIE_CORNAMUSA, Anfitrion, Paso
 
 ARCO_DENSO = 0.6       # cada cuánto se toma un punto sobre la superficie del poste, en diámetros
@@ -1061,10 +1062,12 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion) -> Resultado:
     # Cerca del poste la cuerda se modela algo tensa, como cuando se ata: sin gravedad, para
     # que los tramos que suben por el frente no se descuelguen ni amontonen la cuerda.
     _, _, r0 = poste.cilindricas(X)
-    Xr = relajar(X, h, anfitrion=poste, gravedad=r0 > poste.rb + DISTANCIA_SIN_GRAVEDAD,
-                 pasadas_largo=PASADAS_LARGO)
+    Xr, limites = asentar_o_relajar(X, h, anfitrion=poste,
+                                    gravedad=r0 > poste.rb + DISTANCIA_SIN_GRAVEDAD,
+                                    pasadas_largo=PASADAS_LARGO)
     return _resultado(paso.n, Xr, h, paso.secuencia, resaltado,
-                      buscar=lambda Y: _buscar(Y, h, sobre, poste), medir=_medir(paso.n, poste))
+                      buscar=lambda Y: _buscar(Y, h, sobre, poste), medir=_medir(paso.n, poste),
+                      limites=limites)
 
 
 def _medir(n: int, poste: Poste | Tablon | Cornamusa | Barril | Parado):

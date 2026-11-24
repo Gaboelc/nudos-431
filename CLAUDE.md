@@ -12,6 +12,8 @@ Desde la raíz del repositorio, con Python 3.11 o más reciente:
 
 - `python -m pip install -e .[dev]`: instala lo necesario.
 - `python -m nudos construir <slug>`: construye y comprueba todos los pasos y escribe `build/<slug>/modelo.json`.
+- `python -m nudos --motor <orden> …`: cualquier orden con el motor de física (T15d): los pasos se asientan y el terminado se aprieta con `nudos/fisica/asentar.py` en vez de `relajar()` y `apretar()`. Pone `NUDOS_MOTOR=1`. Hoy sabe de la mesa, el poste y la cruz de los amarres; con otro anfitrión o plantilla, ese nudo sale como siempre. Sin la opción, nada cambia.
+- `python -m nudos prueba-motor`: construye los cuatro pilotos sin el motor y con él y arma en `build/motor/prueba.pdf` la página de prueba de T15d, en color y en gris. Necesita Google Chrome.
 - `python -m nudos hoja <slug> [--vista arriba|55] [--pasos 2,4-5]`: genera la hoja de revisión en `build/<slug>/`. Con `--pasos`, solo esos pasos.
 - `python -m nudos diagnostico <slug> [--pasos 2,4-5] [--todo]`: construye solo esos pasos, en segundos, y dice en pocas líneas qué falla o está cerca del límite y cerca de qué punto del YAML, como `gaza[3]`. Con `--todo`, también el error común, el nudo por detrás y los apretados. Los borradores lo usan en vez de scripts propios.
 - `python -m nudos ampliar <imagen> --zona x0,y0,x1,y1`: copia ampliada de una zona de una imagen de la fuente, con cuadrícula, en `revision/_ampliadas/` (fuera de git).

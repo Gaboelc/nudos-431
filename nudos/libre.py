@@ -36,6 +36,11 @@ LIMITES = {
     "curvatura_min": 0.9,      # radio de curvatura, en diámetros
     "estiramiento_max": 0.02,  # fracción del largo de cada tramo
 }
+# Con el motor (T15d), la separación mínima es su distancia mínima (nudos/fisica/contacto.py,
+# DMIN): la IPC no deja ningún par más cerca, y una cuerda apretada sí se aplasta hasta un 5 %
+# contra otra (T15g dibuja la sección aplastada). El 0,97 de siempre cuida a la relajación, que
+# no garantiza nada.
+LIMITES_MOTOR = {**LIMITES, "separacion_min": 0.95}
 
 
 class TrazadoError(ValueError):
@@ -151,9 +156,25 @@ def construir_paso(paso: Paso, anfitrion: Anfitrion | None = None,
     if paso.resaltar is not None:
         a, b = paso.resaltar
         resaltado = (float(ctrl_s[a]), float(ctrl_s[b]))
-    return _resultado(paso.n, relajar(X, h, reparto=reparto, anfitrion=mesa.get("anfitrion")), h,
-                      paso.secuencia, resaltado, medir=mesa.get("medir"), reparto=reparto,
-                      pasadas=paso.pasadas)
+    Xr, limites = asentar_o_relajar(X, h, reparto=reparto, anfitrion=mesa.get("anfitrion"))
+    return _resultado(paso.n, Xr, h, paso.secuencia, resaltado, medir=mesa.get("medir"),
+                      reparto=reparto, pasadas=paso.pasadas, limites=limites)
+
+
+def asentar_o_relajar(X, h, reparto: Reparto | None = None, anfitrion=None, motor=None,
+                      **relajar_kw) -> tuple[np.ndarray, dict]:
+    """La cuerda de un paso relajada (relajar()), o, con la opción del motor (T15d,
+    nudos/fisica/asentar.py), asentada; y los límites con que se comprueba. `motor` son los
+    argumentos de más para asentar_paso(), como la tensión de cada tramo de un amarre. Si el
+    motor todavía no sabe asentar ese nudo (su anfitrión llega en T15f), se relaja."""
+    from .fisica import usar_motor
+    if usar_motor():
+        from .fisica.asentar import SinMotor, asentar_paso
+        try:
+            return asentar_paso(X, h, reparto, anfitrion, **(motor or {})).X, LIMITES_MOTOR
+        except SinMotor:
+            pass
+    return relajar(X, h, reparto=reparto, anfitrion=anfitrion, **relajar_kw), LIMITES
 
 
 def _en_la_mesa(anfitrion: Anfitrion | None, n: int) -> dict:
@@ -205,18 +226,40 @@ def voltear(r: Resultado, secuencia, pasadas=None, anfitrion: Anfitrion | None =
     for i in rep.inicios:   # los puntos fijos de cada firme siguen sobre la mesa
         X[i:i + 3, 2] = rep.radio[i]
     invertida = tuple(t[:-1] + ("U" if encima(t) else "O") for t in secuencia)
-    return _resultado(r.n, relajar(X, r.h, reparto=r.reparto, anfitrion=mesa.get("anfitrion")),
-                      r.h, invertida, None, medir=mesa.get("medir"), reparto=r.reparto,
-                      pasadas=pasadas)
+    from .fisica import usar_motor
+    if usar_motor():
+        # Con el motor, el nudo volteado parte como un trazado: sobre la mesa, con cada cruce
+        # elevado al revés. Volteado tal cual, todo lo que estaba en la mesa queda en el aire, y
+        # la memoria de la cuerda lo dejaría ahí.
+        # Los nodos van cada h sobre la mesa, como en un trazado: vistos desde arriba, los del
+        # nudo asentado quedan más juntos donde la cuerda sube o baja. Lo que sobra al final se
+        # alarga en línea recta, como un chicote que se suelta.
+        P = X[:, :2].copy()
+        for a, b in rep.tramos:
+            Q = X[a:b + 1, :2]
+            S = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(Q, axis=0), axis=1))])
+            u = np.arange(b - a + 1) * r.h
+            P[a:b + 1] = np.column_stack([np.interp(u, S, Q[:, 0]), np.interp(u, S, Q[:, 1])])
+            mas = u > S[-1]
+            if mas.any():
+                d = (Q[-1] - Q[-2]) / np.linalg.norm(Q[-1] - Q[-2])
+                P[a:b + 1][mas] = Q[-1] + (u[mas] - S[-1])[:, None] * d
+        cruces = encontrar_cruces(P, r.h, rep.seguido)
+        if len(cruces) == len(invertida) // 2 and emparejar(cruces, invertida) is not None:
+            X = elevar(P, r.h, cruces, encimas(cruces, invertida), r.reparto)
+    Xr, limites = asentar_o_relajar(X, r.h, reparto=r.reparto, anfitrion=mesa.get("anfitrion"))
+    return _resultado(r.n, Xr, r.h, invertida, None, medir=mesa.get("medir"), reparto=r.reparto,
+                      pasadas=pasadas, limites=limites)
 
 
 def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=None,
-               reparto: Reparto | None = None, pasadas=None) -> Resultado:
+               reparto: Reparto | None = None, pasadas=None, limites: dict | None = None) -> Resultado:
     """Mide la cuerda ya relajada y la compara con la secuencia declarada.
 
     `buscar(X)` devuelve los cruces y la altura de sus dos pasadas (por omisión, los de
     la proyección sobre la mesa). `medir(X)` agrega medidas y fallas propias. Con varias
-    cuerdas, `pasadas` dice cuántas pasadas de la secuencia declarada son de cada una."""
+    cuerdas, `pasadas` dice cuántas pasadas de la secuencia declarada son de cada una.
+    `limites` son los de la comprobación (por omisión, LIMITES; con el motor, LIMITES_MOTOR)."""
     rep = reparto or Reparto.una(len(Xr))
     if buscar is None:
         cruces_r, alturas = encontrar_cruces(Xr, h, rep.seguido), None
@@ -261,7 +304,7 @@ def _resultado(n: int, Xr, h: float, secuencia, resaltado, buscar=None, medir=No
         secuencia=obtenida,
         esperada=esperada,
         medidas=medidas,
-        fallas=_fallas(n, textos, medidas, donde, donde_sep, donde_est) + otras,
+        fallas=_fallas(n, textos, medidas, donde, donde_sep, donde_est, limites) + otras,
         reparto=reparto,
     )
 
@@ -283,30 +326,32 @@ def _texto(secuencia, nombres=(), pasadas=()) -> str:
     return ", ".join(partes)
 
 
-def _fallas(n, textos, medidas, donde, donde_sep=None, donde_est=None) -> list[str]:
+def _fallas(n, textos, medidas, donde, donde_sep=None, donde_est=None, limites=None) -> list[str]:
     """`textos` son la secuencia obtenida y la esperada, escritas con _texto; son iguales
     si coinciden. `donde`, `donde_sep` y `donde_est` son dónde ocurren la curvatura, la
     separación y el estiramiento, para que el mensaje diga cerca de qué punto de la mesa."""
     def cerca(p) -> str:
         return "" if p is None else f" cerca de ({p[0]:.1f}, {p[1]:.1f})"
 
+    lim = limites or LIMITES
+
     out = []
     obtenida, esperada = textos
     if obtenida != esperada:
         out.append(f"Paso {n}: después de relajar, la secuencia es {obtenida} "
                    f"y debía ser {esperada}.")
-    if medidas["separacion_min"] < LIMITES["separacion_min"]:
+    if medidas["separacion_min"] < lim["separacion_min"]:
         out.append(f"Paso {n}: dos tramos quedan a {medidas['separacion_min']:.2f} diámetros"
                    f"{cerca(donde_sep)}; "
-                   f"el mínimo es {LIMITES['separacion_min']}.")
-    if medidas["curvatura_min"] < LIMITES["curvatura_min"]:
+                   f"el mínimo es {lim['separacion_min']}.")
+    if medidas["curvatura_min"] < lim["curvatura_min"]:
         out.append(f"Paso {n}: la cuerda se dobla con radio {medidas['curvatura_min']:.2f} "
                    f"cerca de ({donde[0]:.1f}, {donde[1]:.1f}); el mínimo es "
-                   f"{LIMITES['curvatura_min']}.")
-    if medidas["estiramiento_max"] > LIMITES["estiramiento_max"]:
+                   f"{lim['curvatura_min']}.")
+    if medidas["estiramiento_max"] > lim["estiramiento_max"]:
         out.append(f"Paso {n}: la cuerda se estira {medidas['estiramiento_max']:.1%}"
                    f"{cerca(donde_est)}; "
-                   f"el máximo es {LIMITES['estiramiento_max']:.0%}.")
+                   f"el máximo es {lim['estiramiento_max']:.0%}.")
     return out
 
 

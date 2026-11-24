@@ -28,7 +28,8 @@ import numpy as np
 
 from ..anfitrion import PASADAS_LARGO, PENETRACION_MAX, Cabo, Cruz, Palos, Tubo
 from ..cruces import Cruce, cruces_2d, emparejar
-from ..libre import R, Resultado, TrazadoError, _resultado, catmull_rom, relajar, remuestrear
+from ..libre import (R, Resultado, TrazadoError, _resultado, asentar_o_relajar, catmull_rom, relajar,
+                     remuestrear)
 from ..procesos import ejecutor
 from ..spec import Spec
 from .amarre import AmarreCuadrado, cuerda
@@ -244,9 +245,13 @@ def construir_error(spec: Spec) -> tuple[Resultado | None, list[str]]:
     return r, [f"Error común: {f}" for f in r.fallas]
 
 
-def construir_paso(n: int, g, c, hito: str, previo: str | None) -> Resultado:
+def construir_paso(n: int, g, c, hito: str, previo: str | None, tension: str = "ajustada") -> Resultado:
     """El paso n: la cuerda hasta `hito`, con lo que cae a la mesa. Se resalta lo que agrega
-    desde `previo`. `hito` puede ser también un alias, como «vueltas»."""
+    desde `previo`. `hito` puede ser también un alias, como «vueltas».
+
+    Con la opción del motor (T15d), un amarre sobre la cruz se asienta en vez de relajarse: lo
+    ya atado, con la tensión de atado `tension` (más en los ahorcados), y lo que sigue suelto
+    sobre la mesa."""
     t = c.trazo(hito, previo)
     P, Z = t.puntos, t.zonas
     D, ctrl = catmull_rom(P)
@@ -278,14 +283,30 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None) -> Resultado:
     solido, penetracion = g.solido, g.penetracion
     if t.marco is not None and t.marco.get("solido") is not None:
         solido, penetracion = t.marco["solido"], ("penetracion_dedos", "en un dedo")
+    limites = None
     if quietos is not None and quietos.all():
         # Nada se relaja, como en el adujado; solo se apoya en la mesa lo que la curva suave
         # dejó apenas por debajo.
         Xr = X.copy()
         Xr[:, 2] = np.maximum(Xr[:, 2], R)
     else:
-        Xr = relajar(X, h, anfitrion=solido, gravedad=np.zeros(len(X), bool),
-                     pasadas_largo=PASADAS_LARGO, quietos=quietos)
+        motor = None
+        if isinstance(g, _Amarre):
+            from ..fisica.asentar import tensiones_de_amarre
+            s_hitos = {k: float(s_ctrl[i]) for k, i in c.c.hitos.items() if i <= t.fin}
+            # Sin una mano en el hito: la cuerda dobla ahí hacia la mesa, y sostenerla donde la
+            # deja la plantilla comprimía un tramo un 4 % (T15d). El roce y la memoria de lo que
+            # sigue suelto bastan para que lo atado no se afloje.
+            # Apretado, la cuerda no guarda la forma de la plantilla: manda la tensión.
+            motor = {"tension": tensiones_de_amarre(len(X), s_hitos, h, s_fin, tension),
+                     "chicote": True, "nodos_mano": 1}
+        if motor is not None:
+            Xr, limites = asentar_o_relajar(X, h, anfitrion=solido, motor=motor,
+                                            gravedad=np.zeros(len(X), bool),
+                                            pasadas_largo=PASADAS_LARGO, quietos=quietos)
+        else:
+            Xr = relajar(X, h, anfitrion=solido, gravedad=np.zeros(len(X), bool),
+                         pasadas_largo=PASADAS_LARGO, quietos=quietos)
     medir = None
     if penetracion is not None:
         clave, donde = penetracion
@@ -298,9 +319,30 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None) -> Resultado:
             return {clave: pen}, f
 
     r = _resultado(n, Xr, h, secuencia, (s_ini, s_fin),
-                   buscar=lambda Y: g.buscar(Y, h, zonas, t), medir=medir)
+                   buscar=lambda Y: g.buscar(Y, h, zonas, t), medir=medir, limites=limites)
     r.giro = t.giro
     return r
+
+
+def apretado_con_motor(spec: Spec) -> Resultado | None:
+    """Con la opción del motor (T15d), el terminado apretado de un amarre sobre la cruz: el
+    último paso asentado con la tensión «apretada». Sin la opción, o en otra plantilla, None,
+    como siempre."""
+    from ..fisica import usar_motor
+    if not usar_motor() or not spec.pasos:
+        return None
+    try:
+        g = geometria(spec)
+    except TrazadoError:
+        return None
+    if not isinstance(g, _Amarre):
+        return None
+    c = g.cuerda()
+    previo = spec.pasos[-2].hasta if len(spec.pasos) > 1 else None
+    try:
+        return construir_paso(spec.pasos[-1].n, g, c, spec.pasos[-1].hasta, previo, tension="apretada")
+    except TrazadoError:
+        return None
 
 
 def voltear_sin_relajar(r: Resultado, secuencia) -> Resultado:

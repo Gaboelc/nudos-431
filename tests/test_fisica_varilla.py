@@ -209,3 +209,44 @@ def test_el_marco_paralelo_en_una_helice():
         return math.atan2(D1[k] @ np.cross(T[k], N), D1[k] @ N)
 
     assert angulo(len(T) - 1) - angulo(0) == pytest.approx(-2 * math.pi * c / math.hypot(R, c), rel=2e-3)
+
+
+# --- La memoria (T15d) ---
+
+@pytest.mark.parametrize("semilla", [1, 2])
+def test_la_memoria_contra_diferencias_finitas(semilla):
+    X = curva_al_azar(semilla=semilla)
+    rng = np.random.default_rng(semilla + 20)
+    K = Varilla.curvatura_de(X) + rng.normal(size=(len(X) - 2, 3)) * 0.3
+    v = Varilla(np.linalg.norm(np.diff(X, axis=0), axis=1), curvatura=K)
+    x = X.ravel() + rng.normal(size=X.size) * 0.05
+    E, g, _ = v.memoria(x)
+    h, n = 1e-6, len(x)
+    gfd = np.array([(v.memoria(x + h * u, 0)[0] - v.memoria(x - h * u, 0)[0]) / (2 * h) for u in np.eye(n)])
+    assert np.abs(gfd - g.ravel()).max() <= 1e-7 * np.abs(g).max()
+    H = v.hessiano_de_bloques(np.zeros((v.N - 1, 6, 6)), v.memoria(x)[2]).toarray()
+    Hfd = np.array([(v.memoria(x + h * u, 1)[1].ravel() - v.memoria(x - h * u, 1)[1].ravel()) / (2 * h)
+                    for u in np.eye(n)])
+    assert np.abs(Hfd - H).max() <= 1e-6 * np.abs(H).max()
+    # Con la flexión, es EI·|κb − κb₀|²/(l₀ + l₁).
+    kb = Varilla.curvatura_de(x.reshape(-1, 3))
+    esperada = float(np.sum(v.k_doblar * np.sum((kb - K) ** 2, axis=1)))
+    assert v.flexion(x, 0)[0] + E == pytest.approx(esperada, rel=1e-12)
+
+
+def test_con_memoria_la_cuerda_guarda_su_forma():
+    """Una curva en S sobre la mesa, sin peso, con sus puntas sostenidas: sin memoria cambia
+    de forma (un arco de círculo no, porque ya es un equilibrio); con memoria, se queda como
+    estaba."""
+    t = np.linspace(0, 20, 41)
+    X = np.column_stack([t, 3 * np.sin(t / 3), np.zeros_like(t)])
+    l = np.linalg.norm(np.diff(X, axis=0), axis=1)
+    fijos = [0, 1, 39, 40]
+    for memoria in (True, False):
+        v = Varilla(l, gravedad=False, curvatura=Varilla.curvatura_de(X) if memoria else None)
+        r = newton(v.evaluar, X, fijos=fijos)
+        assert r.convergio
+        if memoria:
+            assert np.abs(r.x - X).max() < 1e-9
+        else:
+            assert np.abs(r.x - X).max() > 0.1

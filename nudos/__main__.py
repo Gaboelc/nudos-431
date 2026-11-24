@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import sys
 from pathlib import Path
@@ -19,7 +20,8 @@ from .hoja import ANCHO, desde_abajo, hoja, mapa, mapa_puno
 from .plantillas.puno import PunoDeMono
 from .imprimir import (CELDA_MM, PPP, ImpresionError, extra_prueba, imprimir, pagina_prueba,
                        px)
-from .libre import LIMITES
+from .fisica import usar_motor
+from .libre import LIMITES, LIMITES_MOTOR
 from .mejoras import DESTINO as DESTINO_MEJORAS, construir_muestras, pagina_apretado, pagina_mejoras
 from .revision import RevisionError, revision
 from .spec import SpecError, cargar
@@ -27,6 +29,9 @@ from .spec import SpecError, cargar
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="python -m nudos", description="Libro de nudos del Grupo 431")
+    p.add_argument("--motor", action="store_true",
+                   help="asienta los pasos y aprieta el terminado con el motor de física (T15d); "
+                        "va antes de la orden, como «python -m nudos --motor construir <slug>»")
     ordenes = p.add_subparsers(dest="orden", required=True)
     c = ordenes.add_parser("construir", help="construye los pasos de un nudo y los comprueba")
     c.add_argument("slug")
@@ -76,10 +81,15 @@ def main(argv=None) -> int:
     cm.add_argument("--reimprimir", action="store_true",
                     help="vuelve a imprimir solos, en <despues>, los nudos con el modelo igual y "
                          "alguna imagen distinta, y compara otra vez")
+    ordenes.add_parser("prueba-motor", help="página de prueba del motor de física (T15d): los "
+                                           "pilotos como salen hoy y con el motor, en color y "
+                                           "en gris")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
     args = p.parse_args(argv)
+    if args.motor:
+        os.environ["NUDOS_MOTOR"] = "1"
     try:
         if args.orden == "construir":
             return _construir(args.slug)
@@ -91,6 +101,8 @@ def main(argv=None) -> int:
             return _ficha(args.slug)
         if args.orden == "mejoras":
             return _mejoras()
+        if args.orden == "prueba-motor":
+            return _prueba_motor()
         if args.orden == "estado":
             return _estado()
         if args.orden == "revision":
@@ -133,6 +145,22 @@ def _mejoras() -> int:
         return 1
     print(f"Página de prueba de las mejoras en {mejoras.relative_to(RAIZ)}")
     print(f"Página de prueba del nudo terminado apretado en {apretado.relative_to(RAIZ)}")
+    return 0
+
+
+def _prueba_motor() -> int:
+    from .prueba_motor import DESTINO, construir_pilotos, pagina
+    try:
+        modelos = construir_pilotos()
+        destino = pagina(modelos, DESTINO)
+    except ImpresionError as e:
+        print(e, file=sys.stderr)
+        return 1
+    for slug, (_, motor) in modelos.items():
+        print(f"{slug}: {len(motor.fallas)} fallas con el motor")
+        for f in motor.fallas:
+            print(f"  - {f}")
+    print(f"Página de prueba del motor en {destino.relative_to(RAIZ)}")
     return 0
 
 
@@ -241,8 +269,10 @@ def _construir(slug: str) -> int:
         estado = "ok" if r.secuencia == r.esperada else "distinta"
         print(f"{r.n:>4}  {len(r.esperada) // 2:>6}  {m['separacion_min']:>10.2f}  "
               f"{m['curvatura_min']:>9.2f}  {m['estiramiento_max']:>12.1%}  {estado}")
-    print(f"\nLímites: separación ≥ {LIMITES['separacion_min']}, curvatura ≥ "
-          f"{LIMITES['curvatura_min']}, estiramiento ≤ {LIMITES['estiramiento_max']:.0%}")
+    lim = LIMITES_MOTOR if usar_motor() else LIMITES
+    print(f"\nLímites: separación ≥ {lim['separacion_min']}, curvatura ≥ "
+          f"{lim['curvatura_min']}, estiramiento ≤ {lim['estiramiento_max']:.0%}"
+          + (" (con el motor)" if usar_motor() else ""))
     if modelo.fallas:
         print("\nFallas:")
         for f in modelo.fallas:
