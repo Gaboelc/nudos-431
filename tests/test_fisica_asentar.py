@@ -199,3 +199,16 @@ def test_el_nudo_simple_apretado_gasta_lo_que_dice_pieranski(monkeypatch):
     lam = L - Lp
     print(f"Λ = {lam:.2f} (ideal {LAMBDA_IDEAL}, cuerda real 10,35)")
     assert 0.95 * LAMBDA_IDEAL <= lam <= 1.1 * LAMBDA_IDEAL
+
+
+def test_la_vuelta_de_escota_con_el_motor_no_dobla_de_mas(monkeypatch):
+    """T15f: `separar` no llegaba nunca a dejar todos los tramos de su largo en el paso 4 de la
+    vuelta de escota, y a las 2000 vueltas la gruesa doblaba con radio 0,86 en el seno, que la
+    memoria guardaba. Ahora se queda con la mejor vuelta sin choques ni dobleces."""
+    from nudos.libre import LIMITES_MOTOR, construir_paso
+    from nudos.spec import cargar
+    monkeypatch.setenv("NUDOS_MOTOR", "1")
+    spec = cargar("vuelta-de-escota")
+    r = construir_paso(spec.pasos[3], spec.anfitrion, spec.cuerdas)
+    assert r.fallas == []
+    assert r.medidas["curvatura_min"] >= LIMITES_MOTOR["curvatura_min"] + 0.1

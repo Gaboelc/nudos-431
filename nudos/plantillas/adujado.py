@@ -76,6 +76,10 @@ class Adujado:
     # pasan por encima del extremo, en vez de alternar.
     VARIANTES = {"sin-alternar": "seno-2"}
     CON_FIRME: tuple[str, ...] = ()
+    # Con el motor (T15f): la aduja va suelta sobre la mesa, sin tensión de atado, y no se
+    # aprieta (nudos/plantillas/pasos.py).
+    TENSION = "suelta"
+    APRETAR = False
 
     @classmethod
     def leer(cls, datos: dict, falla) -> Adujado:

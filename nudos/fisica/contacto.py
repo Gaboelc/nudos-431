@@ -190,6 +190,12 @@ class MallaContacto:
             return math.inf
         return math.sqrt(col.compute_minimum_distance(self.malla, self.V(x)))
 
+    def margen(self, x) -> float:
+        """Cuánto le falta al par más cercano para entrar a la barrera: la distancia mínima menos
+        dmin (infinito si ningún par está en la franja). Si no es positivo, la energía de la
+        barrera no está definida y ipctk no puede proyectar su Hessiano (T15f)."""
+        return self.distancia_minima(x) - self.dmin
+
     def paso_libre(self, x0, x1) -> float:
         """La fracción de 0 a 1 del paso de x0 a x1 que se puede dar sin que ningún par se
         acerque a menos de dmin en el camino (la CCD)."""
@@ -312,6 +318,9 @@ class ContactoCompuesto:
     def roce_retrasado(self, x0, kappa: float, eps: float = EPS_ROCE) -> "RoceCompuesto":
         return RoceCompuesto(self, [(malla.roce_retrasado(self._sub(x0, nodos), kappa, eps), nodos, gl, P)
                                     for malla, nodos, gl, P in self.partes])
+
+    def margen(self, x) -> float:
+        return min(malla.margen(self._sub(x, nodos)) for malla, nodos, _, _ in self.partes)
 
     def paso_libre(self, x0, x1) -> float:
         return min(malla.paso_libre(self._sub(x0, nodos), self._sub(x1, nodos))

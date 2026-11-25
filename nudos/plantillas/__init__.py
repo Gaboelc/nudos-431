@@ -25,7 +25,10 @@ Y, si los necesita:
 - `nombres(hito)`: los nombres de la imagen de cada hito, cuando la cuerda va del firme al
   chicote, como en el puño de mono; sin él, los dice CON_FIRME;
 - `voltear(resultado)`: el nudo terminado por detrás, cuando la plantilla va sin anfitrión y no
-  se voltea como un nudo libre, como el puño de mono.
+  se voltea como un nudo libre, como el puño de mono;
+- con el motor (T15f), `TENSION`: la tensión de atado de todos sus pasos, si no es la del
+  paso («ajustada», y «apretada» en el terminado apretado), y `APRETAR = False` si el nudo
+  terminado no se aprieta. El adujado va «suelto» y no se aprieta.
 
 `ANFITRION = None` quiere decir que la plantilla va sin anfitrión, como el puño de mono: la
 especificación no lleva `anfitrion`.

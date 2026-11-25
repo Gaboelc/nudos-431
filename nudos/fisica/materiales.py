@@ -22,6 +22,9 @@ class Material:
     peso_por_d: float       # N por diámetro de largo
     mu_cuerda: float        # el roce de cuerda con cuerda (T15c)
     mu_madera: float        # el roce de cuerda con madera (T15c)
+    # El roce de cuerda con metal (el destorcedor, T15f): el de una cuerda de nailon sobre acero,
+    # de tabla. No se mide en T15e; si un nudo de metal lo pide, se mide como el de la madera.
+    mu_metal: float = 0.3
 
     @classmethod
     def desde_si(cls, diametro_m: float, EA_n: float, EI_nm2: float, GJ_nm2: float,

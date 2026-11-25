@@ -249,9 +249,10 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None, tension: str = "
     """El paso n: la cuerda hasta `hito`, con lo que cae a la mesa. Se resalta lo que agrega
     desde `previo`. `hito` puede ser también un alias, como «vueltas».
 
-    Con la opción del motor (T15d), un amarre sobre la cruz se asienta en vez de relajarse: lo
-    ya atado, con la tensión de atado `tension` (más en los ahorcados), y lo que sigue suelto
-    sobre la mesa."""
+    Con la opción del motor (T15d, T15f), la cuerda se asienta en vez de relajarse: lo ya atado,
+    con la tensión de atado `tension` (en un amarre, más en los ahorcados), y lo que sigue suelto
+    sobre la mesa. Una plantilla puede fijar la suya (`TENSION`), como el adujado, que va
+    suelto."""
     t = c.trazo(hito, previo)
     P, Z = t.puntos, t.zonas
     D, ctrl = catmull_rom(P)
@@ -284,29 +285,30 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None, tension: str = "
     if t.marco is not None and t.marco.get("solido") is not None:
         solido, penetracion = t.marco["solido"], ("penetracion_dedos", "en un dedo")
     limites = None
-    if quietos is not None and quietos.all():
+    from ..fisica import usar_motor
+    if usar_motor():
+        # Con el motor (T15d, T15f), cualquier plantilla se asienta: lo ya atado, con la tensión
+        # de atado `tension` (en un amarre, más en los ahorcados) y las dos puntas sostenidas de
+        # un nodo, y lo que sigue suelto sobre la mesa, sin tensión. Sin una mano en el hito: la
+        # cuerda dobla ahí hacia la mesa, y sostenerla donde la deja la plantilla comprimía un
+        # tramo un 4 % (T15d). El roce y la memoria de lo que sigue suelto bastan para que lo
+        # atado no se afloje. Los puntos `quietos` no se sostienen: la memoria ya guarda la
+        # forma con que la plantilla los traza.
+        from ..fisica.asentar import tensiones_de_amarre
+        tension = getattr(g.plantilla, "TENSION", tension)
+        hitos = c.c.hitos if isinstance(c, _CuerdaDeAmarre) else {}
+        s_hitos = {k: float(s_ctrl[i]) for k, i in hitos.items() if i <= t.fin}
+        motor = {"tension": tensiones_de_amarre(len(X), s_hitos, h, s_fin, tension),
+                 "chicote": True, "nodos_mano": 1}
+        Xr, limites = asentar_o_relajar(X, h, anfitrion=solido, motor=motor)
+    elif quietos is not None and quietos.all():
         # Nada se relaja, como en el adujado; solo se apoya en la mesa lo que la curva suave
         # dejó apenas por debajo.
         Xr = X.copy()
         Xr[:, 2] = np.maximum(Xr[:, 2], R)
     else:
-        motor = None
-        if isinstance(g, _Amarre):
-            from ..fisica.asentar import tensiones_de_amarre
-            s_hitos = {k: float(s_ctrl[i]) for k, i in c.c.hitos.items() if i <= t.fin}
-            # Sin una mano en el hito: la cuerda dobla ahí hacia la mesa, y sostenerla donde la
-            # deja la plantilla comprimía un tramo un 4 % (T15d). El roce y la memoria de lo que
-            # sigue suelto bastan para que lo atado no se afloje.
-            # Apretado, la cuerda no guarda la forma de la plantilla: manda la tensión.
-            motor = {"tension": tensiones_de_amarre(len(X), s_hitos, h, s_fin, tension),
-                     "chicote": True, "nodos_mano": 1}
-        if motor is not None:
-            Xr, limites = asentar_o_relajar(X, h, anfitrion=solido, motor=motor,
-                                            gravedad=np.zeros(len(X), bool),
-                                            pasadas_largo=PASADAS_LARGO, quietos=quietos)
-        else:
-            Xr = relajar(X, h, anfitrion=solido, gravedad=np.zeros(len(X), bool),
-                         pasadas_largo=PASADAS_LARGO, quietos=quietos)
+        Xr = relajar(X, h, anfitrion=solido, gravedad=np.zeros(len(X), bool),
+                     pasadas_largo=PASADAS_LARGO, quietos=quietos)
     medir = None
     if penetracion is not None:
         clave, donde = penetracion
@@ -325,17 +327,16 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None, tension: str = "
 
 
 def apretado_con_motor(spec: Spec) -> Resultado | None:
-    """Con la opción del motor (T15d), el terminado apretado de un amarre sobre la cruz: el
-    último paso asentado con la tensión «apretada». Sin la opción, o en otra plantilla, None,
-    como siempre."""
+    """Con la opción del motor (T15d), el terminado apretado de un nudo de plantilla: el último
+    paso asentado con la tensión «apretada» (T15f: en cualquier plantilla, no solo en los
+    amarres). Una plantilla que se deja suelta, como el adujado (`APRETAR = False`), no se
+    aprieta. Sin la opción, None, como siempre."""
     from ..fisica import usar_motor
-    if not usar_motor() or not spec.pasos:
+    if not usar_motor() or not spec.pasos or not getattr(spec.plantilla, "APRETAR", True):
         return None
     try:
         g = geometria(spec)
     except TrazadoError:
-        return None
-    if not isinstance(g, _Amarre):
         return None
     c = g.cuerda()
     previo = spec.pasos[-2].hasta if len(spec.pasos) > 1 else None

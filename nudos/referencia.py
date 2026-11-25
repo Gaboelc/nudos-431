@@ -19,6 +19,12 @@ Edge se actualiza solo, y con otra versión todas las imágenes cambian un poco 
 no cambie: las dos carpetas se imprimen con el mismo navegador, el mismo día. `referencia` anota
 la versión en <carpeta>/navegador.txt, y `comparar` avisa si no coinciden.
 
+Con el motor de física (`python -m nudos --motor referencia …`, T15f), los nudos se construyen
+con él, y `referencia` lo anota en <carpeta>/motor.txt. `comparar` avisa si una carpeta se armó
+con el motor y la otra no, y `--reimprimir` construye cada nudo como se armó <después>. Así se
+compara el motor contra sí mismo (antes y después de un cambio del motor) o contra los nudos de
+hoy (lo que hace T19).
+
 El procedimiento entero, en el worktree de una rama:
     python -m nudos referencia <fuera>/antes        (desde un worktree de main, antes del código)
     python -m nudos referencia <fuera>/despues      (con el código nuevo)
@@ -50,6 +56,8 @@ IMPRESORES = 8   # navegadores a la vez; con más, la memoria y la variación de
 # dibuja cientos de píxeles con 2 a 4 niveles de diferencia (el 18 nov de 2026, en todas las
 # imágenes): las dos carpetas que se comparan se imprimen con el mismo navegador.
 NAVEGADOR = "navegador.txt"
+# Si la carpeta se armó con el motor de física (T15f): el archivo existe solo entonces.
+MOTOR = "motor.txt"
 
 
 def nudos_hechos(raiz: Path = RAIZ) -> list[str]:
@@ -93,7 +101,13 @@ def referencia(destino: Path, slugs: list[str] | None = None, impresores: int = 
                avisar=print) -> list[str]:
     """Construye los nudos a la vez y deja en destino/<slug>/ su modelo.json y su impresion/.
     Devuelve las fallas: un nudo con fallas guarda su modelo, pero no se imprime."""
+    from .fisica import usar_motor
     slugs = nudos_hechos() if slugs is None else list(slugs)
+    destino.mkdir(parents=True, exist_ok=True)
+    if usar_motor():
+        (destino / MOTOR).write_text("con el motor de física (--motor)\n", encoding="utf-8")
+    elif (destino / MOTOR).exists():
+        (destino / MOTOR).unlink()
     t = time.perf_counter()
     modelos = construir_varios([cargar(s) for s in slugs])
     avisar(f"Construidos {len(modelos)} nudos en {time.perf_counter() - t:.0f} s.")
@@ -186,6 +200,10 @@ def comparar(antes: Path, despues: Path, reimprimir: bool = False, avisar=print)
         avisar(f"Ojo: las imágenes se imprimieron con navegadores distintos ({va or 'sin anotar'} y "
                f"{vd or 'sin anotar'}). Si los modelos son iguales y todas las imágenes difieren "
                "un poco, es el navegador: arma de nuevo la referencia de antes, hoy.")
+    ma, md = (_con_motor(c) for c in (antes, despues))
+    if ma != md:
+        avisar(f"Ojo: {antes if ma else despues} se armó con el motor de física y "
+               f"{despues if ma else antes} no: los modelos no pueden ser iguales.")
     iguales = len(slugs) - len(difs)
     avisar(f"{iguales} de {len(slugs)} nudos iguales." + ("" if not difs else
            " Si una imagen difiere en 1 o 2 niveles en pocos píxeles y el modelo es igual, prueba "
@@ -198,10 +216,23 @@ def _version(carpeta: Path) -> str | None:
     return ruta.read_text(encoding="utf-8").strip() if ruta.exists() else None
 
 
+def _con_motor(carpeta: Path) -> bool:
+    return (carpeta / MOTOR).exists()
+
+
 def _reimprimir(antes: Path, despues: Path, d: Diferencia, avisar) -> Diferencia | None:
     """Vuelve a imprimir solo un nudo, con el código de ahora, y lo compara otra vez. Solo si el
-    modelo que da el código de ahora es el mismo que el de <después>."""
-    m = construir(cargar(d.slug))
+    modelo que da el código de ahora es el mismo que el de <después>. Se construye con el motor
+    si <después> se armó con él."""
+    previo = os.environ.get("NUDOS_MOTOR")
+    os.environ["NUDOS_MOTOR"] = "1" if _con_motor(despues) else ""
+    try:
+        m = construir(cargar(d.slug))
+    finally:
+        if previo is None:
+            os.environ.pop("NUDOS_MOTOR", None)
+        else:
+            os.environ["NUDOS_MOTOR"] = previo
     destino = despues / d.slug / "modelo.json"
     texto = json.dumps(datos_json(m), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     if texto != destino.read_bytes():

@@ -52,9 +52,11 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Gabriel revisa en papel `build/motor/prueba.pdf` (24 nov): le gustan los terminados del as de guía y del ballestrinque, los pasos casi iguales a los de hoy se ven bien y en gris se distingue. El amarre lo quiere más apretado
     - [x] Amarre cuadrado más apretado: los ahorcados apilados uno sobre otro, en una sola banda, en vez de uno al lado del otro. Gabriel aprobó la página de prueba (`build/ahorcados/prueba.pdf`) el 24 nov
     - [x] Filtro 1 del amarre cuadrado otra vez, de los pasos 4 a 7 y del terminado, con la ficha nueva: aprobado por Gabriel el 24 nov (dd48d6e), y el sitio publicado con el amarre nuevo
-    - [ ] Las fallas de curvatura de la vuelta de escota con el motor (radio 0,87 en el último paso, 0,85 en el error y 0,77 en el reverso), en T15f
+    - [x] Las fallas de curvatura de la vuelta de escota con el motor (radio 0,87 en el último paso, 0,85 en el error y 0,77 en el reverso), en T15f (24 nov)
   - [ ] T15e Calibrar con cuerda real: Gabriel mide la cuerda y fotografía cuatro nudos apretados (S)
-  - [ ] T15f `construir` usa el motor en cualquier nudo y anfitrión, comprobado con los pilotos (M)
+  - [x] T15f `construir` usa el motor en cualquier nudo y anfitrión, comprobado con los pilotos (M) (24 nov)
+    - [x] Las mallas de todos los anfitriones, las plantillas por el motor, `referencia` y `comparar` con él, y los cuatro pilotos sin fallas (24 nov)
+    - [x] Punto de control: Gabriel revisó «Cómo se hizo T15f» en el plan (24 nov)
   - [ ] T15g La sección aplastada y la torsión en el render, con T16 (M)
 - [ ] T16 Las fichas se renderizan en Blender, probado con los pilotos (M)
 - [ ] T17 Animación entre pasos con el modo «atar» del motor, con el as de guía y el amarre cuadrado de piloto (L)

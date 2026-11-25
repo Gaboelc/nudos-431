@@ -75,9 +75,13 @@ def comparar_error(spec: Spec, r: Resultado | None, fallas: list[str],
     return r, fallas
 
 
-def construir_reverso(spec: Spec, final: Resultado) -> tuple[Resultado, list[str]]:
-    """El último paso volteado, para mostrar el nudo terminado por detrás."""
-    r = voltear(final, spec.pasos[-1].secuencia, spec.pasos[-1].pasadas, spec.anfitrion)
+def construir_reverso(spec: Spec, final: Resultado) -> tuple[Resultado | None, list[str]]:
+    """El último paso volteado, para mostrar el nudo terminado por detrás. Si no se puede
+    construir (con el motor, si su cuerda de partida no sirve), None y la falla."""
+    try:
+        r = voltear(final, spec.pasos[-1].secuencia, spec.pasos[-1].pasadas, spec.anfitrion)
+    except TrazadoError as err:
+        return None, [f"Reverso del nudo terminado: {err}"]
     return r, [f"Reverso del nudo terminado: {f}" for f in r.fallas]
 
 

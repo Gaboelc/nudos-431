@@ -39,8 +39,7 @@ Un nudo de plantilla no se aprieta: su plantilla ya traza la cuerda tensa.
 Con la opción del motor (T15d), el apretado es el modo 2 del motor (nudos/fisica/asentar.py,
 `apretar`): el último paso asentado, con las manos de nudos/fisica/manos.py (`para_apretar`)
 tirando fuerte. Se comprueba como un paso, y sus fallas sí cuentan: el motor no busca la ronda que
-cumple, así que si algo falla, se ve. Si el motor todavía no tiene el anfitrión (T15f), se
-aprieta como siempre.
+cumple, así que si algo falla, se ve. Sirve con cualquier anfitrión (T15f).
 """
 from __future__ import annotations
 
@@ -174,12 +173,11 @@ def apretado_detras(spec: Spec, reverso: Resultado | None, rondas: int = RONDAS)
 
 
 def _con_motor(spec: Spec, paso: Paso, base: Resultado, secuencia) -> Resultado | None:
-    """`base` apretado con el motor, si está la opción y el motor tiene su anfitrión; si no,
-    None."""
+    """`base` apretado con el motor, si está la opción; si no, None."""
     from .fisica import usar_motor
     if not usar_motor():
         return None
-    from .fisica.asentar import SinMotor, apretar as apretar_motor
+    from .fisica.asentar import apretar as apretar_motor
     from .libre import LIMITES_MOTOR
     solido = buscar = medir = None
     a = spec.anfitrion
@@ -204,11 +202,8 @@ def _con_motor(spec: Spec, paso: Paso, base: Resultado, secuencia) -> Resultado 
     # Apretado del todo, un nudo se para sobre la mesa y, visto desde arriba, puede mostrar
     # otro diagrama: queda lo más apretado que todavía se ve como en la ficha (la secuencia
     # declarada y los límites), como en apretar().
-    try:
-        r = apretar_motor(base.puntos, base.reparto, solido, base.cruces.values(),
-                          aceptar=lambda Y: not comprobar(Y).fallas)
-    except SinMotor:
-        return None
+    r = apretar_motor(base.puntos, base.reparto, solido, base.cruces.values(),
+                      aceptar=lambda Y: not comprobar(Y).fallas)
     return base if r.aceptado == 0 else comprobar(r.X)
 
 

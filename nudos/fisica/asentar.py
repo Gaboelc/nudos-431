@@ -37,7 +37,7 @@ from dataclasses import dataclass, replace
 
 import numpy as np
 
-from .contacto import DHAT, DMIN, VECINOS, ContactoCompuesto, MallaContacto, cilindro, rigidez_barrera
+from .contacto import DHAT, DMIN, VECINOS, ContactoCompuesto, MallaContacto, rigidez_barrera
 from .integrador import Sistema
 from .manos import SOSTENIDOS, Manos, cortes_de, para_apretar, sostener
 from .materiales import CUERDA_8MM, Material
@@ -51,6 +51,10 @@ FACTOR_AHORCADO = 2.5     # un ahorcado se tira más fuerte: 150 N con «apretad
 FUERZA_APRETAR = 60.0     # N con que se tira de cada parte del nudo al apretarlo
 QUIETO = 1e-3             # diámetros por paso: menos que esto es que la cuerda dejó de moverse
 MAX_PASOS = 300
+# Pasos seguidos en que Newton no converge antes de rendirse (T15f). En el paso 3 del adujado,
+# Newton gastaba sus 500 iteraciones en cada paso, 90 s cada uno, y con MAX_PASOS el paso
+# habría tardado horas. Ningún paso de los pilotos deja de converger ni una vez.
+MAX_SIN_CONVERGER = 2
 AMORTIGUACION = 2.0       # N/d por nodo, la de los pasos cuasiestáticos (T15c)
 # La separación mínima entre ejes que deja `separar`, en sumas de radios: algo más que la
 # distancia mínima de la barrera (0,95), porque la IPC mide entre tramos y no entre nodos (hasta
@@ -64,10 +68,6 @@ RADIO_PARTIDA = 1.1
 # apretada de entrada. Sin esto, los ahorcados del amarre, metidos entre los dos palos, quedaban
 # acuñados y se estiraban un 4 %. Es lo de T14a (la malla a radio − 0,56).
 HOLGURA_SOLIDO = 0.06
-
-
-class SinMotor(ValueError):
-    """El motor todavía no sabe asentar este nudo (su anfitrión llega en T15f)."""
 
 
 def material_de(grosor: float, base: Material = CUERDA_8MM) -> Material:
@@ -87,18 +87,10 @@ def solidos(solido, grosor: float = 1.0) -> list:
     """El anfitrión como mallas para el contacto de una cuerda de `grosor`. La malla va un radio
     de cuerda (y HOLGURA_SOLIDO) por dentro de la madera: la barrera deja el eje a dmin + dhat/2
     = un diámetro de ella, donde la cuerda toca la madera. Sin anfitrión, ninguno."""
-    from ..anfitrion import Cruz, Poste
+    from .solidos import mallas
     if solido is None:
         return []
-    r = grosor / 2 + HOLGURA_SOLIDO * grosor
-    if type(solido) is Poste:
-        largo = solido.hasta - solido.desde
-        centro = ((solido.desde + solido.hasta) / 2, 0.0, solido.zc)
-        return [cilindro(centro, (1, 0, 0), solido.radio - r, largo)]
-    if type(solido) is Cruz:
-        return [cilindro((0, 0, solido.zb), (0, 1, 0), solido.radio - r, solido.largo),
-                cilindro((0, 0, solido.zt), (1, 0, 0), solido.radio - r, solido.largo)]
-    raise SinMotor(f"el motor todavía no tiene el anfitrión «{type(solido).__name__}» (T15f)")
+    return mallas(solido, grosor / 2 + HOLGURA_SOLIDO * grosor)
 
 
 def contacto(X, cortes, grosores, solido=None):
@@ -157,19 +149,30 @@ def separar(X, h, reparto=None, solido=None, iteraciones: int = 2000):
     libre = np.ones(len(X), bool)
     for i in rep.inicios:
         libre[i:i + SOSTENIDOS] = False
+    mejor, mejor_largo = None, np.inf
     for _ in range(iteraciones):
+        antes = X.copy()
         malos = _limitar_curva(X, h, libre, rmin=RADIO_PARTIDA, ganancia=0.35, grosor=rep.grosor,
                                interior=rep.interior)
-        largo = np.linalg.norm(np.diff(X, axis=0), axis=1)[seguido] / h - 1
-        if (not malos and np.abs(largo).max() < 0.005
-                and _separacion(X, h, rep)[0] >= SEPARAR_A + 0.005
-                and _penetra(X, rep, solido) <= 1e-3):
-            break
+        largo = float(np.abs(np.linalg.norm(np.diff(antes, axis=0), axis=1)[seguido] / h - 1).max())
+        if (not malos and _separacion(antes, h, rep)[0] >= SEPARAR_A + 0.005
+                and _penetra(antes, rep, solido) <= 1e-3):
+            if largo < 0.005:
+                break
+            # Sin choques ni dobleces, pero con algún tramo todavía largo o corto: se guarda la
+            # mejor. Las correcciones pueden pelearse sin llegar nunca (T15f: en la vuelta de
+            # escota, a las 200 vueltas quedaba a 0,6 % y a las 2000 doblaba con radio 0,86,
+            # y la memoria guardaba ese doblez). El largo lo termina de dar el motor.
+            if largo < mejor_largo:
+                mejor, mejor_largo = antes, largo
         _colisiones(X, salto, libre, rep, radio * (SEPARAR_A + 0.01))
         X[:, 2] = np.maximum(X[:, 2], radio)
         if solido is not None:
             solido.empujar(X, libre)
         _largos(X, h, libre, pasadas=16, seguido=seguido)
+    else:
+        if mejor is not None:
+            X = mejor
     if _separacion(X, h, rep)[0] < SEPARAR_A - 0.015:
         raise TrazadoError("el motor no pudo separar los tramos de la cuerda de partida: dos "
                            f"quedan a {_separacion(X, h, rep)[0]:.2f}")
@@ -219,6 +222,15 @@ def asentar(X, cortes, grosores, manos: Manos, solido=None, memoria: bool = True
             l = l / (1 + manos.tension[a:b - 1] / mat.EA)
         varillas.append(Varilla(l, mat, curvatura=Varilla.curvatura_de(Xk) if memoria else None))
     malla = contacto(X, cortes, grosores, solido)
+    margen = malla.margen(X)
+    if margen <= 0:
+        # La IPC no puede partir de una cuerda que ya está dentro de la barrera: su energía no
+        # está definida ahí. Pasa cuando `separar` no llega a una cuerda de partida válida, como
+        # en la vuelta de cornamusa y el amarre diagonal (T15f): mejor una falla del paso que un
+        # error de ipctk que tumba toda la construcción, o un asentado con avisos.
+        from ..libre import TrazadoError
+        raise TrazadoError("el motor no puede partir de esta cuerda: un par queda "
+                           f"{-margen:.2f} diámetros dentro de la barrera del contacto")
     if kappa is None:
         # La barrera, para que un nodo que se apoya con la tensión más alta sobre una cuerda
         # quede a media franja (una cuerda con tensión T sobre otra aprieta T·h por nodo).
@@ -228,7 +240,7 @@ def asentar(X, cortes, grosores, manos: Manos, solido=None, memoria: bool = True
         kappa = rigidez_barrera(max(1.0, T * h))
     sis = Sistema(varillas, malla, fijos=manos.fijos, fuerzas=manos.fuerzas, kappa=kappa, roce=roce)
     x = X.copy()
-    mov, n_newton = np.inf, 0
+    mov, n_newton, sin_converger = np.inf, 0, 0
     mejor, cuando = (x, 0) if aceptar is not None else (None, None)
     for paso in range(1, max_pasos + 1):
         r = sis.paso(x, amortiguacion=amortiguacion)
@@ -237,6 +249,13 @@ def asentar(X, cortes, grosores, manos: Manos, solido=None, memoria: bool = True
         n_newton += r.iteraciones
         if registro is not None:
             registro(paso, mov, r.iteraciones, r.convergio)
+        sin_converger = 0 if r.convergio else sin_converger + 1
+        if sin_converger >= MAX_SIN_CONVERGER:
+            if aceptar is not None:
+                break   # se queda con lo más apretado que cumplía
+            from ..libre import TrazadoError
+            raise TrazadoError(f"el motor no converge: {sin_converger} pasos seguidos sin que "
+                               f"Newton llegue (paso {paso})")
         if aceptar is not None:
             if aceptar(x):
                 mejor, cuando = x, paso

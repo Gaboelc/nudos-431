@@ -165,15 +165,12 @@ def asentar_o_relajar(X, h, reparto: Reparto | None = None, anfitrion=None, moto
                       **relajar_kw) -> tuple[np.ndarray, dict]:
     """La cuerda de un paso relajada (relajar()), o, con la opción del motor (T15d,
     nudos/fisica/asentar.py), asentada; y los límites con que se comprueba. `motor` son los
-    argumentos de más para asentar_paso(), como la tensión de cada tramo de un amarre. Si el
-    motor todavía no sabe asentar ese nudo (su anfitrión llega en T15f), se relaja."""
+    argumentos de más para asentar_paso(), como la tensión de cada tramo de un amarre. El motor
+    sabe de todos los anfitriones (nudos/fisica/solidos.py, T15f); uno nuevo sin malla falla."""
     from .fisica import usar_motor
     if usar_motor():
-        from .fisica.asentar import SinMotor, asentar_paso
-        try:
-            return asentar_paso(X, h, reparto, anfitrion, **(motor or {})).X, LIMITES_MOTOR
-        except SinMotor:
-            pass
+        from .fisica.asentar import asentar_paso
+        return asentar_paso(X, h, reparto, anfitrion, **(motor or {})).X, LIMITES_MOTOR
     return relajar(X, h, reparto=reparto, anfitrion=anfitrion, **relajar_kw), LIMITES
 
 
