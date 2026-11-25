@@ -87,6 +87,13 @@ def main(argv=None) -> int:
     ordenes.add_parser("prueba-blender", help="página de prueba de las fichas en Blender (T16 y "
                                              "T15g): los pilotos con el motor, dibujados con "
                                              "three.js y con Blender, en color y en gris")
+    pa = ordenes.add_parser("prueba-atar", help="prueba de la animación entre pasos (T17): el "
+                                                "as de guía y el amarre atados con el motor, "
+                                                "en video")
+    pa.add_argument("slugs", nargs="*", help="los nudos (por omisión, los dos pilotos)")
+    pa.add_argument("--sin-video", action="store_true", help="solo los cuadros, sin Blender")
+    pa.add_argument("--solo-video", action="store_true",
+                    help="dibuja los videos desde los cuadros ya guardados en build/atar")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -108,6 +115,8 @@ def main(argv=None) -> int:
             return _prueba_motor()
         if args.orden == "prueba-blender":
             return _prueba_blender()
+        if args.orden == "prueba-atar":
+            return _prueba_atar(args.slugs, not args.sin_video, args.solo_video)
         if args.orden == "estado":
             return _estado()
         if args.orden == "revision":
@@ -183,6 +192,26 @@ def _prueba_blender() -> int:
         return 1
     print(f"Página de prueba de Blender en {destino.relative_to(RAIZ)}")
     return 0
+
+
+def _prueba_atar(slugs, video: bool, solo_video: bool = False) -> int:
+    from .prueba_atar import DESTINO, PILOTOS, prueba, videos
+    if solo_video:
+        try:
+            videos(tuple(slugs) or PILOTOS)
+        except ImpresionError as e:
+            print(e, file=sys.stderr)
+            return 1
+        print(f"Videos de la prueba de atar en {DESTINO.relative_to(RAIZ)}")
+        return 0
+    try:
+        informe = prueba(tuple(slugs) or PILOTOS, video=video, previa=video)
+    except ImpresionError as e:
+        print(e, file=sys.stderr)
+        return 1
+    fallas = sum(len(v["fallas"]) for k, v in informe.items() if isinstance(v, dict))
+    print(f"Prueba de atar en {DESTINO.relative_to(RAIZ)}, con {fallas} fallas")
+    return 1 if fallas else 0
 
 
 def _imprimir(slug: str) -> int:

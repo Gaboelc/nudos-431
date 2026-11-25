@@ -118,11 +118,12 @@ class Sistema:
     """Una o varias cuerdas (`varillas`, sus nodos seguidos en ese orden), su contacto
     (`malla`, con los mismos nodos) y sus manos: los nodos `fijos` y las `fuerzas` (N, 3) en
     newtons sobre cada nodo. `kappa` es la rigidez de la barrera (ver
-    `contacto.rigidez_barrera`)."""
+    `contacto.rigidez_barrera`). `resortes`, si se da, es (k (N,), metas (N, 3)): cada nodo
+    tirado hacia su meta con un resorte de rigidez k en N/d (al atar, T17, la guía)."""
 
     def __init__(self, varillas, malla: MallaContacto | None = None, fijos=(), fuerzas=None,
                  kappa: float = 1.0, roce: bool = True, eps_roce: float = EPS_ROCE,
-                 tol_fuerza: float = 1e-7, max_newton: int = 500):
+                 tol_fuerza: float = 1e-7, max_newton: int = 500, resortes=None):
         self.varillas = list(varillas)
         self.cortes = np.cumsum([0, *(v.N for v in self.varillas)])
         self.N = N = int(self.cortes[-1])
@@ -133,6 +134,11 @@ class Sistema:
         self.fuerzas = np.zeros((N, 3)) if fuerzas is None else np.asarray(fuerzas, float).reshape(N, 3)
         self.kappa, self.roce, self.eps_roce = kappa, roce, eps_roce
         self.tol_fuerza, self.max_newton = tol_fuerza, max_newton
+        self.resortes = None
+        if resortes is not None:
+            k, metas = resortes
+            self.resortes = (np.repeat(np.asarray(k, float), 3),
+                             np.asarray(metas, float).reshape(N, 3).ravel())
         # La masa de cada nodo, en N·s²/d: su peso sobre la gravedad en diámetros por segundo².
         self.masa = np.concatenate([
             v.material.peso_por_d * (np.r_[v.l, 0.0] + np.r_[0.0, v.l]) / 2
@@ -143,26 +149,40 @@ class Sistema:
         x = np.asarray(x, float).ravel()
         partes = [v.evaluar(x[3 * a:3 * b], orden, proyectar)
                   for v, a, b in zip(self.varillas, self.cortes[:-1], self.cortes[1:])]
+        if self.resortes is not None:
+            k, metas = self.resortes
+            d = x - metas
+            Er = 0.5 * float(np.sum(k * d * d))
+        else:
+            Er = 0.0
         if orden == 0:
-            return math.fsum(partes) - float(self.fuerzas.ravel() @ x)
-        E = math.fsum(p[0] for p in partes) - float(self.fuerzas.ravel() @ x)
+            return math.fsum(partes) - float(self.fuerzas.ravel() @ x) + Er
+        E = math.fsum(p[0] for p in partes) - float(self.fuerzas.ravel() @ x) + Er
         g = np.concatenate([p[1] for p in partes]) - self.fuerzas.ravel()
+        if self.resortes is not None:
+            g = g + k * d
         if orden == 1:
             return E, g, None
-        return E, g, sp.block_diag([p[2] for p in partes], format="csr")
+        H = sp.block_diag([p[2] for p in partes], format="csr")
+        if self.resortes is not None:
+            H = H + sp.diags(k, format="csr")
+        return E, g, H
 
-    def paso(self, x, v=None, dt: float | None = None, amortiguacion: float = 2.0) -> Paso:
+    def paso(self, x, v=None, dt: float | None = None, amortiguacion: float = 2.0,
+             viscosidad: float = 0.0) -> Paso:
         """Un paso desde la cuerda en x (N, 3) con velocidad v. Con `dt` (en segundos), Euler
-        implícito; sin `dt`, cuasiestático, con `amortiguacion` (N/d por nodo). Los nodos fijos
-        quedan donde están en x."""
+        implícito, con un roce viscoso `viscosidad` (N·s/d por nodo); sin `dt`, cuasiestático,
+        con `amortiguacion` (N/d por nodo). Los nodos fijos quedan donde están en x."""
         x0 = np.asarray(x, float).reshape(self.N, 3)
         v0 = np.zeros_like(x0) if v is None else np.asarray(v, float).reshape(self.N, 3)
         if dt is None:
             A = np.full(3 * self.N, amortiguacion)
             meta = x0.ravel()
         else:
-            A = np.repeat(self.masa, 3) / dt ** 2
-            meta = (x0 + dt * v0).ravel()
+            # Con `viscosidad` (N·s/d por nodo), un roce con el aire que frena cada nodo con
+            # una fuerza proporcional a su velocidad (al atar, T17: que nada salte).
+            A = np.repeat(self.masa, 3) / dt ** 2 + viscosidad / dt
+            meta = (x0 + dt * v0 * (self.masa / (self.masa + viscosidad * dt))[:, None]).ravel()
         m = self.malla
         roce = m.roce_retrasado(x0, self.kappa, self.eps_roce) if m is not None and self.roce else None
         if roce is not None and len(roce) == 0:

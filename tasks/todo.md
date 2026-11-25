@@ -66,7 +66,10 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
 - [x] T16 Las fichas se renderizan en Blender, probado con los pilotos (M) (25 nov)
   - [x] `imprimir` dibuja con Blender, con la escena, la cámara y los nombres de three.js; `comparar` tolera el ruido de Cycles (25 nov)
   - [x] Punto de control: Gabriel aprobó `build/blender/prueba.pdf`: Blender se ve mejor en todos los casos (25 nov)
-- [ ] T17 Animación entre pasos con el modo «atar» del motor, con el as de guía y el amarre cuadrado de piloto (L)
+- [x] T17 Animación entre pasos con el modo «atar» del motor, con el as de guía y el amarre cuadrado de piloto (L) (25 nov)
+  - [x] Diseño de los caminos de la mano, aprobado por Gabriel (25 nov)
+  - [x] `prueba-atar`: los dos pilotos atados sin fallas y los 10 s en Blender (25 nov)
+  - [x] Punto de control: Gabriel aprobó los videos de prueba (25 nov)
 - [ ] T18 Videos: horizontal en 4K a 60 fps y 68 Mbps (YouTube, y una copia en 1080p en el visor) y vertical en 1080 × 1920 a 60 fps (Instagram), con los pilotos (M)
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L)
 - [ ] Punto de control de la fase 5

@@ -196,11 +196,11 @@ class MallaContacto:
         barrera no está definida y ipctk no puede proyectar su Hessiano (T15f)."""
         return self.distancia_minima(x) - self.dmin
 
-    def paso_libre(self, x0, x1) -> float:
+    def paso_libre(self, x0, x1, dmin: float | None = None) -> float:
         """La fracción de 0 a 1 del paso de x0 a x1 que se puede dar sin que ningún par se
-        acerque a menos de dmin en el camino (la CCD)."""
+        acerque a menos de dmin (o de la que se dé) en el camino (la CCD)."""
         return min(1.0, ipctk.compute_collision_free_stepsize(
-            self.malla, self.V(x0), self.V(x1), min_distance=self.dmin,
+            self.malla, self.V(x0), self.V(x1), min_distance=self.dmin if dmin is None else dmin,
             broad_phase=self._bp, narrow_phase_ccd=self._ccd))
 
     # --- La barrera y el roce (T15c) ---

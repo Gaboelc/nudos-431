@@ -363,9 +363,10 @@ def dibujar(escena, trabajo):
     for i, m in enumerate(datos["mallas"]):
         malla_generica(i, m)
     mesa()
-    cx, cy = datos["centro"]
-    luces(cx, cy, datos["extension"] + 2)
-    camara(escena, datos["camara"])
+    # En un video (T17), cada cuadro trae su cámara y su luz; la escena es la misma.
+    cx, cy = trabajo.get("centro", datos["centro"])
+    luces(cx, cy, trabajo.get("extension", datos["extension"]) + 2)
+    camara(escena, trabajo.get("camara") or datos["camara"])
     escena.render.filepath = trabajo["salida"]
     bpy.ops.render.render(write_still=True)
 

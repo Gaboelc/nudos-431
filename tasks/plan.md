@@ -536,103 +536,16 @@ Se implementa después del punto de control E, desde lo aprendido en T14a. Lo qu
 - **La página de prueba:** `python -m nudos prueba-blender` deja `build/blender/prueba.pdf`: cada imagen de la ficha de los cuatro pilotos con three.js junto a la de Blender, las dos con la cuerda del motor, en color y en gris, al 76 %, y la hoja de T15g.
 - **Punto de control (Gabriel, 25 nov):** Blender se ve mejor que three.js en todos los casos, y el aplastado queda activo (`APLASTAR = True`).
 
-#### T17: Animación entre pasos
+#### T17: Animación entre pasos (cerrada)
 
-**Descripción:** calcular el movimiento continuo de la cuerda de un paso al siguiente con el modo «atar» del motor (T15). Una mano lleva el chicote por un camino que sigue, con un margen, la cuerda del paso siguiente, desde su punta, como al pasarla por un lazo. El resto de la cuerda se mueve con la dinámica, el peso y el roce, y al final se asienta en la pose de la ficha. Como el motor nunca deja que la cuerda se atraviese, tampoco entre dos cuadros, la animación hereda esa garantía.
-- En una plantilla, cada paso es un comienzo más largo de la misma cuerda: la mano lleva el chicote por el camino final (como el video de `poc/blender`), pero ahora la cuerda que ya está se aprieta con cada vuelta nueva.
-- En un nudo libre, la cola cambia de forma entre pasos: la mano la lleva por fuera de todo y la hace entrar por donde dice el paso.
-
-Lo que mostró T14b:
-- **En un nudo libre, la mano tiene que planear por encima y por debajo.** Llevar la cuerda al paso siguiente con resortes, sin atravesarse, deja el chicote encima del tramo por el que debía pasar por debajo, y el cruce sale al revés. La mano tiene que levantar el tramo o meter el chicote por debajo, a una altura que sale de la secuencia declarada del paso siguiente.
-- **En una plantilla, avanzar la mano por el camino y asentar cada cuadro funciona** (el video del amarre de T14b), con la tensión de atado de T14a. Pero cada cuadro se asentaba por separado desde la plantilla cortada: no era un movimiento continuo, y la CCD no miraba lo que pasa entre dos cuadros.
-- **La cámara va por tramos:** desde una sola vista, el ballestrinque inicial del amarre queda detrás del palo. Y el video necesita una pausa al final de cada paso: el amarre en 9 s va demasiado rápido.
-
-**Diseño (propuesta, 25 nov; falta que Gabriel lo revise).**
-
-*La idea.* Entre dos pasos hay una **guía**: la cuerda movida a mano, sin física, cuadro a cuadro, planeada para que cada cruce se forme por el lado que dice la secuencia del paso siguiente. La guía sola podría atravesarse o verse de palo; el motor la sigue con las manos y la convierte en cuerda real, que pesa, roza y nunca se atraviesa. Lo que planea los cruces es la guía; lo que garantiza que nada se atraviesa es el motor. Es la falla de T14b al revés: allí los resortes tiraban hacia la pose final sin plan, y el chicote quedaba encima.
-
-*1. Una sola cuerda para todo el video.* Cada paso de la ficha tiene su largo: un nudo libre dibuja el chicote del largo que conviene a cada paso (en el as de guía, de 71 a 110 d), y una plantilla dibuja la cuerda hasta el hito del paso (en el amarre, de 69 a 463 d). La animación usa los nodos de la ficha tal cual, sin remuestrear, y alinea cada paso con el siguiente así:
-- **Se alinea desde el firme** lo que no cambia al comienzo de la cuerda y **desde la punta** lo que no cambia al final, comparando las dos poses nodo a nodo. Lo que queda entre las dos partes es lo que se mueve. En el as de guía, del paso 1 al 2 la cuerda coincide en los primeros 25,6 d y en los últimos 41,8 (la gaza pequeña se forma en el medio); en los demás pasos coincide desde el firme y cambia la punta.
-- **El largo que sobra o falta entra o sale por una punta:** por el chicote, la mano da cuerda o la recoge (la cuerda sale de la mano, como en el video de T14b, y la punta que se ve es la de la mano); por el firme, entra cuerda por su extremo, que en el as de guía está fuera del encuadre (y = 30, con el encuadre hasta 12,4). Se elige la punta que deja quieta la mayor parte de la cuerda: en el as de guía, el firme del paso 1 al 2 y la mano en los demás; en las plantillas, siempre la mano.
-- Así, **en cada pausa se ve exactamente la pose de la ficha**, nodo por nodo. Los largos de los pasos no son los de una cuerda real; el video no lo oculta ni lo arregla, y si Gabriel lo nota en la prueba, se corrige en la especificación del nudo.
-
-*2. La guía en un nudo libre.* Tiene hasta tres movimientos, en este orden, y cada uno puede faltar:
-- **Acomodar:** lo que cambia de forma sin cruzar nada se lleva derecho de su pose a la nueva, como la gaza grande del as de guía, que se achica del paso 3 al 4. Si al llevarlo derecho aparece o desaparece algún cruce, no es acomodar: es formar un cruce (abajo).
-- **Enhebrar:** la mano lleva la punta por la cuerda nueva del paso siguiente, la que la ficha resalta (por ejemplo, `chicote-sube` y `chicote-sale` en el paso 4), y cada nodo nuevo sale de la mano justo sobre ese camino. Antes, si la punta del paso de antes no está donde empieza el camino nuevo, la mano recoge la cuerda hasta ahí (del paso 3 al 4, los 7,6 d de `chicote-acerca`).
-- **Formar un cruce en medio de la cuerda:** como la gaza pequeña del paso 2, donde la cuerda pasa sobre sí misma sin que la punta se mueva. La mano toma el tramo que tiene que quedar encima, en el nodo del cruce, y lo lleva de su lugar al nuevo pasando por arriba; lo que está entre las partes alineadas se acomoda detrás.
-
-**La altura sale de la secuencia declarada del paso siguiente.** La guía se planea en planta (x, y) y después se le da altura con la misma regla de `elevar()`: en cada cuadro de la guía se buscan los cruces en su proyección, cada cruce se sigue de cuadro en cuadro y, para cada uno, se decide qué tramo va encima:
-- Si el cruce está en la secuencia del paso siguiente, el de la secuencia.
-- Si solo está en la del paso de antes y desaparece, el de esa secuencia.
-- Si aparece y desaparece dentro del movimiento, el tramo que lleva la mano.
-
-Un cruce guarda su encima y su debajo todo el tiempo que existe: si la secuencia de los dos pasos lo pide al revés, la cuerda tendría que atravesarse, y la guía falla antes de simular. Es la regla de las etiquetas («si un cruce cambia, es otro cruce»), ahora comprobada en el movimiento.
-
-**Por encima, la mano pasa alta; por debajo, otra mano levanta el tramo.**
-- **Si la cuerda nueva va por encima,** la mano pasa a 1 d sobre el tramo de abajo (holgura) y baja después de cruzarlo, en unos 3 d. Lo que deja detrás baja a la altura del trazado del paso siguiente: una mano real lleva el chicote un poco levantado y la cuerda se apoya detrás.
-- **Si va por debajo,** no puede meterse bajo un tramo que está en la mesa. Una segunda mano toma el tramo de arriba en el nodo del cruce y lo levanta antes de que llegue la punta. Empieza cuando la punta está a 4 d del cruce, en 0,3 s, hasta que su cara de abajo queda 1 d sobre la cuerda que pasa (unos 2,5 d de altura). La punta pasa por la mesa, y la mano lo baja a su altura del paso siguiente cuando la punta va 3 d más allá. Es lo que hace una persona con un dedo, y lo que el paso 4 del as de guía dice: «entra por debajo y sale por encima».
-- **La mano del firme** sostiene sus primeros nodos todo el tiempo, como al asentar.
-
-*3. La guía en una plantilla.* La plantilla ya trae su camino en 3D, con cada cruce a su altura, así que no hay nada que planear: la mano avanza por el camino de la plantilla (el del último paso, que contiene a todos) a 0,5 d hacia afuera de la madera y de la cuerda que ya está, para no arrastrarse sobre ella. Cada nodo nuevo sale de la mano. Lo ya atado lleva la tensión de atado del paso (`tensiones_de_amarre`, con «hasta» donde va la mano: en el amarre, 20 N y 2,5 veces más en los ahorcados), entre la mano del firme y la que da cuerda, así que **cada vuelta nueva aprieta a las de antes** y los ahorcados juntan las vueltas mientras se dan. En el cierre del amarre, el paso 7 es 2,2 d más corto que el 6: la mano recoge eso.
-
-*4. Cómo sigue el motor a la guía (`nudos/fisica/atar.py`, el modo 3).*
-- **Euler implícito** (`Sistema.paso` con `dt`), con 2 subpasos por cuadro a 60 cuadros por segundo, los de T18: dt = 1/120 s. T15c mostró que un paso largo puede llevar la cuerda por el costado de un obstáculo; con las velocidades de abajo, ningún nodo se mueve más de 0,1 d por subpaso.
-- **Las manos son nodos que se mueven solos**, con la guía (`Manos.fijos`, que se mueven entre subpasos): la que da cuerda, la que levanta un tramo y la del firme. El resto de la cuerda no tiene resortes: la llevan las manos, el peso, la mesa, el roce y su memoria.
-- **La memoria sigue a la guía:** la curvatura de reposo de cada nodo es la de la guía en ese cuadro, no la de la pose de partida (con esa, la cuerda volvería al paso de antes). Así la cuerda tiende a tomar sola la forma planeada, como la deja la mano, sin resortes hacia una pose que no ve los cruces. La tensión de atado, el roce (uno solo, el estático, como en T15c) y la cuerda medida de T15e son los de asentar.
-- **Dar y recoger cuerda:** un nodo nuevo nace en la mano, a h del anterior y en la dirección del camino. Antes de agregarlo se comprueba que su tramo no queda a menos de dmin de ningún otro; si queda, la mano espera un subpaso. Recoger quita el último nodo cuando la mano llega a él.
-- **El encaje, al final de cada paso:** la cuerda se asienta (pasos cuasiestáticos, como `asentar`) con la memoria de la ficha y resortes hacia la pose de la ficha que suben de a poco, durante 0,4 s de video. Después se comprueba: la secuencia es la declarada, ningún nodo queda a más de 0,3 d de la ficha y el paso en línea recta hasta la ficha está libre según la CCD (`paso_libre` = 1). Con eso, los últimos cuadros van en línea recta a la pose exacta de la ficha, en 0,2 s. Si algo no se cumple, el paso falla con su número y lo que faltó; no se tapa con un fundido.
-- **Cada paso parte de la pose exacta de la ficha,** así que los pasos no dependen uno del otro y se calculan a la vez, uno por proceso (`nudos/procesos.py`). Construir dos veces da los mismos cuadros byte a byte, como hoy.
-
-*5. La comprobación de cada cuadro (el primer criterio).* Además de la CCD dentro del motor, una pasada aparte revisa los cuadros guardados: en cada cuadro, ningún par de tramos ni la cuerda con la madera o la mesa a menos de dmin (`distancia_minima`); y entre cada cuadro y el siguiente, el movimiento en línea recta libre según la CCD. Es lo que hará Blender al dibujar uno tras otro, así que lo que se ve es lo que se comprobó. Donde se da o se recoge cuerda, el tramo nuevo se comprueba aparte.
-
-*6. El nudo terminado.* Después del último paso, el apretado: en un nudo libre, los pasos de `apretar` (el modo 2: las manos tiran del firme y del chicote, sin roce) hasta el que eligió `aceptar`, que es el de la ficha. En una plantilla, la tensión pasa de «ajustada» a «apretada» en 1 s. Son pasos que el motor ya da; se guardan como cuadros, con la misma comprobación.
-
-*7. Los tiempos del video.*
-- **La mano va a 5 d/s** (4 cm/s con la cuerda de 8 mm), arranca y frena suave y baja a 2,5 d/s a menos de 2 d de un cruce de la cuerda nueva, que es lo que hay que mirar. Levantar un tramo, 0,3 s.
-- **En una plantilla, lo que se repite va más rápido:** la primera vuelta y el primer ahorcado a 5 d/s, las demás vueltas y ahorcados a 15 d/s. A 5 d/s, los 463 d del amarre serían 93 s.
-- **La pausa al final de cada paso: 1,5 s** quieta en la pose de la ficha, con el título del paso (que T18 pone en pantalla), y otros 1,5 s al final, con el nudo apretado.
-- **Lo que dura cada nudo, estimado:** el as de guía, unos 30 s (de 0,5 a 3 s de movimiento en cada paso, más el encaje y la pausa); el amarre, unos 40 s.
-
-*8. La cámara por tramos.*
-- Cada paso tiene su toma: la vista «3d» de la ficha (`pose()` de `render/escena.js`), encuadrada con la cuerda de ese tramo (la pose de antes, la de después y la guía, dentro del encuadre del nudo, sin el firme lejano).
-- **En una plantilla, el ángulo alrededor del eje vertical se elige en cada tramo** entre los de 30° en 30° para que el palo tape lo menos posible de la cuerda nueva, contando qué parte de ella queda detrás de los palos desde la cámara. Así el ballestrinque de inicio se ve, desde el otro lado.
-- La cámara solo se mueve durante una pausa, después de 0,5 s quieta, en 0,8 s con arranque y frenado suaves; nunca mientras la mano cruza.
-- Dentro de un tramo, un giro lento de no más de 8°, para que se lea el relieve.
-- El vertical de redes (T18) arma sus tomas con la misma regla y su propio encuadre.
-
-*9. La prueba (el segundo punto de control) y su costo.*
-- `python -m nudos prueba-atar` construye el as de guía y el amarre con el motor, calcula todos sus pasos animados con la comprobación de cada cuadro, y deja en `build/atar/` sus cuadros (`<slug>.npz`).
-- **El video de prueba de 10 s en movimiento de cada uno** se dibuja en Blender con la escena de T16 (Cycles, la trenza, las luces, los nombres de `nombresDe`), en 1280 × 720 a 30 cuadros por segundo (uno de cada dos), y se arma con ffmpeg. Los 10 s son lo más difícil de cada nudo: en el as de guía, los pasos 3 a 5 (sube por la gaza por debajo y por encima, y pasa por detrás del firme); en el amarre, el último paso de las vueltas y los ahorcados (pasos 3 a 5), donde la cuerda aprieta lo que ya está.
-- **Una previa entera de cada nudo** en baja calidad (960 × 540, 16 muestras), para ver todos los pasos.
-- **Costo, estimado:**
-  - Motor. El as de guía tiene 550 nodos; con unas 50 ms por subpaso, son 2 × 60 × 30 s, unos 3 minutos, repartidos en 6 procesos: menos de 1 minuto. El amarre, con 2300 nodos y de 0,2 a 0,5 s por subpaso, de 15 a 40 minutos en 7 procesos. Se mide en la prueba.
-  - Blender. La prueba, 300 cuadros por nudo a unos 6 s: 30 minutos cada uno. La previa, unos 2 s por cuadro: de 30 a 40 minutos cada una. T18, con 4K y 60 cuadros por segundo, es otra cosa y se mide allí.
-
-*10. Lo que no cambia.* La especificación no gana campos: la guía sale de las poses de la ficha, de su resaltado y de sus secuencias. Si un nudo de T19 necesita otra mano (otro agarre, otro orden), entra entonces como un campo opcional del paso, con ese nudo. Sin la orden de atar, `construir`, las fichas y el sitio no cambian. El visor sigue sin video hasta T18.
-
-*Los módulos.*
-- `nudos/animar.py`: alinea los pasos, arma la guía (acomodar, enhebrar, formar un cruce y las alturas), los tiempos y las tomas.
-- `nudos/fisica/atar.py`: sigue la guía, da y recoge cuerda, hace el encaje y comprueba los cuadros.
-- `nudos/prueba_atar.py`: la orden y la página.
-- `render/blender/escena.py` gana el modo video: una llamada a Blender por paso, con todos sus cuadros.
-- Pruebas (`tests/test_atar.py`, pocos segundos, con cuerdas cortas):
-  - una punta que pasa sobre una cuerda tendida y otra que pasa por debajo, levantándola, con el cruce del lado declarado;
-  - una guía que pide invertir un cruce falla antes de simular;
-  - dar y recoger cuerda no deja tramos a menos de dmin;
-  - el encaje llega a la pose;
-  - calcular dos veces da lo mismo;
-  - la comprobación de cuadros detecta dos cuadros entre los que una cuerda atraviesa a otra.
-
-**Los riesgos que veo.**
-- **Que la cuerda no siga a la guía donde la mano no la toca.** Por ejemplo, que al achicar la gaza grande el roce la deje lejos y el encaje no llegue a 0,3 d. Si pasa, se agregan resortes suaves hacia la guía en lo que acomoda, no en lo que enhebra.
-- **El tiempo del amarre:** si pasa de una hora, el amarre se simula cuasiestático (como T14b, pero continuo), que en una plantilla tensa casi no se distingue.
-- **Que una pausa con la pose exacta de la ficha se vea como un salto** después del encaje. Por eso el encaje exige 0,3 d y la recta final dura 0,2 s.
-
-**Criterios de aceptación:**
-- [ ] Ningún cuadro tiene una cuerda atravesando otra (la CCD del motor), y la pose final de cada paso es la de la ficha, con su secuencia declarada.
-- [ ] Gabriel aprueba la prueba de 10 segundos en movimiento del as de guía y del amarre (la puerta del método de elasthic).
-
-**Dependencias:** T15 y T16. **Tamaño:** L. Es la tarea de más riesgo de la fase. **Sesión:** modelo grande.
+Cerrada el 25 nov: Gabriel aprobó los 10 s de prueba del as de guía y del amarre. El diseño y su «Cómo se hizo» están en el historial. La orden es `python -m nudos prueba-atar`. Lo que dejó abierto para T18:
+- **El amarre dura 94 s,** no 40. La mano recoge y vuelve a dar en cada paso los 20 d de cola que la ficha deja sobre la mesa, y no puede ir a más de 10 d/s, que es un nodo por cuadro. Para acortarlo, la mano puede llevar la cola o dar dos nodos por cuadro.
+- **Quedan saltos de un cuadro:**
+  - 0,6 d en la gaza pequeña del as de guía, porque el lazo nace apretado.
+  - De 0,3 a 0,8 d en la punta del amarre, cuando la mano se zafa de un contacto.
+- **El encuadre del as de guía** incluye el firme hasta el borde, así que el nudo queda chico y a un lado.
+- **Falta el nudo terminado apretado** al final del video (punto 6 del diseño).
+- **Una marca oscura chica sobre la mesa** en el video del amarre, sin revisar: puede ser una malla de la escena exportada.
 
 #### T18: Videos
 
