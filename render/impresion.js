@@ -4,7 +4,8 @@
    «nombres» son claves de nombresDe (escena.js). «reservado» es la esquina superior
    izquierda, en px, que la ficha tapa con el número del paso o un sello: ahí no se ponen
    los nombres. «mejoras» son las de T7b (nudos/imprimir.py, MEJORAS); el supermuestreo no
-   llega aquí: lo hace nudos/imprimir.py dibujando al doble y reduciendo. */
+   llega aquí: lo hace nudos/imprimir.py dibujando al doble y reduciendo.
+   Con Blender (T16), nudos/blender.py pide después window.exportar() y window.soloNombres(). */
 import { crearEscena, nombresDe } from "./recursos/escena.js";
 
 /* Las mejoras de la lista, como las recibe crearEscena. Sin ninguna, la escena de antes de T7b. */
@@ -85,6 +86,15 @@ window.dibujar = async function (trabajo) {
   await cuadro();
   escena.renderizar();
   await cuadro();
+  window.escenaActual = escena;
   return true;
+};
+
+/* Para el render en Blender (nudos/blender.py): la escena dibujada, como datos, y la página con
+   solo los nombres, sin la escena ni el fondo, para ponerlos encima de la imagen de Blender. */
+window.exportar = () => window.escenaActual.exportar();
+window.soloNombres = () => {
+  window.escenaActual.lienzo.style.visibility = "hidden";
+  document.documentElement.style.background = document.body.style.background = "transparent";
 };
 window.impresionLista = true;

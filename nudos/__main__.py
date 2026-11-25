@@ -84,6 +84,9 @@ def main(argv=None) -> int:
     ordenes.add_parser("prueba-motor", help="página de prueba del motor de física (T15d): los "
                                            "pilotos como salen hoy y con el motor, en color y "
                                            "en gris")
+    ordenes.add_parser("prueba-blender", help="página de prueba de las fichas en Blender (T16 y "
+                                             "T15g): los pilotos con el motor, dibujados con "
+                                             "three.js y con Blender, en color y en gris")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -103,6 +106,8 @@ def main(argv=None) -> int:
             return _mejoras()
         if args.orden == "prueba-motor":
             return _prueba_motor()
+        if args.orden == "prueba-blender":
+            return _prueba_blender()
         if args.orden == "estado":
             return _estado()
         if args.orden == "revision":
@@ -161,6 +166,22 @@ def _prueba_motor() -> int:
         for f in motor.fallas:
             print(f"  - {f}")
     print(f"Página de prueba del motor en {destino.relative_to(RAIZ)}")
+    return 0
+
+
+def _prueba_blender() -> int:
+    from .prueba_blender import DESTINO, construir_pilotos, pagina
+    try:
+        modelos = construir_pilotos()
+        for slug, m in modelos.items():
+            if m.fallas:
+                print(f"{slug}: {len(m.fallas)} fallas con el motor; no se dibuja", file=sys.stderr)
+                return 1
+        destino = pagina(modelos, DESTINO)
+    except ImpresionError as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Página de prueba de Blender en {destino.relative_to(RAIZ)}")
     return 0
 
 

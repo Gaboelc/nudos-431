@@ -1,9 +1,12 @@
 """Imágenes de impresión de un nudo, a 300 ppp en su tamaño impreso.
 
-Salen de la misma escena 3D del visor (render/escena.js), dibujada con Chrome sin
-interfaz y con WebGL por software (SwiftShader), para que construir dos veces dé
-exactamente las mismas imágenes, píxel por píxel, en cualquier computadora con la misma
-versión de Chrome. Con otra versión de Pillow cambian los bytes del PNG, no los píxeles.
+Salen de la misma escena 3D del visor (render/escena.js), armada con Chrome sin interfaz y con
+WebGL por software (SwiftShader). Desde T16 las dibuja Blender (Cycles, nudos/blender.py): la
+escena, la cámara y los nombres son los de three.js, y Blender pone la luz, la trenza con relieve
+y las sombras. Con NUDOS_RENDER=threejs se dibujan como antes, con three.js, para que construir
+dos veces dé exactamente las mismas imágenes, píxel por píxel, con la misma versión de Chrome.
+Con Blender, imprimir dos veces da lo mismo o diferencias de ruido (ver referencia.py). Con otra
+versión de Pillow cambian los bytes del PNG, no los píxeles.
 
 Para cada nudo se generan, en build/<slug>/impresion/:
 - paso-<n>.png: cada paso, con el tramo que se mueve resaltado y los nombres.
@@ -20,6 +23,7 @@ import html
 import http.server
 import io
 import os
+import re
 import shutil
 import tempfile
 import threading
@@ -64,6 +68,18 @@ SUPERMUESTREO = 2   # con «supermuestreo», cada imagen se dibuja a esta escala
 # comparar en papel el terminado sin apretar, a medias y apretado («python -m nudos mejoras»,
 # build/mejoras/apretado.pdf). En falso, el terminado es el último paso, como antes de T7c.
 TERMINADO_APRETADO = True
+
+
+# Quién dibuja las imágenes de impresión (T16): «blender» o «threejs». Lo cambia NUDOS_RENDER, y
+# se lee en cada llamada, así que los procesos lo heredan.
+RENDERS = ("blender", "threejs")
+
+
+def render_activo() -> str:
+    r = os.environ.get("NUDOS_RENDER", "") or "blender"
+    if r not in RENDERS:
+        raise ImpresionError(f"NUDOS_RENDER={r}: tiene que ser {' o '.join(RENDERS)}")
+    return r
 
 
 class ImpresionError(Exception):
@@ -218,8 +234,11 @@ def imprimir(modelo: Modelo, destino: Path, extra: list[Imagen] | None = None) -
     return dibujar(imagenes(modelo) + (extra or []), destino)
 
 
-def dibujar(lista: list[Imagen], destino: Path) -> list[Path]:
-    """Dibuja cada imagen en destino/<nombre>.png, al tamaño de CELDA_MM y a PPP."""
+def dibujar(lista: list[Imagen], destino: Path, render: str | None = None) -> list[Path]:
+    """Dibuja cada imagen en destino/<nombre>.png, al tamaño de CELDA_MM y a PPP, con Blender o
+    con three.js (`render`; por omisión, render_activo())."""
+    if (render or render_activo()) == "blender":
+        return dibujar_blender(lista, destino)
     destino.mkdir(parents=True, exist_ok=True)
     ancho, alto = px(CELDA_MM[0]), px(CELDA_MM[1])
     rutas = []
@@ -233,6 +252,58 @@ def dibujar(lista: list[Imagen], destino: Path) -> list[Path]:
             _guardar(im, ruta)
             rutas.append(ruta)
     return rutas
+
+
+def dibujar_blender(lista: list[Imagen], destino: Path, aplastar: bool | None = None) -> list[Path]:
+    """Como dibujar, con Blender: Edge arma cada escena y la exporta, con una captura de solo los
+    nombres; Blender las dibuja todas en una corrida y aquí se componen sobre blanco."""
+    from . import blender
+    aplastar = blender.APLASTAR if aplastar is None else aplastar
+    destino.mkdir(parents=True, exist_ok=True)
+    ancho, alto = px(CELDA_MM[0]), px(CELDA_MM[1])
+    rutas, nombres, trabajos = [], [], []
+    with tempfile.TemporaryDirectory(prefix="nudos-blender-") as tmp:
+        tmp = Path(tmp)
+        with _servidor() as base, chrome() as navegador:
+            for k, img in enumerate(lista):
+                escena, etiquetas = _exportar(navegador, base, img, ancho, alto)
+                clave = f"{k:03d}-" + re.sub(r"[^\w-]", "-", img.nombre)
+                t = blender.preparar(escena, tmp, clave, aplastar)
+                t["salida"] = str(tmp / f"{clave}.png")
+                trabajos.append(t)
+                nombres.append(etiquetas)
+        blender.renderizar(trabajos, ancho, alto)
+        for img, t, etiquetas in zip(lista, trabajos, nombres):
+            ruta = destino / f"{img.nombre}.png"
+            _guardar(blender.componer(Path(t["salida"]), etiquetas, ancho, alto), ruta)
+            rutas.append(ruta)
+    return rutas
+
+
+def _exportar(navegador, base: str, img: Imagen, ancho: int, alto: int) -> tuple[dict, Image.Image]:
+    """La escena de la imagen, exportada por escena.js, y los nombres solos, sobre fondo
+    transparente, al doble de tamaño (como el supermuestreo de las imágenes de three.js)."""
+    contexto = navegador.new_context(viewport={"width": ancho, "height": alto},
+                                     device_scale_factor=SUPERMUESTREO, color_scheme="light")
+    try:
+        pagina = contexto.new_page()
+        problemas: list[str] = []
+        pagina.on("console", lambda m: problemas.append(m.text) if m.type == "error" else None)
+        pagina.on("pageerror", lambda e: problemas.append(str(e)))
+        pagina.on("request", lambda r: None if r.url.startswith((base, "data:"))
+                  else problemas.append(f"pidió un recurso de fuera: {r.url}"))
+        pagina.goto(base + "index.html", wait_until="load")
+        pagina.wait_for_function("window.impresionLista === true", timeout=30000)
+        # Sin las mejoras de three.js: la sombra de contacto la hace Blender, con la luz.
+        pagina.evaluate("t => window.dibujar(t)", {**trabajo(img), "mejoras": []})
+        escena = pagina.evaluate("() => window.exportar()")
+        pagina.evaluate("() => window.soloNombres()")
+        if problemas:
+            raise ImpresionError(f"{img.nombre}: el navegador dio errores:\n  " + "\n  ".join(problemas))
+        png = pagina.screenshot(type="png", animations="disabled", caret="hide", omit_background=True)
+        return escena, Image.open(io.BytesIO(png)).convert("RGBA")
+    finally:
+        contexto.close()
 
 
 def _guardar(im: Image.Image, ruta: Path) -> None:

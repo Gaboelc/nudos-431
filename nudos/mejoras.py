@@ -196,7 +196,7 @@ def pagina_apretado(modelos: dict[str, Modelo], carpeta: Path = DESTINO) -> Path
 def _dibujar_con_gris(imgs: list[Imagen], carpeta: Path) -> None:
     """Dibuja las imágenes y guarda además su versión en gris, lo que daría una impresora
     sin color, en carpeta/gris/."""
-    dibujar(imgs, carpeta)
+    dibujar(imgs, carpeta, render="threejs")   # las mejoras son de three.js (T7b y T7c)
     for v in imgs:
         with Image.open(carpeta / f"{v.nombre}.png") as im:
             _guardar(ImageOps.grayscale(im), carpeta / "gris" / f"{v.nombre}.png")

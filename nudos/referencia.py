@@ -25,6 +25,14 @@ con el motor y la otra no, y `--reimprimir` construye cada nudo como se armó <d
 compara el motor contra sí mismo (antes y después de un cambio del motor) o contra los nudos de
 hoy (lo que hace T19).
 
+Desde T16 las imágenes las dibuja Blender (nudos/blender.py), y `referencia` anota con qué se
+dibujaron en <carpeta>/render.txt. Cycles en la tarjeta no repite la imagen bit a bit, aun con la
+semilla fija y el denoiser en la CPU: imprimir dos veces deja unos 80 píxeles sueltos del fondo
+con 1 nivel de diferencia (medido en el as de guía, 25 nov de 2026). Si las dos carpetas se
+dibujaron con Blender, una imagen que difiere en hasta RUIDO_NIVELES niveles y en no más de
+RUIDO_PIXELES de sus píxeles es ruido: `comparar` la cuenta como igual y lo dice aparte. `comparar`
+avisa también si una carpeta se dibujó con Blender y la otra con three.js.
+
 El procedimiento entero, en el worktree de una rama:
     python -m nudos referencia <fuera>/antes        (desde un worktree de main, antes del código)
     python -m nudos referencia <fuera>/despues      (con el código nuevo)
@@ -58,6 +66,11 @@ IMPRESORES = 8   # navegadores a la vez; con más, la memoria y la variación de
 NAVEGADOR = "navegador.txt"
 # Si la carpeta se armó con el motor de física (T15f): el archivo existe solo entonces.
 MOTOR = "motor.txt"
+# Con qué se dibujaron las imágenes (T16): «blender» o «threejs». Sin el archivo, three.js (las
+# carpetas de antes de T16).
+RENDER = "render.txt"
+RUIDO_NIVELES = 2
+RUIDO_PIXELES = 0.005   # fracción de los píxeles de la imagen
 
 
 def nudos_hechos(raiz: Path = RAIZ) -> list[str]:
@@ -104,6 +117,8 @@ def referencia(destino: Path, slugs: list[str] | None = None, impresores: int = 
     from .fisica import usar_motor
     slugs = nudos_hechos() if slugs is None else list(slugs)
     destino.mkdir(parents=True, exist_ok=True)
+    from .imprimir import render_activo
+    (destino / RENDER).write_text(render_activo() + "\n", encoding="utf-8")
     if usar_motor():
         (destino / MOTOR).write_text("con el motor de física (--motor)\n", encoding="utf-8")
     elif (destino / MOTOR).exists():
@@ -142,6 +157,7 @@ class Diferencia:
     modelo_igual: bool = True
     imagenes: list[str] = field(default_factory=list)   # una línea por imagen distinta
     falta: bool = False
+    ruido: list[str] = field(default_factory=list)      # imágenes con solo ruido de Cycles
 
 
 def _rgb(ruta: Path) -> np.ndarray:
@@ -149,8 +165,12 @@ def _rgb(ruta: Path) -> np.ndarray:
         return np.asarray(im.convert("RGB"), dtype=np.int16)
 
 
-def comparar_nudo(antes: Path, despues: Path, slug: str) -> Diferencia | None:
-    """Lo que cambió de un nudo entre dos carpetas de referencia, o None si nada."""
+def comparar_nudo(antes: Path, despues: Path, slug: str, tolerar_ruido: bool | None = None) -> Diferencia | None:
+    """Lo que cambió de un nudo entre dos carpetas de referencia, o None si nada. Con
+    `tolerar_ruido` (por omisión, si las dos se dibujaron con Blender), las imágenes que solo
+    difieren en ruido de Cycles quedan en `ruido` y no cuentan."""
+    if tolerar_ruido is None:
+        tolerar_ruido = _render(antes) == _render(despues) == "blender"
     a, b = antes / slug, despues / slug
     if not (b / "modelo.json").exists():
         return Diferencia(slug, modelo_igual=False, falta=True)
@@ -170,9 +190,17 @@ def comparar_nudo(antes: Path, despues: Path, slug: str) -> Diferencia | None:
             else:
                 dif = np.abs(x - y).max(axis=2)
                 pixeles = int((dif > 0).sum())
-                if pixeles:
-                    d.imagenes.append(f"{nombre}: {pixeles} píxeles, hasta {int(dif.max())} niveles")
+                linea = f"{nombre}: {pixeles} píxeles, hasta {int(dif.max())} niveles"
+                if pixeles and tolerar_ruido and es_ruido(dif):
+                    d.ruido.append(linea)
+                elif pixeles:
+                    d.imagenes.append(linea)
     return None if d.modelo_igual and not d.imagenes else d
+
+
+def es_ruido(dif: np.ndarray) -> bool:
+    """Si la diferencia por píxel de dos imágenes de Blender es solo el ruido de Cycles."""
+    return int(dif.max()) <= RUIDO_NIVELES and (dif > 0).mean() <= RUIDO_PIXELES
 
 
 def comparar(antes: Path, despues: Path, reimprimir: bool = False, avisar=print) -> int:
@@ -200,6 +228,10 @@ def comparar(antes: Path, despues: Path, reimprimir: bool = False, avisar=print)
         avisar(f"Ojo: las imágenes se imprimieron con navegadores distintos ({va or 'sin anotar'} y "
                f"{vd or 'sin anotar'}). Si los modelos son iguales y todas las imágenes difieren "
                "un poco, es el navegador: arma de nuevo la referencia de antes, hoy.")
+    ra, rd = (_render(c) for c in (antes, despues))
+    if ra != rd:
+        avisar(f"Ojo: {antes} se dibujó con {ra} y {despues} con {rd}: las imágenes no pueden ser "
+               "iguales.")
     ma, md = (_con_motor(c) for c in (antes, despues))
     if ma != md:
         avisar(f"Ojo: {antes if ma else despues} se armó con el motor de física y "
@@ -214,6 +246,11 @@ def comparar(antes: Path, despues: Path, reimprimir: bool = False, avisar=print)
 def _version(carpeta: Path) -> str | None:
     ruta = carpeta / NAVEGADOR
     return ruta.read_text(encoding="utf-8").strip() if ruta.exists() else None
+
+
+def _render(carpeta: Path) -> str:
+    ruta = carpeta / RENDER
+    return ruta.read_text(encoding="utf-8").strip() if ruta.exists() else "threejs"
 
 
 def _con_motor(carpeta: Path) -> bool:

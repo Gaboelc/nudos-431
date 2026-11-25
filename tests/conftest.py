@@ -13,6 +13,10 @@ from nudos.imprimir import ImpresionError, chrome
 from nudos.procesos import en_paralelo
 from nudos.spec import ESTADOS, cargar
 
+# Las pruebas que dibujan comprueban la escena con three.js, que repite cada píxel y tarda poco;
+# Blender (T16) tiene las suyas en test_blender.py, que lo piden explícitamente.
+os.environ.setdefault("NUDOS_RENDER", "threejs")
+
 
 @pytest.fixture(scope="session")
 def con_chrome():

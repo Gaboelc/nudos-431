@@ -67,7 +67,7 @@ def _dibujar(modelos: dict[str, tuple[Modelo, Modelo]], carpeta: Path) -> dict[s
         pares[slug] = [(v, b[v.nombre.split("/hoy-")[1]]) for v in a
                        if v.nombre.split("/hoy-")[1] in b]
         todas += [v for par in pares[slug] for v in par]
-    dibujar(todas, carpeta)
+    dibujar(todas, carpeta, render="threejs")   # como se aprobó en T15d, antes de Blender
     for v in todas:
         with Image.open(carpeta / f"{v.nombre}.png") as im:
             _guardar(ImageOps.grayscale(im), carpeta / "gris" / f"{v.nombre}.png")
