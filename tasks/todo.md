@@ -71,6 +71,10 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [x] `prueba-atar`: los dos pilotos atados sin fallas y los 10 s en Blender (25 nov)
   - [x] Punto de control: Gabriel aprobó los videos de prueba (25 nov)
 - [ ] T18 Videos: horizontal en 4K a 60 fps y 68 Mbps (YouTube, y una copia en 1080p en el visor) y vertical en 1080 × 1920 a 60 fps (Instagram), con los pilotos (M)
+  - [x] Diseño en el plan, con el costo de render medido (25 nov)
+  - [x] Punto de control: Gabriel aprobó el diseño y respondió sus cuatro preguntas (25 nov)
+  - [ ] `python -m nudos video` con los dos pilotos
+  - [ ] Punto de control: Gabriel aprueba los videos
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L)
 - [ ] Punto de control de la fase 5
 

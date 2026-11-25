@@ -557,12 +557,111 @@ Cerrada el 25 nov: Gabriel aprobó los 10 s de prueba del as de guía y del amar
 - **En el visor:** horizontal, en la página del QR. El sitio hoy no acepta imágenes ni video, así que la lista de tipos de la decisión de arquitectura 7 gana `.mp4`, con un tope de tamaño. El video vive dentro del sitio, sin YouTube, para que el visor no dependa de servicios externos.
 - **En redes:** el horizontal en YouTube y el vertical en Instagram. Dónde y cuándo se publica lo decide Gabriel.
 
+**Diseño (25 nov; Gabriel lo aprobó el mismo día).**
+
+*1. La orden.* `python -m nudos video <slug> [--previa] [--solo horizontal|vertical]` siempre usa el motor (pone `NUDOS_MOTOR=1`) y hace esto, en orden:
+1. Construye el nudo. Si tiene fallas, no sigue.
+2. Lo ata con el modo «atar» de T17 y guarda los cuadros en `build/<slug>/video/cuadros.npz`, con la huella del `modelo.json` y de la versión de `animar.py` y `fisica/atar.py`. Si la huella no cambió, no lo vuelve a atar: así, cambiar un título o la cámara no cuesta los 20 minutos del motor.
+3. Arma la línea de tiempo: la velocidad de cada parte (punto 3), el apretado (punto 6), las pausas, los títulos y las cámaras de los dos formatos.
+4. Dibuja cada formato en Blender, cuadro por cuadro, en una carpeta fuera de A: (`NUDOS_CUADROS`; por omisión, `%LOCALAPPDATA%\nudos\cuadros\<slug>\<formato>\`). Un cuadro en 4K pesa unos 12 MB y un nudo tiene unos 2700: son 30 GB que Drive no tiene que respaldar. Se puede retomar: si el render se corta, el cuadro que ya está con la misma huella no se vuelve a dibujar.
+5. Arma los videos con ffmpeg en `%USERPROFILE%\Videos\nudos-431\<slug>\` (`NUDOS_VIDEOS`): `<slug>-4k.mp4`, `<slug>-vertical.mp4` y `<slug>-visor.mp4`. Los dos primeros pesan unos 400 y 120 MB, así que tampoco van a A:. La copia del visor se copia además a `videos/<slug>.mp4`, en el repositorio (punto 8).
+
+Con `--previa`, el nudo entero en 960 × 540, 30 fps y 16 muestras, en unos minutos, para ver los tiempos, la cámara y los títulos antes del render largo.
+
+*2. El formato, en ffmpeg.* Los tres videos van sin audio (pregunta 1, abajo), en H.264 4:2:0 y con el índice al principio. El color se pasa a YUV con la matriz BT.709 y se marca como BT.709. Sin eso, el azul de la marca cambia de tono en el reproductor.
+- **4K:** `-b:v 68M -maxrate 68M -bufsize 136M`, perfil High y nivel 5.2. Un cuadro clave cada 30 cuadros y dos cuadros B, como pide YouTube.
+- **Vertical:** `-b:v 20M -maxrate 25M`.
+- **Visor:** sale del 4K, bajado a 1920 × 1080 con Lanczos, con `-crf 20 -maxrate 4M`. Tiene un tope de **20 MB**. Bajé los 8 Mbps de la descripción porque GitHub Pages no publica un sitio de más de 1 GB, y 36 videos de 30 MB ya pasan de ahí. Un fondo blanco con poco movimiento se comprime bien a 4 Mbps, pero eso se revisa en el punto de control. Si un video pasa el tope, la orden falla y dice cuánto pesa.
+
+*3. La duración.* El amarre dura 94 s; la meta es unos 45.
+- **En una plantilla, la cola va en la mano.** Hoy, en cada paso, la mano recoge los 20 d de cola que la ficha deja sobre la mesa y los vuelve a dar: en el amarre son 27 s de los 94. En el video, la pausa de cada paso intermedio muestra la cuerda de la ficha hasta el hito del paso, más 4 d de cola en la mano, así que no hay nada que recoger. La pausa del último paso sí es la ficha entera. Esto cambia una regla de T17 («en cada pausa se ve exactamente la pose de la ficha»): en una plantilla, se ve hasta el hito.
+- **Lo que se repite va en cámara rápida.** El video recorre la simulación a otra velocidad, sin cambiar la del motor (que se queda en 10 d/s como máximo, sin amontonar nodos). En un paso de plantilla, los primeros 10 d de cuerda nueva van a velocidad normal y lo demás va al doble. En los pasos que terminan una serie (`hasta: vueltas` o `ahorcados`), lo demás va al triple. Cada cambio de velocidad tarda 0,5 s. Un cuadro del video que cae entre dos de la simulación se interpola en línea recta, que es justo lo que `comprobar` verificó como libre entre esos dos cuadros. Donde cambia la cantidad de nodos, se toma el cuadro más cercano.
+- **Estimado:** el amarre, unos 45 s, y el as de guía, unos 44 (los 40,6 de hoy más el apretado y la pausa final). El motor tarda lo mismo o menos que en T17, porque ya no recoge ni vuelve a dar la cola.
+
+*4. Los saltos de un cuadro.* La medida `salto_max` pasa a ser una falla: entre dos cuadros de la simulación, ningún nodo se mueve más de **0,35 d**. La mano más rápida mueve 0,17.
+- **La gaza pequeña del as de guía (0,6 d).** `_tramo_firme` lleva cada nodo en línea recta de A a B. Por eso, en los primeros cuadros el lazo es una copia chica del final, con mucha curvatura, y el motor lo abre de golpe. La guía de ese tramo pasa a interpolar el ángulo de la tangente a lo largo de la cuerda, y no las posiciones. Con eso, la curvatura en cada cuadro es una fracción de la de B y el radio nunca es menor que el de la ficha: el lazo nace grande y se cierra, como cuando lo hace una mano. Lo que falta para que la punta llegue a su lugar se reparte en línea recta a lo largo del tramo, lo que no agrega curvatura. Las alturas siguen saliendo de `alturas()`. Lo mismo vale para «acomodar».
+- **La punta del amarre (de 0,3 a 0,8 d).** La mano tira con un resorte de 200 N/d. Cuando la punta se traba en una vuelta, el resorte se carga y, al zafarse, la punta salta. La mano pasa a esperar a la punta: si la punta queda más de 0,15 d atrás de su meta, la guía no avanza en ese cuadro y repite la meta, así que el resorte nunca guarda más de 30 N. En el video se ve como una mano que se detiene un instante. El tiempo de más se mide; T17 ya cuenta las «esperas».
+
+*5. El encuadre.* Hoy cada toma encierra toda la cuerda que cabe en el encuadre de la ficha, más un margen de 3 d, y eso incluye el firme hasta el borde. Pasa a encerrar solo el nudo: la cuerda desde 6 d antes del primer cruce de A o de B (sin cruces, desde 6 d antes del tramo resaltado) hasta la punta, más lo que mueve la guía. El firme sale del cuadro por el borde, como en una foto de cerca. Si el nudo es muy chico, la toma tiene un mínimo de 8 d de semiancho, para que en los primeros pasos no salga demasiado cerca.
+
+*6. El nudo terminado, al final.*
+- **En un nudo libre**, `apretar()` del motor (el modo 2) guarda cada paso cuasiestático hasta el que `aceptar` elige, que es el de `modelo.apretado`. Esos estados se reparten en 1,5 s con arranque y frenado suaves. `comprobar` revisa los cuadros como en T17, y si la recta entre dos pasos no queda libre, se guardan también las iteraciones de Newton de ese paso.
+- **En una plantilla**, la tensión pasa de «ajustada» a «apretada» en 1 s, con el mismo registro.
+- **Al final**, 2,5 s quieta en el nudo apretado, con la cámara acercándose un 10 %.
+
+*7. El título de cada paso en pantalla.*
+- Dice «Paso 4 de 7» en letra chica y, debajo, el título de la especificación («Sube por la gaza»), con `{vueltas}` y `{ahorcados}` ya en letras. Durante la pausa del paso 1 aparece además el nombre del nudo. Antes de dibujar, el texto pasa por la misma comprobación de términos de sección que la ficha.
+- Aparece cuando empieza el movimiento del paso y se queda durante su pausa, con fundidos de 0,25 s.
+- **Lo dibuja Edge**, en HTML con las fuentes del sitio (`sitio/vendor/fuentes`), sobre fondo transparente, como ya se hace con los nombres de las fichas: una imagen por paso y formato. Pillow la pone sobre cada cuadro, así que el tipo es el mismo de la ficha y del visor. Si un título no cabe en dos líneas, la orden falla.
+- **Dónde va:**
+  - En el horizontal, abajo a la izquierda, dentro del 90 % seguro del cuadro.
+  - En el vertical, arriba, entre el 12 % y el 22 % del alto. Instagram tapa el 25 % de abajo con el texto del reel y los botones, y el borde de la derecha con los íconos.
+- Los nombres «Firme» y «Chicote» de las fichas no entran al video: con la cuerda moviéndose, saltarían.
+
+*8. El video en el sitio.*
+- **Los archivos.** El sitio se construye desde `main` (`scripts/publicar.sh`), así que la copia del visor vive en git, en `videos/<slug>.mp4`, con una línea por video en `videos/LEEME.txt` que dice de qué commit y de qué fecha es. `python -m nudos sitio` la copia a `build/sitio/<slug>/video.mp4` si el nudo está en `publicados.txt`. La URL del visor (`/<slug>/`) no cambia: el video es un archivo más dentro de esa carpeta, sin QR propio.
+- **Las reglas.** `EXTENSIONES` gana `.mp4`, y el sitio falla si un video pasa los 20 MB o si el sitio entero pasa los 900 MB, para quedar bajo el límite de 1 GB de GitHub Pages.
+- **En la página.** El visor gana un botón «Ver el video», debajo del modelo 3D. Al tocarlo aparece un `<video controls playsinline preload="none">` horizontal, sin reproducción automática, para no gastar los datos de un celular que solo quería el modelo. Sin video, la página queda igual que hoy. La página no usa póster, porque el sitio sigue sin aceptar imágenes.
+- **El costo en el repositorio (pregunta 3).** Son 36 videos de hasta 20 MB: unos 700 MB en `main`, y otro tanto en `gh-pages` cada vez que cambian todos, porque `publicar.sh` agrega un commit encima del anterior. GitHub recomienda repositorios de menos de 1 GB y avisa desde los 5.
+
+*9. La cámara del vertical.* Usa las mismas tomas por paso, con su propio encuadre. `toma()` pasa a encuadrar la caja del nudo dentro de un área útil del cuadro, y no del cuadro entero:
+- en el horizontal, el 80 % de arriba, para no tapar el título;
+- en el vertical, la franja entre el 22 % y el 75 % del alto.
+
+Como el as de guía es más ancho que alto, en el vertical el ángulo alrededor de la mesa se elige, de 30° en 30° y a no más de 90° del horizontal, para que el nudo salga lo más grande posible (pregunta 2). En una plantilla, sigue mandando que los palos tapen lo menos posible de la cuerda nueva.
+
+*10. La marca oscura sobre la mesa del amarre.* Es la tapa de la punta (`rol: "punta"`) que `escena.js` exporta con la cuerda del paso 1. `mallas_anfitrion` solo saca las mallas con rol «cuerda», así que la tapa se queda fija sobre la mesa en todo el video. Se ve en la prueba de T17, abajo a la izquierda. El arreglo es sacar también «punta» y «dedo». Se confirma listando los roles que exporta.
+
+*11. El costo de render, medido (25 nov, RTX 4070).* Medí 6 cuadros del enhebrado de cada piloto, con la escena de T16:
+
+| Tamaño | Muestras | Denoiser | s por cuadro |
+|---|---|---|---|
+| 1280 × 720 | 64 | CPU | 3,5 (amarre) y 6,8 (as de guía) |
+| 3840 × 2160 | 64 | CPU | 31 |
+| 3840 × 2160 | 64 | tarjeta | 12,8 |
+| 3840 × 2160 | 32 | tarjeta | 8,5 |
+| 3840 × 2160 | 16 | tarjeta | 6,5 |
+| 1080 × 1920 | 32 | tarjeta | 2,0 |
+
+- **El denoiser en la CPU es lo que más cuesta en 4K.** En la tarjeta, el cuadro baja de 31 a 13 s. Las fichas lo dejan en la CPU para que imprimir dos veces dé lo mismo. En un video eso no hace falta, así que `video` lo pone en la tarjeta.
+- **32 muestras alcanzan.** En el as de guía, 32 y 64 muestras difieren en 0,3 niveles de 255 en promedio, y solo el 0,08 % de los píxeles en más de 8 niveles. La comparación del amarre no vale: el cuadro de 32 muestras salió sin el tramo resaltado. Lo reviso al implementar, porque puede ser un error de la escena.
+- **Queda un costo fijo de unos 4 s por cuadro en 4K**, el mismo con 16 que con 64 muestras. Es armar toda la escena en cada cuadro (`vaciar()`, los materiales, las texturas de la trenza de 1024 px, la mesa y el anfitrión), el denoiser y escribir el PNG. `use_persistent_data` casi no lo baja (de 8,5 a 8,0 s). La escena pasa a armarse una vez por llamada a Blender: en cada cuadro solo se cambia la malla de la cuerda, la cámara y, si cambian, las luces. Los PNG se escriben con compresión baja. **Meta: unos 6 s por cuadro en 4K.**
+- **Los cuadros repetidos se dibujan una vez.** En las pausas, con la misma pose y la misma cámara, se dibuja un cuadro y se copia. Es cerca del 10 %.
+- **Por nudo (unos 45 s, 2700 cuadros):**
+  - el horizontal, de 4 a 6 horas (de 6 a 8,5 s por cuadro);
+  - el vertical, 1,5 horas;
+  - el motor, de 5 a 20 minutos.
+- **Los dos pilotos:** de 11 a 15 horas, de noche.
+- **Los 36 nudos de T19:** de 200 a 270 horas, de 8 a 11 días de render seguido. Es menos que las 340 a 560 horas que estimaba la descripción, pero sigue siendo mucho (pregunta 4).
+
+*12. Los módulos.*
+- `nudos/video.py`: la orden, la línea de tiempo con la velocidad, los títulos, el armado y ffmpeg. Toma de `prueba_atar.py` la línea de tiempo y la cámara, que pasan a este módulo, y `prueba-atar` las importa de aquí.
+- `nudos/animar.py`: la cola en la mano, la interpolación por ángulo, el encuadre del nudo y el apretado.
+- `nudos/fisica/atar.py`: la mano que espera y la falla por salto.
+- `render/blender/escena.py`: el modo video, con la escena armada una sola vez y el denoiser en la tarjeta.
+- `render/titulo.html`: el título de cada paso.
+- `nudos/exportar.py`, `sitio/plantilla.html` y `sitio/visor.js`: el video en el visor.
+- **Pruebas, rápidas:**
+  - la velocidad interpola bien y no saca cuadros fuera de la simulación;
+  - la interpolación por ángulo no baja del radio de B;
+  - la mano que espera no deja saltos de más de 0,35 d con el gancho de T17;
+  - los títulos caben;
+  - el sitio acepta `.mp4` con el tope y rechaza uno de más;
+  - el visor sin video queda igual.
+
+*Lo que decidió Gabriel (25 nov, al aprobar el diseño).*
+1. **Sin audio** por ahora. Puede que más adelante quiera agregarle.
+2. **El vertical puede girar el nudo** hasta 90° respecto de la ficha.
+3. **Los videos del visor van en `main`.** `publicar.sh` no cambia.
+4. **T19 en 4K a 60 fps, sin reescalar, y lo corre Gabriel.** Una sola orden pone todos los nudos en cola y los va haciendo uno tras otro, para dejarla corriendo de noche: `python -m nudos video --todos` (o con varios slugs). Si se corta, al volver a correrla sigue donde quedó: no vuelve a atar los nudos con la misma huella, no vuelve a dibujar los cuadros que ya están y no vuelve a armar los videos que ya están completos. Al terminar cada nudo anota en `NUDOS_VIDEOS/cola.txt` lo hecho, lo que falló y cuánto tardó. Un nudo que falla no detiene la cola. Esto se implementa en T18 y se prueba con los dos pilotos.
+
 **Criterios de aceptación:**
 - [ ] `python -m nudos video <slug>` arma los dos formatos.
-- [ ] El visor del as de guía muestra su video, y la URL del QR no cambia.
+- [ ] Los dos pilotos se atan sin fallas, sin saltos de más de 0,35 d entre cuadros y terminan con el nudo apretado. El amarre dura 50 s o menos.
+- [ ] El visor del as de guía muestra su video, de 20 MB o menos, y la URL del QR no cambia.
 - [ ] Gabriel aprueba los videos de los pilotos; los de los demás nudos se arman en T19.
 
-**Dependencias:** T17. **Tamaño:** M, más el tiempo de render. T14b midió unos 7 s por cuadro a 1280 × 720 con 64 muestras, a 30 fps: los 36 nudos en dos formatos, de 30 a 50 horas. Con el formato de arriba, si el tiempo crece con los píxeles y los cuadros, el horizontal cuesta 18 veces eso (9 veces los píxeles y el doble de cuadros) y el vertical, 4,5 veces: de 340 a 560 horas, de dos a tres semanas de render seguido. T16 mide el tiempo real por cuadro en 4K y busca bajarlo (la GPU, menos muestras con el denoiser) antes de comprometer los 36 videos. El vertical se renderiza con su propia cámara: recortar el horizontal corta el nudo.
+**Dependencias:** T17. **Tamaño:** M, más el tiempo de render. T14b midió unos 7 s por cuadro a 1280 × 720 con 64 muestras, a 30 fps: los 36 nudos en dos formatos, de 30 a 50 horas. Con el formato de arriba, si el tiempo crece con los píxeles y los cuadros, el horizontal cuesta 18 veces eso (9 veces los píxeles y el doble de cuadros) y el vertical, 4,5 veces: de 340 a 560 horas, de dos a tres semanas de render seguido. (El 25 nov se midió el tiempo real: está en el punto 11 del diseño.) T16 mide el tiempo real por cuadro en 4K y busca bajarlo (la GPU, menos muestras con el denoiser) antes de comprometer los 36 videos. El vertical se renderiza con su propia cámara: recortar el horizontal corta el nudo.
 
 #### T19: Todos los nudos a la vez
 
