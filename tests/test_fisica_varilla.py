@@ -92,7 +92,7 @@ def test_la_tension_de_atado():
 def test_el_peso_es_el_de_la_cuerda():
     X = np.column_stack([np.linspace(0, 125, 501), np.zeros(501), np.zeros(501)])   # 1 m
     g = Varilla.desde_forma(X).peso(X.ravel())[1]
-    assert g[:, 2].sum() == pytest.approx(0.045 * 9.81, rel=1e-9)     # 45 g/m
+    assert g[:, 2].sum() == pytest.approx(0.0204 * 9.81, rel=1e-9)    # 20,4 g/m (T15e)
 
 
 def test_calcular_dos_veces_da_lo_mismo():

@@ -54,6 +54,9 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Filtro 1 del amarre cuadrado otra vez, de los pasos 4 a 7 y del terminado, con la ficha nueva: aprobado por Gabriel el 24 nov (dd48d6e), y el sitio publicado con el amarre nuevo
     - [x] Las fallas de curvatura de la vuelta de escota con el motor (radio 0,87 en el último paso, 0,85 en el error y 0,77 en el reverso), en T15f (24 nov)
   - [ ] T15e Calibrar con cuerda real: Gabriel mide la cuerda y fotografía cuatro nudos apretados (S)
+    - [x] Gabriel midió la cuerda y fotografió tres nudos (25 nov); `config/cuerdas.yaml` con la cuerda medida y los pilotos con ella, sin fallas
+    - [x] Punto de control: Gabriel aprobó la cuerda medida con `revision/t15e/t15e-color.pdf` (25 nov)
+    - [ ] La foto del amarre cuadrado apretado
   - [x] T15f `construir` usa el motor en cualquier nudo y anfitrión, comprobado con los pilotos (M) (24 nov)
     - [x] Las mallas de todos los anfitriones, las plantillas por el motor, `referencia` y `comparar` con él, y los cuatro pilotos sin fallas (24 nov)
     - [x] Punto de control: Gabriel revisó «Cómo se hizo T15f» en el plan (24 nov)

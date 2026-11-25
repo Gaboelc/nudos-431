@@ -1,0 +1,26 @@
+# Las cuerdas del motor de física (nudos/fisica/materiales.py), una por tipo de cuerda.
+#
+# Unidades de catálogo: el diámetro en mm, el peso en g por metro, la rigidez a la tracción
+# (EA) en N y la de flexión (EI) en N·m². El motor las pasa a las suyas (diámetros y newtons).
+# La rigidez a la torsión no va aquí: el motor no la usa (T15b) y, para medirla, toma EI/1,5.
+
+cuerda-8mm:
+  # La cuerda trenzada de los filtros, medida por Gabriel el 24 y 25 de noviembre de 2026 (T15e).
+  diametro_mm: 8
+  # Del paquete: 612,35 g los 30 m.
+  peso_g_m: 20.4
+  # Sin medir: se estira un 0,5 % con 100 N (T14a). En un nudo casi no se estira.
+  EA_n: 20000
+  # Voladizos de 10, 15, 20, 30 y 40 cm, que caen 3,4, 8,2, 10,5, 27 y 37 cm. Con la elástica sin
+  # linealizar, una sola EI no los explica (falla hasta un 52 %); con EI y un ángulo de caída de
+  # 18° en el borde donde se sujeta (la cuerda dobla ahí o trae curva del carrete), de −17 % a
+  # +13 %. Incierta en un factor de 2 más o menos. T14a suponía 2·10⁻³, cuatro veces más rígida.
+  EI_n_m2: 5.0e-4
+  # Media vuelta sobre un palo de madera: 1,8 kg se sostienen con 0,78 kg, tres veces igual
+  # (Euler-Eytelwein: μ = ln(1,8/0,78)/π = 0,27). Con vuelta y media, P baja solo al quitarle
+  # todo el peso a p: la fórmula pide 0,14 kg.
+  roce_madera: 0.27
+  # Sin medir: el de T14a.
+  roce_cuerda: 0.35
+  # Sin medir: el de una cuerda de nailon sobre acero, de tabla (el destorcedor, T15f).
+  roce_metal: 0.3
