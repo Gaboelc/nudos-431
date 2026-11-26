@@ -80,7 +80,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [ ] Quitar el modo video viejo de `render/blender/escena.py` (en T20b)
 - [ ] **El pulido a fondo** (propuesta del 26 nov, aprobada el mismo día; el diseño está en el plan)
   - [ ] T20 El aspecto: material, escena, luz y cámara (L; sesión «el aspecto»)
-    - [ ] T20a El cuadro final en cuatro aspectos, con Cycles y EEVEE y su costo (`prueba-aspecto`)
+    - [x] T20a El cuadro final en cuatro aspectos, con Cycles y EEVEE y su costo (`prueba-aspecto`, `build/aspecto/prueba.pdf`) (26 nov)
     - [ ] Punto de control: Gabriel elige el aspecto y el motor de render
     - [ ] T20b El aspecto elegido en los videos, y la prueba de 10 s en 4K; punto de control
     - [ ] T20c Las fichas, solo si se nota en papel

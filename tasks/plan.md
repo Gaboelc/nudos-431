@@ -797,6 +797,21 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
   - **Viñeta y grano:** después de Blender, en Python (`vineta_y_grano`), con la semilla del cuadro; en el video irán en `_componer`.
 - **El desenfoque de movimiento:** ni Cycles ni EEVEE toman el atributo `velocity` de una malla común (el cuadro sale igual, medido). Funciona con un modificador de Geometry Nodes que corre cada vértice su velocidad por el tiempo de la escena: los dos motores miran la escena al abrir y al cerrar el obturador, y ahí la cuerda ya se movió.
 - **Recursos de terceros:** los dos HDRI de Poly Haven (CC0, 57 MB), bajados con permiso de Gabriel, en `recursos/hdri/` de la carpeta de A:. Están fuera de git y en `.git/info/exclude`, registrados con su huella en `config/recursos.yaml`. `nudos/recursos.py` los busca y los comprueba (desde un worktree, con `NUDOS_RECURSOS`).
+- **El costo, medido en la RTX 4070** (segundos por cuadro de 4K, el promedio del paso 4 y del amarre; y días para los 36 nudos, con 7200 cuadros de 4K y 3000 del reel cada uno; la meta es 14):
+
+  | Motor | 0 hoy | 1 estudio | 2 cuerda real | 3a Meadow | 3b J&E Gray 02 |
+  |---|---|---|---|---|---|
+  | Cycles, 64 muestras | 9,9 s, 32 días | 10,3 s, 34 | 10,3 s, 34 | 7,1 s, 24 | 6,6 s, 22 |
+  | Cycles, 32 | 7,8 s, 25 (el de T18) | 7,4 s, 24 | 7,1 s, 23 | 4,9 s, 16 | 4,7 s, 15 |
+  | Cycles, 16 | | 4,7 s, 15 | 4,6 s, 15 | 3,5 s, 11 | 3,4 s, 11 |
+  | EEVEE, 64 | 2,9 s, 10 | 5,8 s, 19 | 5,8 s, 19 | 3,1 s, 10 | 3,0 s, 10 |
+  | EEVEE, 32 | | 2,6 s, 9 | 2,6 s, 9 | 1,6 s, 5 | 1,6 s, 5 |
+  | EEVEE, 16 | | 1,6 s, 5 | 1,6 s, 5 | 1,1 s, 4 | 1,1 s, 4 |
+
+  - A tamaño real, Cycles con 16 muestras y EEVEE con 16, 32 y 64 se ven casi iguales: el denoiser de Cycles suaviza un poco la trenza, y EEVEE marca más los surcos y no tiene brillo de filamento.
+  - El estudio cuesta más que el campamento en los dos motores: las tres luces de área con sombras suaves contra el HDRI.
+  - Las primeras medidas de la segunda corrida salieron hasta el doble de lentas mientras otro programa usaba la máquina; la tabla es de una tercera corrida, con la tarjeta libre.
+- **Lo que propone Claude:** el estudio (1), con EEVEE a 32 muestras: 2,6 s por cuadro de 4K y 9 días para los 36 nudos, con margen para volver a dibujar. Se ve casi igual que Cycles a 64 muestras, que cuesta 4 veces más, y no parpadea, como podría el denoiser de Cycles con pocas muestras. Las fichas siguen en Cycles.
 
 **Punto de control:** Gabriel elige el aspecto y el motor de render, con los números a la vista.
 
