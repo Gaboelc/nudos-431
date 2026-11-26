@@ -810,7 +810,7 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
 
   - A tamaño real, Cycles con 16 muestras y EEVEE con 16, 32 y 64 se ven casi iguales: el denoiser de Cycles suaviza un poco la trenza, y EEVEE marca más los surcos y no tiene brillo de filamento.
   - El estudio cuesta más que el campamento en los dos motores: las tres luces de área con sombras suaves contra el HDRI.
-  - Las primeras medidas de la segunda corrida salieron hasta el doble de lentas mientras otro programa usaba la máquina; la tabla es de una tercera corrida, con la tarjeta libre.
+  - Algunas medidas de una corrida salieron hasta el doble de lentas mientras corría a la vez otro Blender; la tabla es de una corrida con la tarjeta libre, y repite las medidas de la primera.
 - **Lo que propone Claude:** el estudio (1), con EEVEE a 32 muestras: 2,6 s por cuadro de 4K y 9 días para los 36 nudos, con margen para volver a dibujar. Se ve casi igual que Cycles a 64 muestras, que cuesta 4 veces más, y no parpadea, como podría el denoiser de Cycles con pocas muestras. Las fichas siguen en Cycles.
 
 **Punto de control:** Gabriel elige el aspecto y el motor de render, con los números a la vista.
