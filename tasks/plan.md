@@ -977,6 +977,81 @@ La cámara (las paradas y la aceleración) es de T22.
   - La sonoridad y el pico.
   - La voz siempre se entiende: mientras hay voz, la música queda 15 dB abajo.
 
+**Cómo se hicieron T23a y T23b (26 nov de 2026; falta que Gabriel elija la voz y la música):**
+- **La búsqueda de voces (26 nov).** Las licencias se comprobaron en la ficha de cada modelo en Hugging Face.
+  - **Los candidatos que caben en la RTX 4070, con licencia libre:**
+    - Qwen3-TTS 1.7B (Apache-2.0).
+    - Chatterbox Multilingual V3, con un ajuste para el español de Latinoamérica (`es-mx-latam`, MIT, junio).
+    - VoxCPM2 (Apache-2.0, 30 idiomas, 48 kHz).
+    - Ming-3.0-tts 0.5B (MIT, 19 nov). En el test de español de MiniMax pronuncia mal el 1,1 % de las palabras; VoxCPM2, el 1,3 %.
+  - **Los descartados:**
+    - Fish Audio S2 Pro: licencia de investigación no comercial y 10 GB.
+    - Voxtral TTS: CC BY-NC y no clona.
+    - FireRedTTS3: 11,7 GB, no cabe, y su versión oficial pide Linux.
+    - dots.tts: pronuncia mal el 2,6 % de las palabras en español.
+    - OmniVoice: no queda claro si sus pesos son no comerciales.
+    - Ming-3.0-tts tiny: 16,8 GB.
+  - **Lo que autorizó Gabriel:** de la voz, solo Qwen3-TTS. Tampoco autorizó el alineador forzado (Qwen3-ForcedAligner, 1,7 GB) ni pyloudnorm. Su voz clonada queda para después, si las voces de la prueba no lo convencen.
+- **La instalación (con permiso de cada descarga), en `D:\nudos\ia` (`NUDOS_IA`), fuera de A:.**
+  - **Los entornos:** uv 0.13.10 (con el hash verificado), Python 3.12 y torch 2.7.1+cu128, compartido en el caché de uv.
+  - **Qwen3-TTS:** `qwen-tts` 0.1.1, con VoiceDesign y Base de 1.7B (8,4 GB).
+  - **ACE-Step 1.5:** commit ca1e85f, con su `uv sync`, librosa y `checkpoints/` (9,4 GB).
+  - **La música compuesta:**
+    - FluidSynth 2.6.3.
+    - GeneralUser GS 2.0 (commit 684543d, su licencia permite cualquier uso en música).
+    - Siete carpetas del VCSL (CC0, 52 MB): kalimba de Tanzania, glockenspiel, dos shakers, palmas, bombo y cajón.
+  - **Cómo se describe:** `nudos/ia.py` dice todo esto, encuentra los entornos y corre los scripts de `sonido/` como a Blender: con `python -I -X utf8`, un trabajo en JSON y `HF_HUB_OFFLINE=1`, así que al correr nada se baja.
+  - **Dos tropiezos:**
+    - transformers 4.57 consulta la red al cargar el tokenizador si se le da el nombre del repositorio, y por eso el script carga desde la carpeta local.
+    - Una descarga de Hugging Face parecía colgada porque Windows no actualiza el tamaño de un archivo abierto.
+- **`nudos/voz.py`:**
+  - **Los proveedores:**
+    - `QwenTTS`: VoiceDesign crea la voz una vez, diciendo `TEXTO_REFERENCIA`, y Base la clona en cada texto, así que suena igual en todo el video.
+    - `ElevenLabs`: por su API, con la clave en `ELEVENLABS_API_KEY` y el tiempo de cada letra.
+    - `Falso`: para las pruebas.
+  - **El caché por huella:** guarda el texto dicho, la voz con la huella de su muestra, el modelo y los ajustes, en `NUDOS_VOZ` (`%LOCALAPPDATA%\nudos\voz`). Las locuciones que faltan se piden juntas, para que Qwen cargue sus modelos una sola vez.
+  - **La pronunciación (`para_decir`):** los números y las medidas en letras («1,5 m» → «un metro y medio», «Paso 4 de 7» → «Paso cuatro de siete»), sin comillas ni paréntesis. `PRONUNCIACION` lleva lo que se oiga mal. Cada palabra recuerda cómo se ve, para los subtítulos.
+  - **El tiempo de cada palabra:** sin alineador, `estimar_tiempos` empareja las pausas del audio con la puntuación, por programación dinámica, y reparte cada tramo por sílabas. Con el proveedor falso, el error medio es de 18 ms y el máximo de 33. Cada locución dice si sus tiempos son «estimados» o del «proveedor».
+- **`nudos/sonoridad.py`** mide como pide UIT-R BS.1770-4 (la ponderación K y las dos compuertas), en vez de pyloudnorm.
+  - Un tono de 1 kHz a 0 dBFS da −3,00 LUFS, como pide la norma.
+  - También tiene el pico real con sobremuestreo ×4 y un limitador con anticipación.
+- **`nudos/musica.py`:** folk de campamento a 100 pulsos por minuto, en sol mayor y en 4/4. Cada capítulo empieza en un pulso, con su propio compás (`en_pulso`).
+  - **Candidata A, compuesta en código (`componer`):**
+    - La guitarra punteada (Travis), el bajo, el shaker con acento en el contratiempo, las palmas, el bombo apagado y el glockenspiel.
+    - El motivo de la serie en kalimba: re, sol, si, la-sol, y la respuesta. En la apertura termina abierto, en re, y en el cierre se resuelve en sol.
+    - **El arreglo de cada capítulo:**
+      - Los pasos van parejos y sin melodía.
+      - La verificación lleva una pregunta de glockenspiel.
+      - Los errores van en la menor, sin percusión.
+      - La práctica es la más llena, con palmas, bombo y contracanto.
+      - En el cierre, el motivo llega al golpe del nudo y ahí suena el acorde final rasgueado, con el bajo y la kalimba.
+    - **Cómo suena:**
+      - Todo va humanizado con una semilla fija.
+      - FluidSynth toca la guitarra y el bajo con GeneralUser GS, por MIDI escrito aquí.
+      - Lo demás lo toca el muestreador propio (`Banco`) con las muestras del VCSL.
+  - **Lo medido en las muestras:**
+    - Los nombres del VCSL van una octava abajo de lo que suena.
+    - La kalimba es una mbira y está hasta 60 centésimas fuera de 440 Hz.
+    - Por eso `altura()` mide cada muestra y la transposición la corrige: medida otra vez, cada nota queda a menos de una centésima. Cada banco se normaliza y cada instrumento se equilibra por su sonoridad medida (`MEZCLA`).
+    - En la demo, los errores quedan 5 LU abajo y el cierre sube con el acorde final.
+  - **Candidata B, ACE-Step 1.5 (`armar_ace`):**
+    - Genera una pieza por arreglo (abre, pasos, ralo, lleno y cierra), a 100 pulsos por minuto y en sol mayor, en unos 30 s cada una.
+    - `sonido/ace_step.py` mide sus pulsos con librosa: de 99,6 a 100,4 por minuto. La pieza de los pasos iba a medio tiempo y librosa daba 49,8; el pulso se corrige al pedido.
+    - Cada capítulo toma su pieza desde un compás, con su nivel (`NIVEL_ACE`). El cierre pone el último compás fuerte en el golpe.
+- **`nudos/mezcla.py` (el comienzo de T23c):** `bajo_la_voz` baja la música lo justo para quedar 15 dB bajo la voz. Empieza 0,15 s antes de que entre la voz y no sube en pausas de menos de 0,45 s.
+- **Las pruebas de escucha:**
+  - `python -m nudos prueba-voz` deja en `revision/voz/` cuatro voces (dos hombres y dos mujeres, creadas por descripción y por eso no son de nadie), cada una con la apertura y los pasos 2 y 4 del as de guía, a −20 LUFS y en un orden al azar.
+  - **Lo medido:** dicen de 4,8 a 6,2 sílabas por segundo y ninguna termina cortada. La pedida como «hombre joven» salió aguda: 185 Hz de mediana, contra 94 del otro hombre.
+  - `python -m nudos prueba-musica` deja en `revision/musica/` las dos candidatas (34 s) y cada una con la voz encima.
+  - Las dos pruebas están también en una página privada para el celular: https://claude.ai/artifact/GqEhKz4kp3jCH5QhXruDjk.
+- **Pruebas rápidas:**
+  - `tests/test_voz.py`: los números, la pronunciación, las sílabas, el caché, los tiempos estimados contra los reales, ElevenLabs con una API falsa y Qwen con el script falso.
+  - `tests/test_musica.py`:
+    - La sonoridad contra la norma, el pico real y el limitador.
+    - El pulso, que los compases caigan en los capítulos, que la semilla repita y que el arreglo cambie en cada capítulo.
+    - El MIDI, la altura medida, la música con instrumentos sintéticos y los 15 dB bajo la voz.
+  - Ninguna usa red, tarjeta ni bancos.
+
 #### T24: El visor
 
 - **La trenza:** material físico con anisotropía y *sheen* (ya están en three.js 0.160) y un relieve más fino, con ruido de lygia.

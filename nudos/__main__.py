@@ -104,6 +104,13 @@ def main(argv=None) -> int:
     ca = ordenes.add_parser("calidad", help="mide la calidad del movimiento en los cuadros del "
                                             "video (T21a), con el motor y sin dibujar")
     ca.add_argument("slugs", nargs="*", help="los nudos (por omisión, los dos pilotos de T17)")
+    pv = ordenes.add_parser("prueba-voz", help="la prueba de voz a ciegas de T23: la apertura y "
+                                               "dos pasos del as de guía con cada voz, en revision/voz/")
+    pv.add_argument("--proveedor", choices=("qwen", "elevenlabs", "falso"),
+                    help="otro proveedor para las voces de prueba (por omisión, Qwen3-TTS)")
+    pm = ordenes.add_parser("prueba-musica", help="las demos de 30 s de la música de T23 sobre la "
+                                                  "línea de tiempo del as de guía, en revision/musica/")
+    pm.add_argument("--solo", choices=("codigo", "ace-step"), help="solo una de las candidatas")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -131,6 +138,16 @@ def main(argv=None) -> int:
             return _video(args.slugs, args.todos, args.previa, args.solo)
         if args.orden == "calidad":
             return _calidad(args.slugs)
+        if args.orden == "prueba-voz":
+            from .prueba_sonido import prueba_voz
+            sys.stdout.reconfigure(line_buffering=True)      # el avance de los modelos, al momento
+            print(f"Prueba de voz en {prueba_voz(args.proveedor)}")
+            return 0
+        if args.orden == "prueba-musica":
+            from .prueba_sonido import prueba_musica
+            sys.stdout.reconfigure(line_buffering=True)
+            print(f"Prueba de música en {prueba_musica(args.solo)}")
+            return 0
         if args.orden == "estado":
             return _estado()
         if args.orden == "revision":

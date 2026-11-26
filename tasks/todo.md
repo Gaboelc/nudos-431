@@ -96,9 +96,9 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
     - [ ] Los tres pilotos en 4K y en vertical; punto de control
   - [ ] T23 El sonido: voz, música, diseño sonoro y mezcla (L; sesión «el sonido»)
-    - [ ] T23a Las voces locales y su prueba de escucha a ciegas (`prueba-voz`)
-    - [ ] T23b La música, compuesta en código y con ACE-Step 1.5 (`prueba-musica`)
-    - [ ] Punto de control: Gabriel elige la voz y la música (si ninguna voz local convence, ElevenLabs)
+    - [x] T23a Las voces locales y su prueba de escucha a ciegas (`prueba-voz`): cuatro voces de Qwen3-TTS (26 nov)
+    - [x] T23b La música, compuesta en código y con ACE-Step 1.5 (`prueba-musica`) (26 nov)
+    - [ ] Punto de control: Gabriel elige la voz y la música (si ninguna voz local convence, su voz clonada o ElevenLabs), y si se baja el alineador forzado
     - [ ] T23c El diseño sonoro y la mezcla
   - [ ] T24 El visor: material, luz y postprocesado (M; sesión «el aspecto»); punto de control en la computadora y en un celular de gama baja
   - [ ] Borrar los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel)
