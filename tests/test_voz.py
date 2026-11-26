@@ -148,6 +148,14 @@ def test_qwen_disena_una_vez_y_clona_cada_texto(monkeypatch):
     assert len(llamadas) == 2
 
 
+def test_la_voz_elegida_esta_en_el_repositorio():
+    assert V.VOZ.nombre == "joven"
+    ruta = V.VOZ.ruta_referencia()
+    assert ruta.exists() and ruta.stat().st_size > 100_000
+    assert V.VOZ.huella()["referencia"] == V._huella_archivo(ruta)
+    assert V.QwenTTS().muestra(V.VOZ) == (ruta, V.TEXTO_REFERENCIA)
+
+
 def test_los_textos_de_la_prueba_salen_de_la_especificacion():
     from nudos.ficha import terminos_encontrados
     from nudos.prueba_sonido import textos_prueba

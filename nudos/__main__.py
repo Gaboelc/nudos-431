@@ -108,9 +108,9 @@ def main(argv=None) -> int:
                                                "dos pasos del as de guía con cada voz, en revision/voz/")
     pv.add_argument("--proveedor", choices=("qwen", "elevenlabs", "falso"),
                     help="otro proveedor para las voces de prueba (por omisión, Qwen3-TTS)")
-    pm = ordenes.add_parser("prueba-musica", help="las demos de 30 s de la música de T23 sobre la "
-                                                  "línea de tiempo del as de guía, en revision/musica/")
-    pm.add_argument("--solo", choices=("codigo", "ace-step"), help="solo una de las candidatas")
+    pm = ordenes.add_parser("prueba-musica", help="las demos de la música de T23: el instrumento del "
+                                                  "motivo y las cinco canciones, en revision/musica/")
+    pm.add_argument("--cancion", help="solo esa canción (fogata, sendero, rocio, lumbre o amanecer)")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -146,7 +146,7 @@ def main(argv=None) -> int:
         if args.orden == "prueba-musica":
             from .prueba_sonido import prueba_musica
             sys.stdout.reconfigure(line_buffering=True)
-            print(f"Prueba de música en {prueba_musica(args.solo)}")
+            print(f"Prueba de música en {prueba_musica(args.cancion)}")
             return 0
         if args.orden == "estado":
             return _estado()

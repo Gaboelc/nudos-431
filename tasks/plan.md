@@ -1044,8 +1044,27 @@ La cámara (las paradas y la aceleración) es de T22.
   - **Lo medido:** dicen de 4,8 a 6,2 sílabas por segundo y ninguna termina cortada. La pedida como «hombre joven» salió aguda: 185 Hz de mediana, contra 94 del otro hombre.
   - `python -m nudos prueba-musica` deja en `revision/musica/` las dos candidatas (34 s) y cada una con la voz encima.
   - Las dos pruebas están también en una página privada para el celular: https://claude.ai/artifact/GqEhKz4kp3jCH5QhXruDjk.
+- **Lo que eligió Gabriel (26 nov).**
+  - **La voz:** la D, «joven» (hombre de unos 25 años, alegre y conversador). Su muestra quedó en el repositorio, en `sonido/voces/joven.wav` (`voz.VOZ`), para que las 36 locuciones la clonen igual aunque se borre el caché.
+  - **La música:** la candidata compuesta en código. ACE-Step salió del código; su versión queda en el commit b4583a0, y su entorno sigue en `D:\nudos\ia\ace-step` hasta que Gabriel diga si se borra.
+  - **El motivo:** no le gustó el «tuc tuc tuc» de la apertura y el cierre. Era la kalimba del VCSL, una mbira de sonido seco, lo único que suena solo en esos dos capítulos. `prueba-musica` lo pone en glockenspiel, celesta, caja de música y vibráfono, para que elija.
+  - **Más canciones:** pidió varias, parecidas a la elegida y distintas entre sí, una por familia o cinco repartidas al azar.
+- **Las cinco canciones (26 nov).** `musica.py` pasó a componer cualquier `Cancion`.
+  - **Lo que tiene cada una:** tono, pulso, compás, guitarra de acero o de nailon y cómo se toca, bajo, percusión, el instrumento de la pregunta y el del contracanto, y la progresión de cada capítulo en grados.
+  - **Las voces de la guitarra** salen de cada acorde, con la menor distancia a las anteriores.
+  - **El motivo** es el mismo en todas, transportado a su tono, y cabe en el rango de cada instrumento.
+  - **Las canciones:**
+    - **Fogata:** sol, 100, Travis de acero, shaker y palmas; es la elegida.
+    - **Sendero:** re, 104, arpegio rodado, bajo sincopado, cajón y banjo en la práctica, con un acorde prestado (bVII).
+    - **Rocío:** do, 92, un vals en 3/4 de nailon, con vibráfono y marimba.
+    - **Lumbre:** la, 96, rasgueo suave de acero, shaker grande y vibráfono.
+    - **Amanecer:** fa, 94, nailon a medio tiempo, cajón muy suave, marimba y glockenspiel.
+  - **Por qué cinco y no una por familia:** «De sujeción» tiene 14 nudos y «De acortamiento», uno.
+  - **El reparto** está en `config/musica.yaml`: al azar con la semilla 431, 8, 7, 7, 7 y 7 nudos por canción, alternando dentro de cada familia, con el as de guía en «fogata». Se puede cambiar a mano. `cancion_de(slug)` la da, y un nudo que no esté ahí toma una fija por su nombre. T22 llama a `musica(capitulos, golpe, slug=...)`.
+  - **Lo medido en las demos:** en las cinco, los errores quedan de 3 a 6 LU abajo y la práctica y el cierre, arriba.
 - **Pruebas rápidas:**
-  - `tests/test_voz.py`: los números, la pronunciación, las sílabas, el caché, los tiempos estimados contra los reales, ElevenLabs con una API falsa y Qwen con el script falso.
+  - `tests/test_voz.py`: los números, la pronunciación, las sílabas, el caché, los tiempos estimados contra los reales, ElevenLabs con una API falsa, Qwen con el script falso y la voz elegida en el repositorio.
+  - `tests/test_musica.py`, además: los grados y las voces de la guitarra en los doce tonos, que las cinco canciones sean distintas y compartan el motivo, el vals en tres y el reparto de los 36 nudos.
   - `tests/test_musica.py`:
     - La sonoridad contra la norma, el pico real y el limitador.
     - El pulso, que los compases caigan en los capítulos, que la semilla repita y que el arreglo cambie en cada capítulo.

@@ -3,7 +3,8 @@
 - `prueba_voz()`: la apertura y dos pasos del as de guía, dichos por cada voz de
   `voz.VOCES_PRUEBA`, todos a la misma sonoridad, en una página para escuchar a ciegas: las voces
   van con una letra, en un orden al azar con semilla fija, y la clave queda escondida al final.
-- `prueba_musica()`: las dos candidatas de la música sobre la línea de tiempo del as de guía.
+- `prueba_musica()`: el instrumento del motivo de la serie (cada opción en la apertura y el cierre
+  de «Fogata») y las cinco canciones sobre la misma línea de tiempo, sin voz y con la voz elegida.
 """
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import html
 import json
 import random
 import re
+import unicodedata
 from pathlib import Path
 
 import numpy as np
@@ -148,10 +150,9 @@ def prueba_voz(proveedor: str | None = None, slug: str = "as-de-guia", aviso=pri
 # --------------------------------------------------------------------------
 # La música
 # --------------------------------------------------------------------------
-# La línea de tiempo de la demo (s): cada capítulo en compases enteros de 2,4 s, el golpe del nudo
-# en el segundo compás del cierre.
-DEMO = (("apertura", 4.8), ("pasos", 9.6), ("verificacion", 4.8), ("errores", 4.8), ("aplicacion", 4.8),
-        ("cierre", 4.8))
+# La línea de tiempo de la demo, en compases de cada canción; el golpe del nudo, en el segundo
+# compás del cierre.
+DEMO = (("apertura", 2), ("pasos", 4), ("verificacion", 2), ("errores", 2), ("aplicacion", 2), ("cierre", 2))
 NOMBRES = {"apertura": "Apertura", "materiales": "Materiales", "pasos": "Paso a paso",
            "verificacion": "Cómo revisar", "errores": "Errores", "aplicacion": "En la práctica",
            "seguridad": "Seguridad", "cierre": "Cierre"}
@@ -159,49 +160,51 @@ COLORES = {"apertura": "#d1801a", "pasos": "#3d7dca", "verificacion": "#3a9b6e",
            "aplicacion": "#8a5cc2", "seguridad": "#7a8696", "cierre": "#d1801a", "materiales": "#6b9bd1"}
 
 
-def linea_demo():
+def linea_demo(cancion, partes=DEMO):
+    """Los capítulos de la demo en s, en compases enteros de la canción, y el golpe."""
     from .musica import Capitulo
+    compas = cancion.compas * cancion.pulso
     caps, t = [], 0.0
-    for nombre, d in DEMO:
-        caps.append(Capitulo(nombre, round(t, 6), round(t + d, 6)))
-        t += d
-    golpe = caps[-1].inicio + 2.4
+    for nombre, n in partes:
+        caps.append(Capitulo(nombre, round(t, 6), round(t + n * compas, 6)))
+        t += n * compas
+    golpe = caps[-1].inicio + compas if caps[-1].nombre == "cierre" else None
     return caps, golpe
 
 
-def demo_con_voz(candidata: str, aviso=print):
-    """La apertura y dos pasos dichos por la primera voz de la prueba, sobre la música, con los
-    capítulos del largo de lo que dice la voz (en el pulso) y la música abajo mientras habla."""
+def demo_con_voz(cancion, motivo: str, aviso=print):
+    """La apertura y dos pasos dichos por la voz elegida, sobre la música, con los capítulos del
+    largo de lo que dice la voz (en el pulso) y la música abajo mientras habla."""
     from . import musica as M
+    from . import sonoridad as so
     from . import voz as V
     from .mezcla import bajo_la_voz
     textos = textos_prueba()
-    locs = V.locuciones([t for _, t in textos], V.VOCES_PRUEBA[0], aviso=aviso)
-    caps, t = [], 0.0
-    entradas = []
+    locs = V.locuciones([t for _, t in textos], V.VOZ, aviso=aviso)
+    P = cancion.pulso
+    caps, t, entradas = [], 0.0, []
     for i, L in enumerate(locs):
-        nombre = "apertura" if i == 0 else "pasos"
-        entrada = t + (0.6 if i == 0 else 1.2)
+        entrada = t + (P if i == 0 else 2 * P)
         entradas.append(entrada)
-        fin = M.al_pulso(entrada + L.segundos + 0.6) if i == 0 else entrada + L.segundos + 0.6
-        if nombre == "pasos" and caps and caps[-1].nombre == "pasos":
+        fin = M.al_pulso(entrada + L.segundos + P, 0.0, P)
+        if i == 0:
+            caps.append(M.Capitulo("apertura", t, fin))
+        elif caps[-1].nombre == "pasos":
             caps[-1] = M.Capitulo("pasos", caps[-1].inicio, fin)
         else:
-            caps.append(M.Capitulo(nombre, t, fin))
+            caps.append(M.Capitulo("pasos", t, fin))
         t = fin
-    caps.append(M.Capitulo("cierre", t, t + 4.8))
-    golpe = M.al_pulso(t + 2.4, 0.0)
-    mus = M.musica(caps, golpe, candidata=candidata, aviso=aviso)
+    compas = cancion.compas * P
+    caps.append(M.Capitulo("cierre", t, t + 2 * compas))
+    mus = M.musica(caps, t + compas, cancion=cancion, motivo=motivo, aviso=aviso)
     n = len(mus.mezcla)
     voz = np.zeros(n)
     for e, L in zip(entradas, locs):
         k = int(round(e * M.SR))
         voz[k:k + len(L.audio)] += L.audio[:max(0, n - k)]
-    from . import sonoridad as so
     voz = so.a_lufs(voz, M.SR, -16.0)
     mezcla = bajo_la_voz(mus.mezcla, voz, M.SR)
-    mezcla = so.limitar_pico(so.a_lufs(mezcla, M.SR, -16.0), M.SR, -1.0)
-    return mezcla, mus.capitulos
+    return so.limitar_pico(so.a_lufs(mezcla, M.SR, -16.0), M.SR, -1.0), mus.capitulos
 
 
 def _linea_html(caps, total: float) -> str:
@@ -215,40 +218,37 @@ def _linea_html(caps, total: float) -> str:
 
 PAGINA_MUSICA = """<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prueba de música: as de guía</title>
+<title>Prueba de música: las canciones</title>
 <style>
   :root {{ color-scheme: light; --tinta: #16202f; --suave: #586273; --marca: #d1801a; --fondo: #f6f4ef; }}
   body {{ margin: 0; background: var(--fondo); color: var(--tinta);
          font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }}
   main {{ max-width: 900px; margin: 0 auto; padding: 32px 20px 64px; }}
   h1 {{ font-size: 28px; margin: 0 0 6px; }}
-  .bajada {{ color: var(--suave); margin: 0 0 24px; }}
-  .demo {{ background: #fff; border-radius: 14px; padding: 18px 20px; margin: 0 0 16px;
+  h2 {{ font-size: 22px; margin: 28px 0 8px; }}
+  .bajada {{ color: var(--suave); margin: 0 0 16px; }}
+  .demo {{ background: #fff; border-radius: 14px; padding: 16px 20px; margin: 0 0 14px;
            box-shadow: 0 2px 10px rgba(22, 32, 47, .06); }}
-  .demo h2 {{ margin: 0 0 4px; font-size: 22px; }}
-  .demo h2 span {{ color: var(--marca); }}
+  .demo h3 {{ margin: 0 0 4px; font-size: 19px; }}
   .demo p {{ margin: 0 0 10px; color: var(--suave); font-size: 14px; }}
   audio {{ width: 100%; }}
-  .linea {{ position: relative; display: flex; height: 30px; border-radius: 8px; overflow: hidden; margin-top: 8px; }}
+  .linea {{ position: relative; display: flex; height: 28px; border-radius: 8px; overflow: hidden; margin-top: 8px; }}
   .cap {{ color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center;
-          white-space: nowrap; overflow: hidden; opacity: .55; transition: opacity .15s; }}
+          white-space: nowrap; overflow: hidden; opacity: .55; cursor: pointer; }}
   .cap.ahora {{ opacity: 1; }}
   .cabeza {{ position: absolute; top: 0; bottom: 0; width: 2px; background: #16202f; left: 0; }}
-  details {{ margin-top: 28px; background: #fff; border-radius: 14px; padding: 14px 20px; }}
-  summary {{ cursor: pointer; font-weight: 600; }}
-  li {{ margin: 6px 0; }}
 </style></head>
 <body><main>
-<h1>Prueba de música: as de guía</h1>
-<p class="bajada">Dos candidatas sobre la misma línea de tiempo. Cada capítulo cambia el arreglo: la apertura con el
-motivo de la serie, el paso a paso parejo para que la voz se oiga, los errores más ralos, la práctica más llena y el
-cierre con el motivo y el acorde final en el golpe del nudo. La barra marca en qué capítulo vas.</p>
+<h1>Prueba de música: las canciones</h1>
+<p class="bajada">Primero, el instrumento del motivo de la serie (la kalimba sonaba «tuc tuc tuc»): la apertura y el
+cierre de «Fogata» con cada uno. Después, las cinco canciones sobre la misma línea de tiempo, sin voz y con la voz
+elegida. La barra marca en qué capítulo vas; toca un capítulo para ir ahí.</p>
 {demos}
-<details><summary>Ver qué es cada candidata (después de elegir)</summary><ul>{clave}</ul></details>
 </main>
 <script>
 document.querySelectorAll('.demo').forEach(d => {{
   const a = d.querySelector('audio'), caps = [...d.querySelectorAll('.cap')], cab = d.querySelector('.cabeza');
+  if (!cab) return;
   const tiempos = JSON.parse(d.dataset.caps), total = parseFloat(d.dataset.total);
   const pinta = () => {{
     cab.style.left = (100 * a.currentTime / total) + '%';
@@ -262,58 +262,62 @@ document.querySelectorAll('.demo').forEach(d => {{
 """
 
 
-def prueba_musica(solo: str | None = None, aviso=print) -> Path:
-    """Arma revision/musica/index.html con las demos de 30 s de cada candidata y, si la voz ya está
-    generada (prueba-voz), las mismas candidatas debajo de la voz."""
+def _demo_html(titulo: str, nota: str, archivo: str, caps) -> str:
+    total = caps[-1].fin
+    tiempos = json.dumps([[c.inicio, c.fin] for c in caps])
+    return (f'<section class="demo" data-caps=\'{tiempos}\' data-total="{total}"><h3>{html.escape(titulo)}</h3>'
+            f'<p>{html.escape(nota)}</p><audio controls preload="none" src="{archivo}"></audio>'
+            f'<div class="linea">{_linea_html(caps, total)}<div class="cabeza"></div></div></section>')
+
+
+def prueba_musica(cancion: str | None = None, aviso=print) -> Path:
+    """Arma revision/musica/index.html: la apertura y el cierre de «Fogata» con cada instrumento
+    posible del motivo, y cada canción sobre la línea de tiempo de la demo, sin voz y con la voz
+    elegida (si su entorno de voz está). Deja también un JSON por demo con sus capítulos."""
     from . import musica as M
     destino = REVISION / "musica"
     destino.mkdir(parents=True, exist_ok=True)
-    caps, golpe = linea_demo()
-    candidatas = [c for c in ("codigo", "ace-step") if solo in (None, c)]
-    orden = list(candidatas)
-    random.Random(4312).shuffle(orden)
-    letras = "12"
-    descripcion = {"codigo": "Compuesta en código (nudos/musica.py): FluidSynth con GeneralUser GS para la guitarra "
-                             "y el bajo, y muestras CC0 del VCSL para la kalimba, el glockenspiel y la percusión.",
-                   "ace-step": "Generada en la tarjeta con ACE-Step 1.5 (MIT): una pieza por arreglo, con el mismo "
-                               "pulso y tono, cortada a compás con librosa."}
-    demos, clave = [], []
-    for i, cand in enumerate(orden):
-        letra = letras[i]
-        aviso(f"  candidata {letra}: {cand}")
-        mus = M.musica(caps, golpe, candidata=cand, aviso=aviso)
-        archivo = f"musica-{letra}.wav"
-        _wav16(destino / archivo, mus.mezcla, M.SR)
-        (destino / f"musica-{letra}.json").write_text(
-            json.dumps([[c.nombre, c.inicio, c.fin] for c in mus.capitulos]), encoding="utf-8")
-        total = mus.capitulos[-1].fin
-        tiempos = json.dumps([[c.inicio, c.fin] for c in mus.capitulos])
-        demos.append(f'<section class="demo" data-caps=\'{tiempos}\' data-total="{total}">'
-                     f'<h2>Candidata <span>{letra}</span></h2><p>{total:.0f} s, sin voz. Toca un capítulo para ir ahí.</p>'
-                     f'<audio controls preload="none" src="{archivo}"></audio>'
-                     f'<div class="linea">{_linea_html(mus.capitulos, total)}<div class="cabeza"></div></div></section>')
-        clave.append(f"<li><b>Candidata {letra}:</b> {html.escape(descripcion[cand])}</li>")
-    # Con la voz, si ya se generó la prueba de voz.
-    for i, cand in enumerate(orden):
-        letra = letras[i]
+    for viejo in destino.glob("*"):
+        viejo.unlink()
+    bloques, indice = ["<h2>El instrumento del motivo</h2>"], {"motivo": {}, "canciones": {}}
+
+    def guardar(nombre: str, x, caps):
+        _wav16(destino / f"{nombre}.wav", x, M.SR)
+        (destino / f"{nombre}.json").write_text(json.dumps([[c.nombre, c.inicio, c.fin] for c in caps]),
+                                                encoding="utf-8")
+        return f"{nombre}.wav"
+
+    fogata = M.CANCIONES["fogata"]
+    caps_m, golpe_m = linea_demo(fogata, (("apertura", 2), ("cierre", 2)))
+    for nombre, instrumento in M.MOTIVOS_PRUEBA.items():
+        aviso(f"  motivo: {nombre}")
+        mus = M.musica(caps_m, golpe_m, cancion=fogata, motivo=instrumento, aviso=aviso)
+        sin_tildes = unicodedata.normalize("NFKD", nombre).encode("ascii", "ignore").decode()
+        clave = "motivo-" + re.sub(r"[^a-z]+", "-", sin_tildes.lower()).strip("-")
+        archivo = guardar(clave, mus.mezcla, mus.capitulos)
+        bloques.append(_demo_html(nombre.capitalize(), "La apertura y el cierre de «Fogata», con el golpe.",
+                                  archivo, mus.capitulos))
+        indice["motivo"][nombre] = clave
+    bloques.append("<h2>Las cinco canciones</h2>")
+    for clave, can in M.CANCIONES.items():
+        if cancion not in (None, clave):
+            continue
+        aviso(f"  canción: {can.nombre}")
+        caps, golpe = linea_demo(can)
+        mus = M.musica(caps, golpe, cancion=can, aviso=aviso)
+        archivo = guardar(f"cancion-{clave}", mus.mezcla, mus.capitulos)
+        bloques.append(_demo_html(can.nombre, can.descripcion, archivo, mus.capitulos))
+        indice["canciones"][clave] = {"nombre": can.nombre, "descripcion": can.descripcion,
+                                      "archivos": [f"cancion-{clave}"]}
         try:
-            mezcla, caps_v = demo_con_voz(cand, aviso=aviso)
-        except Exception as e:      # sin la voz generada, la página va sin estas demos
+            mezcla, caps_v = demo_con_voz(can, M.MOTIVO, aviso=aviso)
+        except Exception as e:      # sin el entorno de la voz, la página va sin estas demos
             aviso(f"  sin la demo con voz: {e}")
-            break
-        archivo = f"musica-{letra}-con-voz.wav"
-        _wav16(destino / archivo, mezcla, M.SR)
-        (destino / f"musica-{letra}-con-voz.json").write_text(
-            json.dumps([[c.nombre, c.inicio, c.fin] for c in caps_v]), encoding="utf-8")
-        total = caps_v[-1].fin
-        tiempos = json.dumps([[c.inicio, c.fin] for c in caps_v])
-        demos.append(f'<section class="demo" data-caps=\'{tiempos}\' data-total="{total}">'
-                     f'<h2>Candidata <span>{letra}</span>, con voz</h2>'
-                     f'<p>La apertura y dos pasos con una de las voces de la prueba de voz; la música baja '
-                     f'sola mientras habla.</p>'
-                     f'<audio controls preload="none" src="{archivo}"></audio>'
-                     f'<div class="linea">{_linea_html(caps_v, total)}<div class="cabeza"></div></div></section>')
-    (destino / "index.html").write_text(PAGINA_MUSICA.format(demos="\n".join(demos), clave="".join(clave)),
-                                        encoding="utf-8")
-    (destino / "clave.json").write_text(json.dumps({letras[i]: c for i, c in enumerate(orden)}), encoding="utf-8")
+            continue
+        archivo = guardar(f"cancion-{clave}-con-voz", mezcla, caps_v)
+        bloques.append(_demo_html(f"{can.nombre}, con voz", "La apertura y dos pasos con la voz elegida; "
+                                  "la música baja sola mientras habla.", archivo, caps_v))
+        indice["canciones"][clave]["archivos"].append(f"cancion-{clave}-con-voz")
+    (destino / "index.html").write_text(PAGINA_MUSICA.format(demos="\n".join(bloques)), encoding="utf-8")
+    (destino / "indice.json").write_text(json.dumps(indice, ensure_ascii=False, indent=1), encoding="utf-8")
     return destino / "index.html"

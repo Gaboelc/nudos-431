@@ -1,0 +1,47 @@
+# La canción de cada nudo de la edición 1 (T23b, nudos/musica.py): cinco canciones repartidas al
+# azar (semilla 431), cada una con 7 u 8 nudos y alternando dentro de cada familia. El as de
+# guía va con «fogata», la que Gabriel eligió el 26 nov. Se puede cambiar a mano; un nudo que
+# no esté aquí toma una fija por su nombre.
+canciones:
+  # Piloto
+  as-de-guia: fogata
+  ballestrinque: fogata
+  vuelta-de-escota: fogata
+  amarre-cuadrado: rocio
+  cabeza-de-turco: lumbre
+  # Tanda 1: libres, una cuerda
+  simple: sendero
+  ocho: amanecer
+  ocho-doble: lumbre
+  as-de-guia-espanol: rocio
+  mariposa-alpina: sendero
+  margarita: rocio
+  arnes-de-hombre: amanecer
+  silla-de-bombero: fogata
+  # Tanda 2: libres, dos cuerdas o dos extremos
+  rizo: fogata
+  pescador: rocio
+  pescador-doble: sendero
+  nudo-aguja: rocio
+  # Tanda 3: sobre anfitrión
+  ballestrinque-doble: sendero
+  vuelta-de-braza: amanecer
+  media-llave-y-dos-cotes: lumbre
+  fugitivo: fogata
+  tensor: rocio
+  tensor-ajustable: sendero
+  constrictor: lumbre
+  nudo-de-liberacion-rapida: amanecer
+  presilla-de-alondra: lumbre
+  prusik: fogata
+  # Tanda 4: plantillas
+  amarre-redondo: sendero
+  amarre-diagonal: amanecer
+  amarre-tripode: lumbre
+  refuerzo-de-cabo: amanecer
+  adujado: lumbre
+  puno-de-mono: fogata
+  # Tanda 5: anfitriones especiales
+  eslinga-de-barril: rocio
+  eslinga-de-andamio: sendero
+  vuelta-de-cornamusa: amanecer

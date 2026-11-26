@@ -58,70 +58,149 @@ def test_el_limitador_deja_el_pico_bajo_el_techo_y_no_toca_lo_demas():
 # --------------------------------------------------------------------------
 # La composición
 # --------------------------------------------------------------------------
+FOGATA = M.CANCIONES["fogata"]
+P = FOGATA.pulso
+
+
 def _caps():
     return [M.Capitulo("apertura", 0.0, 4.9), M.Capitulo("pasos", 4.9, 15.2), M.Capitulo("verificacion", 15.2, 19.1),
             M.Capitulo("errores", 19.1, 24.0), M.Capitulo("aplicacion", 24.0, 28.7), M.Capitulo("cierre", 28.7, 33.5)]
 
 
+def _demo(can):
+    """La línea de tiempo de la demo en compases enteros de la canción, y su golpe."""
+    compas = can.compas * can.pulso
+    caps, t = [], 0.0
+    for nombre, n in (("apertura", 2), ("pasos", 4), ("verificacion", 2), ("errores", 2), ("aplicacion", 2),
+                      ("cierre", 2)):
+        caps.append(M.Capitulo(nombre, t, t + n * compas))
+        t += n * compas
+    return M.en_pulso(caps, can.pulso), caps[-1].inicio + compas
+
+
 def test_los_capitulos_caen_en_el_pulso():
-    caps = M.en_pulso(_caps())
+    caps = M.en_pulso(_caps(), P)
     for c in caps:
-        assert abs(c.inicio / M.PULSO - round(c.inicio / M.PULSO)) < 1e-6
-        assert c.fin - c.inicio >= 2 * M.PULSO - 1e-9
+        assert abs(c.inicio / P - round(c.inicio / P)) < 1e-6
+        assert c.fin - c.inicio >= 2 * P - 1e-9
     assert all(a.fin == b.inicio for a, b in zip(caps, caps[1:]))
     assert [c.nombre for c in caps] == [c.nombre for c in _caps()]
-    pulsos, compases = M.rejilla(caps)
-    assert np.allclose(np.diff(pulsos), M.PULSO)
-    # Cada capítulo empieza un compás.
-    assert all(np.isclose(compases, c.inicio).any() for c in caps)
+    pulsos, compases = M.rejilla(caps, P, 4)
+    assert np.allclose(np.diff(pulsos), P)
+    assert all(np.isclose(compases, c.inicio).any() for c in caps)       # cada capítulo empieza un compás
     with pytest.raises(M.MusicaError):
         M.en_pulso([M.Capitulo("intermedio", 0, 3)])
 
 
+def test_los_grados_y_las_voces_de_la_guitarra():
+    assert M.acorde("I", 7) == (7, False, 7)
+    assert M.acorde("vi", 7) == (4, True, 4)
+    assert M.acorde("V/3", 7) == (2, False, 6)          # re con fa# en el bajo
+    assert M.acorde("bVII", 2) == (0, False, 0)         # do en re mayor
+    with pytest.raises(M.MusicaError):
+        M.acorde("VIII", 0)
+    sol = M.voces(*M.acorde("I", 7))
+    assert sol == (43, 50, (59, 62, 67))                # sol en posición abierta
+    do = M.voces(*M.acorde("IV", 7), previas=sol[2])
+    assert do[0] == 48 and do[2] == (60, 64, 67)        # la voz más cercana a la anterior
+    for t in range(12):
+        for cifra in ("I", "ii", "iii", "IV", "V", "vi", "V/3", "bVII"):
+            bajo, alterno, agudos = M.voces(*M.acorde(cifra, t))
+            assert 40 <= bajo <= 51 and alterno > bajo and all(55 <= n <= 71 for n in agudos)
+
+
 def test_los_compases_caen_en_los_capitulos_y_la_semilla_repite():
-    caps = M.en_pulso(_caps())
+    caps = M.en_pulso(_caps(), P)
     golpe = caps[-1].inicio + 2.4
     a = M.componer(caps, golpe, semilla=7)
     b = M.componer(caps, golpe, semilla=7)
     c = M.componer(caps, golpe, semilla=8)
     assert a == b and a != c
-    _, compases = M.rejilla(caps)
+    _, compases = M.rejilla(caps, P, 4)
     # El bajo toca en el primer pulso de cada compás (hasta el golpe), con lo poco que se corre.
     bajos = np.array([n.t for n in a["bajo"]])
     for t in compases[compases < golpe - 1e-6]:
         assert np.abs(bajos - t).min() <= 2.5 * M.TEMBLOR["bajo"] + 1e-9
     # Nada suena después del golpe, salvo el acorde final.
-    for inst, notas in a.items():
-        tarde = [n for n in notas if n.t > golpe + 0.2]
-        assert not tarde, inst
+    for voz, notas in a.items():
+        assert not [n for n in notas if n.t > golpe + 0.2], voz
     final = [n for n in a["guitarra"] if abs(n.t - golpe) < 0.12]
     assert len(final) >= 5 and max(n.dur for n in final) >= 4
 
 
 def test_el_arreglo_cambia_en_cada_capitulo():
-    caps = M.en_pulso(_caps())
+    caps = M.en_pulso(_caps(), P)
     notas = M.componer(caps, None)
 
-    def en(inst, nombre):
+    def en(voz, nombre):
         c = next(c for c in caps if c.nombre == nombre)
-        return [n for n in notas[inst] if c.inicio - 0.02 <= n.t < c.fin - 0.02]
-    assert en("kalimba", "apertura") and en("kalimba", "cierre")            # el motivo abre y cierra
-    assert not en("kalimba", "pasos")
-    for inst in ("shaker", "bombo", "palmas", "glock"):
-        assert not en(inst, "errores"), inst                                 # los errores, ralos
-    assert en("palmas", "aplicacion") and en("glock", "aplicacion")          # la práctica, llena
-    assert not en("palmas", "pasos") and not en("glock", "pasos")
+        return [n for n in notas[voz] if c.inicio - 0.02 <= n.t < c.fin - 0.02]
+    assert en("motivo", "apertura") and en("motivo", "cierre")              # el motivo abre y cierra
+    assert not en("motivo", "pasos")
+    for voz in ("shaker", "bombo", "palmas", "contracanto", "pregunta"):
+        assert not en(voz, "errores"), voz                                   # los errores, ralos
+    assert en("palmas", "aplicacion") and en("contracanto", "aplicacion")    # la práctica, llena
+    assert en("pregunta", "verificacion") and not en("pregunta", "pasos")
+    assert not en("palmas", "pasos") and not en("contracanto", "pasos")
     assert len(en("guitarra", "errores")) < len(en("guitarra", "pasos"))
     # El motivo de la apertura queda abierto (en re) y el del cierre se resuelve en sol.
-    assert en("kalimba", "apertura")[-1].nota % 12 == 2
-    assert en("kalimba", "cierre")[-1].nota % 12 == 7
+    assert en("motivo", "apertura")[-1].nota % 12 == 2
+    assert en("motivo", "cierre")[-1].nota % 12 == 7
+
+
+def test_las_cinco_canciones_son_distintas_y_comparten_el_motivo():
+    huellas, motivos = set(), set()
+    for clave, can in M.CANCIONES.items():
+        caps, golpe = _demo(can)
+        notas = M.componer(caps, golpe, cancion=can)
+        assert notas["guitarra"] and notas["bajo"] and notas["motivo"], clave
+        # La guitarra va en el tono de la canción, salvo los acordes prestados.
+        escala = {(can.tonica + g) % 12 for g in M.ESCALA}
+        fuera = [n for n in notas["guitarra"] if n.nota % 12 not in escala]
+        assert len(fuera) <= len(notas["guitarra"]) * 0.15, clave
+        huellas.add(tuple((n.nota - can.tonica) % 12 for n in notas["guitarra"][:40]))
+        # El motivo: los mismos grados en todas, desde su tónica.
+        apertura = [n for n in notas["motivo"] if n.t < caps[0].fin]
+        motivos.add(tuple((n.nota - can.tonica) % 12 for n in apertura))
+        # Todo en el rango de cada instrumento.
+        de = M.instrumentos_de(can)
+        for voz in ("motivo", "pregunta", "contracanto"):
+            lo, hi = M.RANGO.get(de[voz], (0, 127))
+            assert all(lo - 5 <= n.nota <= hi + 5 for n in notas[voz]), (clave, voz)
+    assert len(huellas) == len(M.CANCIONES)
+    assert len(motivos) == 1
+
+
+def test_el_vals_va_en_tres():
+    can = M.CANCIONES["rocio"]
+    assert can.compas == 3
+    caps, golpe = _demo(can)
+    _, compases = M.rejilla(caps, can.pulso, can.compas)
+    assert np.allclose(np.diff(compases[:5]), 3 * can.pulso)
+    notas = M.componer(caps, golpe, cancion=can)
+    bajos = np.array([n.t for n in notas["bajo"]])
+    for t in compases[compases < golpe - 1e-6]:
+        assert np.abs(bajos - t).min() <= 2.5 * M.TEMBLOR["bajo"] + 1e-9
+
+
+def test_cada_nudo_tiene_su_cancion():
+    import yaml
+    edicion = yaml.safe_load((M.RAIZ / "config" / "edicion-1.yaml").read_text(encoding="utf-8"))
+    slugs = [s for grupo in edicion.values() for s in grupo]
+    reparto = M.reparto()
+    assert sorted(reparto) == sorted(slugs)
+    assert set(reparto.values()) == set(M.CANCIONES)
+    cuenta = [list(reparto.values()).count(c) for c in M.CANCIONES]
+    assert max(cuenta) - min(cuenta) <= 1
+    assert M.cancion_de("as-de-guia").clave == "fogata"
+    assert M.cancion_de("un-nudo-nuevo") == M.cancion_de("un-nudo-nuevo")
+    assert M.cancion_de("un-nudo-nuevo").clave in M.CANCIONES
 
 
 def test_el_midi_no_corta_una_nota_que_se_repite():
     notas = [M.Nota(0.0, 1.0, 60, 80), M.Nota(0.6, 1.0, 60, 80), M.Nota(0.0, 2.0, 64, 70)]
     datos = M.midi(notas, 25)
     assert datos[:4] == b"MThd" and b"MTrk" in datos
-    # Los eventos del do: encendido, apagado antes del segundo encendido, encendido, apagado.
     i = datos.index(b"MTrk") + 8
     t, eventos = 0, []
     while i < len(datos):
@@ -163,11 +242,14 @@ def test_la_musica_de_un_video_con_instrumentos_sinteticos():
     assert m.mezcla.dtype == np.float32
     assert so.lufs(m.mezcla, SR) == pytest.approx(M.NIVEL, abs=0.6)
     assert so.pico_real(m.mezcla) <= -1.0 + 1e-6
-    # Del caché, igual.
-    m2 = M.musica(caps, golpe=31.3, instrumentos=inst)
+    m2 = M.musica(caps, golpe=31.3, instrumentos=inst)                      # del caché, igual
     assert m.huella == m2.huella and np.array_equal(m.mezcla, m2.mezcla)
-    # Otra semilla, otra música.
     assert M.musica(caps, golpe=31.3, semilla=1, instrumentos=inst).huella != m.huella
+    # La canción del nudo, con su pulso y su compás.
+    r = M.musica(caps, golpe=31.3, slug="amarre-cuadrado", instrumentos=inst)
+    can = M.cancion_de("amarre-cuadrado")
+    assert r.cancion == can.clave
+    assert np.allclose(np.diff(r.compases[:3]), can.compas * can.pulso)
 
 
 # --------------------------------------------------------------------------

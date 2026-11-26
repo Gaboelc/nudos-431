@@ -66,8 +66,14 @@ class Voz:
         d = asdict(self)
         d.pop("etiqueta")
         if self.referencia:
-            d["referencia"] = _huella_archivo(Path(self.referencia))
+            d["referencia"] = _huella_archivo(self.ruta_referencia())
         return d
+
+    def ruta_referencia(self) -> Path:
+        """La muestra, relativa a la raíz del repositorio si no es absoluta."""
+        from . import RAIZ
+        p = Path(self.referencia)
+        return p if p.is_absolute() else RAIZ / p
 
 
 def _huella_archivo(ruta: Path) -> str:
@@ -98,6 +104,12 @@ VOCES_PRUEBA = (
         "accent. Calm, confident and reassuring, like a documentary narrator. Steady, unhurried pace."),
         semilla=4314, etiqueta="Mujer de unos 45 años, serena y segura, como de documental"),
 )
+
+# La voz de los videos: Gabriel eligió la D de la prueba a ciegas, «joven», el 26 nov. Su muestra
+# (la que VoiceDesign creó con la semilla 4313) va en el repositorio, para que las locuciones de
+# los 36 nudos la clonen siempre igual aunque se borre el caché.
+VOZ = Voz("joven", referencia="sonido/voces/joven.wav", texto_referencia=TEXTO_REFERENCIA,
+          etiqueta="Hombre de unos 25 años, alegre y conversador")
 
 
 # --------------------------------------------------------------------------
@@ -382,8 +394,11 @@ def _a_sr(x: np.ndarray, sr: int) -> np.ndarray:
 
 
 def _leer_wav(ruta: Path) -> tuple[np.ndarray, int]:
+    import warnings
     from scipy.io import wavfile
-    sr, x = wavfile.read(ruta)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")       # el bloque «fact» de los WAV en coma flotante
+        sr, x = wavfile.read(ruta)
     if x.dtype.kind == "i":
         x = x / float(np.iinfo(x.dtype).max)
     x = np.asarray(x, np.float64)
@@ -464,7 +479,7 @@ class QwenTTS(Proveedor):
     def muestra(self, voz: Voz) -> tuple[Path, str]:
         """La muestra que se clona: la grabada, o la que VoiceDesign creó de la descripción."""
         if voz.referencia:
-            return Path(voz.referencia), voz.texto_referencia
+            return voz.ruta_referencia(), voz.texto_referencia
         if not voz.descripcion:
             raise VozError(f"la voz «{voz.nombre}» no tiene ni descripción ni muestra")
         h = _huella("muestra", self.huella(), voz.descripcion, voz.semilla, TEXTO_REFERENCIA)
