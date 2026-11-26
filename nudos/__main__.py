@@ -101,6 +101,18 @@ def main(argv=None) -> int:
     vd.add_argument("--previa", action="store_true",
                     help="el nudo entero en 960 × 540, 30 fps y 16 muestras, para revisar")
     vd.add_argument("--solo", choices=("horizontal", "vertical"), help="solo ese formato")
+    asp = ordenes.add_parser("prueba-aspecto", help="el cuadro final de T20a: tres tomas en 4K en cada "
+                                                    "aspecto, con Cycles y con EEVEE, con su costo, en "
+                                                    "build/aspecto/prueba.pdf")
+    asp.add_argument("--aspectos", default="", help="las claves de los aspectos, como 0,1,3a (por "
+                                                     "omisión, todos)")
+    asp.add_argument("--motores", default="cycles,eevee",
+                     help="cycles, eevee o los dos; cycles:16 es Cycles con 16 muestras")
+    asp.add_argument("--tomas-de-nuevo", action="store_true",
+                     help="vuelve a sacar las tomas del atado de los pilotos (con el motor)")
+    asp.add_argument("--tomas", default="", help="solo esas tomas, como paso4,amarre (por omisión, las tres)")
+    asp.add_argument("--solo-pdf", action="store_true",
+                     help="arma el PDF con las imágenes y los tiempos ya dibujados")
     ca = ordenes.add_parser("calidad", help="mide la calidad del movimiento en los cuadros del "
                                             "video (T21a), con el motor y sin dibujar")
     ca.add_argument("slugs", nargs="*", help="los nudos (por omisión, los dos pilotos de T17)")
@@ -157,6 +169,8 @@ def main(argv=None) -> int:
             sys.stdout.reconfigure(line_buffering=True)
             print(f"Prueba de la mezcla en {prueba_mezcla(args.slugs or PILOTOS_MEZCLA, not args.sin_voz)}")
             return 0
+        if args.orden == "prueba-aspecto":
+            return _prueba_aspecto(args.aspectos, args.motores, args.tomas_de_nuevo, args.solo_pdf, args.tomas)
         if args.orden == "estado":
             return _estado()
         if args.orden == "revision":
@@ -245,6 +259,41 @@ def _video(slugs, todos: bool, previa: bool, solo) -> int:
     malos = cola(list(slugs), previa=previa, solo=solo)
     print(f"Videos en {carpeta_videos()}; {malos} nudos con fallas (ver cola.txt)")
     return 1 if malos else 0
+
+
+def _prueba_aspecto(aspectos: str, motores: str, de_nuevo: bool, solo_pdf: bool, solo_tomas: str = "") -> int:
+    """El cuadro final de T20a, en build/aspecto/prueba.pdf."""
+    from .aspecto import ASPECTOS, DESTINO, Resultado, pagina, prueba, tomas
+    from .blender import BlenderError
+    from .recursos import RecursoError
+    nombres = {"cycles": "CYCLES", "eevee": "BLENDER_EEVEE"}
+    lista = []
+    for m in (x.strip().lower() for x in motores.split(",") if x.strip()):
+        motor, _, muestras = m.partition(":")
+        if motor not in nombres or (muestras and not muestras.isdigit()):
+            print(f"No conozco el motor {m}: usa cycles, eevee o, con otras muestras, cycles:16 o eevee:32.",
+                  file=sys.stderr)
+            return 2
+        lista.append(nombres[motor] + (f":{muestras}" if muestras else ""))
+    claves = [c.strip() for c in aspectos.split(",") if c.strip()]
+    elegidos = [a for a in ASPECTOS if not claves or a.clave in claves]
+    if not elegidos:
+        print(f"No hay aspectos {aspectos}: son {', '.join(a.clave for a in ASPECTOS)}.", file=sys.stderr)
+        return 2
+    try:
+        if de_nuevo:
+            tomas(rehacer=True)
+        if solo_pdf:
+            datos = json.loads((DESTINO / "tiempos.json").read_text(encoding="utf-8"))
+            destino = pagina(tomas(), [Resultado(**d) for d in datos], DESTINO)
+        else:
+            destino = prueba(elegidos, lista, DESTINO,
+                             solo=[t.strip() for t in solo_tomas.split(",") if t.strip()] or None)
+    except (BlenderError, ImpresionError, RecursoError) as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Página de prueba del aspecto en {destino.relative_to(RAIZ)}")
+    return 0
 
 
 def _calidad(slugs) -> int:

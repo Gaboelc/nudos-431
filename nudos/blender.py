@@ -259,6 +259,195 @@ def _con_tapas(m: MallaCuerda, P: np.ndarray, R: float, lados: int, grosor: floa
 
 
 # --------------------------------------------------------------------------
+# La trenza con geometría (T20)
+# --------------------------------------------------------------------------
+TRENZA_SUB = 5          # anillos por cada tramo entre dos nodos (con h = 0,2 d, uno cada 0,04 d)
+TRENZA_LADOS = 96       # vértices de cada anillo: unos 6 por cada hilo
+TRENZA_RELIEVE = 0.07   # d: de lo hondo de un surco a lo alto de un hilo
+CINTA_GROSOR = 0.035    # d: lo que la cinta del chicote sobresale de la trenza
+
+
+@dataclass
+class MallaTrenza:
+    vertices: np.ndarray    # (V, 3)
+    caras: np.ndarray       # (m, 4)
+    uv: np.ndarray          # (m, 4, 2): u en mosaicos de la trenza a lo largo, v alrededor
+    material: np.ndarray    # (m,) 0 base, 1 resaltado, 2 la cinta (el remate)
+    fibra_a: np.ndarray     # (V, 3) la dirección de los hilos A en cada vértice
+    fibra_b: np.ndarray     # (V, 3) la de los hilos B
+    aplastado: np.ndarray   # (anillos,) cuánto se acortó el radio más corto de cada anillo
+
+
+def curva_densa(P, sub: int, alpha: float = 0.5) -> np.ndarray:
+    """La Catmull-Rom centrípeta por los nodos P, con `sub` puntos por cada tramo entre dos nodos
+    (el primero, el nodo): ((n − 1)·sub + 1, 3). Con la misma cantidad de nodos, la misma cantidad
+    de puntos, así que la malla de dos cuadros seguidos se corresponde vértice a vértice."""
+    P = np.asarray(P, float)
+    if sub <= 1 or len(P) < 2:
+        return P.copy()
+    Q = np.vstack([2 * P[0] - P[1], P, 2 * P[-1] - P[-2]])
+    p0, p1, p2, p3 = Q[:-3], Q[1:-2], Q[2:-1], Q[3:]
+    d01 = np.maximum(np.linalg.norm(p1 - p0, axis=1), 1e-6) ** alpha
+    d12 = np.maximum(np.linalg.norm(p2 - p1, axis=1), 1e-6) ** alpha
+    d23 = np.maximum(np.linalg.norm(p3 - p2, axis=1), 1e-6) ** alpha
+    t0 = np.zeros_like(d01)[:, None, None]
+    t1 = d01[:, None, None]
+    t2 = (d01 + d12)[:, None, None]
+    t3 = (d01 + d12 + d23)[:, None, None]
+    f = (np.arange(sub) / sub)[None, :, None]
+    t = t1 + f * (t2 - t1)
+    p0, p1, p2, p3 = (x[:, None, :] for x in (p0, p1, p2, p3))
+    A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1
+    A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2
+    A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3
+    B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2
+    B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3
+    C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2
+    return np.vstack([C.reshape(-1, 3), P[-1:]])
+
+
+def _planos_densos(P, s, R, otras, solidos) -> list[list[tuple[np.ndarray, float]]]:
+    """`_contactos` para una curva densa P (con su largo s), contra las cuerdas de `otras`
+    ((Q, sQ, Ro, misma)) y los sólidos: los planos de contacto de cada punto."""
+    from scipy.spatial import cKDTree
+    out: list[list[tuple[np.ndarray, float]]] = [[] for _ in range(len(P))]
+    for Q, sq, Ro, misma in otras:
+        arbol = cKDTree(Q)
+        for i, vecinos in enumerate(arbol.query_ball_point(P, R + Ro)):
+            for q in vecinos:
+                if misma and abs(sq[q] - s[i]) < VECINOS_ARCO * (R + Ro):
+                    continue
+                d = Q[q] - P[i]
+                dist = float(np.linalg.norm(d))
+                if 1e-9 < dist < R + Ro:
+                    out[i].append((d / dist, dist * R / (R + Ro)))
+    for Ps, Ns in solidos or []:
+        _, q = cKDTree(Ps).query(P)
+        h = np.einsum("ij,ij->i", P - Ps[q], Ns[q])
+        for i in np.nonzero((h > 0) & (h < R))[0]:
+            out[i].append((-Ns[q[i]], float(h[i])))
+    return out
+
+
+def malla_trenza(X, radio: float = 0.5, grosor: float = 1.0, tramos=None, s=None,
+                 sub: int = TRENZA_SUB, lados: int = TRENZA_LADOS, relieve: float = TRENZA_RELIEVE,
+                 mosaico: float = 1.0, otras=(), solidos=None, cinta: float = CINTA_GROSOR,
+                 tapas: bool = True) -> MallaTrenza:
+    """La malla de una cuerda con la trenza en la geometría (T20): un anillo cada h/`sub` sobre
+    la Catmull-Rom de los nodos X, con el relieve de los hilos en el contorno, la sección
+    aplastada donde aprieta (`otras`: las demás cuerdas como (Q, sQ, Ro, misma); `solidos`: las
+    muestras de `_muestras_solidos`) y, en los tramos del remate, una cinta lisa un poco más
+    gruesa. `tramos` son los de `exportar()`, por tramo entre nodos ([n0, n1, material]).
+
+    `s` es la coordenada de cada nodo a lo largo de la cuerda, de la que sale la trenza (por
+    omisión, el largo desde el nodo 0). Con la coordenada de material de T21b, la trenza queda
+    pegada a la cuerda aunque la cuerda se mueva."""
+    from . import trenza
+    X = np.asarray(X, float)
+    n = len(X)
+    if s is None:
+        s = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(X, axis=0), axis=1))])
+    s = np.asarray(s, float)
+    P = curva_densa(X, sub)
+    nd = len(P)
+    k = np.minimum(np.arange(nd) // sub, n - 2)
+    f = (np.arange(nd) - k * sub) / sub
+    sd = s[k] + f * (s[k + 1] - s[k])
+    D1, D2 = _marcos(P)
+    T = np.cross(D1, D2)
+    ang = 2 * np.pi * np.arange(lados) / lados
+    c, sn = np.cos(ang)[None, :, None], np.sin(ang)[None, :, None]
+    dirs = c * D1[:, None, :] + sn * D2[:, None, :]
+    alrededor = -sn * D1[:, None, :] + c * D2[:, None, :]
+    R = radio
+    radios = np.full((nd, lados), R)
+    if otras or solidos:
+        planos = _planos_densos(P, sd, R, otras, solidos)
+        for i in range(nd):
+            if planos[i]:
+                radios[i] = _seccion(dirs[i], R, planos[i])
+    aplastado = 1 - radios.min(axis=1) / R
+    u = sd / (np.pi * grosor * mosaico)
+    v = np.arange(lados) / lados
+    alto = trenza.relieve(u[:, None], v[None, :])
+    mat_nodo = np.zeros(n - 1, dtype=np.int32)
+    for a, b, m in (tramos or []):
+        mat_nodo[a:b] = m
+    mat_seg = mat_nodo[np.minimum(np.arange(nd - 1) // sub, n - 2)]
+    # Los anillos de la cinta: los de los tramos del remate y sus bordes.
+    en_cinta = np.zeros(nd, bool)
+    en_cinta[:-1] |= mat_seg == 2
+    en_cinta[1:] |= mat_seg == 2
+    escala = radios / R
+    r = np.where(en_cinta[:, None], radios + cinta * grosor * escala,
+                 radios + relieve * grosor * (alto - 0.6) * escala)
+    V = (P[:, None, :] + r[:, :, None] * dirs).reshape(-1, 3)
+    fa, fb = trenza.direcciones_hilos(np.broadcast_to(T[:, None, :], dirs.shape), alrededor, mosaico)
+    kk = np.repeat(np.arange(nd - 1), lados)
+    jj = np.tile(np.arange(lados), nd - 1)
+    a_, b_ = kk * lados + jj, kk * lados + (jj + 1) % lados
+    caras = np.stack([a_, a_ + lados, b_ + lados, b_], axis=1)
+    u0, u1 = u[kk], u[kk + 1]
+    v0, v1 = jj / lados, (jj + 1) / lados
+    uv = np.stack([np.c_[u0, v0], np.c_[u1, v0], np.c_[u1, v1], np.c_[u0, v1]], axis=1)
+    malla = MallaTrenza(V, caras, uv, np.repeat(mat_seg, lados), fa.reshape(-1, 3), fb.reshape(-1, 3),
+                        aplastado)
+    if tapas:
+        malla = _tapas_trenza(malla, P, T, u, lados, R)
+    return malla
+
+
+TAPA_TRENZA = (8, 0.55)   # anillos y alto (en radios) de la cúpula de cada punta de la trenza
+
+
+def _tapas_trenza(m: MallaTrenza, P, T, u, lados: int, R: float) -> MallaTrenza:
+    """Una cúpula en cada punta, como `_con_tapas` pero cerrada (el último anillo es un punto,
+    así que no queda un hoyito en la punta) y más redonda, como la cinta que envuelve el corte."""
+    anillos, alto = TAPA_TRENZA
+    V, caras, uv, mat = [m.vertices], [m.caras], [m.uv], [m.material]
+    fa, fb = [m.fibra_a], [m.fibra_b]
+    total = len(m.vertices)
+    for punta in (0, len(P) - 1):
+        hacia = T[punta] * (1 if punta else -1)
+        borde = m.vertices[punta * lados:(punta + 1) * lados]
+        fa_borde = m.fibra_a[punta * lados:(punta + 1) * lados]
+        fb_borde = m.fibra_b[punta * lados:(punta + 1) * lados]
+        material = m.material[0] if punta == 0 else m.material[-1]
+        previo = np.arange(punta * lados, (punta + 1) * lados)
+        jj = np.arange(lados)
+        for j in range(1, anillos + 1):
+            th = np.radians(90.0 * j / anillos)
+            anillo = P[punta] + np.cos(th) * (borde - P[punta]) + hacia * (alto * R * np.sin(th))
+            idx = total + jj
+            total += lados
+            V.append(anillo)
+            fa.append(fa_borde)
+            fb.append(fb_borde)
+            a, b = previo[jj], previo[(jj + 1) % lados]
+            c, d = idx[(jj + 1) % lados], idx[jj]
+            caras.append(np.stack([a, d, c, b], axis=1) if punta else np.stack([a, b, c, d], axis=1))
+            uu = np.full(lados, u[punta])
+            v0, v1 = jj / lados, (jj + 1) / lados
+            esquinas = (v0, v0, v1, v1) if punta else (v0, v1, v1, v0)
+            uv.append(np.stack([np.c_[uu, vv] for vv in esquinas], axis=1))
+            mat.append(np.full(lados, material, dtype=m.material.dtype))
+            previo = idx
+    return MallaTrenza(np.vstack(V), np.vstack(caras), np.concatenate(uv), np.concatenate(mat),
+                       np.vstack(fa), np.vstack(fb), m.aplastado)
+
+
+def guardar_trenza(m: MallaTrenza, ruta, velocidad=None) -> None:
+    """El npz de una malla de trenza para Blender (render/blender/aspecto.py). Con `velocidad`
+    ((V, 3), en d por segundo), el desenfoque de movimiento de Cycles."""
+    datos = dict(vertices=m.vertices.astype(np.float32), caras=m.caras.astype(np.int32),
+                 uv=m.uv.astype(np.float32), material=m.material.astype(np.int32),
+                 fibra_a=m.fibra_a.astype(np.float32), fibra_b=m.fibra_b.astype(np.float32))
+    if velocidad is not None:
+        datos["velocidad"] = np.asarray(velocidad, np.float32)
+    np.savez(ruta, **datos)
+
+
+# --------------------------------------------------------------------------
 # Dibujar con Blender
 # --------------------------------------------------------------------------
 def preparar(escena: dict, carpeta: Path, nombre: str, aplastar: bool = APLASTAR) -> dict:

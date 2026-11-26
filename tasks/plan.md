@@ -774,6 +774,30 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
   - El desenfoque de movimiento, con la velocidad de cada vértice (el atributo `velocity`; si Blender no lo toma bien, un desenfoque vectorial en el compositor).
   - El chicote con una cinta que siempre se ve.
 
+**Cómo se hizo T20a (26 nov):**
+- **La orden** `python -m nudos prueba-aspecto` (`nudos/aspecto.py` y `render/blender/aspecto.py`):
+  - Saca las tomas del atado guardado de los pilotos (`video.atar` y `video.cuadros_de`) y las guarda en `build/aspecto/tomas.npz`; la segunda vez no hace falta el motor.
+  - **Paso 4:** el cuadro más cerca de la mitad del paso con el resaltado entero a la vista, con la cámara del video. (Hoy el resaltado va por índice de nodo y en la mitad del paso queda vacío; lo arregla T21b.)
+  - **Amarre:** el último cuadro del video, con una cámara de apertura más baja (1,2 rad desde la vertical) que deja ver el fondo.
+  - **Trenza:** el cuello del as de guía terminado, de cerca (7,5 d de alto), con el foco en el centro de sus cruces.
+  - **Movimiento:** el cuadro más rápido del paso 4 con un movimiento parejo (la punta a 7,6 d/s, en el acomodar), sin y con desenfoque.
+  - Mide cada cuadro con la escena ya en la tarjeta: los «seguidos» cambian solo la malla de la cuerda, como `render/blender/video.py`. Mide también el vertical y el desenfoque, y arma `build/aspecto/prueba.pdf`. `--motores cycles:16,eevee:32` mide con otras muestras, y `--tomas` dibuja solo algunas tomas y deja las demás como estaban.
+- **La trenza con geometría** (`nudos/trenza.py` y `malla_trenza` en `nudos/blender.py`):
+  - Un anillo cada 0,04 d sobre la Catmull-Rom centrípeta de los nodos (5 por tramo; 10 en el primer plano) y 96 lados (160 en el primer plano).
+  - El relieve de los 16 hilos va en el contorno (0,07 d de lo hondo de un surco a lo alto de un hilo), con la sección aplastada de T15g. En el remate, una cinta lisa 0,035 d más gruesa, cerrada en la punta.
+  - La trenza sale de la coordenada `s` de cada nodo: hoy, el largo desde el nodo 0; con T21b, σ. El relieve se repite cada π/8 d.
+  - Con la misma cantidad de nodos, la misma malla vértice a vértice, que es lo que pide la velocidad del desenfoque.
+  - Los atributos `fibra_a` y `fibra_b` dan la dirección de los hilos para el brillo de filamento (la anisotropía de Cycles), y una textura dice qué hilo hay en cada punto.
+  - La cuerda real: negra, con dos hilos A vecinos amarillos y la trenza a unos 26° del eje (`mosaico` 2), como en las fotos de T15e.
+- **La escena** (`render/blender/aspecto.py`):
+  - **Estudio:** una mesa de tablas de 18 d con los cantos biselados sobre un fondo de papel en forma de taza, que se ve igual desde cualquier lado de la mesa. Una ventana grande atrás a la izquierda, un contraluz y un relleno. La madera es toda procedural: anillos, fibras, manchas, juntas y un barniz suave.
+  - **Campamento:** el HDRI da la luz y el fondo, girado para que su sol quede atrás a la izquierda de la cámara (el sol de cada HDRI está anotado en `config/recursos.yaml`). En las tomas bajas, lo que ve la cámara se baja unos grados para que entren los árboles; la luz sigue siendo la del HDRI sin bajar. EEVEE saca del HDRI un sol con sombra.
+  - **La vista:** AgX con «AgX - Base Contrast», que no lava el azul.
+  - **La profundidad de campo:** f/11 de un lente real a la escala de la cuerda de 8 mm (el número f, por 0,008).
+  - **Viñeta y grano:** después de Blender, en Python (`vineta_y_grano`), con la semilla del cuadro; en el video irán en `_componer`.
+- **El desenfoque de movimiento:** ni Cycles ni EEVEE toman el atributo `velocity` de una malla común (el cuadro sale igual, medido). Funciona con un modificador de Geometry Nodes que corre cada vértice su velocidad por el tiempo de la escena: los dos motores miran la escena al abrir y al cerrar el obturador, y ahí la cuerda ya se movió.
+- **Recursos de terceros:** los dos HDRI de Poly Haven (CC0, 57 MB), bajados con permiso de Gabriel, en `recursos/hdri/` de la carpeta de A:. Están fuera de git y en `.git/info/exclude`, registrados con su huella en `config/recursos.yaml`. `nudos/recursos.py` los busca y los comprueba (desde un worktree, con `NUDOS_RECURSOS`).
+
 **Punto de control:** Gabriel elige el aspecto y el motor de render, con los números a la vista.
 
 **T20b, el aspecto elegido en los videos (M).**

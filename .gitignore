@@ -1,5 +1,7 @@
 # Fuentes de referencia: entrada, nunca contenido publicado
 entradas/
+# Recursos de terceros del render (HDRI y texturas), bajados a mano: ver config/recursos.yaml
+recursos/
 # Hojas de revisión privadas
 revision/
 # Archivos generados

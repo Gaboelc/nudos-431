@@ -1,0 +1,30 @@
+# Los recursos de terceros que usa el render (T20): se bajan a mano, con permiso de Gabriel, y
+# viven fuera de git, en recursos/ de la carpeta del libro (o en NUDOS_RECURSOS). Aquí queda de
+# dónde salió cada uno, su licencia y su huella, para bajarlo igual en otra computadora.
+
+hdri/meadow_4k.hdr:
+  nombre: Meadow
+  autor: Sergej Majboroda
+  fuente: https://polyhaven.com/a/meadow
+  url: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/meadow_4k.hdr
+  licencia: CC0
+  bytes: 28278596
+  sha256: 07cceb6787c88afed5595421194331bc4dfddce67f424911f68afaab733c7fdf
+  bajado: 2026-11-26
+  uso: el fondo y la luz del aspecto «campamento» (T20a)
+  # El punto más brillante (medido en Blender): u desde la izquierda de la imagen y la altura, en
+  # grados. Aquí es una zona ancha (el sol tras las nubes, 37 veces el promedio).
+  sol: {u: 0.466, altura: 42.4}
+
+hdri/je_gray_02_4k.hdr:
+  nombre: J&E Gray 02
+  autor: Greg Zaal
+  fuente: https://polyhaven.com/a/je_gray_02
+  url: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/je_gray_02_4k.hdr
+  licencia: CC0
+  bytes: 29120842
+  sha256: d248dcc666352b5b3ee8a81eefa2e4337a4a69dcd1c210f7dbb7c67d16b521b1
+  bajado: 2026-11-26
+  uso: el fondo y la luz del aspecto «campamento» (T20a)
+  # El sol, nítido (135 000 veces el promedio) y bajo, entre los árboles.
+  sol: {u: 0.600, altura: 21.2}
