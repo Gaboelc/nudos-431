@@ -75,12 +75,34 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [x] Punto de control: Gabriel aprobó el diseño y respondió sus cuatro preguntas (25 nov)
   - [x] `python -m nudos video` con los dos pilotos: las previas, con el audio (26 nov)
   - [x] Punto de control: Gabriel aprobó las previas corregidas (punta cerrada, remate sin codo, sin brincos al recoger) y el audio (26 nov)
-  - [ ] Gabriel renderiza los pilotos en 4K y vertical con el código nuevo (`python -m nudos video as-de-guia amarre-cuadrado`); el render que empezó el 25 nov usa el código viejo
-  - [ ] Subir `videos/as-de-guia.mp4` (y el del amarre) que deja ese render, y revisar el visor con el video
-  - [ ] Medir el 4K con los cambios de velocidad (escena persistente, cuadro entero, muestreo adaptativo) y comparar la calidad del umbral 0,01 contra el 0,03
-  - [ ] Quitar el modo video viejo de `render/blender/escena.py` cuando no quede ningún render con el código anterior
-  - [ ] Pulir a fondo el render en Blender y el motor de física (Gabriel, 26 nov: lo quiere discutir en una conversación nueva)
-- [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L)
+  - [x] Pulir a fondo el render en Blender y el motor de física: Gabriel lo discutió el 26 nov y salió el pulido a fondo (T20 a T24, abajo)
+  - [ ] Los pilotos en 4K y su video en el visor pasan a T22, con el aspecto y la estructura nuevos. Quedan sin efecto el render de los pilotos con el código de hoy y la medida del umbral 0,01 contra el 0,03
+  - [ ] Quitar el modo video viejo de `render/blender/escena.py` (en T20b)
+- [ ] **El pulido a fondo** (propuesta del 26 nov, aprobada el mismo día; el diseño está en el plan)
+  - [ ] T20 El aspecto: material, escena, luz y cámara (L; sesión «el aspecto»)
+    - [ ] T20a El cuadro final en cuatro aspectos, con Cycles y EEVEE y su costo (`prueba-aspecto`)
+    - [ ] Punto de control: Gabriel elige el aspecto y el motor de render
+    - [ ] T20b El aspecto elegido en los videos, y la prueba de 10 s en 4K; punto de control
+    - [ ] T20c Las fichas, solo si se nota en papel
+  - [ ] T21 El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga (XL; la sesión del plan)
+    - [ ] T21a Medir el movimiento de hoy (`nudos/fisica/calidad.py`) y cerrar el diseño
+    - [ ] Punto de control: Gabriel aprueba el diseño
+    - [ ] T21b Las poses de video y el largo fijo
+    - [ ] T21c La guía nueva, el tiempo y la gravedad, con el as de guía; prueba de 10 s y punto de control
+    - [ ] T21d La madeja, con el amarre cuadrado; prueba de 10 s y punto de control
+    - [ ] T21e El error y la aplicación
+  - [ ] T22 El video completo: capítulos, guion, cámara, tarjetas, errores, aplicación y reel (L)
+    - [ ] T22a El diseño, el guion de un piloto (`guion <slug>`) y la maqueta de las tarjetas; punto de control
+    - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
+    - [ ] Los tres pilotos en 4K y en vertical; punto de control
+  - [ ] T23 El sonido: voz, música, diseño sonoro y mezcla (L; sesión «el sonido»)
+    - [ ] T23a Las voces locales y su prueba de escucha a ciegas (`prueba-voz`)
+    - [ ] T23b La música, compuesta en código y con ACE-Step 1.5 (`prueba-musica`)
+    - [ ] Punto de control: Gabriel elige la voz y la música (si ninguna voz local convence, ElevenLabs)
+    - [ ] T23c El diseño sonoro y la mezcla
+  - [ ] T24 El visor: material, luz y postprocesado (M; sesión «el aspecto»); punto de control en la computadora y en un celular de gama baja
+  - [ ] Borrar los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel)
+- [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36
 - [ ] Punto de control de la fase 5
 
 ## Fase 6: libro y primera edición

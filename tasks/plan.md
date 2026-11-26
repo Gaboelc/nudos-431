@@ -109,6 +109,9 @@ D5 entorno ──► T1 spec v0 + generador libre (as de guía)
                  │
           T15 motor, T16 fichas en Blender, T17 animación, T18 videos (con los pilotos)
                  │
+          T20 a T24, el pulido a fondo: el aspecto, el motor al atar, el video completo,
+          el sonido y el visor (con los pilotos)
+                 │
           T19 todos los nudos a la vez
                  │
   Fase 6:
@@ -708,9 +711,313 @@ Como el as de guía es más ancho que alto, en el vertical el ángulo alrededor 
   La huella de cada cuadro no cambió, porque el dibujo es el mismo. Probado con 8 cuadros de la previa de cada piloto: cada uno muestra su cuerda, que avanza de un cuadro al siguiente, con el resaltado. Falta medir el 4K cuando termine el render de Gabriel. El modo video viejo de `escena.py` se queda hasta entonces, porque ese render todavía lo usa.
 - **El render en 4K, medido:** 8,0 s por cuadro con todo incluido: armar la malla de cada cuadro en Python, Blender con la escena armada una vez y el denoiser en la tarjeta, y escribir el PNG. No llega a la meta de 6 s. Las pausas ahorran el 14 % de los cuadros del as de guía (2338 distintos de 2704). Así, cada piloto en 4K tarda unas 5 horas, y con el vertical (unos 2,5 s por cuadro), unas 7 horas por nudo: los 36 nudos de T19, unos 10 u 11 días de render seguido.
 
+#### El pulido a fondo: T20 a T24 (propuesta del 26 nov; Gabriel la aprobó el mismo día)
+
+**De dónde sale.** Gabriel (26 nov) sintió que el render de Blender, el motor de física y el sonido no tuvieron la profundidad necesaria. Era el pendiente de T18 «Pulir a fondo el render en Blender y el motor de física». Pidió:
+- **Render:** más elaborado, un material de cuerda con textura y relieve de verdad, una escena menos plana, videos más fluidos y videos más largos y útiles (paso a paso, errores comunes y una aplicación). Se pueden instalar complementos y programas.
+- **Motor:** una cuerda que se mueva con fluidez y que no se encoja en cada paso.
+- **Sonido:** más dinámico, con música (la elige o la crea Claude) y con voz.
+- **Varios:** la marca naranja del chicote a veces deja de verse cuando la cuerda se encoge, y la tarjeta de los pasos puede ser más llamativa.
+- **Repositorios para revisar:** lygia, react-three-rapier, react-postprocessing, librosa y video-shotcraft (abajo, qué se usa).
+
+Va antes de T19: si T19 corriera hoy, gastaría 10 u 11 días de render en un aspecto que se va a cambiar. **El resultado esperado:** un video por nudo que enseña (el paso a paso con voz), corrige (los errores), muestra para qué sirve (la aplicación) y se ve y suena como un producto profesional, con una cuerda que se mueve como cuerda. Las fichas impresas solo cambian si se leen mejor en papel.
+
+**Lo que decidió Gabriel (26 nov):**
+1. **Video completo y reel.** Cada nudo tiene un horizontal de unos 2 min con apertura, paso a paso con voz, cómo revisar que quedó bien, errores comunes, aplicación y cierre, y capítulos para YouTube. El visor lleva el capítulo del paso a paso, por el límite de 1 GB del sitio. Además, un reel vertical de 45 a 60 s.
+2. **La voz:** primero el mejor modelo local gratis, sin importar cuánto tarde en generarse. Si ninguno convence, ElevenLabs.
+3. **Las aplicaciones son con objetos,** y D1 no cambia: solo los amarres sostienen personas. La propia ficha de la eslinga de andamio dice «no la uses como andamio ni como columpio», así que su aplicación es una repisa colgante. Si la ficha tiene sección de seguridad, entra también al video.
+4. **Render: unas 2 semanas para los 36 nudos.** La prueba del cuadro final mide Cycles contra EEVEE, y el video usa el que se vea mejor dentro de ese tiempo. Las fichas siguen en Cycles.
+5. **La música la elige y la crea Claude** (T23).
+
+**Lo que había (medido el 26 nov):**
+- **La cuerda en Blender** es un tubo de 32 lados, con la trenza como textura y relieve (bump), sin geometría, con rugosidad 0,8 y sin brillo de tela (dejaba un halo en el borde de los cruces). En el video hay un anillo cada 0,2 d sin suavizar (las fichas usan 0,08 d con Catmull-Rom), y todas las cuerdas son azules, así que los nudos de dos cuerdas saldrían mal.
+- **La escena:** el render va sobre blanco. La mesa solo recibe sombras y nunca se ve, el fondo es de un color plano y hay dos luces de área. La vista es «Standard» con exposición −0,55, porque AgX lavaba el azul. No hay profundidad de campo, ni desenfoque de movimiento, ni compositor.
+- **«Encogerse».** Cada paso de la ficha es un dibujo aparte, con su propio largo (el as de guía: 71,0, 87,6, 84,6, 86,8, 94,9, 102,6 y 109,7 d). El video conserva cada pose exacta, así que la mano *recoge* la punta (quita nodos: 2,2 s en los pasos 3 y 4 del as de guía) y después *enhebra* (`_partir` agrega nodos, y la cuerda le sale de la mano).
+- **La «marca naranja»** es el resaltado ámbar del tramo que se mueve. Va por índice de nodo (`_tramos` en `prueba_atar.py`), así que desaparece cuando la cuerda se acorta por debajo de su comienzo, o cuando la pausa de una plantilla corta la cuerda en el hito. El remate del chicote (granate oscuro, 0,8 d) casi no se ve con la exposición −0,55.
+- **El movimiento:**
+  - Cada nodo tiene un resorte de 5 N/d hacia la guía, y la viscosidad (0,2 N·s/d) pesa unas 6000 veces más que la inercia. La cuerda no se mueve como cuerda: se deforma hacia la guía como una masa espesa.
+  - «Acomodar» lleva cada nodo en línea recta, que es un morph.
+  - Las velocidades de la mano cambian en seco (de 5 a 2,5 d/s cerca de un cruce).
+  - Las plantillas van en cámara rápida (×3 y ×5), y `retiempo` toma el cuadro más cercano cuando cambia la cantidad de nodos, que al enhebrar es casi siempre.
+- **El video:** dura unos 45 s y solo trae los pasos. El paso 1 no se anima. La cámara mezcla dos tomas en línea recta, se queda quieta 0,5 s y se mueve 0,8 s. La tarjeta es HTML de Edge, con un fundido lineal de 0,25 s.
+- **El sonido:** mono, con los tres efectos de T18 (el clic, el golpe y el roce granular, que Gabriel aprobó). No tiene música ni voz, y la sonoridad no está normalizada.
+- **El costo:** 8 s por cuadro en 4K, unas 7 h por nudo con el vertical. El motor tarda unos 15 min por piloto.
+- **El visor:** three.js 0.160.0 con ACES, sombras VSM y la trenza en un canvas de 512 px. No tiene postprocesado ni mapa de entorno, y el cambio de paso es instantáneo. La versión 0.160 ya trae AgX y la anisotropía del material físico.
+
+**Las tareas:**
+
+| Tarea | Qué | Tamaño | Sesión |
+|---|---|---|---|
+| T20 | El aspecto: material, escena, luz, cámara; Cycles o EEVEE | L | «El aspecto», en su worktree |
+| T21 | El motor al atar: largo fijo, manos que agarran, gravedad en lo que cuelga | XL | La del plan (modelo grande) |
+| T22 | El video completo: capítulos, guion, cámara, tarjetas, errores, aplicación, reel | L | La del plan, después de T21 |
+| T23 | El sonido: voz, música, diseño sonoro y mezcla | L | «El sonido», en su worktree |
+| T24 | El visor: material, luz y postprocesado (lygia y three.js 0.160) | M | «El aspecto» |
+
+Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y la eslinga de andamio (anfitrión, y la aplicación que pidió Gabriel).
+
+#### T20: El aspecto: material, escena, luz y cámara
+
+**T20a, el cuadro final (*hero frame*), con su costo medido (M).** Una orden nueva, `python -m nudos prueba-aspecto`, dibuja en 4K tres tomas: el as de guía a mitad del paso 4, el amarre cuadrado terminado y un primer plano de la trenza. Cada toma va en cuatro aspectos, con Cycles y con EEVEE, y la orden arma `build/aspecto/prueba.pdf` con el tiempo por cuadro y la proyección para los 36 nudos (video largo más reel) contra la meta de 2 semanas, que son unos 4 s por cuadro de 4K en promedio.
+- **Aspecto 0:** el de hoy.
+- **Aspecto 1, estudio:**
+  - La trenza con geometría: 16 hilos, 2 sobre 2, con relieve real en el contorno.
+  - Brillo de filamento (anisotropía a lo largo de cada hilo), una pelusa suave (*sheen*) y un poco de variación de color entre hilos.
+  - Una mesa de madera que se ve, con textura y cantos, y un fondo curvo de estudio con degradado.
+  - Una luz grande de ventana, un contraluz y rebote.
+  - Profundidad de campo con el foco en la punta, y viñeta y grano suaves en el compositor.
+  - La vista AgX o «Khronos PBR Neutral», la que no lave el azul.
+- **Aspecto 2, estudio con la cuerda real:** como el 1, pero con la cuerda de los filtros (negra con trazador amarillo, como en las fotos de T15e) y el chicote con una cinta de color.
+- **Aspecto 3, campamento:** la mesa al aire libre, el fondo de árboles desenfocado (el cielo de Blender y un HDRI CC0 de Poly Haven) y sol suave.
+- **Los colores de la ficha** (azul, crema, ámbar y remate) quedan en los aspectos 1 y 3.
+- **En la misma prueba:**
+  - El desenfoque de movimiento, con la velocidad de cada vértice (el atributo `velocity`; si Blender no lo toma bien, un desenfoque vectorial en el compositor).
+  - El chicote con una cinta que siempre se ve.
+
+**Punto de control:** Gabriel elige el aspecto y el motor de render, con los números a la vista.
+
+**T20b, el aspecto elegido en los videos (M).**
+- **`nudos/blender.py`:**
+  - La malla de la trenza (o el tubo con desplazamiento, según lo que gane en T20a), con un anillo cada 0,08 d sobre la curva de Catmull-Rom, como en las fichas.
+  - La UV, el resaltado, el remate y la cinta van por la coordenada de material σ de cada nodo, que da T21b.
+  - El color de cada cuerda sale de la especificación.
+- **`render/blender/video.py`:** la escena, los materiales, el foco que sigue la acción, el desenfoque de movimiento, el compositor y la vista de color, con EEVEE o con Cycles.
+- **Se quita el modo video viejo** de `render/blender/escena.py`: ya no queda ningún render que lo use.
+- **Prueba de 10 s en 4K** del as de guía. Punto de control.
+
+**T20c, las fichas (S, solo si se nota en papel).** La trenza nueva entra a las imágenes de impresión solo si la página de prueba impresa, en color y en gris, se ve mejor (la regla de T7b). Si no, las fichas no cambian. `referencia` y `comparar` muestran qué se movió.
+
+#### T21: El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga
+
+**Solo cambia el modo «atar».** Asentar y apretar no se tocan: todo cambio en `nudos/fisica/` entra con valores por omisión que dejan todo como hoy. `referencia` y `comparar --reimprimir` comprueban que los 36 `modelo.json` y las imágenes no cambian, como en T15f, y la huella de `tests/test_apretar.py` tampoco.
+
+**Lo que hoy lo hace tosco** (medido por la revisión de diseño del 26 nov):
+- **La cuerda cambia de largo.** Recoger quita nodos y `_partir` los agrega. Por `_partir`, la mano no puede pasar de 10 d/s, y por eso las plantillas necesitan la cámara rápida.
+- **`retiempo` toma el cuadro más cercano** cuando cambia la cantidad de nodos, así que la cámara rápida da saltitos.
+- **El resaltado y el remate van por índice de nodo,** y la UV de la trenza sale del largo de cada cuadro: en el modo «firme», la textura camina por la cuerda.
+- **La gravedad está apagada en la práctica.** Con 0,2 N·s/d, un nodo suelto cae a 0,0016 d/s, y con el resorte de 5 N/d cuelga 0,00006 d. Nada cuelga ni cae.
+- **Las velocidades cambian en seco,** y «acomodar» es un morph.
+
+**Lo que no se vería aunque se agregara: la inercia.** La mano llega a 5 d/s en 0,3 s, y una cola colgando se inclina menos de 1°. El roce cuadrático del aire es 10⁻⁴ del peso. Lo que sí se ve es la gravedad sobre la cuerda libre: que cuelgue, que se acueste y que caiga sobre la mesa.
+
+**El diseño (se cierra en el punto de control de T21a):**
+1. **Largo fijo y coordenada de material.**
+   - Una sola cuerda para todo el video, en una sola grilla (la h del último paso).
+   - El nodo j es siempre el mismo punto de la cuerda, σ_j, medido desde el extremo lejano del firme en un nudo libre o desde el nodo 0 en una plantilla. Así, el resaltado, el remate, la cinta del chicote y la trenza quedan pegados a la cuerda.
+   - Desaparecen recoger, `_partir`, `cambio`, `recoge` y `_ajustar`.
+2. **Las poses de video, que son las pausas.**
+   - **En un nudo libre:**
+     - Hay un depósito R de firme fuera del encuadre (lo que el firme gana en todo el nudo), y la cuerda mide L, el largo del último paso.
+     - Cada pausa tiene el depósito, el tramo que dibuja la ficha (exacto, a 0,02 d, con su secuencia) y una cola de más, T_k = L − o_k − L_k.
+     - En el as de guía, R = 16,6 d y L ≈ 126 d (632 nodos), y las colas de más miden 22,1, 22,1, 25,1, 22,9, 14,8, 7,1 y 0 d.
+   - **La cola de más:**
+     - Se acuesta en la mesa en la primera dirección, vista desde arriba, que no cruza nada.
+     - Si no hay ninguna, queda en un arco levantado por fuera del nudo y fuera de la toma.
+     - Un campo opcional del video (`video: {cola: …}`) la corrige donde la regla falle; las fichas lo ignoran.
+   - **En una plantilla:** la pausa es la cuerda hasta el hito, más la cola en la mano, como hoy, y el resto va en la madeja.
+   - **La regla de la pausa se mantiene, precisada:** el tramo que dibuja la ficha es la pose de la ficha, con su secuencia, y el depósito, la cola y la madeja solo pasan por encima. Así cada transición sigue corriendo en paralelo con las demás. Si cada una partiera del final de la anterior, atar un nudo tardaría de 5 a 6 veces más.
+3. **Manos que agarran.**
+   - Una pinza sostiene 2 o 3 nodos (su posición y, si hace falta, su dirección), y puede soltar y volver a agarrar.
+   - La que lleva el chicote lo toma a 1,5 d de la punta, así que la punta y su cinta siempre se ven.
+4. **La guía nueva.**
+   - Toma la punta, la lleva por encima de todo, la enhebra por el camino del paso siguiente (los tramos de encima suben con `alturas`, como hoy) y tira de la cola hasta su arco.
+   - La cuerda que todavía no pasó cuelga como un seno, así que se recoge sola, sin cúspide.
+   - Lo que cuelga flojo pasa siempre por encima, y se comprueba: si quedara debajo de un borde al tirar, se enrollaría en él.
+5. **El tiempo.**
+   - Arranques y frenadas de tirón mínimo, velocidades suavizadas y fases que se solapan.
+   - La velocidad del video es C1, y `retiempo` siempre interpola.
+   - Lo repetitivo de las plantillas se simula a 20 o 30 d/s con 3 o 4 subpasos, en vez de la cámara rápida: sin `_partir`, ya se puede.
+6. **La gravedad en lo que cuelga.**
+   - En los tramos libres (lo flojo y lo levantado), poca amortiguación y sin resorte, para que cuelguen y caigan.
+   - Con **memoria plástica:** la curvatura de reposo se relaja hacia la actual, y así un lazo que se suelta no salta (un lazo de 10 d guarda unos 10 N·d de flexión, y un nodo tiene una masa de 2,6·10⁻⁷).
+   - Los resortes hacia la guía se quedan, pero entran de a poco en el último 30 % de cada transición y reemplazan a `encajar`. La amortiguación de Rayleigh queda como opción.
+7. **Las comprobaciones de cada cuadro:**
+   - La cantidad de nodos fija y el largo con ±0,5 %.
+   - Ningún par a menos de dmin y la CCD entre cuadros, como hoy.
+   - El tope de 0,35 d de desplazamiento pasa a ser un tope a la aceleración (la diferencia segunda), porque un movimiento rápido y un brinco se distinguen por la aceleración. Si la gravedad se ve, el tope deja pasar g (1225 d/s²).
+
+**Las subtareas, cada una con su prueba:**
+- **T21a, medir y diseñar (M).** `nudos/fisica/calidad.py` mide en los cuadros guardados:
+  - la velocidad, la aceleración y el tirón de cada nodo;
+  - los brincos;
+  - cuánto cambia el largo;
+  - las paradas en seco;
+  - cuántos cuadros salen del más cercano.
+
+  La medida de los dos pilotos de hoy queda en este bloque. **Punto de control:** Gabriel aprueba el diseño.
+- **T21b, las poses de video y el largo fijo (M).**
+  - `animar.poses_video` arma σ, el depósito y la cola de más, validados.
+  - `seguir` queda sin `_partir` ni recoger, y con pinzas.
+  - Prueba: la misma cantidad de nodos en todo el video; las colas del as de guía a ±0,2 d de las de arriba; solo cruces por encima en lo agregado; y lo mismo dos veces.
+- **T21c, la guía nueva, el tiempo y la gravedad (L),** con el as de guía. Prueba de 10 s y punto de control.
+- **T21d, la madeja (L),** con el amarre cuadrado. Prueba de 10 s y punto de control.
+- **T21e, el error y la aplicación (M).**
+  - **El error:** va del paso anterior a su pose, hace una pausa y vuelve atrás (los mismos cuadros al revés, que `comprobar` acepta mientras el movimiento sea casi estático). Después sigue con el paso correcto.
+  - **La aplicación:** el nudo apretado se coloca sobre la utilería, con la madera pasando por su lazo, y sus puntas se estiran hasta las anclas con la cuerda del depósito y se asientan con el motor. Ahí no se comprueba la secuencia vista desde arriba (con carga, el nudo se para), sino que nada se atraviese y que el lazo abrace la utilería.
+
+**La prueba de punta a punta (lenta):** el as de guía atado entero, sin dibujar.
+- Cero fallas de `comprobar` y la cantidad de nodos fija.
+- El largo a ±0,5 %, cero brincos y ningún cuadro tomado del más cercano.
+- Cada pausa con la ficha a 0,02 d y con su secuencia.
+- No más del doble del tiempo de hoy.
+
+**Lo que cuesta:** hoy, unos 15 min de motor por piloto; con todo, de 20 a 35. El riesgo alto es la gravedad en lo que cuelga, porque Newton pierde la viscosidad que hoy lo estabiliza. El riesgo medio es la guía nueva.
+
+**Planes B:**
+- Si la cola de más no se puede acomodar, queda en la madeja («en la mano») o se corrige con el campo del video.
+- Si la gravedad no se estabiliza, los resortes se quedan y lo flojo cuelga como una catenaria dentro de la guía.
+- Si la madeja no convence a la vista, la cuerda sale del cuadro por la mano.
+
+#### T22: El video completo
+
+**T22a, el diseño (M), que Gabriel aprueba antes de programar.**
+- **Los capítulos:**
+  - **Apertura** (unos 6 s): el nudo terminado gira despacio, con el nombre y para qué sirve.
+  - **Lo que necesitas** (3 s): los materiales, solo si la ficha los dice.
+  - **Paso a paso:** el grueso del video. Cada paso lleva su tarjeta, su voz y su movimiento, y el paso 1 también se anima, desde la cuerda estirada.
+  - **Cómo saber que quedó bien:** la verificación, con primeros planos y una marca en cada cosa que se revisa.
+  - **Errores comunes:** el error con imagen, atado con el motor (T21e) y marcado con ✗, y después el correcto con ✓. Los demás errores van en tarjetas con voz.
+  - **En la práctica:** la aplicación.
+  - **Seguridad,** si la ficha la tiene.
+  - **Cierre:** el nudo apretado con su golpe, el nombre y la dirección del visor.
+- **Lo que sale de cada video:**
+  - Capítulos para YouTube y subtítulos (`.srt`) de la voz.
+  - El reel vertical (de 45 a 60 s), con su propia cámara y un guion corto: el nudo terminado como gancho, el título de cada paso dicho, un error, la aplicación y el cierre, con subtítulos quemados palabra por palabra.
+  - En el visor, el capítulo del paso a paso, en 1080p y de 20 MB o menos.
+  - Si Gabriel quiere, el nombre o el logo del grupo en el cierre.
+- **La voz manda el tiempo.** Cada sección dura lo que su frase, y el movimiento se estira o se acorta un poco para cuadrar. Los cortes de capítulo caen en el pulso de la música.
+- **El guion:**
+  - Sale de la especificación: `usos`, el texto de cada paso, `verificacion`, `error`, `seguridad` y `precauciones`.
+  - Un campo opcional `voz:` por paso, para cuando el texto escrito no suena bien dicho, y `aplicacion:` con la escena y su texto. Es la versión siguiente del formato.
+  - Pasa por la misma comprobación de términos de sección que la ficha, y va en tuteo.
+  - `python -m nudos guion <slug>` arma una hoja de revisión del guion, en HTML, con la duración estimada de cada parte.
+- **Las tarjetas nuevas,** primero como maqueta animada en HTML que Gabriel abre en el navegador:
+  - El número grande en un distintivo de color, «Paso 4 de 7», el título y una barra de avance con un punto por paso.
+  - Entran con un rebote suave y salen rápido, sobre un fondo esmerilado (el cuadro de atrás, desenfocado).
+  - Tarjetas de capítulo, con ✓ y ✗ en verde y rojo, y formas y fondos animados de lygia.
+  - Las dibuja Edge, cuadro por cuadro y con fondo transparente, y Pillow las pone sobre el video, como hoy.
+- **La cámara:**
+  - Una ruta continua con velocidad suave, sin tramos en línea recta ni paradas en seco.
+  - Sigue el punto de acción con un poco de retraso, se acerca en cada cruce nuevo y enfoca donde está la mano.
+  - Nunca se congela: en las pausas se desliza muy despacio.
+  - Las ideas salen del catálogo de video-shotcraft (tomas, ritmo y entradas de tarjetas).
+- **Las aplicaciones de los pilotos,** con texto propio y dentro de D1:
+  - **El as de guía:** por ejemplo, una gaza alrededor de un árbol para tender el cabo de un toldo, o un balde izado.
+  - **El amarre cuadrado:** una mesa de campamento o un portón. Aquí sí se suben personas.
+  - **La eslinga de andamio:** una repisa colgante con ollas, como dicen sus `usos`.
+  - **La utilería:** propia o CC0 (Poly Haven), con árboles de la extensión gratuita Sapling Tree Gen y el cielo de Blender.
+  - **El nudo,** como en T21e: se coloca con un giro rígido (los anfitriones ya tienen la medida), y sus puntas se asientan hasta sus anclas con el motor.
+
+**Punto de control:** Gabriel aprueba el diseño, el guion de un piloto y la maqueta de las tarjetas.
+
+**T22b, la implementación (L).**
+- `nudos/video.py` gana los capítulos, el guion, la cámara nueva, las tarjetas, los errores, la aplicación y el reel. Si crece demasiado, se parte en un paquete `nudos/video/`.
+- **El disco:** un video de 2 min en 4K son unos 240 GB de cuadros. Por eso se arma por tramos: cada unos 10 s se codifican en un intermedio sin pérdida y los PNG se borran. `NUDOS_CUADROS` pasa a D:, que tiene 625 GB libres; C: tiene 164.
+- **La previa entera** (960 × 540) de los tres pilotos, con voz, música y tarjetas. Punto de control.
+- **Los tres pilotos en 4K y en vertical,** de noche. Punto de control.
+
+#### T23: El sonido: voz, música, diseño sonoro y mezcla
+
+**T23a, la voz (M).**
+- **Los candidatos:** primero, una búsqueda corta de los mejores modelos locales en español a la fecha. Hoy son, por ejemplo, Qwen3-TTS (Apache-2.0, enero de 2026, 10 idiomas, clona con 3 s de muestra) y Chatterbox multilingüe (MIT), más los que aparezcan, siempre con una licencia que permita este uso.
+- **La instalación:** cada modelo en su propio entorno fuera de A: (piden PyTorch con CUDA y quizá otro Python), llamado como un programa aparte, como Blender.
+- **La prueba de escucha a ciegas** (`python -m nudos prueba-voz`):
+  - La apertura y dos pasos del as de guía, con 3 o 4 voces latinoamericanas por modelo, y la de Gabriel clonada si da una muestra de 30 s.
+  - Todas al mismo volumen, en una página en `revision/voz/` (fuera de git). Gabriel elige.
+  - Si ninguna convence, ElevenLabs: Gabriel crea la cuenta y pone `ELEVENLABS_API_KEY`, y el módulo ya lo sabe usar.
+- **`nudos/voz.py`:**
+  - El proveedor.
+  - Un caché por huella (texto, voz, modelo y ajustes): nada se genera dos veces.
+  - La pronunciación: «chicote», «ballestrinque», «Paso 4 de 7».
+  - El tiempo de cada palabra, con un alineador forzado (los modelos locales no lo dan; ElevenLabs sí), para los subtítulos y la sincronía.
+
+**T23b, la música (M).**
+- **El estilo:** folk acústico de campamento, cálido y alegre sin apuro, a unos 100 pulsos por minuto y en tono mayor. Guitarra acústica punteada, bajo suave y percusión liviana (shaker, palmas y un bombo apagado). Un motivo corto en kalimba o glockenspiel es la firma sonora de la serie: abre y cierra cada video.
+- **El arreglo cambia en cada capítulo:** constante y despejado bajo la voz en los pasos, más ralo en los errores, más lleno en la aplicación. En el cierre suenan el motivo y el acorde final con el golpe del nudo.
+- **Dos candidatas, y Gabriel elige por oído** (`python -m nudos prueba-musica`):
+  - **(A) Compuesta en código:** `nudos/musica.py` escribe las notas, los acordes y el arreglo por capítulos, con humanización, y los toca con instrumentos muestreados de licencia libre mediante sfizz o FluidSynth. La sincronía es exacta.
+  - **(B) Generada en la tarjeta con ACE-Step 1.5** (MIT, enero de 2026, local) y cortada a compás con librosa (el pulso y los compases).
+
+  Las dos son propias y no tienen licencia de nadie más.
+- **Demos de 30 s** sobre la línea de tiempo del as de guía. El punto de control va junto con el de la voz.
+
+**T23c, el diseño sonoro y la mezcla (M).** Parte de los tres efectos que Gabriel aprobó en T18.
+- **Estéreo:** cada sonido se ubica según dónde pasa en el cuadro, en una sala chica (reverberación por convolución con una respuesta sintetizada).
+- **Un foley más fino, que sale del motor:**
+  - El roce sigue la presión de contacto y la velocidad de deslizamiento.
+  - Suena un «tac» cuando la cuerda se apoya en la mesa y un crujido al apretar.
+  - Soplidos suaves en los movimientos de cámara y en las entradas de tarjeta.
+  - Para probar: un tic por cada cruce nuevo, agudo si pasa por encima y grave si pasa por debajo, para reforzar la lectura de los cruces.
+- **Opcional:** si Gabriel graba 2 o 3 minutos de su cuerda con el celular (rozarla, apretarla, dejarla caer), los granos salen de esa grabación.
+- **La mezcla:** la música baja sola cuando habla la voz (*sidechain*). Todo queda a −14 LUFS y −1 dBTP (con pyloudnorm), en estéreo y en AAC de 256 kbps.
+- **Las pruebas:**
+  - Los golpes caen donde aparecen las tarjetas, con un margen de ±20 ms (con librosa si instala en Python 3.14; si no, con scipy).
+  - La sonoridad y el pico.
+  - La voz siempre se entiende: mientras hay voz, la música queda 15 dB abajo.
+
+#### T24: El visor
+
+- **La trenza:** material físico con anisotropía y *sheen* (ya están en three.js 0.160) y un relieve más fino, con ruido de lygia.
+- **La luz:** un entorno para los reflejos (RoomEnvironment) y el tonemap AgX, que también trae la 0.160.
+- **El postprocesado:** oclusión ambiental (GTAOPass) y SMAA, solo si el equipo aguanta y con la vista quieta.
+- **Lo que se copia:** esos complementos de three@0.160.0 y los archivos de lygia que se usen, con sus licencias, van a `sitio/vendor/`, y `sitio/vendor/LEEME.txt` los anota.
+- **Opcional, después de T21:** la animación en 3D entre pasos dentro del visor, con los cuadros del motor comprimidos (unos MB por nudo), para girar el nudo mientras se ata. Cambia la lista de tipos del sitio (decisión 7), así que lo decide Gabriel.
+- **`exportar()`,** que arma la escena de las fichas, no cambia, y `comparar` lo comprueba.
+- **Punto de control:** Gabriel abre el visor en la computadora y en un celular de gama baja (el pendiente de T7b).
+
+#### Los repositorios sugeridos: qué se usa y por qué
+
+- **lygia (sí, en la web):** va en el visor (el relieve de la trenza en GLSL, el ruido y el tramado) y en las tarjetas animadas del video, que dibuja Edge.
+  - En Blender no sirve: Cycles no corre GLSL y lygia no trae OSL.
+  - Su licencia, Prosperity 3.0.0, permite el uso no comercial, y el grupo lo es.
+  - Se copian solo los archivos que se usan, con el texto de la licencia, como three.js en `sitio/vendor/`.
+- **react-three-rapier (no):** Rapier simula cuerpos rígidos unidos con articulaciones. Una cuerda hecha de eslabones se atraviesa en un nudo apretado y cambia los cruces sin avisar, que es justo lo que impide la IPC con CCD del motor.
+- **react-postprocessing (no, pero sí la idea):** el visor no usa React, y `postprocessing` de pmndrs pide three ≥ 0.168. Los pases que hacen falta ya vienen con three.js 0.160 (GTAOPass, SMAAPass y OutputPass), así que se usan esos sin cambiar de versión, y `exportar()` no se mueve.
+- **librosa (sí, en el audio):** corta a compás la música generada (la candidata B) y comprueba la sincronía del audio armado. Pide Python ≥ 3.13 y numba: primero se prueba que instale en el 3.14 del venv, y si no, va en el entorno de la música.
+- **video-shotcraft (como referencia):** una skill de Remotion con 124 fichas de tomas y notas sobre ritmo, sincronía con el pulso y sonido (Apache-2.0). Sirve de catálogo de ideas para la cámara, las transiciones y las tarjetas; su código no se usa.
+
+#### Costos, orden y verificación del pulido
+
+**Costos:**
+- **Render:** 2 semanas para los 36. Cada nudo tiene unos 7200 cuadros del video largo y unos 3000 del reel (que cuestan la cuarta parte), así que hacen falta unos 4 s por cuadro de 4K en promedio. T20a mide si Cycles cabe; si no, va EEVEE.
+- **Disco:** los cuadros van por tramos a D:. Con permiso de Gabriel, se borran los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros`.
+- **Dinero:** cero con la voz y la música locales. ElevenLabs entra solo si la voz local no convence: un plan mensual, durante uno o dos meses.
+- **Instalaciones,** con permiso de Gabriel al momento de bajar cada una:
+  - Los modelos de voz y ACE-Step, en entornos fuera de A:.
+  - sfizz o FluidSynth, con un banco de instrumentos libre.
+  - pyloudnorm y librosa.
+  - La extensión Sapling Tree Gen de Blender.
+  - Texturas y HDRI CC0 de Poly Haven.
+  - Los complementos de three@0.160.0.
+  - Los archivos de lygia.
+
+**Orden.** Van en paralelo T20a y T24 (sesión «el aspecto»), T21 (la sesión del plan) y T23a y T23b (sesión «el sonido»). T22 integra todo, y después viene T19. Los puntos de control de Gabriel, cada uno con algo que ver u oír, son estos:
+1. El cuadro final con sus costos (T20a).
+2. El diseño del motor (T21a) y sus pruebas de 10 s (T21c y T21d).
+3. La escucha de voces y músicas (T23).
+4. El diseño del video, el guion y la maqueta de las tarjetas (T22a).
+5. La previa entera de los tres pilotos (T22b).
+6. Los pilotos en 4K.
+7. El visor (T24).
+
+**Verificación:**
+- **Pruebas rápidas de cada módulo nuevo:**
+  - El guion: términos de sección, tuteo y campos.
+  - La voz, con un proveedor falso: el caché y los tiempos.
+  - La música: los compases caen en los capítulos, y repite con la misma semilla.
+  - La mezcla: LUFS, pico y *ducking*.
+  - Las tarjetas caben.
+  - La velocidad de la cámara es continua.
+  - El motor, según T21.
+  - La aplicación: la cuerda queda fuera de la utilería y las puntas llegan a sus anclas.
+- **Las fichas no cambian** (salvo con T20c): con `referencia` antes y después, `comparar` da los 36 `modelo.json` iguales byte a byte.
+- **La suite entera:** `.venv/Scripts/python -m pytest -n 4 --dist loadfile`.
+- **De punta a punta:** `python -m nudos video <piloto> --previa` de los tres pilotos, con todo, y después en 4K.
+
 #### T19: Todos los nudos a la vez
 
 **Descripción:** con todo implementado y probado en los pilotos, una sola corrida calcula todos los nudos con el motor, dibuja todas sus fichas en Blender y arma todos sus videos. No hay tandas (Gabriel, 23 nov).
+- **Antes, desde el pulido a fondo (26 nov):** la tabla de aplicaciones de los 36 nudos en texto, que Gabriel aprueba; sus escenas, armadas por familias (en poste, amarres, dos cuerdas…); los guiones revisados, y las voces y la música generadas. El render de los videos es de unas 2 semanas.
 1. `referencia` de todos los nudos con el código de antes de la fase, para comparar.
 2. Todos los nudos construidos con el motor, a la vez y con todos los núcleos (`nudos/procesos.py`), de noche si hace falta.
 3. `comparar` dice qué cambió en cada nudo. Donde la secuencia de algún paso no es la declarada, el paso se corrige (ver «La secuencia declarada sigue mandando» en T15) y se vuelve a correr.
@@ -723,7 +1030,7 @@ Como el as de guía es más ancho que alto, en el vertical el ángulo alrededor 
 - [ ] Todas las fichas caben y se leen en gris, y cada nudo tiene su video en el visor y en vertical para redes.
 - [ ] Gabriel revisa en papel todas las fichas y decide en qué nudos se repite el filtro 1 (los que cambiaron de secuencia, si hubo alguno).
 
-**Dependencias:** T15 a T18. **Tamaño:** L, casi todo tiempo de cálculo y de render.
+**Dependencias:** T15 a T18 y T20 a T24. **Tamaño:** L, casi todo tiempo de cálculo y de render.
 
 #### Punto de control de la fase 5
 
@@ -819,6 +1126,11 @@ Va después de la fase 5 (Gabriel, 23 nov): las fichas del libro salen con la cu
 | Complejidad que no se ve en el papel | Medio | Cada fenómeno entra con su prueba física y, si cambia la imagen, con la página de prueba impresa (la regla de T7b) |
 | Código o texto de un paquete de pago entra al repositorio público | Alto | El paquete vive fuera de git y solo se usa como referencia; los scripts de Blender del libro son propios |
 | El render de los videos ocupa la computadora por días | Bajo | Gabriel acepta el costo; se renderiza por tandas, de noche, empezando por una vista previa a media resolución |
+| Los videos largos no caben en las 2 semanas de render | Medio | T20a mide Cycles y EEVEE en 4K antes de elegir el aspecto; los cuadros repetidos se dibujan una vez |
+| Un video de 2 min en 4K llena el disco (unos 240 GB de cuadros) | Medio | Se arma por tramos en un intermedio sin pérdida, y los cuadros van a D: |
+| La gravedad en lo que cuelga desestabiliza al motor (Newton sin la viscosidad) | Alto | T21c con el as de guía antes que nada; plan B: los resortes se quedan y lo flojo cuelga como una catenaria dentro de la guía |
+| Ninguna voz local suena natural en español | Medio | Prueba de escucha a ciegas; si ninguna convence, ElevenLabs (Gabriel, 26 nov) |
+| Una aplicación muestra un nudo sosteniendo a una persona | Alto | Solo objetos, salvo los amarres (D1); la sección de seguridad de la ficha entra al video |
 
 ## Preguntas abiertas
 
