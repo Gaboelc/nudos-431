@@ -244,8 +244,9 @@ def material_liso(nombre, rgb_lineal, rugosidad, metal=0.0, veta_eje=None):
 # --------------------------------------------------------------------------
 # Mallas
 # --------------------------------------------------------------------------
-def cuerda(k, datos):
-    """La malla de una cuerda, desde el npz de nudos/blender.py, con sus tres materiales."""
+def cuerda(k, datos, materiales=None):
+    """La malla de una cuerda, desde el npz de nudos/blender.py, con sus tres materiales. En un
+    video, `materiales` trae los ya armados, para no rehacer la trenza en cada cuadro."""
     z = np.load(datos["malla"])
     V, F, UV, mat = z["vertices"], z["caras"], z["uv"], z["material"]
     malla = bpy.data.meshes.new(f"cuerda-{k}")
@@ -261,9 +262,11 @@ def cuerda(k, datos):
     capa.data.foreach_set("uv", UV.ravel())
     malla.polygons.foreach_set("use_smooth", np.ones(len(F), dtype=bool))
     color = datos["color"]
-    for i, cols in enumerate((COLORES[color], AMBAR)):
-        malla.materials.append(material_trenza(f"trenza-{k}-{i}", cols))
-    malla.materials.append(material_remate(f"remate-{k}"))
+    if materiales is None:
+        materiales = [material_trenza(f"trenza-{k}-{i}", cols)
+                      for i, cols in enumerate((COLORES[color], AMBAR))] + [material_remate(f"remate-{k}")]
+    for m in materiales:
+        malla.materials.append(m)
     malla.validate()
     ob = bpy.data.objects.new(f"cuerda-{k}", malla)
     bpy.context.scene.collection.objects.link(ob)
@@ -310,14 +313,16 @@ def mesa():
 # Luz y cámara
 # --------------------------------------------------------------------------
 def luz(nombre, pos, mira, energia, tam):
-    datos = bpy.data.lights.new(nombre, "AREA")
-    datos.energy = energia
-    datos.size = tam
-    ob = bpy.data.objects.new(nombre, datos)
+    ob = bpy.data.objects.get(nombre)
+    if ob is None:
+        datos = bpy.data.lights.new(nombre, "AREA")
+        ob = bpy.data.objects.new(nombre, datos)
+        bpy.context.scene.collection.objects.link(ob)
+    ob.data.energy = energia
+    ob.data.size = tam
     ob.location = pos
     ob.rotation_mode = "QUATERNION"
     ob.rotation_quaternion = (Vector(mira) - Vector(pos)).to_track_quat("-Z", "Y")
-    bpy.context.scene.collection.objects.link(ob)
 
 
 def luces(cx, cy, escala):
@@ -328,6 +333,8 @@ def luces(cx, cy, escala):
         6500 * k / 144, 18 * escala / 12)
     luz("relleno", (cx + 14 * escala / 12, cy - 16 * escala / 12, 10 * escala / 12), (cx, cy, 0),
         1500 * k / 144, 24 * escala / 12)
+    if bpy.data.worlds.get("cielo") is not None:
+        return
     mundo = bpy.data.worlds.new("cielo")
     bpy.context.scene.world = mundo
     try:
@@ -340,15 +347,19 @@ def luces(cx, cy, escala):
 
 
 def camara(escena, c):
-    """La cámara de three.js, con su misma matriz: las dos miran por −z con +y hacia arriba."""
-    datos = bpy.data.cameras.new("camara")
-    datos.sensor_fit = "VERTICAL"
+    """La cámara de three.js, con su misma matriz: las dos miran por −z con +y hacia arriba.
+    Si ya hay una (en un video), la mueve."""
+    cam = bpy.data.objects.get("camara")
+    if cam is None:
+        datos = bpy.data.cameras.new("camara")
+        cam = bpy.data.objects.new("camara", datos)
+        escena.collection.objects.link(cam)
+    datos = cam.data
+    datos.sensor_fit = "VERTICAL"     # el fov de three.js es el vertical, en cualquier aspecto
     datos.angle_y = math.radians(c["fov"])
     datos.clip_start, datos.clip_end = c["cerca"], c["lejos"]
-    cam = bpy.data.objects.new("camara", datos)
     e = c["matriz"]
     cam.matrix_world = Matrix([[e[col * 4 + fila] for col in range(4)] for fila in range(4)])
-    escena.collection.objects.link(cam)
     escena.camera = cam
 
 
@@ -371,6 +382,34 @@ def dibujar(escena, trabajo):
     bpy.ops.render.render(write_still=True)
 
 
+def video(escena, lote):
+    """Los cuadros de un video (T18): la escena (el anfitrión, la mesa, el cielo y los
+    materiales de la cuerda) se arma una sola vez, y en cada cuadro solo cambian la malla de la
+    cuerda, la cámara y las luces."""
+    vaciar()
+    datos = json.loads(open(lote["escena"], encoding="utf-8").read())
+    for i, m in enumerate(datos["mallas"]):
+        malla_generica(i, m)
+    mesa()
+    color = lote.get("color", "azul")
+    materiales = [material_trenza(f"trenza-0-{i}", cols)
+                  for i, cols in enumerate((COLORES[color], AMBAR))] + [material_remate("remate-0")]
+    previa = None
+    for t in lote["trabajos"]:
+        inicio = time.time()
+        if previa is not None:
+            malla = previa.data
+            bpy.data.objects.remove(previa)
+            bpy.data.meshes.remove(malla)
+        previa = cuerda(0, t["cuerdas"][0], materiales)
+        cx, cy = t["centro"]
+        luces(cx, cy, t["extension"] + 2)
+        camara(escena, t["camara"])
+        escena.render.filepath = t["salida"]
+        bpy.ops.render.render(write_still=True)
+        print(f"listo: {t['salida']} en {time.time() - inicio:.1f} s", flush=True)
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     ap = argparse.ArgumentParser()
@@ -381,6 +420,14 @@ def main():
     escena = bpy.context.scene
     dispositivo = gpu(escena)
     ajustes(escena, lote["ancho"], lote["alto"], lote["muestras"])
+    if lote.get("video"):
+        # En un video, el denoiser va en la tarjeta (en 4K, de 31 a 13 s por cuadro) y el PNG
+        # se escribe con poca compresión: no hace falta que dos corridas den lo mismo bit a bit.
+        if hasattr(escena.cycles, "denoising_use_gpu"):
+            escena.cycles.denoising_use_gpu = True
+        escena.render.image_settings.compression = 10
+        video(escena, lote)
+        return
     for t in lote["trabajos"]:
         inicio = time.time()
         dibujar(escena, t)

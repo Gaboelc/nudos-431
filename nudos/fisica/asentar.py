@@ -202,7 +202,8 @@ class Asentado:
 def asentar(X, cortes, grosores, manos: Manos, solido=None, memoria: bool = True,
             roce: bool = True, quieto: float = QUIETO, max_pasos: int = MAX_PASOS,
             kappa: float | None = None, largos=None, registro=None,
-            amortiguacion: float = AMORTIGUACION, aceptar=None, paciencia: int = 15) -> Asentado:
+            amortiguacion: float = AMORTIGUACION, aceptar=None, paciencia: int = 15,
+            trayectoria: list | None = None) -> Asentado:
     """Pasos cuasiestáticos desde X hasta que la cuerda deja de moverse. X ya tiene que estar
     separada (`separar`). `largos` (N,) son los largos de reposo de cada tramo, el que empieza
     en cada nodo (por omisión, los de X): separar estira un poco la cuerda, y ella vuelve a su
@@ -210,7 +211,8 @@ def asentar(X, cortes, grosores, manos: Manos, solido=None, memoria: bool = True
     paso. Con `aceptar(x) -> bool`, el resultado es el último paso que cumple (o el de partida,
     si ninguno), aunque la cuerda siga moviéndose después: así se aprieta un nudo hasta donde
     se sigue viendo como en su ficha. Si después de cumplir pasan `paciencia` pasos sin que
-    vuelva a cumplir, no se sigue."""
+    vuelva a cumplir, no se sigue. Con `trayectoria` (una lista), se le agrega la cuerda de
+    cada paso: el video (T18) muestra el apretado con ellas."""
     X = np.asarray(X, float)
     varillas = []
     for k, (a, b) in enumerate(zip(cortes[:-1], cortes[1:])):
@@ -247,6 +249,8 @@ def asentar(X, cortes, grosores, manos: Manos, solido=None, memoria: bool = True
         mov = float(np.max(np.linalg.norm(r.x - x, axis=1)))
         x = r.x
         n_newton += r.iteraciones
+        if trayectoria is not None:
+            trayectoria.append(x.copy())
         if registro is not None:
             registro(paso, mov, r.iteraciones, r.convergio)
         sin_converger = 0 if r.convergio else sin_converger + 1

@@ -20,8 +20,29 @@ SITIO = RAIZ / "sitio"
 ESCENA = RAIZ / "render" / "escena.js"
 PUBLICADOS = RAIZ / "publicados.txt"
 
-# Lo único que puede tener el sitio. Ninguna imagen: así no se cuela ninguna de las fuentes.
-EXTENSIONES = {".html", ".js", ".css", ".woff2", ".txt"}
+# Lo único que puede tener el sitio. Ninguna imagen: así no se cuela ninguna de las fuentes. El
+# video de cada nudo (T18) sale de videos/<slug>.mp4, que arma `python -m nudos video`.
+EXTENSIONES = {".html", ".js", ".css", ".woff2", ".txt", ".mp4"}
+VIDEOS = RAIZ / "videos"
+TOPE_VIDEO_MB = 20.0     # cada video
+TOPE_SITIO_MB = 900.0    # el sitio entero: GitHub Pages no publica uno de más de 1 GB
+VIDEO_HTML = """      <div class="video">
+        <button class="btn" id="verVideo" type="button" aria-expanded="false" aria-controls="videoNudo">Ver el video</button>
+        <video id="videoNudo" class="video-nudo" src="video.mp4" controls playsinline preload="none" hidden></video>
+      </div>
+      <script>
+        (() => {
+          const b = document.getElementById("verVideo"), v = document.getElementById("videoNudo");
+          b.addEventListener("click", () => {
+            const abrir = v.hidden;
+            v.hidden = !abrir;
+            b.setAttribute("aria-expanded", String(abrir));
+            b.textContent = abrir ? "Ocultar el video" : "Ver el video";
+            if (abrir) v.play().catch(() => {}); else v.pause();
+          });
+        })();
+      </script>
+"""
 MARCA = ".nojekyll"   # además le dice a GitHub Pages que no procese el sitio
 
 
@@ -189,7 +210,9 @@ def _lista(modelos: list[Modelo], prefijo: str) -> str:
     return "\n".join(filas)
 
 
-def pagina_nudo(modelo: Modelo) -> str:
+def pagina_nudo(modelo: Modelo, video: bool = False) -> str:
+    """La página del visor. Con `video`, el botón que muestra el video del nudo (T18), que va
+    junto a la página, en video.mp4."""
     s = modelo.spec
     esc = html.escape
     hechos = [("Familia", s.familia)]
@@ -212,6 +235,7 @@ def pagina_nudo(modelo: Modelo) -> str:
         "hechos": "\n".join(f"      <div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in hechos),
         "n_pasos": str(len(s.pasos)),
         "pasos": pasos,
+        "video": VIDEO_HTML if video else "",
         "datos": datos.replace("</", "<\\/"),
     })
 
@@ -301,7 +325,13 @@ def construir_sitio(destino: Path, modelos: list[Modelo] | None = None,
     shutil.copy2(SITIO / "visor.css", recursos / "visor.css")
     for m in modelos:
         (destino / m.spec.slug).mkdir()
-        (destino / m.spec.slug / "index.html").write_text(pagina_nudo(m), encoding="utf-8")
+        video = VIDEOS / f"{m.spec.slug}.mp4"
+        if video.is_file():
+            mb = video.stat().st_size / 1e6
+            if mb > TOPE_VIDEO_MB:
+                raise SitioError(f"El video de {m.spec.slug} pesa {mb:.1f} MB; el tope es {TOPE_VIDEO_MB} MB.")
+            shutil.copy2(video, destino / m.spec.slug / "video.mp4")
+        (destino / m.spec.slug / "index.html").write_text(pagina_nudo(m, video.is_file()), encoding="utf-8")
     (destino / "index.html").write_text(rellenar((SITIO / "indice.html").read_text(encoding="utf-8"), {
         "url": html.escape(URL_BASE), "nudos": _lista(modelos, ""),
     }), encoding="utf-8")
@@ -315,4 +345,7 @@ def construir_sitio(destino: Path, modelos: list[Modelo] | None = None,
     if sobran:
         raise SitioError("El sitio tiene archivos que no deberían estar: "
                          + ", ".join(str(p.relative_to(destino)) for p in sobran))
+    total = sum(p.stat().st_size for p in destino.rglob("*") if p.is_file()) / 1e6
+    if total > TOPE_SITIO_MB:
+        raise SitioError(f"El sitio pesa {total:.0f} MB; el tope es {TOPE_SITIO_MB:.0f} MB.")
     return slugs

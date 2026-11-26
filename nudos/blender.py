@@ -183,8 +183,10 @@ def _seccion(direcciones: np.ndarray, R: float, planos) -> np.ndarray:
     return np.minimum(R * f, limite)
 
 
-def malla_cuerda(k: int, escena: dict, aplastar: bool = APLASTAR, lados: int = LADOS, solidos=None) -> MallaCuerda:
-    """La malla de la cuerda k de una escena exportada por render/escena.js."""
+def malla_cuerda(k: int, escena: dict, aplastar: bool = APLASTAR, lados: int = LADOS, solidos=None,
+                 tapas: bool = False) -> MallaCuerda:
+    """La malla de la cuerda k de una escena exportada por render/escena.js. Con `tapas`, cierra
+    las dos puntas (el video, que no usa las tapas de escena.js)."""
     c = escena["cuerdas"][k]
     P = np.asarray(c["espina"], float).reshape(-1, 3)
     R, grosor = c["radio"], c["grosor"]
@@ -213,7 +215,47 @@ def malla_cuerda(k: int, escena: dict, aplastar: bool = APLASTAR, lados: int = L
     material = np.zeros(n - 1, dtype=np.int32)
     for s0, s1, m in c["tramos"]:
         material[s0:s1] = m
-    return MallaCuerda(V, caras, uv, np.repeat(material, lados), np.repeat(s, lados), aplastado)
+    malla = MallaCuerda(V, caras, uv, np.repeat(material, lados), np.repeat(s, lados), aplastado)
+    return _con_tapas(malla, P, R, lados, grosor) if tapas else malla
+
+
+TAPA_ANILLOS = 6        # anillos de la cúpula que cierra cada punta en el video
+TAPA_ALTO = 0.35        # lo que sobresale la cúpula, en radios
+
+
+def _con_tapas(m: MallaCuerda, P: np.ndarray, R: float, lados: int, grosor: float) -> MallaCuerda:
+    """La malla con una cúpula baja en cada punta, de cuadriláteros como el tubo, con el material
+    del tramo de esa punta (T18: en el video la punta se veía hueca, como un tubo sin tapa; en las
+    fichas las tapas las pone render/escena.js)."""
+    V, caras, uv, mat, s = [m.vertices], [m.caras], [m.uv], [m.material], [m.s]
+    total = len(m.vertices)
+    for punta in (0, len(P) - 1):
+        hacia = P[punta] - P[1 if punta == 0 else punta - 1]
+        T = hacia / max(np.linalg.norm(hacia), 1e-12)
+        borde = m.vertices[punta * lados:(punta + 1) * lados]
+        material = m.material[0] if punta == 0 else m.material[-1]
+        s_punta = m.s[punta * lados]
+        previo = np.arange(punta * lados, (punta + 1) * lados)
+        for j in range(1, TAPA_ANILLOS + 1):
+            th = np.radians(88.0 * j / TAPA_ANILLOS)
+            anillo = P[punta] + np.cos(th) * (borde - P[punta]) + T * (TAPA_ALTO * R * np.sin(th))
+            idx = total + np.arange(lados)
+            total += lados
+            V.append(anillo)
+            s.append(np.full(lados, s_punta))
+            jj = np.arange(lados)
+            a, b = previo[jj], previo[(jj + 1) % lados]
+            c, d = idx[(jj + 1) % lados], idx[jj]
+            # Que las caras miren hacia afuera, como las del tubo: al revés en el comienzo.
+            caras.append(np.stack([a, d, c, b], axis=1) if punta == len(P) - 1 else np.stack([a, b, c, d], axis=1))
+            u = np.full(lados, s_punta / (np.pi * grosor))
+            v0, v1 = jj / lados, (jj + 1) / lados
+            esquinas = (v0, v0, v1, v1) if punta == len(P) - 1 else (v0, v1, v1, v0)
+            uv.append(np.stack([np.c_[u, v] for v in esquinas], axis=1))
+            mat.append(np.full(lados, material, dtype=m.material.dtype))
+            previo = idx
+    return MallaCuerda(np.vstack(V), np.vstack(caras), np.concatenate(uv), np.concatenate(mat),
+                       np.concatenate(s), m.aplastado)
 
 
 # --------------------------------------------------------------------------

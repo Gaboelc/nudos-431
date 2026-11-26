@@ -97,3 +97,18 @@ def test_la_comprobacion_ve_una_cuerda_que_atraviesa_a_otra(gancho):
     D[np.arange(len(B)) * h < 10.0, 2] += 2.5
     fallas = comprobar([B, D])
     assert fallas == ["cuadro 1: entre el cuadro 0 y este, dos tramos pasan a menos de 0.90 d"]
+
+
+def test_recoger_no_empuja_la_cuerda(gancho):
+    """T18: al recoger la cola, la mano empujaba al nodo de al lado en vez de alcanzarlo; el
+    último tramo llegaba a 2,3 d, la cuerda de adelante se arrugaba y la punta saltaba."""
+    from nudos.fisica.atar import SALTO
+    A, B, h, _ = gancho[True]
+    a = animar_tramo(2, B, A, h, None)
+    assert a.fallas == []
+    f0, f1 = a.fases["recoger"]
+    assert f1 > f0 + 30
+    largo = max(float(np.linalg.norm(x[-1] - x[-2])) for x in a.X[f0:f1 + 1])
+    assert largo < 1.6 * h
+    # Medido también en los cuadros en que se quita un nodo.
+    assert a.medidas["salto_max"] <= SALTO

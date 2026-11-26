@@ -73,8 +73,13 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
 - [ ] T18 Videos: horizontal en 4K a 60 fps y 68 Mbps (YouTube, y una copia en 1080p en el visor) y vertical en 1080 × 1920 a 60 fps (Instagram), con los pilotos (M)
   - [x] Diseño en el plan, con el costo de render medido (25 nov)
   - [x] Punto de control: Gabriel aprobó el diseño y respondió sus cuatro preguntas (25 nov)
-  - [ ] `python -m nudos video` con los dos pilotos
-  - [ ] Punto de control: Gabriel aprueba los videos
+  - [x] `python -m nudos video` con los dos pilotos: las previas, con el audio (26 nov)
+  - [x] Punto de control: Gabriel aprobó las previas corregidas (punta cerrada, remate sin codo, sin brincos al recoger) y el audio (26 nov)
+  - [ ] Gabriel renderiza los pilotos en 4K y vertical con el código nuevo (`python -m nudos video as-de-guia amarre-cuadrado`); el render que empezó el 25 nov usa el código viejo
+  - [ ] Subir `videos/as-de-guia.mp4` (y el del amarre) que deja ese render, y revisar el visor con el video
+  - [ ] Medir el 4K con los cambios de velocidad (escena persistente, cuadro entero, muestreo adaptativo) y comparar la calidad del umbral 0,01 contra el 0,03
+  - [ ] Quitar el modo video viejo de `render/blender/escena.py` cuando no quede ningún render con el código anterior
+  - [ ] Pulir a fondo el render en Blender y el motor de física (Gabriel, 26 nov: lo quiere discutir en una conversación nueva)
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L)
 - [ ] Punto de control de la fase 5
 

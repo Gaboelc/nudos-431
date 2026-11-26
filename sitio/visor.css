@@ -114,6 +114,8 @@ h1 {
 .chk input:checked + .box::after { content: ""; width: 8px; height: 4px; border: 2px solid var(--paper); border-top: 0; border-right: 0; transform: translate(0, -1px) rotate(-45deg); }
 .swatch { width: 22px; height: 8px; border-radius: 4px; background: var(--accent); }
 .hint { margin: 0; font-size: 0.68rem; color: var(--muted); }
+.video { margin-top: 14px; }
+.video-nudo { display: block; width: 100%; aspect-ratio: 16 / 9; margin-top: 10px; background: #ffffff; border-radius: 6px; }
 
 /* Pasos */
 .lado { display: grid; gap: 32px; }

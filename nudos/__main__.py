@@ -94,6 +94,13 @@ def main(argv=None) -> int:
     pa.add_argument("--sin-video", action="store_true", help="solo los cuadros, sin Blender")
     pa.add_argument("--solo-video", action="store_true",
                     help="dibuja los videos desde los cuadros ya guardados en build/atar")
+    vd = ordenes.add_parser("video", help="los videos de cada nudo (T18): el horizontal en 4K, "
+                                          "su copia del visor y el vertical, con el motor")
+    vd.add_argument("slugs", nargs="*", help="los nudos, en cola, uno tras otro")
+    vd.add_argument("--todos", action="store_true", help="todos los nudos de modelado o más")
+    vd.add_argument("--previa", action="store_true",
+                    help="el nudo entero en 960 × 540, 30 fps y 16 muestras, para revisar")
+    vd.add_argument("--solo", choices=("horizontal", "vertical"), help="solo ese formato")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -117,6 +124,8 @@ def main(argv=None) -> int:
             return _prueba_blender()
         if args.orden == "prueba-atar":
             return _prueba_atar(args.slugs, not args.sin_video, args.solo_video)
+        if args.orden == "video":
+            return _video(args.slugs, args.todos, args.previa, args.solo)
         if args.orden == "estado":
             return _estado()
         if args.orden == "revision":
@@ -192,6 +201,19 @@ def _prueba_blender() -> int:
         return 1
     print(f"Página de prueba de Blender en {destino.relative_to(RAIZ)}")
     return 0
+
+
+def _video(slugs, todos: bool, previa: bool, solo) -> int:
+    from .video import carpeta_videos, cola
+    from .video import todos as todos_los
+    if todos:
+        slugs = todos_los()
+    if not slugs:
+        print("Di qué nudos o usa --todos.", file=sys.stderr)
+        return 2
+    malos = cola(list(slugs), previa=previa, solo=solo)
+    print(f"Videos en {carpeta_videos()}; {malos} nudos con fallas (ver cola.txt)")
+    return 1 if malos else 0
 
 
 def _prueba_atar(slugs, video: bool, solo_video: bool = False) -> int:

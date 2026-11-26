@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import math
+
 import numpy as np
 
 from .asentar import contacto, material_de
@@ -37,6 +39,7 @@ DMIN_MOVIMIENTO = 0.95
 MANO_ATRAS = 1.0      # d: si la mano que da cuerda queda más atrás de la guía, el paso falla
 SUBDIVIDIR = 4        # veces que un subpaso se puede partir en dos (ver `_subpaso`)
 VISCOSIDAD = 0.2      # N·s/d por nodo: el roce con el aire, para que nada salte
+SALTO = 0.35          # d: lo más que se puede mover un nodo de un cuadro al siguiente (T18)
 HOLGURA_MANO = 0.8    # una mano que no puede avanzar sin acercar dos tramos a menos de dmin
                       # avanza esta parte de lo que puede, y espera
 
@@ -54,6 +57,7 @@ class CuadroGuia:
     largos: np.ndarray
     curvatura: np.ndarray | None
     cambio: int = 0
+    recoge: bool = False      # la mano recoge cuerda: el último tramo se acorta con ella (T18)
 
 
 @dataclass
@@ -67,6 +71,7 @@ class Cuadros:
     medio: dict = field(default_factory=dict)     # cuadro → la cuerda en los subpasos de antes
     esperas: int = 0                               # subpasos en que una mano tuvo que esperar
     newton: int = 0
+
 
 
 def _varilla(largos, material, curvatura) -> Varilla:
@@ -128,6 +133,12 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
         largos = np.array(g.largos, float)
         if g.cambio or len(x) > 2:
             largos[-1] = max(float(np.linalg.norm(x[-1] - x[-2])), 0.05)
+        if g.recoge:
+            # Al recoger, el tramo de la mano se acorta con ella: con el largo que mide en cada
+            # cuadro, la mano lo comprimía al acercarse, y la cuerda casi no se encoge, así que
+            # empujaba al nodo de al lado. La mano nunca lo alcanzaba, la cuerda de adelante se
+            # arrugaba y el último tramo llegaba a medir 2,3 d, con la punta en codo (T18).
+            largos[-1] = max(min(largos[-1], float(g.largos[-1])), 0.05)
         var = _varilla(largos, material, g.curvatura)
         # La mano del firme (el nodo 0) sostiene; las demás tiran de su nodo con un resorte
         # fuerte: así el contacto puede apartarlas un poco y ninguna se traba contra la cuerda
@@ -176,6 +187,83 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
         if registro is not None:
             registro(i, x)
         previo = g
+    return out
+
+
+def _ajustar(a, i: int, partido: dict, quitado: dict) -> np.ndarray:
+    """El cuadro de antes del cuadro i con los nodos que cambiaron al seguir: el último tramo
+    partido donde la mano dio cuerda, o el nodo de al lado de la mano quitado donde la recogió."""
+    a = np.asarray(a, float)
+    for frac in partido.get(i, ()):
+        a, _ = _partir(a, np.zeros_like(a), frac)
+    for _ in range(quitado.get(i, 0)):
+        a = np.vstack([a[:-2], a[-1:]])
+    return a
+
+
+def repartir_saltos(X: list, partido: dict, quitado: dict, medio: dict, desde: int = 0):
+    """Donde un nodo salta más de SALTO de un cuadro al siguiente (la punta que se zafa de un
+    contacto, T18), el cuadro se reparte en los subpasos que dio el motor para llegar a él
+    (`medio`): son estados de la cuerda de verdad, y van en línea recta y libres de uno al
+    siguiente. El salto queda en varios cuadros, un instante más lento. También donde la mano da
+    o recoge cuerda: el cuadro de antes se parte o se recorta como al seguir, y el cambio de
+    nodos queda en el primero de los cuadros nuevos. Solo en los cuadros desde `desde`. Da los
+    cuadros, `partido`, `quitado` y `medio` con los índices nuevos, y de qué cuadro viejo sale
+    cada uno nuevo."""
+    out, origen = [X[0]], [0]
+    nuevo_de = {0: 0}
+    p2, q2, m2 = {}, {}, {}
+
+    def cambio_en(k, i):
+        if i in partido:
+            p2[k] = partido[i]
+        if i in quitado:
+            q2[k] = quitado[i]
+
+    for i in range(1, len(X)):
+        a, b = _ajustar(X[i - 1], i, partido, quitado), np.asarray(X[i], float)
+        cadena = medio.get(i, ())
+        primero = True
+        if (i >= desde and len(a) == len(b) and cadena
+                and float(np.max(np.linalg.norm(b - a, axis=1))) > SALTO):
+            previo = a
+            for j_y, y in enumerate([*cadena, b]):
+                y = np.asarray(y, float)
+                # Un subpaso que todavía salta de más se reparte sobre su recta, que es la que
+                # `comprobar` verifica libre entre dos estados seguidos.
+                partes = int(math.ceil(float(np.max(np.linalg.norm(y - previo, axis=1))) / SALTO))
+                nuevos = [previo + (j / partes) * (y - previo) for j in range(1, partes)]
+                if j_y < len(cadena):
+                    nuevos.append(y)
+                for z in nuevos:
+                    if primero:
+                        cambio_en(len(out), i)
+                        primero = False
+                    out.append(z)
+                    origen.append(i)
+                previo = y
+        k = len(out)
+        out.append(b)
+        origen.append(i)
+        nuevo_de[i] = k
+        if primero:
+            cambio_en(k, i)
+            if i in medio:
+                m2[k] = medio[i]
+    return out, p2, q2, m2, nuevo_de
+
+
+def saltos(X: list, partido=None, quitado=None) -> list[float]:
+    """Lo más que se mueve un nodo de cada cuadro al siguiente. Donde la cuerda cambia de nodos,
+    el cuadro de antes se parte o se recorta igual que al seguir (como en `comprobar`): ahí, al
+    dar o recoger cuerda, es donde saltaba la punta (T18). Sin decir cómo cambió, ese cuadro no
+    se mide."""
+    partido, quitado = partido or {}, quitado or {}
+    out = []
+    for i in range(1, len(X)):
+        a, b = _ajustar(X[i - 1], i, partido, quitado), np.asarray(X[i], float)
+        if len(a) == len(b):
+            out.append(float(np.max(np.linalg.norm(b - a, axis=1))))
     return out
 
 

@@ -172,8 +172,10 @@ def apretado_detras(spec: Spec, reverso: Resultado | None, rondas: int = RONDAS)
                    **_mesa(spec, paso))
 
 
-def _con_motor(spec: Spec, paso: Paso, base: Resultado, secuencia) -> Resultado | None:
-    """`base` apretado con el motor, si está la opción; si no, None."""
+def _con_motor(spec: Spec, paso: Paso, base: Resultado, secuencia,
+               trayectoria: list | None = None) -> Resultado | None:
+    """`base` apretado con el motor, si está la opción; si no, None. Con `trayectoria`, se le
+    agrega la cuerda de cada paso del motor (el video de T18)."""
     from .fisica import usar_motor
     if not usar_motor():
         return None
@@ -203,7 +205,9 @@ def _con_motor(spec: Spec, paso: Paso, base: Resultado, secuencia) -> Resultado 
     # otro diagrama: queda lo más apretado que todavía se ve como en la ficha (la secuencia
     # declarada y los límites), como en apretar().
     r = apretar_motor(base.puntos, base.reparto, solido, base.cruces.values(),
-                      aceptar=lambda Y: not comprobar(Y).fallas)
+                      aceptar=lambda Y: not comprobar(Y).fallas, trayectoria=trayectoria)
+    if trayectoria is not None:
+        del trayectoria[r.aceptado or 0:]
     return base if r.aceptado == 0 else comprobar(r.X)
 
 

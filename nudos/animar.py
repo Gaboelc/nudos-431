@@ -54,6 +54,8 @@ LIBRE_MANO = 1.1      # d: sin acercarse más que esto a la cuerda que ya está
 VECINOS_MANO = 2.0    # d: lo que hay detrás de la mano a lo largo de la cuerda no cuenta
 ANTICIPA = 15         # cuadros: un cruce nuevo se prepara antes de aparecer
 RAMPA = 1.5           # d: lo que tarda en subir o bajar un tramo, a lo largo de la cuerda
+RADIO_GUIA = 1.5      # d: en un nudo libre, la cuerda no sigue a la guía en curvas más cerradas
+                      # (T18; el lazo más chico de las fichas, la gaza pequeña, mide 1,55)
 
 
 @dataclass
@@ -148,6 +150,27 @@ def _recorrido(s0, s1, velocidad) -> np.ndarray:
     return np.array([s0, s1])
 
 
+def _radios(P) -> np.ndarray:
+    """El radio de curvatura en cada nodo interior de P (N, 2): el largo medio de sus dos
+    tramos sobre el ángulo que gira la cuerda en él."""
+    d1, d2 = P[1:-1] - P[:-2], P[2:] - P[1:-1]
+    l1, l2 = np.linalg.norm(d1, axis=1), np.linalg.norm(d2, axis=1)
+    cruz = d1[:, 0] * d2[:, 1] - d1[:, 1] * d2[:, 0]
+    punto = (d1 * d2).sum(axis=1)
+    giro = np.abs(np.arctan2(cruz, punto))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(giro > 1e-9, (l1 + l2) / 2 / np.maximum(giro, 1e-12), np.inf)
+
+
+def radio_minimo(X, mov=None) -> float:
+    """El radio de curvatura más chico de la cuerda vista desde arriba (en los nodos que se
+    mueven, si se da `mov`)."""
+    R = _radios(np.asarray(X, float)[:, :2])
+    if mov is not None:
+        R = R[np.asarray(mov)[1:-1] > 0.05]
+    return float(R.min()) if len(R) else math.inf
+
+
 def _suave_t(n: int) -> np.ndarray:
     u = np.linspace(0, 1, n)
     return u * u * (3 - 2 * u)
@@ -169,17 +192,40 @@ def tramo(n, A, B, h, resaltado, plantilla=None, solido=None) -> Tramo:
     return _tramo_punta(n, A, B, h, valor, plantilla, solido)
 
 
-def _cuadro(G, h, manos, plantilla=None, hasta=None, ultimo=None, cambio=0):
+def _cuadro(G, h, manos, plantilla=None, hasta=None, ultimo=None, cambio=0, recoge=False):
     N = len(G)
     largos = np.full(N - 1, float(h))
     if ultimo is not None:
         largos[-1] = ultimo
+    k = np.full(N, RESORTE)
+    curvatura = Varilla.curvatura_de(G)
     if plantilla is not None:
         from .fisica.asentar import material_de
         T = plantilla(N, hasta)[:N - 1]
         largos = largos / (1 + T / material_de(1.0).EA)
-    return CuadroGuia(G=G, k=np.full(N, RESORTE), manos=np.asarray(manos, int), largos=largos,
-                      curvatura=Varilla.curvatura_de(G), cambio=cambio)
+    else:
+        k, curvatura = _aflojar(G, h, k, curvatura)
+    return CuadroGuia(G=G, k=k, manos=np.asarray(manos, int), largos=largos,
+                      curvatura=curvatura, cambio=cambio, recoge=recoge)
+
+
+def _aflojar(G, h, k, curvatura):
+    """Donde la guía, vista desde arriba, dobla más cerrado que RADIO_GUIA, la cuerda no la
+    sigue: el resorte hacia la guía se afloja y la memoria no pide más curva que esa (T18). Al
+    formar un lazo en medio de la cuerda, la recta de A a B pasa por una cúspide (la cuerda
+    doblada sobre sí misma); el motor no puede doblarla así, se cargaba y la soltaba de golpe:
+    la gaza pequeña del as de guía saltaba 0,6 d en un cuadro (T17)."""
+    R = _radios(np.asarray(G, float)[:, :2])
+    f = np.clip(R / RADIO_GUIA, 0.0, 1.0) ** 2
+    # La cúspide afloja también a sus vecinos, a 1,5 d a cada lado.
+    w = max(1, int(round(1.5 / h)))
+    f = np.minimum.reduce([np.roll(np.pad(f, w, mode="edge"), j)[w:-w] for j in range(-w, w + 1)])
+    k = k.copy()
+    k[1:-1] *= f
+    tope = 2 * math.tan(h / (2 * RADIO_GUIA))
+    norma = np.linalg.norm(curvatura, axis=1)
+    escala = np.where(norma > tope, tope / np.maximum(norma, 1e-12), 1.0)
+    return k, curvatura * escala[:, None]
 
 
 @dataclass
@@ -195,6 +241,7 @@ class _Borrador:
     mov: np.ndarray | None = None      # cuánto se mueve cada nodo: decide los cruces nuevos
     holgura: object = None             # (sa, sb) → (holgura, peso)
     exacto: np.ndarray | None = None   # el cuadro es exactamente esto (A al empezar, B al final)
+    recoge: bool = False               # la mano recoge cuerda
 
 
 def _rampa(x) -> float:
@@ -301,7 +348,7 @@ def _terminar(borradores, h, refs_A, refs_B, plantilla) -> list[CuadroGuia]:
         G = G[:b.n]
         if b.exacto is not None:
             G = b.exacto.copy()
-        guia.append(_cuadro(G, h, b.manos, plantilla, b.hasta, b.ultimo, b.cambio))
+        guia.append(_cuadro(G, h, b.manos, plantilla, b.hasta, b.ultimo, b.cambio, b.recoge))
     return guia
 
 
@@ -401,7 +448,7 @@ def _tramo_punta(n, A, B, h, r1, plantilla, solido=None) -> Tramo:
             G[-1] = _en(A, h, s)
             G = con_mano(G, s, min(1.0, k / (ARRANQUE * FPS)), m - 1)
             borr.append(_Borrador(G, m, [0, m - 1], s, s - (m - 2) * h, m - n_prev,
-                                  mov=np.zeros(m), holgura=sin_holgura,
+                                  mov=np.zeros(m), holgura=sin_holgura, recoge=True,
                                   exacto=A if k == 0 else None))
             n_prev = m
         fases["recoger"] = (0, len(borr) - 1)
@@ -512,16 +559,24 @@ def animar_tramo(n, A, B, h, resaltado, solido=None, plantilla=None, esperada=No
         if list(obtenida) != list(esperada):
             fallas.append(f"Paso {n}: al terminar de atarlo, la secuencia es {' '.join(obtenida)} "
                           f"y la declarada, {' '.join(esperada)}.")
-    X = c.X + enc + recta(enc[-1], B, max(1, round(RECTA * FPS)))
-    fallas += [f"Paso {n}: {f}" for f in comprobar(X, solido, c.partido, c.quitado, c.medio)]
-    fases = dict(tr.fases)
-    fases["encaje"] = (len(c.X), len(X) - 1)
+    from .fisica.atar import repartir_saltos
+    X, partido, quitado, medio, nuevo_de = repartir_saltos(c.X, c.partido, c.quitado, c.medio)
+    medidas["cuadros_repartidos"] = len(X) - len(c.X)
+    n_seguir = len(X)
+    X = X + enc + recta(enc[-1], B, max(1, round(RECTA * FPS)))
+    fallas += [f"Paso {n}: {f}" for f in comprobar(X, solido, partido, quitado, medio)]
+    fases = {nombre: (nuevo_de[f0], nuevo_de[f1]) for nombre, (f0, f1) in tr.fases.items()}
+    fases["encaje"] = (n_seguir, len(X) - 1)
     medidas["segundos_motor"] = round(time.time() - t0, 1)
     medidas["segundos_seguir"] = round(t_seguir, 1)
-    saltos = [float(np.max(np.linalg.norm(b - a, axis=1))) for a, b in zip(X[:-1], X[1:])
-              if len(a) == len(b)]
-    medidas["salto_max"] = round(max(saltos, default=0.0), 3)
-    return Animado(n, tr.modo, X, c.partido, c.quitado, fases, fallas, medidas)
+    from .fisica.atar import SALTO, saltos
+    sal = saltos(X, partido, quitado)
+    medidas["salto_max"] = round(max(sal, default=0.0), 3)
+    grandes = [v for v in sal if v > SALTO]
+    if grandes:
+        fallas.append(f"Paso {n}: en {len(grandes)} cuadros un nodo salta más de {SALTO} d (hasta "
+                      f"{max(sal):.2f}).")
+    return Animado(n, tr.modo, X, partido, quitado, fases, fallas, medidas)
 
 
 # --------------------------------------------------------------------------
@@ -563,11 +618,93 @@ def _animar_paso(spec, n, A, B, h, resaltado, esperada) -> Animado:
     return animar_tramo(n, A, B, h, resaltado, solido, plantilla, esperada)
 
 
+COLA_MANO = 4.0       # d: en una plantilla, la cola que queda en la mano en cada pausa (T18)
+APRETAR = 1.5         # s: el nudo terminado se aprieta en esto (T18)
+
+
+@dataclass
+class Pose:
+    """La pose de un paso en el video: la de la ficha o, en una plantilla, la de la ficha
+    hasta el hito del paso más COLA_MANO de cola en la mano (T18)."""
+    n: int
+    puntos: np.ndarray
+    h: float
+    resaltado: tuple | None
+    esperada: tuple | None
+
+
+def poses(modelo) -> list[Pose]:
+    """Las poses de los pasos en el video. En una plantilla, la ficha deja unos 20 d de cola
+    sobre la mesa en cada paso, y atarlos pedía recogerlos y volver a darlos en cada paso (27 s
+    de los 94 del amarre en T17): en el video, cada pausa salvo la última muestra la cuerda hasta
+    el hito, con la cola en la mano."""
+    out = []
+    P = modelo.pasos
+    for k, r in enumerate(P):
+        X = np.asarray(r.puntos, float)
+        if modelo.spec.plantilla is not None and k < len(P) - 1 and r.resaltado:
+            fin = int(round(r.resaltado[1] / r.h)) + int(math.ceil(COLA_MANO / r.h)) + 1
+            X = X[:min(len(X), max(fin, 2))]
+        out.append(Pose(r.n, X, r.h, r.resaltado, r.esperada))
+    return out
+
+
 def animar(spec, modelo, pasos=None) -> list[Animado]:
     """Los tramos animados de un nudo ya construido con el motor (`modelo`): del paso 1 al 2,
-    del 2 al 3… (o solo los que terminan en los pasos de `pasos`), cada uno en un proceso."""
+    del 2 al 3… (o solo los que terminan en los pasos de `pasos`), cada uno en un proceso, entre
+    las poses de `poses()`."""
     from .procesos import mapa
-    P = modelo.pasos
+    P = poses(modelo)
     args = [(spec, B.n, A.puntos, B.puntos, B.h, B.resaltado, B.esperada)
             for A, B in zip(P[:-1], P[1:]) if pasos is None or B.n in pasos]
     return [f.result() for f in mapa(_animar_paso, args)]
+
+
+def animar_apretado(spec, modelo) -> Animado | None:
+    """El nudo terminado apretándose, del último paso a `modelo.apretado`, en APRETAR s (T18).
+
+    En un nudo libre son los pasos del modo 2 del motor (`apretar`, el mismo cálculo que da el
+    apretado de la ficha), repartidos en el tiempo con arranque y frenado suaves. En una
+    plantilla, el apretado de la ficha se asienta desde el trazado con la tensión «apretada», no
+    desde el último paso: el video va en línea recta del último paso al apretado, que es poco
+    (la tensión cambia, no el camino). En los dos, `comprobar` revisa todos los cuadros. Sin
+    apretado (o igual al último paso), None."""
+    from .fisica.atar import FPS as _FPS, SALTO, comprobar, saltos
+    final, apretado = modelo.pasos[-1], modelo.apretado
+    if apretado is None or apretado is final or len(apretado.puntos) != len(final.puntos):
+        return None
+    A = np.asarray(final.puntos, float)
+    Z = np.asarray(apretado.puntos, float)
+    if float(np.max(np.linalg.norm(Z - A, axis=1))) < 1e-6:
+        return None
+    solido, _ = de_plantilla(spec, final.n)
+    estados = [A]
+    if spec.plantilla is None:
+        from .apretar import _con_motor
+        tray: list = []
+        paso = spec.pasos[-1]
+        if _con_motor(spec, paso, final, paso.secuencia, trayectoria=tray) is None:
+            raise TrazadoError("el apretado del video necesita el motor (NUDOS_MOTOR=1)")
+        estados += [np.asarray(x, float) for x in tray]
+        if spec.anfitrion is not None and solido is None:
+            from .libre import _en_la_mesa
+            solido = _en_la_mesa(spec.anfitrion, final.n).get("anfitrion")
+    estados.append(Z)
+    # Los estados, repartidos en APRETAR s por lo que avanzan, con arranque y frenado suaves.
+    d = np.array([0.0] + [float(np.max(np.linalg.norm(b - a, axis=1)))
+                          for a, b in zip(estados[:-1], estados[1:])])
+    s = np.cumsum(d) / max(float(d.sum()), 1e-12)
+    nf = max(2, int(round(APRETAR * _FPS)))
+    X = [A]
+    for u in _suave_t(nf + 1)[1:]:
+        k = int(np.clip(np.searchsorted(s, u, side="right") - 1, 0, len(estados) - 2))
+        t = 0.0 if s[k + 1] <= s[k] else (u - s[k]) / (s[k + 1] - s[k])
+        X.append(estados[k] + float(np.clip(t, 0, 1)) * (estados[k + 1] - estados[k]))
+    fallas = [f"Apretado: {f}" for f in comprobar(X, solido)]
+    sal = saltos(X)
+    if max(sal, default=0.0) > SALTO:
+        fallas.append(f"Apretado: un nodo salta {max(sal):.2f} d de un cuadro al siguiente; "
+                      f"el máximo es {SALTO}.")
+    medidas = {"estados": len(estados), "salto_max": round(max(sal, default=0.0), 3),
+               "distancia": round(float(np.max(np.linalg.norm(Z - A, axis=1))), 3)}
+    return Animado(final.n + 1, "apretar", X, {}, {}, {"apretar": (1, len(X) - 1)}, fallas, medidas)

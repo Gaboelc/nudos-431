@@ -65,9 +65,10 @@ class Cuadro:
 def linea_de_tiempo(modelo, animados) -> list[Cuadro]:
     """Todos los cuadros del nudo: la pausa en el paso 1 y, por cada paso siguiente, su
     movimiento y su pausa en la pose de la ficha."""
-    P = {r.n: r for r in modelo.pasos}
+    from .animar import poses
+    P = {r.n: r for r in poses(modelo)}   # en una plantilla, con la cola en la mano (T18)
     pausa = round(PAUSA * FPS)
-    primero = modelo.pasos[0]
+    primero = P[modelo.pasos[0].n]
     out = [Cuadro(primero.puntos, primero.n, "pausa", primero.resaltado) for _ in range(pausa)]
     for a in animados:
         B = P[a.n]
@@ -244,7 +245,9 @@ def mallas_anfitrion(modelo) -> list[dict]:
     img = imagenes(modelo)[0]
     with _servidor() as base, chrome() as navegador:
         escena, _ = _exportar(navegador, base, img, px(CELDA_MM[0]), px(CELDA_MM[1]))
-    return [m for m in escena["mallas"] if m["rol"] != "cuerda"]
+    # Sin las tapas de las puntas («punta») ni la de la cuerda: van con cada cuadro. Con la
+    # tapa de la punta del paso 1, quedaba una marca oscura fija sobre la mesa (T18).
+    return [m for m in escena["mallas"] if m["rol"] not in ("cuerda", "punta")]
 
 
 def _tramos(N: int, h: float, resaltado, dos_remates: bool) -> list:
