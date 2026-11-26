@@ -85,8 +85,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [ ] T20b El aspecto elegido en los videos, y la prueba de 10 s en 4K; punto de control
     - [ ] T20c Las fichas, solo si se nota en papel
   - [ ] T21 El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga (XL; la sesión del plan)
-    - [ ] T21a Medir el movimiento de hoy (`nudos/fisica/calidad.py`) y cerrar el diseño
-    - [ ] Punto de control: Gabriel aprueba el diseño
+    - [x] T21a Medir el movimiento de hoy: `python -m nudos calidad` (`nudos/fisica/calidad.py`), con la medida de los dos pilotos en el plan (26 nov)
+    - [ ] Punto de control: Gabriel aprueba el diseño de T21 (en el plan, con la medida y la meta)
     - [ ] T21b Las poses de video y el largo fijo
     - [ ] T21c La guía nueva, el tiempo y la gravedad, con el as de guía; prueba de 10 s y punto de control
     - [ ] T21d La madeja, con el amarre cuadrado; prueba de 10 s y punto de control

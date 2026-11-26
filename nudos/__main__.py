@@ -101,6 +101,9 @@ def main(argv=None) -> int:
     vd.add_argument("--previa", action="store_true",
                     help="el nudo entero en 960 × 540, 30 fps y 16 muestras, para revisar")
     vd.add_argument("--solo", choices=("horizontal", "vertical"), help="solo ese formato")
+    ca = ordenes.add_parser("calidad", help="mide la calidad del movimiento en los cuadros del "
+                                            "video (T21a), con el motor y sin dibujar")
+    ca.add_argument("slugs", nargs="*", help="los nudos (por omisión, los dos pilotos de T17)")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -126,6 +129,8 @@ def main(argv=None) -> int:
             return _prueba_atar(args.slugs, not args.sin_video, args.solo_video)
         if args.orden == "video":
             return _video(args.slugs, args.todos, args.previa, args.solo)
+        if args.orden == "calidad":
+            return _calidad(args.slugs)
         if args.orden == "estado":
             return _estado()
         if args.orden == "revision":
@@ -214,6 +219,35 @@ def _video(slugs, todos: bool, previa: bool, solo) -> int:
     malos = cola(list(slugs), previa=previa, solo=solo)
     print(f"Videos en {carpeta_videos()}; {malos} nudos con fallas (ver cola.txt)")
     return 1 if malos else 0
+
+
+def _calidad(slugs) -> int:
+    """La calidad del movimiento de los videos (T21a), en build/calidad/<slug>.json."""
+    from .prueba_atar import PILOTOS
+    from .video import calidad, construir
+    os.environ["NUDOS_MOTOR"] = "1"
+    slugs = tuple(slugs) or PILOTOS
+    modelos = construir(list(slugs))
+    destino = BUILD / "calidad"
+    destino.mkdir(parents=True, exist_ok=True)
+    for slug in slugs:
+        if modelos[slug].fallas:
+            print(f"{slug}: el nudo tiene fallas con el motor; no se mide", file=sys.stderr)
+            return 1
+        m = calidad(modelos[slug])
+        (destino / f"{slug}.json").write_text(json.dumps(m, indent=1, ensure_ascii=False),
+                                             encoding="utf-8")
+        r, c = m["resaltado"], m["camara"]
+        print(f"{slug}: {m['segundos']} s, {m['cuadros']} cuadros\n"
+              f"  nodos {m['nodos']['min']}–{m['nodos']['max']}, {m['nodos']['cambios']} cambios; "
+              f"largo {m['largo']['min']}–{m['largo']['max']} d ({m['largo']['variacion']:.0%})\n"
+              f"  aceleración p99 {m['aceleracion']['p99']} y máx {m['aceleracion']['max']} d/s²; "
+              f"{m['brincos']} brincos; {m['punta']['paradas_en_seco']} paradas en seco de la punta\n"
+              f"  resaltado vacío en {r['vacio']} y corto en {r['corto']} de {r['cuadros']} cuadros\n"
+              f"  cámara: {c['paradas']} paradas, quieta el {c['quietos']:.0%} del tiempo, "
+              f"aceleración máx {c['aceleracion']['max']} d/s²")
+    print(f"Medidas en {destino.relative_to(RAIZ)}")
+    return 0
 
 
 def _prueba_atar(slugs, video: bool, solo_video: bool = False) -> int:

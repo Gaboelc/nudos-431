@@ -800,6 +800,28 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
 
 **Lo que no se vería aunque se agregara: la inercia.** La mano llega a 5 d/s en 0,3 s, y una cola colgando se inclina menos de 1°. El roce cuadrático del aire es 10⁻⁴ del peso. Lo que sí se ve es la gravedad sobre la cuerda libre: que cuelgue, que se acueste y que caiga sobre la mesa.
 
+**La medida de hoy (T21a, 26 nov).** `python -m nudos calidad` mide los cuadros del video tal como se ven (60 por segundo) y deja `build/calidad/<slug>.json`. Un brinco es una aceleración de más de 360 d/s² (0,1 d de diferencia segunda en un cuadro). Una parada en seco es la punta acelerando a más de 50 d/s²: la mano de T17 arranca a unos 17.
+
+| | As de guía | Amarre cuadrado |
+|---|---|---|
+| Duración | 45,2 s (2710 cuadros) | 48,1 s (2884 cuadros) |
+| Nodos | de 357 a 550; cambian 281 veces | de 242 a 2314; cambian 1003 veces |
+| Largo de la cuerda | de 71,0 a 109,8 d (35 %) | de 48,2 a 461,8 d (crece con los pasos) |
+| Recoger, acomodar (el morph) y encaje | 4,8, 6,6 y 3,6 s | 3,7, 3,0 y 3,1 s |
+| Aceleración p99 y máxima | 340 y 906 d/s² | 217 y 868 d/s² |
+| Brincos | 7 | 6 |
+| Paradas en seco de la punta | 74 | 34 |
+| Resaltado vacío o a medias | 144 + 578 de 2351 cuadros (31 %) | 331 + 1080 de 2645 cuadros (53 %) |
+| Cámara: paradas, tiempo quieta y aceleración máxima | 14, 14 % y 222 d/s² | 14, 14 % y 852 d/s² |
+
+**La meta de T21:**
+- La cantidad de nodos no cambia, y el largo varía ±0,5 %.
+- Cero segundos de recoger y de morph.
+- Cero brincos y ninguna parada en seco de la punta.
+- El resaltado nunca queda vacío ni a medias.
+
+La cámara (las paradas y la aceleración) es de T22.
+
 **El diseño (se cierra en el punto de control de T21a):**
 1. **Largo fijo y coordenada de material.**
    - Una sola cuerda para todo el video, en una sola grilla (la h del último paso).

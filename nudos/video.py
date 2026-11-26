@@ -884,6 +884,35 @@ def cuadros_de(modelo, tramos, formato: str) -> list[Cuadro]:
     return cuadros
 
 
+def calidad(modelo, formato: str = "horizontal") -> dict:
+    """La calidad del movimiento (T21a) en los cuadros del video, sin dibujarlo: la cuerda
+    (nudos/fisica/calidad.py), el resaltado del tramo que se mueve y la cámara. Usa el atado
+    guardado si su huella coincide."""
+    from .fisica.calidad import medir
+    from .prueba_atar import _tramos
+    tramos, _ = atar(modelo)
+    F = FORMATOS[formato]
+    cuadros = cuadros_de(modelo, tramos, formato)
+    h = modelo.pasos[-1].h
+    dos = modelo.spec.plantilla is not None
+    informe = medir([c.X for c in cuadros], F["fps"], fases=[c.fase for c in cuadros])
+    # El resaltado va por índice de nodo: si la cuerda se acorta por debajo de donde empieza,
+    # o la pausa de una plantilla la corta en el hito, se achica o no se ve.
+    con = vacio = corto = 0
+    for c in cuadros:
+        if not c.resaltado:
+            continue
+        con += 1
+        nominal = c.resaltado[1] - c.resaltado[0]
+        visto = sum((b - a) * h for a, b, m in _tramos(len(c.X), h, c.resaltado, dos) if m == 1)
+        vacio += int(visto <= 0)
+        corto += int(0 < visto < nominal / 2)
+    informe["resaltado"] = {"cuadros": con, "vacio": vacio, "corto": corto}
+    informe["camara"] = medir([np.asarray(c.camara["pos"], float).reshape(1, 3) for c in cuadros],
+                              F["fps"])
+    return informe
+
+
 ARMADO = "1"   # súbela si cambia cómo se arma un video desde sus cuadros (componer o codificar)
 
 
