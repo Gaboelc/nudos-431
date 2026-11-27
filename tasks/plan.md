@@ -811,7 +811,9 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
   - A tamaño real, Cycles con 16 muestras y EEVEE con 16, 32 y 64 se ven casi iguales: el denoiser de Cycles suaviza un poco la trenza, y EEVEE marca más los surcos y no tiene brillo de filamento.
   - El estudio cuesta más que el campamento en los dos motores: las tres luces de área con sombras suaves contra el HDRI.
   - Algunas medidas de una corrida salieron hasta el doble de lentas mientras corría a la vez otro Blender; la tabla es de una corrida con la tarjeta libre, y repite las medidas de la primera.
-- **Lo que propone Claude:** el estudio (1), con EEVEE a 32 muestras: 2,6 s por cuadro de 4K y 9 días para los 36 nudos, con margen para volver a dibujar. Se ve casi igual que Cycles a 64 muestras, que cuesta 4 veces más, y no parpadea, como podría el denoiser de Cycles con pocas muestras. Las fichas siguen en Cycles.
+- **Lo que propuso Claude:** el estudio (1), con EEVEE a 32 muestras: 2,6 s por cuadro de 4K y 9 días para los 36 nudos, con margen para volver a dibujar. Se ve casi igual que Cycles a 64 muestras, que cuesta 4 veces más, y no parpadea, como podría el denoiser de Cycles con pocas muestras. Las fichas siguen en Cycles.
+
+**Lo que eligió Gabriel (26 nov):** la cuerda real en las dos escenas que le gustaron: el estudio (2) para el paso a paso y los errores, y el campamento J&E Gray 02 (3b) para la apertura, la aplicación y el cierre (T22). La prueba de 10 s de T20b va en el estudio. El motor: Cycles con 16 muestras (de 11 a 15 días para los 36, según cuánto sea estudio y cuánto campamento).
 
 **Punto de control:** Gabriel elige el aspecto y el motor de render, con los números a la vista.
 
@@ -823,6 +825,19 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
 - **`render/blender/video.py`:** la escena, los materiales, el foco que sigue la acción, el desenfoque de movimiento, el compositor y la vista de color, con EEVEE o con Cycles.
 - **Se quita el modo video viejo** de `render/blender/escena.py`: ya no queda ningún render que lo use.
 - **Prueba de 10 s en 4K** del as de guía. Punto de control.
+
+**Cómo se hizo T20b (26 nov):**
+- **La escena del video** (`nudos/aspecto.py`, sección «El aspecto de los videos»): `VIDEO` tiene las dos escenas que eligió Gabriel, con la cuerda real; `ESCENA_VIDEO` es la del paso a paso (el estudio; hasta que T22 arme los capítulos, la de todo el video) y `MOTOR_VIDEO`, Cycles con 16 muestras. Los ajustes van en dos partes, la escena y la cuerda (`AJUSTES_ESCENA` y `AJUSTES_CUERDA`), así que el campamento lleva la cuerda real; los de T20a quedan iguales.
+- **Lo que se dibuja una vez por video:** la mesa cubre la cuerda de todos los cuadros y el anfitrión (`escenario_video`), y la luz (y el sol del HDRI) se orienta según la cámara del primer cuadro.
+- **Lo que cambia en cada cuadro** (`nudos/video.py`, en `dibujar` y `_preparar_malla`, sin tocar la línea de tiempo de T21):
+  - La malla de la trenza (`malla_trenza`, un anillo cada 0,04 d sobre la Catmull-Rom), con la velocidad de cada vértice: la de los nodos entre el cuadro anterior y el siguiente, si tienen la misma cantidad de nodos; si no, sin desenfoque en ese cuadro (hasta T21b).
+  - El foco, en la punta de la cuerda, con el promedio de medio segundo para que no salte (`focos`).
+  - La huella de cada cuadro lleva también el foco, la velocidad, el aspecto y el código de `render/blender/aspecto.py`, `video.py` y `nudos/trenza.py`.
+- **`render/blender/video.py`:** arma la escena con las funciones de `render/blender/aspecto.py` (`entorno` y `materiales`) y, en cada cuadro, cambia la malla, la cámara y el foco; el desenfoque, con el modificador de Geometry Nodes, en todos los cuadros.
+- **Al armar** (`_componer`): la viñeta y un grano de un píxel, distinto en cada cuadro (`posproceso_video`, unos 0,4 s por cuadro de 4K, en paralelo). `ARMADO` sube a «2».
+- **Se quitó el modo video viejo** de `render/blender/escena.py`.
+- **Los colores de la ficha pasan a la cuerda del video** (`ESTILO_VIDEO`): el azul, a la cuerda real; la crema de un nudo de dos cuerdas, a una cuerda clara con dos hilos rojos (`real-claro`). Hoy el video arma una sola cuerda por cuadro: el reparto entre dos cuerdas llega con T21b.
+- **La prueba de 10 s:** `python -m nudos video <slug> --prueba` dibuja 10 s del medio del paso 4 en 4K, sin audio, en `<slug>-prueba-4k.mp4`, y deja los cuadros en `NUDOS_CUADROS` para el video entero.
 
 **T20c, las fichas (S, solo si se nota en papel).** La trenza nueva entra a las imágenes de impresión solo si la página de prueba impresa, en color y en gris, se ve mejor (la regla de T7b). Si no, las fichas no cambian. `referencia` y `comparar` muestran qué se movió.
 
@@ -1172,6 +1187,15 @@ La cámara (las paradas y la aceleración) es de T22.
 - **Opcional, después de T21:** la animación en 3D entre pasos dentro del visor, con los cuadros del motor comprimidos (unos MB por nudo), para girar el nudo mientras se ata. Cambia la lista de tipos del sitio (decisión 7), así que lo decide Gabriel.
 - **`exportar()`,** que arma la escena de las fichas, no cambia, y `comparar` lo comprueba.
 - **Punto de control:** Gabriel abre el visor en la computadora y en un celular de gama baja (el pendiente de T7b).
+
+**Cómo se hizo T24 (26 nov):**
+- **`sitio/fisico.js`,** un módulo nuevo que solo importa el visor (`visor.js`). `render/escena.js` gana unos ganchos (`fisico`) que, sin él, dejan todo como antes: la impresión sigue igual y `exportar()` no cambia. Con `?simple` en la dirección, el visor de antes, para comparar.
+- **La trenza:** `MeshPhysicalMaterial` con pelusa (*sheen*, del tono medio de la cuerda), anisotropía con un mapa de la dirección de cada hilo y un relieve fino de fibras con el ruido simplex de lygia; el tramado de lygia, al dibujar directo.
+- **La luz:** `RoomEnvironment` para los reflejos y AgX. Solo, el AgX de three.js aplanaba el azul (se veía gris): se le agregó un *look* de contraste y saturación (potencia 1,22 y saturación 1,3), como el «AgX - Base Contrast» de T20a, cambiando el código del tonemap al cargar `fisico.js`.
+- **El postprocesado, solo con la cámara quieta:** `GTAOPass` con MSAA ×4. Se mide un cuadro (después del primero, que compila); si tarda más de 90 ms, o no hay WebGL 2, el visor sigue sin postprocesado. En la RTX 4070, unos 2 ms.
+- **Sin SMAA:** dejaba un filo claro en el borde de la cuerda y de los palos, porque el fondo del visor es transparente. Por lo mismo, el `OutputPass` divide por el alfa antes del tonemap y vuelve a multiplicar después.
+- **Lo copiado** a `sitio/vendor/` (con permiso de Gabriel; anotado en `LEEME.txt`): 13 complementos de three@0.160.0 (el paquete, comprobado contra el hash de npm; el `three.module.min.js` del sitio es idéntico al del paquete) y 7 archivos de lygia del commit aa7580b, como texto dentro de `lygia/lygia.js` (el sitio no publica `.glsl`), con `LICENCIA.txt`.
+- **Pruebas:** `tests/test_visor.py`: cada módulo encuentra lo que importa, la impresión no carga el visor físico, lygia va con su licencia y el visor carga sin errores con y sin `?simple`.
 
 #### Los repositorios sugeridos: qué se usa y por qué
 

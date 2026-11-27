@@ -203,3 +203,110 @@ def test_blender_dibuja_el_estudio_y_mide_el_tiempo(con_blender, tmp_path, motor
         # La mesa de madera se ve: el cuadro no es blanco.
         assert np.asarray(im, float).mean() < 200
     json.dumps(tiempos)
+
+
+# --- El aspecto de los videos (T20b) ------------------------------------------
+
+class _C:
+    """Un cuadro del video, con lo que usan focos y velocidad_nodos."""
+
+    def __init__(self, X, camara, paso=4, fase="enhebrar"):
+        self.X, self.camara, self.paso, self.fase = np.asarray(X, float), camara, paso, fase
+
+
+_CAM = {"pos": np.array([0.0, -30.0, 30.0]), "target": np.array([0.0, 0.0, 0.5]), "fov": 30.0, "aspecto": 16 / 9}
+
+
+def test_la_velocidad_de_los_nodos_usa_los_vecinos_con_la_misma_cantidad_de_nodos():
+    X = _cuerda(11)
+    cuadros = [_C(X, _CAM), _C(X + [0.1, 0, 0], _CAM), _C(X + [0.2, 0, 0], _CAM), _C(_cuerda(12), _CAM)]
+    assert np.allclose(aspecto.velocidad_nodos(cuadros, 1, 60), [6.0, 0, 0])   # (0,2 d en 2 cuadros) × 60
+    assert np.allclose(aspecto.velocidad_nodos(cuadros, 2, 60), [6.0, 0, 0])   # el siguiente no sirve: hacia atrás
+    assert np.allclose(aspecto.velocidad_nodos(cuadros, 0, 60), [6.0, 0, 0])
+    assert aspecto.velocidad_nodos(cuadros, 3, 60) is None
+
+
+def test_el_foco_sigue_la_punta_sin_saltar():
+    X = _cuerda(11)
+    lejos = X.copy()
+    lejos[-1] += [0, 20.0, 0]
+    cuadros = [_C(X, _CAM)] * 30 + [_C(lejos, _CAM)] * 30
+    f = aspecto.focos(cuadros, 60)
+    assert len(f) == 60
+    assert f[0] == pytest.approx(aspecto._profundidad(_CAM, X[-1]))
+    assert np.all(np.diff(f) >= -1e-9) and max(np.diff(f)) < (f[-1] - f[0]) / 10
+
+
+def test_la_mesa_del_video_cubre_toda_la_cuerda_y_el_anfitrion():
+    X = _cuerda(51, 30.0)
+    lejos = X + [40.0, 25.0, 0]
+    palo = {"pos": [-60.0, 0, 1, 60.0, 0, 1], "rol": "madera"}
+    e = aspecto.escenario_video([X] * 30 + [lejos], [palo], 0.3)
+    (cx, cy), (a, b) = e["mesa"]["centro"], e["mesa"]["semi"]
+    pts = np.vstack([X, lejos, [[-60, 0, 1], [60, 0, 1]]])
+    assert np.all(np.abs(pts[:, 0] - cx) < a) and np.all(np.abs(pts[:, 1] - cy) < b)
+    assert e["luz"]["az"] == 0.3
+
+
+def test_el_grano_del_video_cambia_en_cada_cuadro():
+    im = Image.new("RGB", (192, 108), (128, 128, 128))
+    a, b = np.asarray(aspecto.posproceso_video(im, 1), float), np.asarray(aspecto.posproceso_video(im, 2), float)
+    assert not np.array_equal(a, b)
+    assert np.array_equal(a, np.asarray(aspecto.posproceso_video(im, 1), float))
+    assert a[:6, :6].mean() < a[50:58, 92:100].mean()
+
+
+def test_la_ventana_de_la_prueba_va_al_medio_del_paso():
+    from nudos.video import ventana
+    X = _cuerda(11)
+    cuadros = ([_C(X, _CAM, 3, "pausa") for _ in range(900)] + [_C(X, _CAM, 4, "enhebrar") for _ in range(1200)]
+               + [_C(X, _CAM, 4, "pausa") for _ in range(100)])
+    v = ventana(cuadros, segundos=10.0, fps=60)
+    assert len(v) == 600
+    i0 = next(i for i, c in enumerate(cuadros) if c is v[0])
+    assert i0 == 900 + 600 - 300
+
+
+def test_la_malla_del_video_lleva_la_velocidad(tmp_path):
+    from nudos import video
+    X = _cuerda(31, 6.0)
+    ruta = str(tmp_path / "c.npz")
+    video._SOLIDOS = None
+    video._preparar_malla(X.astype(np.float32), [[0, 26, 0], [26, 30, 2]], ruta, float(np.linalg.norm(X[1] - X[0])),
+                          np.tile([0.0, 3.0, 0.0], (31, 1)), "real")
+    z = np.load(ruta)
+    assert set(z.files) >= {"vertices", "caras", "uv", "material", "fibra_a", "fibra_b", "velocidad"}
+    assert z["velocidad"].shape == z["vertices"].shape
+    assert np.allclose(z["velocidad"], [0.0, 3.0, 0.0])
+
+
+def test_blender_dibuja_los_cuadros_del_video(con_blender, tmp_path):
+    import subprocess
+    from nudos import RAIZ, video
+    from nudos.prueba_atar import _datos_camara
+    X = _cuerda(41, 10.0)
+    h = float(np.linalg.norm(X[1] - X[0]))
+    video._SOLIDOS = None
+    trabajos = []
+    for k in range(2):
+        ruta = str(tmp_path / f"c{k}.npz")
+        video._preparar_malla(X + [0.05 * k, 0, 0], [[0, 36, 0], [36, 40, 2]], ruta, h,
+                              np.tile([3.0, 0, 0], (41, 1)), "real")
+        trabajos.append({"cuerdas": [{"malla": ruta}], "camara": _datos_camara({**_CAM, "aspecto": 16 / 9}),
+                         "foco": 40.0, "salida": str(tmp_path / f"r{k}.png")})
+    escena = tmp_path / "escena.json"
+    lote_v = aspecto.lote_video("estudio", 0.0)
+    escena.write_text(json.dumps({"mallas": [], **aspecto.escenario_video([X], [], 0.0)}), encoding="utf-8")
+    lote = tmp_path / "lote.json"
+    lote.write_text(json.dumps({"ancho": 128, "alto": 72, "fps": 60, "motor": lote_v["motor"],
+                                "ajustes": {**lote_v["ajustes"], "muestras": 4}, "aspecto": lote_v["aspecto"],
+                                "escena": str(escena), "cuerdas": [{"estilo": "real", "resaltado": "real-ambar"}],
+                                "desenfoque": True, "trabajos": trabajos}), encoding="utf-8")
+    r = subprocess.run([blender.ejecutable(), "--background", "--factory-startup", "--python-exit-code", "1",
+                        "--python", str(RAIZ / "render" / "blender" / "video.py"), "--", "--lote", str(lote)],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace")
+    assert r.returncode == 0, r.stdout[-2000:] + r.stderr[-2000:]
+    assert r.stdout.count("listo:") == 2
+    for k in range(2):
+        with Image.open(tmp_path / f"r{k}.png") as im:
+            assert im.size == (128, 72) and im.mode == "RGB"

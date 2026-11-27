@@ -1,6 +1,7 @@
 /* Página del visor: navegación entre pasos, vistas y nombres. La escena está en escena.js.
    Los pasos escritos están en el HTML, así que se pueden leer aunque el 3D no cargue. */
 import { crearEscena, nombresDe } from "./escena.js";
+import { crearFisico } from "./fisico.js";
 
 const datos = JSON.parse(document.getElementById("modelo").textContent);
 const N = datos.pasos.length;
@@ -122,7 +123,13 @@ function medir(el) {
 const medidasNombres = () => Object.fromEntries(Object.entries(tags).map(([clave, [el]]) => [clave, medir(el)]));
 
 try {
-  escena = crearEscena(stage, datos, { movimientoReducido, alRenderizar: placeTags, medidasNombres, mejoras: MEJORAS });
+  // T24: material físico, entorno, AgX y, con la cámara quieta, oclusión ambiental. Con
+  // «?simple» en la dirección, la escena de antes (la de las fichas), para comparar.
+  const simple = new URLSearchParams(location.search).has("simple");
+  const fisico = simple ? null : crearFisico();
+  window.visorFisico = fisico;    // para revisar en la consola si va con postprocesado
+  escena = crearEscena(stage, datos, { movimientoReducido, alRenderizar: placeTags, medidasNombres, mejoras: MEJORAS,
+    fisico });
 } catch (e) {
   msg.textContent = "Este visor necesita WebGL. Ábrelo en un navegador con aceleración gráfica; los pasos escritos siguen abajo.";
 }

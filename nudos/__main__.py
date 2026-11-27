@@ -101,6 +101,9 @@ def main(argv=None) -> int:
     vd.add_argument("--previa", action="store_true",
                     help="el nudo entero en 960 × 540, 30 fps y 16 muestras, para revisar")
     vd.add_argument("--solo", choices=("horizontal", "vertical"), help="solo ese formato")
+    vd.add_argument("--prueba", action="store_true",
+                    help="la prueba del aspecto (T20b): 10 s del paso 4 en 4K, sin audio, en "
+                         "<slug>-prueba-4k.mp4")
     asp = ordenes.add_parser("prueba-aspecto", help="el cuadro final de T20a: tres tomas en 4K en cada "
                                                     "aspecto, con Cycles y con EEVEE, con su costo, en "
                                                     "build/aspecto/prueba.pdf")
@@ -151,6 +154,8 @@ def main(argv=None) -> int:
         if args.orden == "prueba-atar":
             return _prueba_atar(args.slugs, not args.sin_video, args.solo_video)
         if args.orden == "video":
+            if args.prueba:
+                return _video_prueba(args.slugs)
             return _video(args.slugs, args.todos, args.previa, args.solo)
         if args.orden == "calidad":
             return _calidad(args.slugs)
@@ -245,6 +250,24 @@ def _prueba_blender() -> int:
         print(e, file=sys.stderr)
         return 1
     print(f"Página de prueba de Blender en {destino.relative_to(RAIZ)}")
+    return 0
+
+
+def _video_prueba(slugs) -> int:
+    """La prueba del aspecto de T20b: 10 s del paso 4 de cada nudo en 4K."""
+    from .blender import BlenderError
+    from .video import VideoError, construir, prueba
+    if not slugs:
+        print("Di qué nudos.", file=sys.stderr)
+        return 2
+    try:
+        modelos = construir(list(slugs))
+        for slug in slugs:
+            salida = prueba(modelos[slug], aviso=lambda t: print(t, flush=True))
+            print(f"Prueba del aspecto en {salida}")
+    except (VideoError, BlenderError, ImpresionError) as e:
+        print(e, file=sys.stderr)
+        return 1
     return 0
 
 

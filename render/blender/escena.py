@@ -245,8 +245,8 @@ def material_liso(nombre, rgb_lineal, rugosidad, metal=0.0, veta_eje=None):
 # Mallas
 # --------------------------------------------------------------------------
 def cuerda(k, datos, materiales=None):
-    """La malla de una cuerda, desde el npz de nudos/blender.py, con sus tres materiales. En un
-    video, `materiales` trae los ya armados, para no rehacer la trenza en cada cuadro."""
+    """La malla de una cuerda, desde el npz de nudos/blender.py, con sus tres materiales; o con
+    `materiales`, si ya están armados."""
     z = np.load(datos["malla"])
     V, F, UV, mat = z["vertices"], z["caras"], z["uv"], z["material"]
     malla = bpy.data.meshes.new(f"cuerda-{k}")
@@ -382,34 +382,6 @@ def dibujar(escena, trabajo):
     bpy.ops.render.render(write_still=True)
 
 
-def video(escena, lote):
-    """Los cuadros de un video (T18): la escena (el anfitrión, la mesa, el cielo y los
-    materiales de la cuerda) se arma una sola vez, y en cada cuadro solo cambian la malla de la
-    cuerda, la cámara y las luces."""
-    vaciar()
-    datos = json.loads(open(lote["escena"], encoding="utf-8").read())
-    for i, m in enumerate(datos["mallas"]):
-        malla_generica(i, m)
-    mesa()
-    color = lote.get("color", "azul")
-    materiales = [material_trenza(f"trenza-0-{i}", cols)
-                  for i, cols in enumerate((COLORES[color], AMBAR))] + [material_remate("remate-0")]
-    previa = None
-    for t in lote["trabajos"]:
-        inicio = time.time()
-        if previa is not None:
-            malla = previa.data
-            bpy.data.objects.remove(previa)
-            bpy.data.meshes.remove(malla)
-        previa = cuerda(0, t["cuerdas"][0], materiales)
-        cx, cy = t["centro"]
-        luces(cx, cy, t["extension"] + 2)
-        camara(escena, t["camara"])
-        escena.render.filepath = t["salida"]
-        bpy.ops.render.render(write_still=True)
-        print(f"listo: {t['salida']} en {time.time() - inicio:.1f} s", flush=True)
-
-
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     ap = argparse.ArgumentParser()
@@ -420,14 +392,6 @@ def main():
     escena = bpy.context.scene
     dispositivo = gpu(escena)
     ajustes(escena, lote["ancho"], lote["alto"], lote["muestras"])
-    if lote.get("video"):
-        # En un video, el denoiser va en la tarjeta (en 4K, de 31 a 13 s por cuadro) y el PNG
-        # se escribe con poca compresión: no hace falta que dos corridas den lo mismo bit a bit.
-        if hasattr(escena.cycles, "denoising_use_gpu"):
-            escena.cycles.denoising_use_gpu = True
-        escena.render.image_settings.compression = 10
-        video(escena, lote)
-        return
     for t in lote["trabajos"]:
         inicio = time.time()
         dibujar(escena, t)

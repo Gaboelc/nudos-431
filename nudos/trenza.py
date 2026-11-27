@@ -44,6 +44,10 @@ ESTILOS = {
     # pálido de las fotos de T15e.
     "real": Estilo((92, 98, 112), (22, 23, 27), (4, 4, 6), (238, 226, 84), (252, 248, 178),
                    mosaico=2.0, trazador_real=True, variacion=0.10),
+    # La segunda cuerda de un nudo de dos (la crema de la ficha), en el video: clara, con dos hilos
+    # rojos, y la trenza de la cuerda real.
+    "real-claro": Estilo((252, 250, 244), (228, 224, 212), (118, 110, 94), (196, 40, 36), (226, 70, 60),
+                         mosaico=2.0, trazador_real=True, variacion=0.05),
     # El resaltado sobre la cuerda real: el ámbar de la ficha, con la trenza de la cuerda real.
     "real-ambar": Estilo((255, 214, 140), (222, 140, 34), (92, 46, 6), (150, 30, 30),
                          mosaico=2.0, variacion=0.08),

@@ -12,8 +12,12 @@ modo «atar» de T17 (`nudos/animar.py`), arma la línea de tiempo y dibuja en B
 Los tres llevan el audio de nudos/audio.py (el clic de cada título, el golpe del apretado y el
 roce de la cuerda), que se pega aparte: cambiarlo no obliga a volver a dibujar.
 
+El aspecto es el de T20b (nudos/aspecto.py): la cuerda real con la trenza en la geometría, en el
+estudio de madera, con Cycles a 16 muestras, profundidad de campo con el foco en la punta,
+desenfoque de movimiento, y viñeta y grano al armar.
+
 Con `--previa`, el nudo entero en 960 × 540, 30 fps y 16 muestras, para revisar los tiempos, la
-cámara, los títulos y el audio antes del render largo.
+cámara, los títulos y el audio antes del render largo. Con `--prueba`, 10 s del paso 4 en 4K.
 
 Todo se puede retomar: el atado se guarda con la huella del nudo y del código de la animación,
 cada cuadro dibujado con la huella de lo que muestra, y cada video terminado con la huella de sus
@@ -62,11 +66,12 @@ FUNDIDO = 0.25             # s: los títulos
 AVISO_CADA = 10            # cuadros: cada cuántos imprime el avance
 
 FORMATOS = {
-    # tam, cuadros por segundo, muestras, área útil del nudo (x0, y0, x1, y1 en fracciones del
-    # cuadro, y hacia abajo), el CSS del título y su escala.
-    "horizontal": {"tam": (3840, 2160), "fps": 60, "muestras": 32, "area": (0.05, 0.05, 0.95, 0.78),
+    # tam, cuadros por segundo, muestras (None: las del motor del video, aspecto.MOTOR_VIDEO),
+    # área útil del nudo (x0, y0, x1, y1 en fracciones del cuadro, y hacia abajo), el CSS del
+    # título y su escala.
+    "horizontal": {"tam": (3840, 2160), "fps": 60, "muestras": None, "area": (0.05, 0.05, 0.95, 0.78),
                    "css": (1920, 1080), "escala": 2.0},
-    "vertical": {"tam": (1080, 1920), "fps": 60, "muestras": 32, "area": (0.05, 0.29, 0.95, 0.76),
+    "vertical": {"tam": (1080, 1920), "fps": 60, "muestras": None, "area": (0.05, 0.29, 0.95, 0.76),
                  "css": (1080, 1920), "escala": 1.0},
     "previa": {"tam": (960, 540), "fps": 30, "muestras": 16, "area": (0.05, 0.05, 0.95, 0.78),
                "css": (1920, 1080), "escala": 0.5},
@@ -577,28 +582,51 @@ def _servir(raiz: Path):
 # --------------------------------------------------------------------------
 # Blender y ffmpeg
 # --------------------------------------------------------------------------
-CODIGO_RENDER = ("render/blender/escena.py", "nudos/blender.py")   # lo que cambia el dibujo
+# Lo que cambia el dibujo de un cuadro: la escena y los materiales del aspecto de T20b.
+CODIGO_RENDER = ("render/blender/escena.py", "render/blender/aspecto.py", "render/blender/video.py",
+                 "nudos/blender.py", "nudos/trenza.py")
 
 
-def _clave(c: Cuadro, h: float, dos: bool, formato: str, base: str) -> str:
+def _clave(c: Cuadro, h: float, dos: bool, formato: str, base: str, foco: float = 0.0, vel=None) -> str:
     from .prueba_atar import _tramos
     cam = _datos_camara(c.camara)
     return _huella(np.round(np.asarray(c.X, float), 5), _tramos(len(c.X), h, c.resaltado, dos),
                    np.round(cam["matriz"], 6).tolist(), c.camara["centro"], round(c.camara["extension"], 4),
-                   formato, base)
+                   formato, base, round(foco, 3), None if vel is None else np.round(vel, 2))
 
 
 def rutas_de(modelo, cuadros: list[Cuadro], formato: str, mallas) -> list[Path]:
-    """La ruta del render de cada cuadro, con la huella de lo que muestra. Cuadros iguales (las
-    pausas) comparten ruta."""
+    """La ruta del render de cada cuadro, con la huella de lo que muestra: la cuerda, la cámara,
+    el foco y la velocidad (el desenfoque de movimiento). Cuadros iguales (las pausas) comparten
+    ruta."""
     from . import blender
+    from .aspecto import focos, velocidad_nodos
     F = FORMATOS[formato]
     h = modelo.pasos[-1].h
     dos = modelo.spec.plantilla is not None
     dest = carpeta_cuadros(modelo.spec.slug) / formato
     base = _huella(mallas, F["muestras"], F["tam"], _codigo(*CODIGO_RENDER), blender.APLASTAR, CYCLES,
-                   PUNTA, "tapas")
-    return [dest / f"r-{_clave(c, h, dos, formato, base)}.png" for c in cuadros]
+                   PUNTA, "tapas", _aspecto_video(modelo, cuadros, mallas))
+    fs = focos(cuadros, F["fps"])
+    return [dest / f"r-{_clave(c, h, dos, formato, base, fs[i], velocidad_nodos(cuadros, i, F['fps']))}.png"
+            for i, c in enumerate(cuadros)]
+
+
+def _aspecto_video(modelo, cuadros: list[Cuadro], mallas) -> dict:
+    """Lo que el lote de render/blender/video.py lleva del aspecto (T20b): el motor, sus ajustes,
+    el aspecto, la mesa, el fondo, la luz y el estilo de la cuerda."""
+    from .aspecto import ESCENA_VIDEO, VIDEO, escenario_video, estilo_video, lote_video
+    az = _az_de(cuadros)
+    color = modelo.spec.cuerdas[0].color if modelo.spec.cuerdas else "azul"
+    return {**lote_video(ESCENA_VIDEO, az), **escenario_video([c.X for c in cuadros], mallas, az),
+            "estilo": estilo_video(color), "resaltado": VIDEO[ESCENA_VIDEO].resaltado}
+
+
+def _az_de(cuadros: list[Cuadro]) -> float:
+    """El azimut de la cámara del primer cuadro: la luz y el sol se orientan según él."""
+    c = cuadros[0].camara
+    d = np.asarray(c["pos"], float) - np.asarray(c["target"], float)
+    return float(math.atan2(d[0], -d[1]))
 
 
 RENDER_VIDEO = RAIZ / "render" / "blender" / "video.py"
@@ -654,32 +682,38 @@ def punta_suave(X, h: float, largo: float = PUNTA[0], umbral: float = PUNTA[1]) 
     return out
 
 
-def _preparar_malla(X, tramos, ruta: str, h: float) -> None:
-    """La malla de la cuerda de un cuadro, en un npz que Blender espera: se escribe con otro
-    nombre y se renombra, para que Blender nunca lea uno a medias."""
+def _preparar_malla(X, tramos, ruta: str, h: float, velocidad=None, estilo: str = "real") -> None:
+    """La malla de la cuerda de un cuadro, con la trenza en la geometría (T20b) y la velocidad de
+    cada vértice, en un npz que Blender espera: se escribe con otro nombre y se renombra, para
+    que Blender nunca lea uno a medias."""
     from . import blender
-    X = punta_suave(X, h)
-    e = {"cuerdas": [{"espina": np.asarray(X, float).ravel().tolist(), "radio": 0.5, "grosor": 1.0,
-                      "color": "azul", "tramos": tramos}], "mallas": _MALLAS}
-    m = blender.malla_cuerda(0, e, solidos=_SOLIDOS, tapas=True)   # las puntas cerradas
+    from .trenza import ESTILOS
+    X = punta_suave(np.asarray(X, float), h)
+    s = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(X, axis=0), axis=1))])
+    m = blender.malla_trenza(X, tramos=tramos, mosaico=ESTILOS[estilo].mosaico, otras=[(X, s, 0.5, True)],
+                             solidos=_SOLIDOS, velocidad=velocidad)
     tmp = ruta + ".tmp.npz"
-    np.savez(tmp, vertices=m.vertices.astype(np.float32), caras=m.caras.astype(np.int32),
-             uv=m.uv.astype(np.float32), material=m.material, s=m.s.astype(np.float32))
+    blender.guardar_trenza(m, tmp)
     os.replace(tmp, ruta)
 
 
-def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print) -> list[Path]:
+def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print, solo: range | None = None) -> list[Path]:
     """Dibuja con Blender los cuadros que faltan y da la ruta del render de cada cuadro (PNG
-    RGBA, con la sombra sobre fondo transparente). Cuadros iguales se dibujan una vez.
+    RGB, con el aspecto de T20b: la escena entera, sin la viñeta ni el grano, que van al
+    armar). Cuadros iguales se dibujan una vez.
 
     Una sola llamada a Blender (render/blender/video.py) dibuja todos los que faltan, con la
     escena armada una vez. Mientras tanto, varios procesos preparan las mallas de la cuerda, a
     lo más ADELANTE cuadros por delante. Cada cuadro se guarda en cuanto Blender lo termina, así
-    que si la orden se corta, al volver a correrla sigue desde ahí."""
+    que si la orden se corta, al volver a correrla sigue desde ahí.
+
+    Con `solo`, dibuja solo esos cuadros (la prueba de 10 s), con la escena, el foco y la huella
+    que tienen en el video entero."""
     import threading
     from concurrent.futures import ProcessPoolExecutor
 
     from . import blender
+    from .aspecto import focos, velocidad_nodos
     from .prueba_atar import _tramos
     F = FORMATOS[formato]
     ancho, alto = F["tam"]
@@ -687,11 +721,14 @@ def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print) ->
     dos = modelo.spec.plantilla is not None
     rutas = rutas_de(modelo, cuadros, formato, mallas)
     rutas[0].parent.mkdir(parents=True, exist_ok=True)
+    fs = focos(cuadros, F["fps"])
     faltan = {}
-    for c, r in zip(cuadros, rutas):
+    for i, (c, r) in enumerate(zip(cuadros, rutas)):
+        if solo is not None and i not in solo:
+            continue
         if r not in faltan and not (r.exists() and r.stat().st_size > 0):
-            faltan[r] = c
-    pendientes = list(faltan.items())
+            faltan[r] = i
+    pendientes = [(r, cuadros[i], i) for r, i in faltan.items()]
     aviso(f"  {formato}: {len(cuadros)} cuadros, {len(set(rutas))} distintos, faltan {len(pendientes)}")
     if not pendientes:
         return rutas
@@ -701,16 +738,20 @@ def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print) ->
     with tempfile.TemporaryDirectory(prefix="nudos-video-") as tmp:
         tmp = Path(tmp)
         esc = tmp / "escena.json"
-        esc.write_text(json.dumps({"mallas": mallas, "camara": None, "centro": [0, 0],
-                                   "extension": 10}), encoding="utf-8")
-        trabajos = [{"cuerdas": [{"malla": str(tmp / f"c{k:05d}.npz"), "color": "azul", "grosor": 1.0}],
-                     "camara": _datos_camara(c.camara), "centro": c.camara["centro"],
-                     "extension": c.camara["extension"], "salida": str(ruta.with_suffix(".tmp.png"))}
-                    for k, (ruta, c) in enumerate(pendientes)]
+        aspecto = _aspecto_video(modelo, cuadros, mallas)
+        esc.write_text(json.dumps({"mallas": mallas, "mesa": aspecto["mesa"], "fondo": aspecto["fondo"],
+                                   "luz": aspecto["luz"]}), encoding="utf-8")
+        trabajos = [{"cuerdas": [{"malla": str(tmp / f"c{k:05d}.npz")}], "camara": _datos_camara(c.camara),
+                     "foco": fs[i], "salida": str(ruta.with_suffix(".tmp.png"))}
+                    for k, (ruta, c, i) in enumerate(pendientes)]
+        ajustes = {**aspecto["ajustes"], "umbral": CYCLES["umbral_adaptativo"]}
+        if F["muestras"]:
+            ajustes["muestras"] = F["muestras"]
         lote = tmp / "lote.json"
-        lote.write_text(json.dumps({"ancho": ancho, "alto": alto, "muestras": F["muestras"],
-                                    "escena": str(esc), "color": "azul", "cycles": CYCLES,
-                                    "trabajos": trabajos}),
+        lote.write_text(json.dumps({"ancho": ancho, "alto": alto, "fps": F["fps"], "motor": aspecto["motor"],
+                                    "ajustes": ajustes, "aspecto": aspecto["aspecto"], "escena": str(esc),
+                                    "cuerdas": [{"estilo": aspecto["estilo"], "resaltado": aspecto["resaltado"]}],
+                                    "desenfoque": True, "obturador": 0.5, "trabajos": trabajos}),
                         encoding="utf-8")
         orden = [blender.ejecutable(), "--background", "--factory-startup", "--python-exit-code", "1",
                  "--python", str(RENDER_VIDEO), "--", "--lote", str(lote)]
@@ -724,14 +765,15 @@ def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print) ->
                 proc.kill()
 
         def dar_mallas(pool):
-            for k, (ruta, c) in enumerate(pendientes):
+            for k, (ruta, c, i) in enumerate(pendientes):
                 with hay_lugar:
                     hay_lugar.wait_for(lambda: k < estado["listos"] + ADELANTE or bool(errores)
                                        or proc.poll() is not None)
                 if errores or proc.poll() is not None:
                     return
                 f = pool.submit(_preparar_malla, np.asarray(c.X, np.float32),
-                                _tramos(len(c.X), h, c.resaltado, dos), trabajos[k]["cuerdas"][0]["malla"], h)
+                                _tramos(len(c.X), h, c.resaltado, dos), trabajos[k]["cuerdas"][0]["malla"], h,
+                                velocidad_nodos(cuadros, i, F["fps"]), aspecto["estilo"])
                 f.add_done_callback(revisar)
 
         cola: list[str] = []
@@ -746,8 +788,14 @@ def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print) ->
                         continue
                     k = int(linea.split()[1])
                     ruta = pendientes[k][0]
-                    ruta.with_suffix(".tmp.png").replace(ruta)
-                    Path(trabajos[k]["cuerdas"][0]["malla"]).unlink(missing_ok=True)
+                    try:
+                        _reemplazar(ruta.with_suffix(".tmp.png"), ruta)
+                        Path(trabajos[k]["cuerdas"][0]["malla"]).unlink(missing_ok=True)
+                    except OSError as e:
+                        # Que se sepa enseguida: si no, Blender sigue dibujando hasta quedarse sin
+                        # mallas y la orden se ve trabada (T20b, con la máquina muy cargada).
+                        aviso(f"  {modelo.spec.slug}, {formato}: no se pudo guardar el cuadro {k}: {e}")
+                        raise
                     with hay_lugar:
                         estado["listos"] = k + 1
                         hay_lugar.notify_all()
@@ -768,6 +816,19 @@ def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print) ->
     if codigo != 0 or estado["listos"] < len(pendientes):
         raise blender.BlenderError(f"Blender no pudo dibujar el video (código {codigo}):\n" + "\n".join(cola))
     return rutas
+
+
+def _reemplazar(origen: Path, destino: Path, intentos: int = 50) -> None:
+    """os.replace con reintentos: en Windows, el antivirus o el indexador pueden tener abierto un
+    PNG recién escrito unos instantes."""
+    for k in range(intentos):
+        try:
+            origen.replace(destino)
+            return
+        except PermissionError:
+            if k == intentos - 1:
+                raise
+            time.sleep(0.2)
 
 
 COLOR = ["-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv"]
@@ -795,25 +856,26 @@ def _iniciar_armar(titulos: dict) -> None:
 
 
 def _componer(args) -> bytes:
-    """El cuadro del video: el render sobre blanco y el título encima con su fundido, en RGB."""
+    """El cuadro del video: el render con la viñeta y el grano de T20b (un grano distinto en
+    cada cuadro, con la semilla de su número) y el título encima con su fundido, en RGB."""
     global _ULTIMO
-    ruta, titulo, alfa = args
+    from .aspecto import posproceso_video
+    ruta, titulo, alfa, indice = args
     if _ULTIMO[0] != ruta:
         with Image.open(ruta) as im:
             fondo = Image.new("RGBA", im.size, (255, 255, 255, 255))
             fondo.alpha_composite(im.convert("RGBA"))
-        _ULTIMO = (ruta, fondo)
-    im = _ULTIMO[1]
+        _ULTIMO = (ruta, fondo.convert("RGB"))
+    im = posproceso_video(_ULTIMO[1], indice).convert("RGBA")
     t = _TITULOS.get(titulo)
     if t is not None and alfa > 0:
-        im = im.copy()
         im.alpha_composite(t if alfa >= 1 else _con_alfa(t, alfa))
     return im.convert("RGB").tobytes()
 
 
 def armar(cuadros: list[Cuadro], rutas: list[Path], tits: dict, formato: str, salida: Path) -> None:
-    """Pone cada render sobre blanco, el título encima con su fundido, y se lo pasa a ffmpeg.
-    Los cuadros se componen en varios procesos, en orden."""
+    """Le pone a cada render la viñeta y el grano, y el título encima con su fundido, y se lo
+    pasa a ffmpeg. Los cuadros se componen en varios procesos, en orden."""
     from concurrent.futures import ProcessPoolExecutor
     F = FORMATOS[formato]
     ancho, alto = F["tam"]
@@ -829,7 +891,7 @@ def armar(cuadros: list[Cuadro], rutas: list[Path], tits: dict, formato: str, sa
             if f == formato:
                 rutas_tit[n] = str(Path(carpeta) / f"t{n}.png")
                 im.save(rutas_tit[n])
-        args = [(str(r), c.titulo, c.alfa) for c, r in zip(cuadros, rutas)]
+        args = [(str(r), c.titulo, c.alfa, i) for i, (c, r) in enumerate(zip(cuadros, rutas))]
         proc = subprocess.Popen(orden, stdin=subprocess.PIPE)
         try:
             with ProcessPoolExecutor(_procesos(), initializer=_iniciar_armar,
@@ -913,7 +975,7 @@ def calidad(modelo, formato: str = "horizontal") -> dict:
     return informe
 
 
-ARMADO = "1"   # súbela si cambia cómo se arma un video desde sus cuadros (componer o codificar)
+ARMADO = "2"   # súbela si cambia cómo se arma un video desde sus cuadros (componer o codificar)
 
 
 def firma_imagen(rutas: list[Path], cuadros: list[Cuadro], tits: dict, formato: str) -> str:
@@ -1024,6 +1086,44 @@ def video(modelo, previa: bool = False, solo: str | None = None, aviso=print) ->
         # por nudo, y C: no aguanta los de dos nudos.
         borrar_cuadros(slug, formato)
     return informe
+
+
+PRUEBA_PASO = 4             # la prueba del aspecto (T20b): el medio de este paso
+PRUEBA_SEGUNDOS = 10.0
+
+
+def ventana(cuadros: list[Cuadro], paso: int = PRUEBA_PASO, segundos: float = PRUEBA_SEGUNDOS,
+            fps: int = 60) -> list[Cuadro]:
+    """Los cuadros de `segundos` alrededor del medio de lo que se mueve en el paso."""
+    mov = [i for i, c in enumerate(cuadros) if c.paso == paso and c.fase != "pausa"]
+    if not mov:
+        raise VideoError(f"el video no tiene movimiento en el paso {paso}")
+    n = min(len(cuadros), int(round(segundos * fps)))
+    a = max(0, min(len(cuadros) - n, mov[len(mov) // 2] - n // 2))
+    return cuadros[a:a + n]
+
+
+def prueba(modelo, segundos: float = PRUEBA_SEGUNDOS, aviso=print) -> Path:
+    """La prueba del aspecto de T20b: `segundos` del medio del paso PRUEBA_PASO en 4K, con su
+    título, la viñeta y el grano, sin audio, en <slug>-prueba-4k.mp4. Los cuadros se quedan en
+    NUDOS_CUADROS: el video entero, con el mismo código, los vuelve a usar."""
+    from .prueba_atar import mallas_anfitrion
+    os.environ["NUDOS_MOTOR"] = "1"
+    if modelo.fallas:
+        raise VideoError(f"{modelo.spec.slug}: el nudo tiene fallas con el motor")
+    tramos, _ = atar(modelo)
+    F = FORMATOS["horizontal"]
+    todos = cuadros_de(modelo, tramos, "horizontal")
+    cuadros = ventana(todos, segundos=segundos, fps=F["fps"])
+    a = next(i for i, c in enumerate(todos) if c is cuadros[0])
+    mallas = mallas_anfitrion(modelo)
+    tits = titulos(modelo, ["horizontal"])
+    t0 = time.time()
+    rutas = dibujar(modelo, todos, "horizontal", mallas, aviso, solo=range(a, a + len(cuadros)))
+    salida = carpeta_videos(modelo.spec.slug) / f"{modelo.spec.slug}-prueba-4k.mp4"
+    armar(cuadros, rutas[a:a + len(cuadros)], tits, "horizontal", salida)
+    aviso(f"  {salida}: {len(cuadros) / F['fps']:.1f} s, en {(time.time() - t0) / 60:.0f} min")
+    return salida
 
 
 def borrar_cuadros(slug: str, formato: str) -> None:

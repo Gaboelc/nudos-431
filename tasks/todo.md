@@ -77,12 +77,13 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [x] Punto de control: Gabriel aprobó las previas corregidas (punta cerrada, remate sin codo, sin brincos al recoger) y el audio (26 nov)
   - [x] Pulir a fondo el render en Blender y el motor de física: Gabriel lo discutió el 26 nov y salió el pulido a fondo (T20 a T24, abajo)
   - [ ] Los pilotos en 4K y su video en el visor pasan a T22, con el aspecto y la estructura nuevos. Quedan sin efecto el render de los pilotos con el código de hoy y la medida del umbral 0,01 contra el 0,03
-  - [ ] Quitar el modo video viejo de `render/blender/escena.py` (en T20b)
+  - [x] Quitar el modo video viejo de `render/blender/escena.py` (en T20b, 26 nov)
 - [ ] **El pulido a fondo** (propuesta del 26 nov, aprobada el mismo día; el diseño está en el plan)
   - [ ] T20 El aspecto: material, escena, luz y cámara (L; sesión «el aspecto»)
     - [x] T20a El cuadro final en cuatro aspectos, con Cycles y EEVEE y su costo (`prueba-aspecto`, `build/aspecto/prueba.pdf`) (26 nov)
-    - [ ] Punto de control: Gabriel elige el aspecto y el motor de render
-    - [ ] T20b El aspecto elegido en los videos, y la prueba de 10 s en 4K; punto de control
+    - [x] Punto de control: Gabriel eligió la cuerda real en el estudio (paso a paso y errores) y en el campamento J&E Gray 02 (apertura, aplicación y cierre), con Cycles a 16 muestras (26 nov)
+    - [x] T20b El aspecto elegido en los videos (`nudos/aspecto.py`, `render/blender/video.py`), sin el modo video viejo de `escena.py`, y la prueba de 10 s en 4K (`video <slug> --prueba`) (26 nov)
+    - [ ] Punto de control: Gabriel revisa la prueba de 10 s en 4K del as de guía
     - [ ] T20c Las fichas, solo si se nota en papel
   - [ ] T21 El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga (XL; la sesión del plan)
     - [x] T21a Medir el movimiento de hoy: `python -m nudos calidad` (`nudos/fisica/calidad.py`), con la medida de los dos pilotos en el plan (26 nov)
@@ -103,7 +104,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Gabriel eligió la celesta para el motivo (las otras opciones empezaban como campanas). Se bajó el alineador forzado y se borró ACE-Step (26 nov)
     - [x] T23c El diseño sonoro y la mezcla: `nudos/foley.py`, `nudos/mezcla.py` y `prueba-mezcla` (26 nov)
     - [ ] Gabriel oye la prueba de la mezcla (`prueba-mezcla`) y decide si se quedan los tics de los cruces y si están bien los niveles del foley y de los efectos. Con eso T23 se cierra y su bloque pasa al historial
-  - [ ] T24 El visor: material, luz y postprocesado (M; sesión «el aspecto»); punto de control en la computadora y en un celular de gama baja
+  - [x] T24 El visor: material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`) (26 nov)
+  - [ ] Punto de control de T24: Gabriel abre el visor en la computadora y en un celular de gama baja
   - [ ] Borrar los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel)
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36
 - [ ] Punto de control de la fase 5

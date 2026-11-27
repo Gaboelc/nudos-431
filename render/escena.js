@@ -295,7 +295,7 @@ function rol(material, nombre) {
   return material;
 }
 
-export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null, reservado = [], mejoras = {} } = {}) {
+export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null, reservado = [], mejoras = {}, fisico = null } = {}) {
   // Si el navegador no tiene WebGL, esto lanza una excepción y quien llama muestra el aviso.
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: !interactiva });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -313,6 +313,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, 0.5, 500);
   camera.up.set(0, 0, 1);
+  // T24: el visor con material físico, entorno, AgX y postprocesado (sitio/fisico.js). Sin él,
+  // la escena de siempre, que es la de las imágenes de impresión.
+  if (fisico) fisico.preparar(renderer, scene, camera);
 
   const B = cajaDeEncuadre(modelo);
   const cx = (B.x0 + B.x1) / 2, cy = (B.y0 + B.y1) / 2;
@@ -337,8 +340,8 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const dentro = (p) => p.x >= interior.x0 && p.x <= interior.x1 && p.y >= interior.y0 && p.y <= interior.y1;
 
   // Luces
-  scene.add(new THREE.HemisphereLight(0xf4f7ff, 0x8a8f99, 1.5));
-  const sol = new THREE.DirectionalLight(0xffffff, 2.4);
+  scene.add(new THREE.HemisphereLight(0xf4f7ff, 0x8a8f99, fisico ? fisico.luz.cielo : 1.5));
+  const sol = new THREE.DirectionalLight(0xffffff, fisico ? fisico.luz.sol : 2.4);
   sol.position.set(cx - 10, cy + 12, 26);
   sol.target.position.set(cx, cy, 0);
   sol.castShadow = true;
@@ -359,7 +362,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     sol.shadow.blurSamples = 25;
   }
   scene.add(sol, sol.target);
-  const relleno = new THREE.DirectionalLight(0xdfe8ff, 0.6);
+  const relleno = new THREE.DirectionalLight(0xdfe8ff, fisico ? fisico.luz.relleno : 0.6);
   relleno.position.set(cx + 14, cy - 16, 10);
   scene.add(relleno);
 
@@ -534,9 +537,11 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const materiales = cuerdas.map((c) => {
     const color = texturasTrenza(renderer, ...COLORES[c.color]);
     const ambar = texturasTrenza(renderer, ...AMBAR);
-    const base = rol(new THREE.MeshStandardMaterial({ map: color.map, bumpMap: color.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0, vertexColors }), "cuerda");
+    const trenza = (t, cols) => (fisico ? fisico.materialCuerda(t, cols, { vertexColors })
+      : new THREE.MeshStandardMaterial({ map: t.map, bumpMap: t.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0, vertexColors }));
+    const base = rol(trenza(color, COLORES[c.color]), "cuerda");
     base.userData.color = c.color;
-    const matAmbar = new THREE.MeshStandardMaterial({ map: ambar.map, bumpMap: ambar.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0, vertexColors });
+    const matAmbar = trenza(ambar, AMBAR);
     const remate = new THREE.MeshStandardMaterial({ map: texturaRemate(), roughness: 0.6, metalness: 0 });
     return { base, ambar: matAmbar, remate, mats: [base, matAmbar, remate] };
   });
@@ -687,7 +692,10 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     for (const t of c.tubos) {
       const m = materiales[t.n];
       const rep = t.L / (Math.PI * t.grosor);
-      for (const mm of [m.base, m.ambar]) { mm.map.repeat.set(rep, 1); mm.bumpMap.repeat.set(rep, 1); }
+      for (const mm of [m.base, m.ambar]) {
+        mm.map.repeat.set(rep, 1); mm.bumpMap.repeat.set(rep, 1);
+        if (mm.anisotropyMap) mm.anisotropyMap.repeat.set(rep, 1);
+      }
       m.remate.map.repeat.set(t.L / (0.5 * t.grosor), 1);
     }
     colocarNombres();
@@ -812,7 +820,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   }
 
   function renderizar() {
-    renderer.render(scene, camera);
+    // Con el visor físico, el postprocesado solo con la cámara quieta.
+    if (fisico) fisico.renderizar(!anim && !enMovimiento);
+    else renderer.render(scene, camera);
     pendiente = false;
     if (alRenderizar) alRenderizar();
   }
@@ -821,6 +831,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     const w = contenedor.clientWidth, h = contenedor.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
+    if (fisico) fisico.redimensionar();
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     if (!movidoPorUsuario && !anim) vista(vistaActual, true);

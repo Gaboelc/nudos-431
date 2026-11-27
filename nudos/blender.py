@@ -276,6 +276,7 @@ class MallaTrenza:
     fibra_a: np.ndarray     # (V, 3) la dirección de los hilos A en cada vértice
     fibra_b: np.ndarray     # (V, 3) la de los hilos B
     aplastado: np.ndarray   # (anillos,) cuánto se acortó el radio más corto de cada anillo
+    velocidad: np.ndarray | None = None   # (V, 3) en d/s, para el desenfoque de movimiento
 
 
 def curva_densa(P, sub: int, alpha: float = 0.5) -> np.ndarray:
@@ -332,7 +333,7 @@ def _planos_densos(P, s, R, otras, solidos) -> list[list[tuple[np.ndarray, float
 def malla_trenza(X, radio: float = 0.5, grosor: float = 1.0, tramos=None, s=None,
                  sub: int = TRENZA_SUB, lados: int = TRENZA_LADOS, relieve: float = TRENZA_RELIEVE,
                  mosaico: float = 1.0, otras=(), solidos=None, cinta: float = CINTA_GROSOR,
-                 tapas: bool = True) -> MallaTrenza:
+                 tapas: bool = True, velocidad=None) -> MallaTrenza:
     """La malla de una cuerda con la trenza en la geometría (T20): un anillo cada h/`sub` sobre
     la Catmull-Rom de los nodos X, con el relieve de los hilos en el contorno, la sección
     aplastada donde aprieta (`otras`: las demás cuerdas como (Q, sQ, Ro, misma); `solidos`: las
@@ -341,7 +342,10 @@ def malla_trenza(X, radio: float = 0.5, grosor: float = 1.0, tramos=None, s=None
 
     `s` es la coordenada de cada nodo a lo largo de la cuerda, de la que sale la trenza (por
     omisión, el largo desde el nodo 0). Con la coordenada de material de T21b, la trenza queda
-    pegada a la cuerda aunque la cuerda se mueva."""
+    pegada a la cuerda aunque la cuerda se mueva.
+
+    Con `velocidad` ((n, 3), la de cada nodo en d/s), cada vértice lleva la de su anillo, entre
+    la de los dos nodos de su tramo: el desenfoque de movimiento (render/blender/aspecto.py)."""
     from . import trenza
     X = np.asarray(X, float)
     n = len(X)
@@ -390,22 +394,29 @@ def malla_trenza(X, radio: float = 0.5, grosor: float = 1.0, tramos=None, s=None
     u0, u1 = u[kk], u[kk + 1]
     v0, v1 = jj / lados, (jj + 1) / lados
     uv = np.stack([np.c_[u0, v0], np.c_[u1, v0], np.c_[u1, v1], np.c_[u0, v1]], axis=1)
+    vel = None
+    if velocidad is not None:
+        W = np.asarray(velocidad, float)
+        vel = np.repeat((1 - f)[:, None] * W[k] + f[:, None] * W[k + 1], lados, axis=0)
     malla = MallaTrenza(V, caras, uv, np.repeat(mat_seg, lados), fa.reshape(-1, 3), fb.reshape(-1, 3),
-                        aplastado)
+                        aplastado, vel)
     if tapas:
-        malla = _tapas_trenza(malla, P, T, u, lados, R)
+        malla = _tapas_trenza(malla, P, T, u, lados, R,
+                              None if velocidad is None else (np.asarray(velocidad, float)[0],
+                                                              np.asarray(velocidad, float)[-1]))
     return malla
 
 
 TAPA_TRENZA = (8, 0.55)   # anillos y alto (en radios) de la cúpula de cada punta de la trenza
 
 
-def _tapas_trenza(m: MallaTrenza, P, T, u, lados: int, R: float) -> MallaTrenza:
+def _tapas_trenza(m: MallaTrenza, P, T, u, lados: int, R: float, vel_puntas=None) -> MallaTrenza:
     """Una cúpula en cada punta, como `_con_tapas` pero cerrada (el último anillo es un punto,
     así que no queda un hoyito en la punta) y más redonda, como la cinta que envuelve el corte."""
     anillos, alto = TAPA_TRENZA
     V, caras, uv, mat = [m.vertices], [m.caras], [m.uv], [m.material]
     fa, fb = [m.fibra_a], [m.fibra_b]
+    vel = [m.velocidad] if m.velocidad is not None else None
     total = len(m.vertices)
     for punta in (0, len(P) - 1):
         hacia = T[punta] * (1 if punta else -1)
@@ -423,6 +434,8 @@ def _tapas_trenza(m: MallaTrenza, P, T, u, lados: int, R: float) -> MallaTrenza:
             V.append(anillo)
             fa.append(fa_borde)
             fb.append(fb_borde)
+            if vel is not None:
+                vel.append(np.repeat(vel_puntas[0 if punta == 0 else 1][None, :], lados, axis=0))
             a, b = previo[jj], previo[(jj + 1) % lados]
             c, d = idx[(jj + 1) % lados], idx[jj]
             caras.append(np.stack([a, d, c, b], axis=1) if punta else np.stack([a, b, c, d], axis=1))
@@ -433,7 +446,7 @@ def _tapas_trenza(m: MallaTrenza, P, T, u, lados: int, R: float) -> MallaTrenza:
             mat.append(np.full(lados, material, dtype=m.material.dtype))
             previo = idx
     return MallaTrenza(np.vstack(V), np.vstack(caras), np.concatenate(uv), np.concatenate(mat),
-                       np.vstack(fa), np.vstack(fb), m.aplastado)
+                       np.vstack(fa), np.vstack(fb), m.aplastado, None if vel is None else np.vstack(vel))
 
 
 def guardar_trenza(m: MallaTrenza, ruta, velocidad=None) -> None:
@@ -442,6 +455,8 @@ def guardar_trenza(m: MallaTrenza, ruta, velocidad=None) -> None:
     datos = dict(vertices=m.vertices.astype(np.float32), caras=m.caras.astype(np.int32),
                  uv=m.uv.astype(np.float32), material=m.material.astype(np.int32),
                  fibra_a=m.fibra_a.astype(np.float32), fibra_b=m.fibra_b.astype(np.float32))
+    if velocidad is None:
+        velocidad = m.velocidad
     if velocidad is not None:
         datos["velocidad"] = np.asarray(velocidad, np.float32)
     np.savez(ruta, **datos)

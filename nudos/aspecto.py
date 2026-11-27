@@ -313,21 +313,22 @@ FSTOP = 11.0           # el número f de un lente real a la escala de la cuerda 
 VINETA = 0.22          # cuánto oscurece la viñeta en las esquinas
 GRANO = 0.016          # el grano, antes de suavizarlo (en 0-1)
 
-AJUSTES_ASPECTO = {
-    0: {"vista": "Standard", "look": "None", "exposicion": -0.55},
-    1: {**VISTA, "exposicion": 0.0, "fstop": FSTOP, "luz": 1.0,
-        "madera_claro": (204, 160, 112), "madera_oscuro": (116, 74, 42), "barniz": 0.12,
-        "papel": (200, 196, 190), "rugosidad": 0.42, "anisotropia": 0.7, "giro_brillo": 0.25,
-        "sheen": 0.35, "filamentos": 0.35, "textura": 2048, "cinta": (214, 52, 32)},
-    2: {**VISTA, "exposicion": 0.0, "fstop": FSTOP, "luz": 1.0,
-        "madera_claro": (204, 160, 112), "madera_oscuro": (116, 74, 42), "barniz": 0.12,
-        "papel": (200, 196, 190), "rugosidad": 0.34, "anisotropia": 0.75, "giro_brillo": 0.25,
-        "sheen": 0.3, "filamentos": 0.4, "textura": 2048, "cinta": (226, 92, 22)},
-    3: {**VISTA, "exposicion": 0.0, "fstop": FSTOP, "luz": 1.0,
-        "madera_claro": (176, 152, 122), "madera_oscuro": (98, 80, 60),
-        "rugosidad": 0.42, "anisotropia": 0.7, "giro_brillo": 0.25, "sheen": 0.35, "filamentos": 0.35,
-        "textura": 2048, "cinta": (214, 52, 32), "sol": 3.2, "sol_angulo": 4.0, "sol_phi": -125,
-        "sol_elev": 38, "cielo": 0.12, "hdri_fuerza": 1.0, "hdri_giro": 0.0},
+# Los ajustes de cada escena y de cada cuerda (render/blender/aspecto.py): un aspecto es una escena
+# con una cuerda.
+_COMUN = {**VISTA, "exposicion": 0.0, "fstop": FSTOP, "luz": 1.0, "textura": 2048}
+AJUSTES_ESCENA = {
+    "blanco": {"vista": "Standard", "look": "None", "exposicion": -0.55},
+    "estudio": {**_COMUN, "madera_claro": (204, 160, 112), "madera_oscuro": (116, 74, 42), "barniz": 0.12,
+                "papel": (200, 196, 190)},
+    "campamento": {**_COMUN, "madera_claro": (176, 152, 122), "madera_oscuro": (98, 80, 60), "sol": 3.2,
+                   "sol_angulo": 4.0, "sol_phi": -125, "sol_elev": 38, "cielo": 0.12, "hdri_fuerza": 1.0,
+                   "hdri_giro": 0.0},
+}
+AJUSTES_CUERDA = {
+    "azul": {"rugosidad": 0.42, "anisotropia": 0.7, "giro_brillo": 0.25, "sheen": 0.35, "filamentos": 0.35,
+             "cinta": (214, 52, 32)},
+    "real": {"rugosidad": 0.34, "anisotropia": 0.75, "giro_brillo": 0.25, "sheen": 0.3, "filamentos": 0.4,
+             "cinta": (226, 92, 22)},
 }
 AJUSTES_MOTOR = {
     # Cycles: como el video de T18 (umbral adaptativo 0,03, el denoiser en la tarjeta), con más
@@ -344,7 +345,9 @@ def ajustes_aspecto(a: Aspecto, az: float = 0.0) -> dict:
     """Los ajustes del aspecto para render/blender/aspecto.py. En el campamento con HDRI, el giro
     del HDRI que pone su sol atrás a la izquierda de la cámara (az: la de la toma)."""
     out = {"n": a.n, "clave": a.clave, "nombre": a.nombre, "malla": a.malla, "escena": a.escena,
-           **AJUSTES_ASPECTO[a.n]}
+           **AJUSTES_ESCENA[a.escena]}
+    if a.malla == "trenza":
+        out.update(AJUSTES_CUERDA["real" if a.estilo.startswith("real") else "azul"])
     if a.hdri:
         from .recursos import recurso, registro
         sol = registro()[a.hdri]["sol"]
@@ -389,18 +392,26 @@ def escenario(t: Toma) -> dict:
     """La mesa, el fondo y la luz de una toma: la mesa cubre toda la cuerda del video (la del
     paso, en estas tomas) con un margen, para que la cuerda nunca quede en el aire."""
     reg = np.vstack([t.region, t.X]) if t.region is not None else t.X
-    (x0, y0), (x1, y1) = reg[:, :2].min(axis=0), reg[:, :2].max(axis=0)
+    return _escenario(reg, t.X, _az(t.camara))
+
+
+def _escenario(region, nudo, az: float) -> dict:
+    """La mesa cubre los puntos de `region` (toda la cuerda que se ve en el video y el
+    anfitrión) con un margen; la luz se coloca alrededor de `nudo`, fija en el mundo y orientada
+    según la cámara de azimut `az`."""
+    region, nudo = np.asarray(region, float), np.asarray(nudo, float)
+    (x0, y0), (x1, y1) = region[:, :2].min(axis=0), region[:, :2].max(axis=0)
     margen = 10.0
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     semi = [max((x1 - x0) / 2 + margen, 30.0), max((y1 - y0) / 2 + margen, 30.0)]
-    (kx0, ky0), (kx1, ky1) = t.X[:, :2].min(axis=0), t.X[:, :2].max(axis=0)
+    (kx0, ky0), (kx1, ky1) = nudo[:, :2].min(axis=0), nudo[:, :2].max(axis=0)
     ext = float(max(kx1 - kx0, ky1 - ky0) / 2)
     return {"mesa": {"centro": [float(cx), float(cy)], "semi": [float(s) for s in semi], "grosor": 4.0,
                      "bisel": 0.45, "giro": 0.0},
             "fondo": {"centro": [float(cx), float(cy)], "piso": -4.0, "radio": float(math.hypot(*semi) + 25),
                       "curva": 45.0, "alto": 260.0},
             "luz": {"centro": [float((kx0 + kx1) / 2), float((ky0 + ky1) / 2)],
-                    "escala": float(np.clip(ext + 8, 16, 30)), "az": _az(t.camara), "extension": ext}}
+                    "escala": float(np.clip(ext + 8, 16, 30)), "az": float(az), "extension": ext}}
 
 
 def _malla(t: Toma, a: Aspecto, X, tramos, ruta: Path, solidos, velocidad=None) -> np.ndarray:
@@ -870,3 +881,98 @@ figcaption span {{ color: #5a6878; margin-left: 1mm; }}
         pagina.goto(origen.as_uri(), wait_until="load")
         pagina.pdf(path=str(destino), prefer_css_page_size=True, print_background=True)
     return destino
+
+
+# --------------------------------------------------------------------------
+# El aspecto de los videos (T20b)
+# --------------------------------------------------------------------------
+# Lo que eligió Gabriel con la prueba de T20a (26 nov): la cuerda real en las dos escenas, el
+# estudio para el paso a paso y los errores y el campamento J&E Gray 02 para la apertura, la
+# aplicación y el cierre (T22), y Cycles con 16 muestras.
+VIDEO = {
+    "estudio": Aspecto("estudio", 2, "estudio con la cuerda real", "trenza", "estudio", estilo="real",
+                       resaltado="real-ambar"),
+    "campamento": Aspecto("campamento", 3, "campamento J&E Gray 02 con la cuerda real", "trenza", "campamento",
+                          estilo="real", resaltado="real-ambar", hdri="hdri/je_gray_02_4k.hdr"),
+}
+ESCENA_VIDEO = "estudio"        # la del paso a paso; hasta que T22 arme los capítulos, la de todo el video
+MOTOR_VIDEO = "CYCLES:16"
+ESTILO_VIDEO = {"azul": "real", "crema": "real-claro"}   # el color de la ficha → la cuerda del video
+FOCO_SUAVE = 0.5                # s: el foco sigue la punta con este promedio, para que no salte
+GRANO_VIDEO = 0.0075            # el grano de cada cuadro, de un píxel (el de T20a, ya suavizado)
+
+
+def estilo_video(color: str) -> str:
+    return ESTILO_VIDEO.get(color, "real")
+
+
+def lote_video(escena: str = ESCENA_VIDEO, az: float = 0.0) -> dict:
+    """El motor, sus ajustes y el aspecto del video, para render/blender/video.py."""
+    motor, muestras = motor_y_muestras(MOTOR_VIDEO)
+    ajustes = dict(AJUSTES_MOTOR[motor])
+    if muestras:
+        ajustes["muestras"] = muestras
+    return {"motor": motor, "ajustes": ajustes, "aspecto": ajustes_aspecto(VIDEO[escena], az)}
+
+
+def escenario_video(Xs, mallas, az: float) -> dict:
+    """La mesa, el fondo y la luz de un video entero: la mesa cubre la cuerda de todos sus cuadros
+    (`Xs`) y el anfitrión; la luz va alrededor del nudo del último cuadro, orientada según la
+    cámara de azimut `az`."""
+    pts = [np.asarray(x, float)[::3] for x in Xs[::20]] + [np.asarray(Xs[-1], float)]
+    for m in mallas or []:
+        pts.append(np.asarray(m["pos"], float).reshape(-1, 3)[::7])
+    return _escenario(np.vstack(pts), np.asarray(Xs[-1], float), az)
+
+
+def focos(cuadros, fps: int) -> list[float]:
+    """La distancia de enfoque de cada cuadro: la de la punta de la cuerda (donde está la mano),
+    vista desde la cámara de ese cuadro, con el promedio de FOCO_SUAVE s para que no salte."""
+    d = np.array([_profundidad(c.camara, np.asarray(c.X, float)[-1]) for c in cuadros])
+    k = max(1, int(round(FOCO_SUAVE * fps)))
+    if k > 1 and len(d) > 1:
+        d = np.convolve(np.pad(d, (k // 2, k - 1 - k // 2), mode="edge"), np.ones(k) / k, mode="valid")
+    return [float(x) for x in d]
+
+
+def velocidad_nodos(cuadros, i: int, fps: int) -> np.ndarray | None:
+    """La velocidad de cada nodo en el cuadro i (d/s), con los cuadros vecinos que tienen la misma
+    cantidad de nodos; None si ninguno la tiene (ahí la cuerda cambia de largo: sin desenfoque)."""
+    X = np.asarray(cuadros[i].X, float)
+    a = np.asarray(cuadros[i - 1].X, float) if i > 0 else None
+    b = np.asarray(cuadros[i + 1].X, float) if i + 1 < len(cuadros) else None
+    a = a if a is not None and a.shape == X.shape else None
+    b = b if b is not None and b.shape == X.shape else None
+    if a is not None and b is not None:
+        return (b - a) * (fps / 2)
+    if b is not None:
+        return (b - X) * fps
+    if a is not None:
+        return (X - a) * fps
+    return None
+
+
+_VINETAS: dict = {}
+
+
+def vineta(ancho: int, alto: int) -> np.ndarray:
+    """El factor de la viñeta en cada píxel (las esquinas, un VINETA más oscuras)."""
+    if (ancho, alto) not in _VINETAS:
+        yy, xx = np.mgrid[0:alto, 0:ancho].astype(np.float32)
+        r = np.sqrt(((xx - ancho / 2) / (ancho / 2)) ** 2 + ((yy - alto / 2) / (alto / 2)) ** 2) / math.sqrt(2)
+        t = np.clip((r - 0.35) / 0.65, 0, 1)
+        _VINETAS[(ancho, alto)] = (1 - VINETA * t * t * (3 - 2 * t)).astype(np.float32)
+    return _VINETAS[(ancho, alto)]
+
+
+def posproceso_video(im: Image.Image, indice: int) -> Image.Image:
+    """La viñeta y el grano de un cuadro del video: como `vineta_y_grano`, más rápido (la viñeta
+    se calcula una vez y el grano no se suaviza, así que en 4K mide un píxel), con un grano
+    distinto en cada cuadro."""
+    x = np.asarray(im.convert("RGB"), np.float32) / 255.0
+    h, w = x.shape[:2]
+    x *= vineta(w, h)[..., None]
+    g = np.random.default_rng(indice).standard_normal((h, w), dtype=np.float32) * GRANO_VIDEO
+    L = x.mean(axis=2)
+    x += (g * (0.5 + 2.0 * L * (1 - L)))[..., None]
+    return Image.fromarray(np.clip(x * 255 + 0.5, 0, 255).astype(np.uint8))

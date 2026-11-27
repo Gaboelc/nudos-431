@@ -723,8 +723,25 @@ def armar(escena, a: dict, t: dict, motor_nombre: str):
     cuerda (base, resaltado y remate)."""
     e.vaciar()
     datos = json.loads(open(t["escena"], encoding="utf-8").read())
+    entorno(escena, a, {**t, "mallas": datos["mallas"]}, motor_nombre)
+    c = t["cuerdas"][0]
+    if a["malla"] != "trenza":
+        color = c.get("color", "azul")
+        return [e.material_trenza(f"trenza-{i}", cols)
+                for i, cols in enumerate((e.COLORES[color], e.AMBAR))] + [e.material_remate("remate")]
+    return materiales(a, c["estilo"], c["resaltado"])
+
+
+def materiales(a: dict, estilo: str, resaltado: str, sufijo: str = "") -> list:
+    """Los materiales de una cuerda con la trenza: la base, el resaltado y la cinta del remate."""
+    return [material_cuerda("cuerda" + sufijo, estilo, a), material_cuerda("resaltado" + sufijo, resaltado, a),
+            material_cinta("cinta" + sufijo, a.get("cinta", (214, 52, 32)), tr.ESTILOS[estilo].mosaico)]
+
+
+def entorno(escena, a: dict, t: dict, motor_nombre: str) -> None:
+    """Todo lo que no es la cuerda: el anfitrión (t["mallas"]), la mesa, el fondo y la luz."""
     nuevo = a["malla"] == "trenza"
-    for i, m in enumerate(datos["mallas"]):
+    for i, m in enumerate(t["mallas"]):
         anfitrion(i, m, nuevo)
     if not nuevo:
         # Hoy: la mesa es un receptor de sombras sobre transparente (Cycles); EEVEE no tiene
@@ -738,9 +755,7 @@ def armar(escena, a: dict, t: dict, motor_nombre: str):
             escena.render.film_transparent = False
         cx, cy = t["luz"]["centro"]
         e.luces(cx, cy, t["luz"]["extension"] + 2)
-        color = t["cuerdas"][0].get("color", "azul")
-        return [e.material_trenza(f"trenza-{i}", cols)
-                for i, cols in enumerate((e.COLORES[color], e.AMBAR))] + [e.material_remate("remate")]
+        return
     escena.render.film_transparent = False
     if a["escena"] == "estudio":
         mesa_madera(t["mesa"], material_madera("madera", a["madera_claro"], a["madera_oscuro"],
@@ -752,9 +767,13 @@ def armar(escena, a: dict, t: dict, motor_nombre: str):
                                                ancho_tabla=14.0, separacion=0.25, barniz=0.0,
                                                rugosidad=0.72, veta=0.09))
         mundo_campamento(t["luz"], a, a.get("hdri"))
-    c = t["cuerdas"][0]
-    return [material_cuerda("cuerda", c["estilo"], a), material_cuerda("resaltado", c["resaltado"], a),
-            material_cinta("cinta", a.get("cinta", (214, 52, 32)), tr.ESTILOS[c["estilo"]].mosaico)]
+
+
+def con_desenfoque(cuerda) -> None:
+    """El modificador que mueve la cuerda por su velocidad (mover_por_velocidad), si no lo tiene."""
+    if "velocidad" not in cuerda.modifiers:
+        mod = cuerda.modifiers.new("velocidad", "NODES")
+        mod.node_group = mover_por_velocidad()
 
 
 def render(escena, salida, comprimir=15):
@@ -802,15 +821,14 @@ def toma(escena, a, t, motor_nombre, ancho, alto):
         if mov.get("camara"):
             camara(escena, mov["camara"], mov.get("foco"), fstop)
         anotar(toma=t["nombre"], tipo="movimiento-sin", s=round(render(escena, mov["salida_sin"]), 2))
-        mod = cuerda.modifiers.new("velocidad", "NODES")
-        mod.node_group = mover_por_velocidad()
+        con_desenfoque(cuerda)
         escena.render.use_motion_blur = True
         escena.render.motion_blur_shutter = mov.get("obturador", 0.5)
         if motor_nombre == "BLENDER_EEVEE":
             escena.eevee.motion_blur_steps = 1
         anotar(toma=t["nombre"], tipo="movimiento", s=round(render(escena, mov["salida"]), 2))
         escena.render.use_motion_blur = False
-        cuerda.modifiers.remove(mod)
+        cuerda.modifiers.remove(cuerda.modifiers["velocidad"])
 
 
 def main():

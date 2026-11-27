@@ -322,6 +322,7 @@ def construir_sitio(destino: Path, modelos: list[Modelo] | None = None,
     shutil.copytree(SITIO / "vendor", recursos / "vendor")
     shutil.copy2(ESCENA, recursos / "escena.js")
     shutil.copy2(SITIO / "visor.js", recursos / "visor.js")
+    shutil.copy2(SITIO / "fisico.js", recursos / "fisico.js")
     shutil.copy2(SITIO / "visor.css", recursos / "visor.css")
     for m in modelos:
         (destino / m.spec.slug).mkdir()
