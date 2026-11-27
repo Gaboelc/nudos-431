@@ -783,7 +783,8 @@ def locuciones(textos: list[str], voz: Voz, proveedor: Proveedor | None = None, 
 # Las grabaciones: la voz de Gabriel
 # --------------------------------------------------------------------------
 # Lo que el reconocimiento de voz debería reconocer: los nombres de los nudos y las palabras de las
-# fichas, para que escriba «gaza» y no «gasa», o «ahorcados» aunque se diga «ahorcaos».
+# fichas. Ayuda poco con las que suenan igual: en las grabaciones de Gabriel siguió escribiendo «gasa»
+# por «gaza» y «arcaos» por «ahorcados». Por eso la muestra para clonar se compara con la ficha.
 CONTEXTO = ("Nudos de cuerda: as de guía, ballestrinque, nudo simple, nudo ocho, ocho doble, nudo de "
             "pescador, amarre cuadrado, amarre diagonal, vuelta de escota, cote, rizo. Chicote, firme, gaza, "
             "seno, vuelta, ahorcados, palo, travesaño, argolla, mosquetón.")
