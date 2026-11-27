@@ -44,6 +44,34 @@ def test_un_brinco_de_un_cuadro_se_ve():
     assert m["aceleracion"]["max"] > BRINCO
 
 
+def test_caer_y_apoyarse_no_es_un_pico_ni_un_temblor():
+    """T21: la cuerda suelta cae con la gravedad (1225 d/s²) y se apoya en la mesa. Pasa de
+    BRINCO, pero no salta ni tiembla."""
+    g = 1225.0
+    t = np.arange(13) / FPS
+    z = np.concatenate([np.maximum(2.0 - 0.5 * g * t * t, 0.0), np.zeros(20)])   # cae 2 d y se queda
+    m = medir(desplazada(z), FPS)
+    assert m["brincos"] >= 1
+    assert m["picos"] == 0 and m["temblores"] == 0
+    # Un nodo que salta 0,3 d y se queda es un pico; uno que salta y vuelve, un temblor.
+    u = np.linspace(0, 1, 2 * FPS + 1)
+    cuadros = desplazada(10 * tiron_minimo(u))
+    for k in range(60, len(cuadros)):
+        cuadros[k] = cuadros[k].copy()
+        cuadros[k][5, 2] += 0.3
+    m = medir(cuadros, FPS)
+    assert m["picos"] == 1 and m["temblores"] == 0
+    cuadros = desplazada(10 * tiron_minimo(u))
+    cuadros[60] = cuadros[60].copy()
+    cuadros[60][5, 2] += 0.3
+    m = medir(cuadros, FPS)
+    assert m["picos"] == 0 and m["temblores"] == 1
+    cuadros = desplazada(10 * tiron_minimo(u))
+    for k in range(40, 50):
+        cuadros[k] = cuadros[k] + [0.0, 0.0, 0.1 * (k % 2)]   # tiembla 0,1 d cuadro por medio
+    assert medir(cuadros, FPS)["temblores"] == 1
+
+
 def test_un_cambio_de_velocidad_en_seco_se_ve():
     # De 5 a 2,5 d/s de un cuadro al siguiente: una parada en seco de la punta.
     v = np.where(np.arange(120) < 60, 5.0, 2.5)

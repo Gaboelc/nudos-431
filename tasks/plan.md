@@ -843,7 +843,7 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
 - **El costo en el video, medido con la prueba:** 585 cuadros de 4K en unos 75 min, 7,7 s por cuadro en promedio, y unos 6 s en los tramos sin otras cosas corriendo en la máquina; T20a medía 4,6 s con la cámara quieta y sin desenfoque. Con 6 s, los 36 nudos (7200 cuadros de 4K y 3000 del reel cada uno) son unos 20 días; con 7,7 s, unos 25. Lo decide Gabriel antes de T19.
 - **Las fichas no cambian:** `referencia` desde `main` (d358b3a) y con el código nuevo, y `comparar`. Los 36 `modelo.json`, iguales byte a byte; las imágenes de los 36 nudos con three.js, iguales (dos nudos salieron con unos píxeles en 1 o 2 niveles al imprimir dos corridas a la vez, e iguales al reimprimirlos); y las de Blender de los cuatro pilotos, iguales. El código de Blender que dibuja las fichas es el mismo para todos los nudos.
 
-**Punto de control de T20b:** Gabriel aprobó la prueba de 10 s en 4K del as de guía (26 nov). Preguntó si la cuerda puede tener un largo fijo y solo cruzarse y moverse, en vez de encogerse o estirarse en cada paso: es el diseño de T21 (abajo), que espera su aprobación en el punto de control de T21a.
+**Punto de control de T20b:** Gabriel aprobó la prueba de 10 s en 4K del as de guía (26 nov). Preguntó si la cuerda puede tener un largo fijo y solo cruzarse y moverse, en vez de encogerse o estirarse en cada paso: es el diseño de T21 (abajo), que Gabriel aprobó el 27 nov.
 
 **T20c, las fichas (S, solo si se nota en papel).** La trenza nueva entra a las imágenes de impresión solo si la página de prueba impresa, en color y en gris, se ve mejor (la regla de T7b). Si no, las fichas no cambian. `referencia` y `comparar` muestran qué se movió.
 
@@ -884,7 +884,7 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
 
 La cámara (las paradas y la aceleración) es de T22.
 
-**El diseño (se cierra en el punto de control de T21a):**
+**El diseño (Gabriel lo aprobó el 27 nov):**
 1. **Largo fijo y coordenada de material.**
    - Una sola cuerda para todo el video, en una sola grilla (la h del último paso).
    - El nodo j es siempre el mismo punto de la cuerda, σ_j, medido desde el extremo lejano del firme en un nudo libre o desde el nodo 0 en una plantilla. Así, el resaltado, el remate, la cinta del chicote y la trenza quedan pegados a la cuerda.
@@ -951,6 +951,40 @@ La cámara (las paradas y la aceleración) es de T22.
 - Si la cola de más no se puede acomodar, queda en la madeja («en la mano») o se corrige con el campo del video.
 - Si la gravedad no se estabiliza, los resortes se quedan y lo flojo cuelga como una catenaria dentro de la guía.
 - Si la madeja no convence a la vista, la cuerda sale del cuadro por la mano.
+
+**Cómo se hizo T21b y T21c (27 nov, con el as de guía):**
+- **Las poses de video** (`animar.poses_video`): el nodo j es siempre σ = j·h.
+  - El depósito es lo que el firme gana en el nudo (16,6 d en el as de guía, al formar la gaza pequeña), y entra por el firme.
+  - La cuerda mide lo que pide el paso más largo con lo que todavía le falta al firme. En el as de guía es el último paso: 109,8 d y 550 nodos. No hizo falta el depósito de más del diseño (`DEPOSITO_FINAL` = 0).
+  - Las colas de más miden 22,1, 22,1, 25,1, 22,9, 14,9, 7,1 y 0 d.
+- **La cola de más:**
+  - Se acuesta en la primera dirección que, vista desde arriba, no pasa a menos de 1,5 d de la cuerda, y sale con la dirección y la pendiente de la punta. Con una dirección promedio, el tramo de la ficha se separaba 0,025 d de ella en la punta.
+  - En los pasos 3 y 6, la punta está dentro del nudo y ninguna dirección cabe. Ahí la cola sube a 60° en 1 d y sale del cuadro, como en una mano que la sostiene, sin bajar nunca de la mesa.
+  - `comprobar_poses` revisa la cantidad de nodos, el tramo de la ficha a 0,02 d, que lo agregado pase solo por encima, y dmin.
+- **La guía** (`_tramo_largo_punta`):
+  - La mano toma la cuerda a 1,5 d de la punta: tres nodos, con 200 N/d.
+  - La trae por el aire a 10 d/s hasta la entrada, que queda 2,5 d antes del primer cruce nuevo.
+  - La enhebra por el camino del paso siguiente a 5 d/s, o a 2,5 cerca de los cruces, con las alturas de T17. Después tira de la cola a 10 d/s.
+  - Lo que ya pasó la entrada sigue el camino de la punta.
+  - Lo que todavía no pasó va suelto: sin resorte ni viscosidad y con su peso. Su memoria es la forma que tenía al soltarse, que se endereza en 0,5 s (`ENDEREZAR`). Así cuelga, se arrastra y se recoge solo.
+  - La pierna que va del nudo a la entrada vuelve a su lugar en los últimos 3 d del recorrido de la mano.
+  - Las velocidades se suavizan con dos promedios de 1 d, y el arranque y el frenado son de quinto grado (0,5 s).
+  - Al final, 0,4 s con los resortes subiendo hasta 50 N/d, en vez de `encajar`, y 0,15 s hasta la pose exacta: la cuerda queda a menos de 0,03 d.
+- **La gaza pequeña** (el paso «firme») todavía va en línea recta de A a B, con arranque y frenado de quinto grado: se infla en vez de formarse, en 3,9 s. Se probó rizarla interpolando el ángulo de cada tramo, pero su extremo queda a 14-17 d de donde llega el firme: una gaza cerrada no sale de doblar un tramo. Queda pendiente.
+- **El motor** (`atar.seguir`, con `CuadroGuia.largo_fijo`, `viscosidad` y `suelto`):
+  - Los largos de reposo son los de la guía.
+  - La viscosidad va por nodo (`Sistema.paso` la acepta así, y con una sola da lo mismo bit a bit).
+  - Lo suelto lleva la memoria de cuando se soltó. Con la memoria plástica que decía el diseño (la forma de cada cuadro), la cuerda se quebraba en un codo de 66° detrás de la mano.
+- **Lo que hubo que arreglar al probar:**
+  - Una curvatura NaN en la guía cuando dos de sus puntos quedaban juntos (`_curvatura_segura`).
+  - Un cruce de la cola en arco tomado por uno del camino nuevo: los cruces de A solo cuentan en el tramo que ya está en su lugar.
+  - La punta se trababa bajo un tramo en el paso 7 porque la altura de la mano entraba después de las alturas de los cruces. En T17 entraba antes, y ahora también.
+- **El video:**
+  - Las pausas son las poses de video.
+  - El resaltado va en σ y la trenza también (`malla_trenza(s=)`), así que no se achican ni caminan.
+  - La cámara encuadra solo el tramo de la ficha.
+  - El foco va a la punta del paso y pasa a la mano cuando esta se acerca (`Cuadro.foco`).
+- **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9988 y 1,0038 del nominal; 3,4 min de motor los seis a la vez.
 
 #### T22: El video completo
 

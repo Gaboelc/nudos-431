@@ -42,6 +42,8 @@ VISCOSIDAD = 0.2      # N·s/d por nodo: el roce con el aire, para que nada salt
 SALTO = 0.35          # d: lo más que se puede mover un nodo de un cuadro al siguiente (T18)
 HOLGURA_MANO = 0.8    # una mano que no puede avanzar sin acercar dos tramos a menos de dmin
                       # avanza esta parte de lo que puede, y espera
+ENDEREZAR = 0.5       # s: lo que tarda la cuerda suelta (T21) en olvidar la forma que tenía al
+                      # soltarse
 
 
 @dataclass
@@ -58,6 +60,14 @@ class CuadroGuia:
     curvatura: np.ndarray | None
     cambio: int = 0
     recoge: bool = False      # la mano recoge cuerda: el último tramo se acorta con ella (T18)
+    # Con largo fijo (T21): los largos de reposo son los de la guía, sin el tramo de la mano
+    # medido en cada cuadro, y la cuerda suelta (`suelto`, de 0 a 1 por nodo) lleva su propia
+    # viscosidad (`viscosidad`, por nodo) y su propia memoria: la forma que tenía al soltarse,
+    # que se va enderezando en ENDEREZAR s. Así un lazo que se suelta no salta, y lo que cuelga
+    # se dobla con su rigidez, sin quebrarse en un codo.
+    largo_fijo: bool = False
+    viscosidad: np.ndarray | None = None
+    suelto: np.ndarray | None = None
 
 
 @dataclass
@@ -103,6 +113,11 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
     malla = _mesa_y_anfitrion(x, solido)
     kappa = rigidez_barrera(max(1.0, resorte * 1.0))
     previo = guia[0]
+    # La memoria de la cuerda suelta (T21): la curvatura que tenía cada nodo al soltarse, que
+    # se va enderezando.
+    memoria_suelta = None
+    suelto_antes = np.zeros(len(x))
+    decae = math.exp(-1.0 / (fps * ENDEREZAR))
     for i, g in enumerate(guia[1:], start=1):
         if g.cambio > 0:
             atras = float(np.linalg.norm(x[-1] - previo.G[-1]))
@@ -131,7 +146,7 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
         # falta. Con el largo de la guía, ese tramo quedaba estirado o encogido (la mano no está
         # justo en la guía) y el nodo de al lado saltaba hasta 0,16 d en un subpaso.
         largos = np.array(g.largos, float)
-        if g.cambio or len(x) > 2:
+        if (g.cambio or len(x) > 2) and not g.largo_fijo:
             largos[-1] = max(float(np.linalg.norm(x[-1] - x[-2])), 0.05)
         if g.recoge:
             # Al recoger, el tramo de la mano se acorta con ella: con el largo que mide en cada
@@ -139,7 +154,23 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
             # empujaba al nodo de al lado. La mano nunca lo alcanzaba, la cuerda de adelante se
             # arrugaba y el último tramo llegaba a medir 2,3 d, con la punta en codo (T18).
             largos[-1] = max(min(largos[-1], float(g.largos[-1])), 0.05)
-        var = _varilla(largos, material, g.curvatura)
+        curvatura = g.curvatura
+        if g.suelto is not None and np.any(np.asarray(g.suelto, float)[1:-1] > 0):
+            p = np.clip(np.asarray(g.suelto, float), 0.0, 1.0)
+            actual = Varilla.curvatura_de(x)
+            if memoria_suelta is None:
+                memoria_suelta = actual.copy()
+            memoria_suelta = memoria_suelta * decae
+            recien = (suelto_antes[1:-1] <= 0) & (p[1:-1] > 0)
+            memoria_suelta[recien] = actual[recien]
+            w = p[1:-1, None]
+            de_guia = np.zeros((len(x) - 2, 3)) if curvatura is None else np.asarray(curvatura, float)
+            curvatura = w * memoria_suelta + (1 - w) * de_guia
+            suelto_antes = p
+        else:
+            suelto_antes = np.zeros(len(x))
+        var = _varilla(largos, material, curvatura)
+        visc = VISCOSIDAD if g.viscosidad is None else np.asarray(g.viscosidad, float)
         # La mano del firme (el nodo 0) sostiene; las demás tiran de su nodo con un resorte
         # fuerte: así el contacto puede apartarlas un poco y ninguna se traba contra la cuerda
         # que ya está, que es lo que hace una mano de verdad.
@@ -175,7 +206,8 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
                     out.esperas += 1
                     y[manos] = x[manos] + HOLGURA_MANO * a * (m1[manos] - x[manos])
             try:
-                x, v = _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo=j == subpasos)
+                x, v = _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo=j == subpasos,
+                                visc=visc)
             except RuntimeError as e:   # ipctk, con un par dentro de la barrera
                 from ..libre import TrazadoError
                 corto = float(np.min(np.linalg.norm(np.diff(y, axis=0), axis=1)))
@@ -267,7 +299,7 @@ def saltos(X: list, partido=None, quitado=None) -> list[float]:
     return out
 
 
-def _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo, nivel=0):
+def _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo, nivel=0, visc=VISCOSIDAD):
     """Un subpaso de x a y (con la mano del firme ya movida) y lo que da el motor, con las
     manos que tiran yendo de sus metas m0 a m1. Si ir en línea recta de y a lo que da el motor
     acercaría dos tramos a menos de DMIN_MOVIMIENTO·dmin (el motor no los acerca: cada iteración
@@ -276,20 +308,20 @@ def _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo, nivel=0):
     línea recta y libre al siguiente, y `comprobar` lo puede ver. Los estados intermedios van a
     out.medio."""
     sis = armar(m1)
-    r = sis.paso(y, v, dt=dt, viscosidad=VISCOSIDAD)
+    r = sis.paso(y, v, dt=dt, viscosidad=visc)
     out.newton += r.iteraciones
     if nivel < SUBDIVIDIR and malla.paso_libre(y, r.x, malla.dmin * DMIN_MOVIMIENTO) < 1.0:
         manos = sis.fijos
         mm = (m0 + m1) / 2
         mitad = x.copy()
         mitad[manos] = x[manos] + 0.5 * (y[manos] - x[manos])
-        x1, v1 = _subpaso(armar, m0, mm, malla, x, mitad, v, dt / 2, out, i, False, nivel + 1)
+        x1, v1 = _subpaso(armar, m0, mm, malla, x, mitad, v, dt / 2, out, i, False, nivel + 1, visc)
         y2 = x1.copy()
         y2[manos] = y[manos]
         a = malla.paso_libre(x1, y2)
         if a < 1.0:
             y2[manos] = x1[manos] + HOLGURA_MANO * a * (y[manos] - x1[manos])
-        return _subpaso(armar, mm, m1, malla, x1, y2, v1, dt / 2, out, i, ultimo, nivel + 1)
+        return _subpaso(armar, mm, m1, malla, x1, y2, v1, dt / 2, out, i, ultimo, nivel + 1, visc)
     out.medio.setdefault(i, []).append(np.array(y, float))
     if not ultimo:
         out.medio.setdefault(i, []).append(r.x.copy())

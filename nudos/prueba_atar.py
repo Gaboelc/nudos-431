@@ -65,8 +65,8 @@ class Cuadro:
 def linea_de_tiempo(modelo, animados) -> list[Cuadro]:
     """Todos los cuadros del nudo: la pausa en el paso 1 y, por cada paso siguiente, su
     movimiento y su pausa en la pose de la ficha."""
-    from .animar import poses
-    P = {r.n: r for r in poses(modelo)}   # en una plantilla, con la cola en la mano (T18)
+    from .animar import poses_atado
+    P = {r.n: r for r in poses_atado(modelo)}   # con largo fijo (T21) o con la cola en la mano (T18)
     pausa = round(PAUSA * FPS)
     primero = P[modelo.pasos[0].n]
     out = [Cuadro(primero.puntos, primero.n, "pausa", primero.resaltado) for _ in range(pausa)]

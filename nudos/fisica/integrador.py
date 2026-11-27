@@ -171,8 +171,9 @@ class Sistema:
     def paso(self, x, v=None, dt: float | None = None, amortiguacion: float = 2.0,
              viscosidad: float = 0.0) -> Paso:
         """Un paso desde la cuerda en x (N, 3) con velocidad v. Con `dt` (en segundos), Euler
-        implícito, con un roce viscoso `viscosidad` (N·s/d por nodo); sin `dt`, cuasiestático,
-        con `amortiguacion` (N/d por nodo). Los nodos fijos quedan donde están en x."""
+        implícito, con un roce viscoso `viscosidad` (N·s/d, uno para todos los nodos o uno por
+        nodo); sin `dt`, cuasiestático, con `amortiguacion` (N/d por nodo). Los nodos fijos
+        quedan donde están en x."""
         x0 = np.asarray(x, float).reshape(self.N, 3)
         v0 = np.zeros_like(x0) if v is None else np.asarray(v, float).reshape(self.N, 3)
         if dt is None:
@@ -180,9 +181,11 @@ class Sistema:
             meta = x0.ravel()
         else:
             # Con `viscosidad` (N·s/d por nodo), un roce con el aire que frena cada nodo con
-            # una fuerza proporcional a su velocidad (al atar, T17: que nada salte).
-            A = np.repeat(self.masa, 3) / dt ** 2 + viscosidad / dt
-            meta = (x0 + dt * v0 * (self.masa / (self.masa + viscosidad * dt))[:, None]).ravel()
+            # una fuerza proporcional a su velocidad (al atar, T17: que nada salte). Con uno
+            # por nodo (T21), la cuerda suelta casi no lo tiene, y cuelga y cae.
+            visc = np.broadcast_to(np.asarray(viscosidad, float), (self.N,))
+            A = np.repeat(self.masa, 3) / dt ** 2 + np.repeat(visc, 3) / dt
+            meta = (x0 + dt * v0 * (self.masa / (self.masa + visc * dt))[:, None]).ravel()
         m = self.malla
         roce = m.roce_retrasado(x0, self.kappa, self.eps_roce) if m is not None and self.roce else None
         if roce is not None and len(roce) == 0:

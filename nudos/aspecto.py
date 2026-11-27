@@ -926,9 +926,11 @@ def escenario_video(Xs, mallas, az: float) -> dict:
 
 
 def focos(cuadros, fps: int) -> list[float]:
-    """La distancia de enfoque de cada cuadro: la de la punta de la cuerda (donde está la mano),
-    vista desde la cámara de ese cuadro, con el promedio de FOCO_SUAVE s para que no salte."""
-    d = np.array([_profundidad(c.camara, np.asarray(c.X, float)[-1]) for c in cuadros])
+    """La distancia de enfoque de cada cuadro: la de su `foco` (con largo fijo, T21: la punta del
+    paso o la mano que se acerca a ella) o, sin él, la de la punta de la cuerda, vista desde la
+    cámara de ese cuadro, con el promedio de FOCO_SUAVE s para que no salte."""
+    d = np.array([_profundidad(c.camara, np.asarray(c.X, float)[-1] if getattr(c, "foco", None) is None
+                               else c.foco) for c in cuadros])
     k = max(1, int(round(FOCO_SUAVE * fps)))
     if k > 1 and len(d) > 1:
         d = np.convolve(np.pad(d, (k // 2, k - 1 - k // 2), mode="edge"), np.ones(k) / k, mode="valid")
