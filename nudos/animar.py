@@ -828,6 +828,11 @@ def _cola(Xf, hf, largo: float, otros):
     p0, t0, z0 = Xf[-1, :2], _direccion(Xf, hf, True, largo=hf), float(Xf[-1, 2])
     # La pendiente con que llega la punta (la que baja de un cruce): la cola la sigue, sin codo.
     pend0 = float((Xf[-1, 2] - Xf[-2, 2]) / max(np.linalg.norm(Xf[-1, :2] - Xf[-2, :2]), 1e-9))
+    # La altura a la que descansa la cuerda suelta sobre la mesa (con el motor, unos 0,55 d: el
+    # contacto con la mesa equilibra su peso), la de lo que la ficha tiene apoyado. Con 0,5, al
+    # soltar la cola el contacto la subía a 0,6 en un cuadro y volvía a bajar.
+    sobre_mesa = Xf[Xf[:, 2] < 0.6, 2]
+    apoyo = float(np.clip(np.median(sobre_mesa), 0.5, 0.6)) if len(sobre_mesa) else 0.5
     lejos = int(round(3.0 / hf))
     duros = [Xf[:max(0, len(Xf) - 1 - lejos)]] + [np.asarray(o, float) for o in otros if len(o)]
     duros = np.vstack(duros)
@@ -840,13 +845,13 @@ def _cola(Xf, hf, largo: float, otros):
     def a_la_mesa(u):
         """La altura de la cola acostada: sale con la pendiente de la punta y se apoya en la
         mesa (una cúbica de Hermite)."""
-        if abs(z0 - 0.5) < 1e-6 and abs(pend0) < 1e-6:
-            return np.full(len(u), 0.5)
-        Ld = max(0.4, 2.0 * abs(z0 - 0.5) / max(abs(pend0), 0.5))
+        if abs(z0 - apoyo) < 1e-6 and abs(pend0) < 1e-6:
+            return np.full(len(u), apoyo)
+        Ld = max(0.4, 2.0 * abs(z0 - apoyo) / max(abs(pend0), 0.5))
         t = np.clip(u / Ld, 0.0, 1.0)
         z = ((2 * t ** 3 - 3 * t ** 2 + 1) * z0 + (t ** 3 - 2 * t ** 2 + t) * pend0 * Ld
-             + (-2 * t ** 3 + 3 * t ** 2) * 0.5)
-        return np.maximum(z, 0.5)      # nunca dentro de la mesa
+             + (-2 * t ** 3 + 3 * t ** 2) * apoyo)
+        return np.maximum(z, apoyo)    # nunca más abajo de donde descansa
 
     plano = cKDTree(duros[:, :2]) if len(duros) else None
     for g in giros:
@@ -862,7 +867,7 @@ def _cola(Xf, hf, largo: float, otros):
         pts, u = _camino_cola(p0, t0, largo, g)
         pendiente = pend0 + (COLA_PENDIENTE - pend0) * _suave(np.clip(u / COLA_SUBE, 0, 1))
         z = z0 + np.concatenate([[0.0], np.cumsum(np.diff(u) * (pendiente[:-1] + pendiente[1:]) / 2)])
-        P, l = en_el_espacio(pts, np.maximum(z, 0.5))
+        P, l = en_el_espacio(pts, np.maximum(z, apoyo))
         pide = junto + (COLA_JUNTO - junto) * np.clip(u / COLA_ARRANQUE, 0, 1)
         if espacio is None or np.all(espacio.query(P)[0] >= pide):
             return P, l, True
@@ -1070,25 +1075,38 @@ def _curvatura_segura(G) -> np.ndarray:
     return out
 
 
-def _cuadro_largo(G, h, k, manos, suelto=True) -> CuadroGuia:
+def _cuadro_largo(G, h, k, manos, suelto=True, largos=None) -> CuadroGuia:
     N = len(G)
     k, curvatura = _aflojar(G, h, np.asarray(k, float), _curvatura_segura(G))
     if suelto:
         p, visc = _suelto_y_visc(k, manos)
     else:
         p, visc = None, None
-    return CuadroGuia(G=G, k=k, manos=np.asarray(manos, int), largos=np.full(N - 1, float(h)),
+    largos = np.full(N - 1, float(h)) if largos is None else np.asarray(largos, float)
+    return CuadroGuia(G=G, k=k, manos=np.asarray(manos, int), largos=largos,
                       curvatura=curvatura, largo_fijo=True, viscosidad=visc, suelto=p)
 
 
-def _asentado(B: PoseVideo) -> list[CuadroGuia]:
+def _largos_de(A: PoseVideo, B: PoseVideo, w: float) -> np.ndarray:
+    """Los largos de reposo de un cuadro del tramo de A a B: los de cada tramo de A, que van
+    hacia los de B. En las fichas del motor la cuerda queda un 0,1 % más corta que h (está
+    asentada), y la cola de más mide h: con h de reposo, al soltarse la cola, lo guiado la
+    empujaba a lo largo y la cola saltaba 0,33 d en un cuadro."""
+    LA = np.linalg.norm(np.diff(A.X, axis=0), axis=1)
+    LB = np.linalg.norm(np.diff(B.X, axis=0), axis=1)
+    return LA + w * (LB - LA)
+
+
+def _asentado(A: PoseVideo, B: PoseVideo) -> list[CuadroGuia]:
     """El final de cada tramo: la guía en la pose de llegada y los resortes subiendo hasta
     RESORTE_FIN en ASENTAR s (reemplaza a `encajar`). La mano ya soltó."""
     out = []
     nA = max(1, int(round(ASENTAR * FPS)))
+    largos = _largos_de(A, B, 1.0)
     for i in range(1, nA + 1):
         kk = RESORTE + (RESORTE_FIN - RESORTE) * (i / nA) ** 2
-        out.append(_cuadro_largo(B.X.copy(), B.h, np.full(len(B.X), kk), [0], suelto=False))
+        out.append(_cuadro_largo(B.X.copy(), B.h, np.full(len(B.X), kk), [0], suelto=False,
+                                 largos=largos))
     return out
 
 
@@ -1223,11 +1241,11 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
         if pierna.any():
             k[pierna] = RESORTE * _rampa((FLOJO - (u_fin - ut)) / FLOJO)
             G[pierna] = [_en(Vf, h, s - o) for s in sig[pierna]]
-        guia.append(_cuadro_largo(G, h, k, manos))
+        guia.append(_cuadro_largo(G, h, k, manos, largos=_largos_de(A, B, w_f)))
     fases = {"aire": (0, int(np.searchsorted(U, s_ent))),
              "enhebrar": (int(np.searchsorted(U, s_ent)), int(np.searchsorted(U, B.largo))),
              "tirar": (int(np.searchsorted(U, B.largo)), F)}
-    guia += _asentado(B)
+    guia += _asentado(A, B)
     fases["asentar"] = (F + 1, len(guia) - 1)
     return Tramo(B.n, "punta", A.X.copy(), B.X.copy(), guia, fases)
 
@@ -1259,14 +1277,15 @@ def _tramo_largo_firme(A: PoseVideo, B: PoseVideo) -> Tramo:
                               exacto=Bx if f == nf else (S if f == 0 else None)))
     cruces = _seguir_cruces(borr, h, refs_A, refs_B, True)
     guia = []
-    for b, cr in zip(borr, cruces):
+    for f, (b, cr) in enumerate(zip(borr, cruces)):
         G = b.G.copy()
         G[:, 2] = alturas(G, h, cr, b.holgura)
         if b.exacto is not None:
             G = b.exacto.copy()
-        guia.append(_cuadro_largo(G, h, np.full(N, RESORTE), [0, N - 1], suelto=False))
+        guia.append(_cuadro_largo(G, h, np.full(N, RESORTE), [0, N - 1], suelto=False,
+                                  largos=_largos_de(A, B, float(_suave5(f / nf)))))
     fases = {"acomodar": (0, nf)}
-    guia += _asentado(B)
+    guia += _asentado(A, B)
     fases["asentar"] = (nf + 1, len(guia) - 1)
     return Tramo(B.n, "firme", S.copy(), Bx.copy(), guia, fases)
 

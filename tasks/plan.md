@@ -993,6 +993,11 @@ La cámara (las paradas y la aceleración) es de T22.
   - El aire llegaba a la entrada sin las alturas de los cruces del camino. Ahora los últimos 2 d del aire se juntan con el camino en cada cuadro (`MEZCLA`).
   - Los cambios de velocidad de la mano se reparten en 2,5 d, porque con 1 d la punta frenaba en seco al pasar de 10 a 2,5 d/s.
   - Se probó una punta más rígida (20 N/d de la mano al extremo) y empeoró: chocaba más con lo que roza.
+- **Sin sacudón al soltar la cola** (el primer cuadro de cada tramo la movía 0,33 d):
+  - Los largos de reposo van de los de la pose de partida a los de la de llegada (`_largos_de`). En las fichas del motor, la cuerda asentada queda un 0,1 % más corta que h, y la cola de más medía h. Al soltarse, lo guiado la empujaba a lo largo.
+  - La cola se apoya donde descansa la cuerda suelta, a unos 0,55 d, y no a 0,5: el contacto con la mesa la subía 0,1 d de golpe.
+  - Ahora el primer cuadro se mueve 0,02-0,04 d.
+- **El video:** la velocidad de la línea de tiempo valía 0,9999999999999999 en vez de 1 (el promedio de unos), y `retiempo` corría un cuadro cada tanto.
 - **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9987 y 1,0037 del nominal y sin ningún pico ni temblor; 3,5 min de motor los seis a la vez.
 
 #### T22: El video completo

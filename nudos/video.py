@@ -264,6 +264,8 @@ def simulacion(modelo, tramos: list[Tramo]) -> tuple[list[Cuadro], np.ndarray]:
     # Los cambios de velocidad, suaves.
     k = max(1, int(RAMPA_VEL * FPS))
     v = np.convolve(np.pad(v, (k // 2, k - 1 - k // 2), mode="edge"), np.ones(k) / k, mode="valid")
+    # El promedio de unos da 0,9999999999999999, y `retiempo` corría un cuadro cada tanto.
+    v = np.where(np.abs(v - 1.0) < 1e-9, 1.0, v)
     return out, v
 
 
