@@ -111,7 +111,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [x] T24 El visor: material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`) (26 nov)
   - [x] Publicar el sitio con el visor nuevo (27 nov, a pedido de Gabriel: construido desde 23a88ae, `gh-pages` ac05c20; los visores del as de guía, el amarre cuadrado y la cabeza de turco cargan en línea sin errores, con el postprocesado en 2 a 8 ms)
   - [ ] Punto de control de T24: Gabriel abre el visor en la computadora y en un celular de gama baja (ya está en línea; con `?simple` en la dirección, el visor de antes)
-  - [x] Borrar los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel; 27 nov: los 1080 cuadros del 25 nov, 35,9 GB. Quedan los 585 de la prueba de 10 s, 14,6 GB, y los `atado` de los dos pilotos)
+  - [x] Borrar los cuadros del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel, 27 nov): los 1080 viejos del 25 nov (35,9 GB) y los 585 de la prueba de 10 s (14,6 GB). Quedan los `atado` de los dos pilotos
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36
 - [ ] Punto de control de la fase 5
 
