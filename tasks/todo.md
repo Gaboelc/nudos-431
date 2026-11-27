@@ -95,7 +95,9 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
       - [x] La medida de `calidad`: 550 nodos fijos, el largo a 0,44 %, sin picos ni temblores y el resaltado siempre entero (27 nov)
       - [x] La previa entera (`build/videos/as-de-guia/as-de-guia-previa.mp4`, 51 s, 27 nov)
       - [x] La prueba de 10 s en 4K (`build/videos/as-de-guia/as-de-guia-prueba-4k.mp4`, el paso 4; 62 min de render, 27 nov)
-      - [ ] Punto de control: Gabriel revisa la previa y la prueba de 10 s
+      - [x] Gabriel vio que en el paso 3 la cuerda de más subía en diagonal: ahora espera en una bolsa (la gaza grande en los pasos 1 a 3, la vuelta del collar en el 6) que se achica mientras la mano tira, sin aire (`_bolsas`, `_Cinta`; 27 nov)
+      - [x] La previa otra vez, con la bolsa (`build/videos/as-de-guia/as-de-guia-previa.mp4`, 42 s, 27 nov): el chicote que se acerca lo lleva la mano, sin gancho, y el resaltado llega hasta la punta de la cuerda
+      - [ ] Punto de control: Gabriel revisa la previa (la prueba de 10 s en 4K es del paso 4 de antes: se rehace si aprueba el movimiento)
       - [ ] La gaza pequeña (el paso «firme») todavía se infla en línea recta
     - [ ] T21d La madeja, con el amarre cuadrado; prueba de 10 s y punto de control
     - [ ] T21e El error y la aplicación

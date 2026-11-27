@@ -719,21 +719,33 @@ def animar_apretado(spec, modelo) -> Animado | None:
 # El video con largo fijo (T21)
 # ==========================================================================
 # Una sola cuerda para todo el video: el nodo j es siempre el mismo punto de la cuerda, σ = j·h.
-# Cada pausa muestra el tramo que dibuja la ficha, exacto, con un depósito de firme detrás (fuera
-# del encuadre) y una cola de más delante de la punta: la que los pasos que siguen todavía van a
-# usar. Entre dos pausas, la mano toma la cuerda cerca de la punta y la lleva por el aire hasta el
-# camino nuevo, la enhebra por él y tira de la cola; lo que todavía no pasó queda suelto y
-# cuelga con su peso.
+# Cada pausa muestra el nudo que dibuja la ficha con un depósito de firme detrás (fuera del
+# encuadre) y la cuerda de más que los pasos que siguen todavía van a usar: acostada sobre la mesa
+# después de la punta, o, si ahí no cabe sin cruzar el nudo, esperando en una bolsa (un tramo
+# libre de la ficha, inflado). Entre dos pausas, la mano toma la cuerda cerca de la punta y la
+# lleva por el aire hasta el camino nuevo, la enhebra por él y tira de la cola; lo que todavía no
+# pasó queda suelto y cuelga con su peso. Si la punta ya está en el camino nuevo, la mano tira y
+# la bolsa se achica mientras la cuerda pasa (`_Cinta`).
 DEPOSITO_FINAL = 0.0   # d de firme fuera del encuadre en el último paso, además de lo que el firme
                        # gana en el nudo (en el as de guía, 16,6 d al formar la gaza pequeña)
 COLA_RADIO = 2.0       # d: el radio con que la cola de más dobla hacia su dirección
 COLA_LIBRE = 1.5       # d: lo más cerca que la cola acostada pasa de la cuerda, vista desde arriba
 COLA_JUNTO = 1.05      # d: lo que puede acercarse en su comienzo, junto a la punta de la ficha
 COLA_ARRANQUE = 2.0    # d: lo que tarda en apartarse hasta COLA_LIBRE
-COLA_SUBE = 1.0        # d: lo que tarda en empinarse la cola que no cabe en la mesa (la mano
-                       # la levanta enseguida)
-COLA_PENDIENTE = 1.73  # y lo que sube por cada d que avanza (60°): sale del cuadro, en la mano
-TOL_FICHA = 0.02       # d: el tramo de la ficha, a esto de la ficha
+TOL_FICHA = 0.02       # d: el tramo de la ficha, a esto de la ficha (fuera de la bolsa)
+# La bolsa (T21c). Antes, la cola que no cabía en la mesa subía en arco fuera del cuadro: en el
+# paso 3 del as de guía, 25 d en diagonal sobre el nudo (Gabriel, 27 nov).
+BOLSA_MARGEN = 0.75    # d: la bolsa empieza y termina a esto de un cruce, que no se mueve
+BOLSA_PUNTA = 3.0      # d: y a esto de la punta de la ficha, que queda como la dibuja la ficha
+BOLSA_RAMPA = 3.0      # d: lo que puede meterse en la cuerda que el paso no movió (la del paso
+                       # anterior): la bolsa se llena con la cuerda que la punta trae
+BOLSA_MIN = 4.0        # d: el tramo libre más corto que puede hacer de bolsa
+BOLSA_VECINOS = 2.0    # d: lo que sigue a la bolsa a lo largo de la cuerda no cuenta para su holgura
+COINCIDE = 0.25        # d: los pasos de un grupo comparten la bolsa donde quedan a menos de esto
+TOL_CINTA = 0.3        # d: la punta de A está en el camino de B, vista desde arriba,
+ALTO_CINTA = 1.0       # y a lo sumo esto más alta o más baja: en el paso 6 del as de guía la punta
+                       # descansa en la mesa y el paso 7 pasa por ahí sobre un cruce (0,67 d más
+                       # alto sin el motor); la mano la levanta al arrancar
 PINZA = 1.5            # d: la mano toma la cuerda a esto de la punta, así que la punta se ve
 PUNTA_GUIA = 2.0       # d: lo que lleva la mano, desde la punta
 ENTRADA = 2.5          # d: la punta entra al camino nuevo esto antes de su primer cruce nuevo
@@ -769,29 +781,45 @@ def _integral5(x):
 class PoseVideo:
     """La pose de un paso en el video con largo fijo (T21b). La cuerda entera X (N, 3) mide lo
     mismo en todos los pasos: el depósito de firme (σ < o), el tramo que dibuja la ficha (de o a
-    o + largo, la ficha remuestreada) y la cola de más (después de o + largo)."""
+    `fin`, la ficha remuestreada) y la cola de más acostada (después de `fin`). Si la cola no cabe
+    en la mesa, no hay cola: la cuerda de más espera en la bolsa, dentro del tramo de la ficha, y
+    `mapa` dice dónde queda en el video cada punto de la ficha (T21c)."""
     n: int
     X: np.ndarray
     h: float
     o: float
-    largo: float
-    cola: float
+    largo: float               # el de la ficha
+    cola: float                # la cola acostada después de la punta de la ficha
     ficha: np.ndarray
     h_ficha: float
     resaltado: tuple | None    # en σ
     esperada: tuple | None
     modo: str | None = None    # cómo se llega desde la pose anterior: «punta» o «firme»
     r1: int | None = None      # en «punta», el primer nodo de la ficha que cambia
-    arco: bool = False         # la cola no cabía en la mesa y va levantada
+    bolsa: tuple | None = None         # (a, b, sobra): la bolsa en σ y la cuerda de más que guarda
+    bolsa_ficha: tuple | None = None   # (a, b): la misma, en σ de la ficha
+    enhebra: bool = True               # en «punta», si la punta pasa por algún cruce nuevo
+    mapa: tuple | None = None          # (s de la ficha, σ): sin bolsa, σ = o + s
 
     @property
     def puntos(self) -> np.ndarray:
         return self.X
 
+    def en_video(self, s: float) -> float:
+        """El σ del video del punto de la ficha a s de su comienzo."""
+        if self.mapa is None:
+            return self.o + float(s)
+        return float(np.interp(s, self.mapa[0], self.mapa[1]))
+
+    @property
+    def fin(self) -> float:
+        """El σ de la punta de la ficha."""
+        return self.en_video(self.largo)
+
     def tramo_ficha(self) -> tuple[int, int]:
         """El primer y el último nodo dentro del tramo de la ficha."""
         a = int(math.ceil(self.o / self.h - 1e-9))
-        b = min(len(self.X) - 1, int(math.floor((self.o + self.largo) / self.h + 1e-9)))
+        b = min(len(self.X) - 1, int(math.floor(self.fin / self.h + 1e-9)))
         return a, b
 
 
@@ -819,11 +847,11 @@ def _camino_cola(p0, t0, largo: float, giro: float, radio: float = COLA_RADIO, p
 
 
 def _cola(Xf, hf, largo: float, otros):
-    """La cola de más que sale de la punta de la ficha Xf, con la dirección de su último tramo:
+    """La cola de más que sale de la punta de la ficha Xf, con la dirección de su último tramo,
     acostada sobre la mesa en la primera dirección (seguir derecho, o doblar de a 15° a un lado y
-    al otro) que, vista desde arriba, no pasa a menos de COLA_LIBRE de la cuerda; si ninguna cabe,
-    en arco: se empina hasta COLA_PENDIENTE y sale del cuadro hacia arriba, como en una mano que
-    la sostiene. Da los puntos (M, 3), su largo desde la punta (en el espacio) y si va en arco."""
+    al otro) que, vista desde arriba, no pasa a menos de COLA_LIBRE de la cuerda. Da los puntos
+    (M, 3) y su largo desde la punta (en el espacio), o None si no cabe en ninguna: entonces la
+    cuerda de más espera en una bolsa (`_bolsas`)."""
     from scipy.spatial import cKDTree
     p0, t0, z0 = Xf[-1, :2], _direccion(Xf, hf, True, largo=hf), float(Xf[-1, 2])
     # La pendiente con que llega la punta (la que baja de un cruce): la cola la sigue, sin codo.
@@ -837,10 +865,6 @@ def _cola(Xf, hf, largo: float, otros):
     duros = [Xf[:max(0, len(Xf) - 1 - lejos)]] + [np.asarray(o, float) for o in otros if len(o)]
     duros = np.vstack(duros)
     giros = [0.0] + [s * math.radians(a) for a in range(15, 181, 15) for s in (1.0, -1.0)]
-
-    def en_el_espacio(pts, z):
-        P = np.column_stack([pts, z])
-        return P, np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))])
 
     def a_la_mesa(u):
         """La altura de la cola acostada: sale con la pendiente de la punta y se apoya en la
@@ -858,80 +882,337 @@ def _cola(Xf, hf, largo: float, otros):
         pts, u = _camino_cola(p0, t0, largo, g)
         pide = COLA_JUNTO + (COLA_LIBRE - COLA_JUNTO) * np.clip(u / COLA_ARRANQUE, 0, 1)
         if plano is None or np.all(plano.query(pts)[0] >= pide):
-            return (*en_el_espacio(pts, a_la_mesa(u)), False)
-    espacio = cKDTree(duros) if len(duros) else None
-    # La punta puede estar apoyada sobre otra cuerda, más cerca que COLA_JUNTO: el arco arranca
-    # pidiendo lo que ya tiene y en COLA_ARRANQUE llega a COLA_JUNTO.
-    junto = min(COLA_JUNTO, float(espacio.query(Xf[-1])[0]) - 1e-3) if espacio is not None else COLA_JUNTO
-    for g in giros:
-        pts, u = _camino_cola(p0, t0, largo, g)
-        pendiente = pend0 + (COLA_PENDIENTE - pend0) * _suave(np.clip(u / COLA_SUBE, 0, 1))
-        z = z0 + np.concatenate([[0.0], np.cumsum(np.diff(u) * (pendiente[:-1] + pendiente[1:]) / 2)])
-        P, l = en_el_espacio(pts, np.maximum(z, apoyo))
-        pide = junto + (COLA_JUNTO - junto) * np.clip(u / COLA_ARRANQUE, 0, 1)
-        if espacio is None or np.all(espacio.query(P)[0] >= pide):
-            return P, l, True
-    raise TrazadoError("la cola de más no cabe ni sobre la mesa ni en arco")
+            P = np.column_stack([pts, a_la_mesa(u)])
+            return P, _largos_acum(P)
+    return None
 
 
-def _pose_video(Xf, hf, o, largo, cola, N, h):
+def _largos_acum(P) -> np.ndarray:
+    """El largo de la polilínea P desde su comienzo hasta cada punto."""
+    return np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))])
+
+
+def _uniforme(P, M: int) -> np.ndarray:
+    """La polilínea P en M puntos repartidos igual a lo largo de ella."""
+    l = _largos_acum(P)
+    u = np.linspace(0.0, l[-1], M)
+    return np.column_stack([np.interp(u, l, P[:, i]) for i in range(P.shape[1])])
+
+
+# --------------------------------------------------------------------------
+# La bolsa: la cuerda de más que no cabe acostada después de la punta (T21c)
+# --------------------------------------------------------------------------
+def _tramos_libres(Xf, hf) -> list[tuple[float, float, bool]]:
+    """Los tramos de la ficha entre dos cruces seguidos a lo largo de la cuerda y el del último
+    cruce a la punta (en σ de la ficha, y si llega a la punta), del más cercano a la punta al más
+    lejano. El firme, antes del primer cruce, no cuenta: la cuerda que esperara ahí tendría que
+    pasar por todo el nudo."""
+    cruces = encontrar_cruces(np.asarray(Xf, float), hf)
+    if not cruces:
+        return []
+    L = (len(Xf) - 1) * hf
+    s = sorted({float(v) for c in cruces for v in (c.sa, c.sb)})
+    tramos = [(a, b, False) for a, b in zip(s[:-1], s[1:])] + [(s[-1], L, True)]
+    return tramos[::-1]
+
+
+def _tramo_fino(Xf, hf, a: float, b: float, paso: float):
+    """Los puntos de la ficha de a a b (en σ de la ficha), cada `paso` de σ, y su σ."""
+    sf = np.append(np.arange(a, b, paso), b)
+    return np.array([_en(Xf, hf, s) for s in sf]), sf
+
+
+def _inflar(P, sobra: float) -> np.ndarray | None:
+    """El tramo P (M, 3) de la ficha, inflado para que mida `sobra` más con las mismas puntas y
+    la misma dirección en ellas, como queda una cuerda floja: cada trocito se alarga igual (salvo
+    junto a las puntas), la cuerda gira lo mismo que en la ficha pero más despacio y un giro de
+    más, ψ(t) = Σ a_k sen(kπt), la trae de vuelta a su punta doblando lo menos posible (la suma de
+    la curvatura al cuadrado, como una elástica: Newton con la condición de la punta). La gaza
+    grande del as de guía sale como una gota más honda y la vuelta del collar, como una lengua.
+    La altura de cada punto es la de la ficha. None si no se cierra."""
+    P = np.asarray(P, float)
+    d = np.diff(P[:, :2], axis=0)
+    l = np.linalg.norm(d, axis=1)
+    th = np.unwrap(np.arctan2(d[:, 1], d[:, 0]))
+    # P va cada un cuarto de nodo de la ficha, que dobla solo en sus nodos: estirada, la cuerda
+    # quedaba con codos cada nodo (y el radio de la lengua del collar, en 1,13 y no en 1,6). El
+    # giro, repartido en un tramo de la ficha.
+    th = np.convolve(np.pad(th, (2, 1), mode="edge"), np.ones(4) / 4, mode="valid")
+    s = np.concatenate([[0.0], np.cumsum(l)])
+    medio = (s[:-1] + s[1:]) / 2
+    Lp = float(s[-1])
+    # Lo que está junto a las puntas (a 1 d) no se alarga: el tramo sale de la ficha como ella.
+    w = _suave5(np.minimum(medio, Lp - medio) / min(1.0, Lp / 4))
+    if w.sum() <= 1e-12:
+        return None
+    w = w / w.sum()
+    pa, pb = P[0, :2], P[-1, :2]
+    K = 8
+    k = np.arange(1, K + 1)
+    meta = float(np.sum(np.linalg.norm(np.diff(P, axis=0), axis=1))) + sobra
+    extra = sobra
+    a = np.zeros(K)
+    Y = None
+    for _ in range(4):          # el largo se mide en el espacio: se corrige lo que suben los cruces
+        ell = l + extra * w
+        t = (np.cumsum(ell) - ell / 2) / float(ell.sum())
+        base = np.sin(np.pi * np.outer(t, k))           # (M − 1, K)
+        Bd = np.diff(base, axis=0)
+        dth = np.diff(th)
+        lm = (ell[:-1] + ell[1:]) / 2
+        H = 2 * Bd.T @ (Bd / lm[:, None]) + 1e-9 * np.eye(K)
+        for _ in range(100):
+            ang = th + base @ a
+            c, sn = np.cos(ang), np.sin(ang)
+            r = pa + np.array([np.sum(ell * c), np.sum(ell * sn)]) - pb
+            g = 2 * Bd.T @ ((dth + Bd @ a) / lm)
+            J = np.vstack([-(ell * sn) @ base, (ell * c) @ base])   # (2, K)
+            # El paso de Newton de la energía con la punta en su lugar (KKT).
+            M = np.block([[H, J.T], [J, np.zeros((2, 2))]])
+            try:
+                sol = np.linalg.solve(M, np.concatenate([-g, -r]))
+            except np.linalg.LinAlgError:
+                return None
+            paso_a = sol[:K]
+            n = float(np.linalg.norm(paso_a))
+            if n > 0.5:
+                paso_a *= 0.5 / n
+            a = a + paso_a
+            if float(np.linalg.norm(r)) < 1e-7 and n < 1e-6:
+                break
+        ang = th + base @ a
+        r = pa + np.array([np.sum(ell * np.cos(ang)), np.sum(ell * np.sin(ang))]) - pb
+        if float(np.linalg.norm(r)) > 1e-5:
+            return None
+        Y = np.empty_like(P)
+        Y[0, :2] = pa
+        Y[1:, :2] = pa + np.cumsum(ell[:, None] * np.column_stack([np.cos(ang), np.sin(ang)]), axis=0)
+        Y[:, 2] = P[:, 2]
+        Y[-1, :2] = pb
+        actual = float(np.sum(np.linalg.norm(np.diff(Y, axis=0), axis=1)))
+        if abs(actual - meta) < 1e-4:
+            break
+        extra += meta - actual
+    return Y
+
+
+def _bolsa_cabe(Y, P, resto, h: float) -> float | None:
+    """Si el tramo inflado Y (del tramo P de la ficha) dobla como mucho tan cerrado como P o
+    RADIO_GUIA, y si, visto desde arriba, no se acerca al resto de la cuerda ni a sí mismo (lejos
+    a lo largo de él) más que COLA_LIBRE o que lo que ya se acercaba P."""
+    from scipy.spatial import cKDTree
+    if radio_minimo(_por_largo(Y, h)[0]) < min(RADIO_GUIA, radio_minimo(_por_largo(P, h)[0])) - 1e-6:
+        return False
+    if len(resto):
+        arbol = cKDTree(np.asarray(resto, float)[:, :2])
+        dY, dP = arbol.query(Y[:, :2])[0], arbol.query(P[:, :2])[0]
+        if np.any(dY < np.minimum(COLA_LIBRE, dP) - 0.01):
+            return False
+    k = max(1, len(Y) // 300)
+    Ys, Ps = Y[::k, :2], P[::k, :2]
+    l = _largos_acum(Y[::k])
+    lejos = np.abs(l[:, None] - l[None, :]) > max(4.0, math.pi * COLA_LIBRE)
+    if lejos.any():
+        dY = np.linalg.norm(Ys[:, None] - Ys[None], axis=2)[lejos]
+        dP = np.linalg.norm(Ps[:, None] - Ps[None], axis=2)[lejos]
+        if np.any(dY < np.minimum(COLA_LIBRE, dP) - 0.01):
+            return False
+    return True
+
+
+def _en_comun(g, A0: float, B0: float, Xf, hf, o, L) -> tuple[float, float]:
+    """El tramo más largo de [A0, B0] (σ del video, sin bolsa) donde todos los pasos del grupo g
+    tienen la cuerda en el mismo lugar (a menos de COINCIDE)."""
+    if len(g) < 2 or B0 <= A0:
+        return A0, B0
+    s = np.append(np.arange(A0, B0, 0.1), B0)
+    ok = np.ones(len(s), bool)
+    for j, k in zip(g[:-1], g[1:]):
+        for i, x in enumerate(s):
+            sj, sk = x - o[j], x - o[k]
+            if not (0.0 <= sj <= L[j] and 0.0 <= sk <= L[k]):
+                ok[i] = False
+            elif np.linalg.norm(_en(Xf[j], hf[j], sj) - _en(Xf[k], hf[k], sk)) > COINCIDE:
+                ok[i] = False
+    mejor, i = (A0, A0), 0
+    while i < len(s):
+        if not ok[i]:
+            i += 1
+            continue
+        j = i
+        while j + 1 < len(s) and ok[j + 1]:
+            j += 1
+        if s[j] - s[i] > mejor[1] - mejor[0]:
+            mejor = (float(s[i]), float(s[j]))
+        i = j + 1
+    return mejor
+
+
+def _bolsas(g, Xf, hf, o, L, cola, dep, h, desde: float = -math.inf) -> dict:
+    """La bolsa del grupo de pasos g, que se siguen sin que la punta pase por un cruce nuevo (así
+    que la cuerda de más no puede cambiar de lugar): el mismo tramo de cuerda en todos, el tramo
+    libre más cercano a la punta del último paso que todos comparten, que empieza después de
+    `desde` (σ del video sin bolsa: la cuerda de más llega con la punta, así que va en lo que el
+    primer paso del grupo tiende) y donde la bolsa cabe (`_inflar`, `_bolsa_cabe`). Da, por paso
+    con cuerda de más, (a, b, Y, sf): la bolsa en σ de la ficha, el tramo inflado y su σ de la
+    ficha."""
+    k1 = g[-1]
+    con = [k for k in g if cola[k] > 1e-9]
+    for a, b, a_punta in _tramos_libres(Xf[k1], hf[k1]):
+        A0 = max(o[k1] + a + BOLSA_MARGEN, desde)
+        B0 = o[k1] + b - (BOLSA_PUNTA if a_punta else BOLSA_MARGEN)
+        A0, B0 = _en_comun(g, A0, B0, Xf, hf, o, L)
+        if B0 - A0 < BOLSA_MIN:
+            continue
+        res = {}
+        for k in con:
+            a_f, b_f = A0 - o[k], B0 - o[k]
+            P, sf = _tramo_fino(Xf[k], hf[k], a_f, b_f, hf[k1] / 4)
+            Y = _inflar(P, cola[k])
+            if Y is None:
+                break
+            s_f = np.arange(len(Xf[k])) * hf[k]
+            cerca = (s_f >= a_f - BOLSA_VECINOS) & (s_f <= b_f + BOLSA_VECINOS)
+            resto = np.vstack([Xf[k][~cerca]] + ([dep[k]] if len(dep[k]) else []))
+            if not _bolsa_cabe(Y, P, resto, h):
+                break
+            res[k] = (a_f, b_f, Y, sf)
+        else:
+            return res
+    raise TrazadoError("la cuerda de más no cabe acostada después de la punta ni en una bolsa")
+
+
+def _deposito(Xf, hf, o: float, N: int, h: float) -> np.ndarray:
+    """El firme que sigue derecho detrás del de la ficha, fuera del encuadre (σ < o)."""
+    sig = np.arange(N) * h
+    sig = sig[sig < o - 1e-9]
+    d = _direccion(Xf, hf, False, largo=hf)
+    X = np.empty((len(sig), 3))
+    X[:, :2] = Xf[0, :2] + (o - sig)[:, None] * d
+    X[:, 2] = Xf[0, 2]
+    return X
+
+
+def _pose_video(Xf, hf, o, largo, cola, N, h, bolsa=None):
     """La cuerda del video de una pose: el depósito sigue derecho al firme de la ficha, la ficha
-    va remuestreada en la grilla del video y la cola sale de su punta (`_cola`)."""
+    va remuestreada en la grilla del video y la cola sale de su punta, acostada (`_cola`). Con
+    `bolsa` (a, b, Y, sf), no hay cola: el tramo de a a b de la ficha va inflado (Y, en los puntos
+    sf de la ficha) y mide `cola` más. Da la cuerda y el mapa σ de la ficha → σ (None sin
+    bolsa)."""
     sig = np.arange(N) * h
     X = np.empty((N, 3))
     dep = sig < o - 1e-9
-    if dep.any():
-        d = _direccion(Xf, hf, False, largo=hf)
-        X[dep, :2] = Xf[0, :2] + (o - sig[dep])[:, None] * d
-        X[dep, 2] = Xf[0, 2]
+    X[dep] = _deposito(Xf, hf, o, N, h)
+    mapa = None
     fin = o + largo
+    if bolsa is not None:
+        a, b, Y, sf = bolsa
+        l = _largos_acum(Y)
+        sv = o + a + (b - a + cola) * l / l[-1]
+        mapa = (np.concatenate([[0.0], sf, [largo]]),
+                np.concatenate([[o], sv, [o + largo + cola]]))
+        fin = o + largo + cola
     co = sig > fin + 1e-9
     for j in np.flatnonzero(~dep & ~co):
-        X[j] = _en(Xf, hf, sig[j] - o)
-    arco = False
+        if mapa is None:
+            X[j] = _en(Xf, hf, sig[j] - o)
+            continue
+        s = float(np.interp(sig[j], mapa[1], mapa[0]))
+        if a <= s <= b:
+            X[j] = [np.interp(s, sf, Y[:, i]) for i in range(3)]
+        else:
+            X[j] = _en(Xf, hf, s)
     if co.any():
-        C, l, arco = _cola(Xf, hf, cola + h, [X[dep]])
+        C = _cola(Xf, hf, cola + h, [X[dep]])
+        if C is None:
+            raise TrazadoError("la cola de más no cabe acostada")
+        C, l = C
         uu = sig[co] - fin
         for i in range(3):
             X[co, i] = np.interp(uu, l, C[:, i])
-    return X, arco
+    return X, mapa
+
+
+def _enhebra(Xf, hf, r1) -> bool:
+    """Si en el paso, que sigue al anterior hasta su nodo r1 de la ficha, la punta pasa por algún
+    cruce nuevo."""
+    s0 = (r1 - 1) * hf
+    return any(max(c.sa, c.sb) >= s0 - hf for c in encontrar_cruces(Xf, hf))
 
 
 def poses_video(modelo) -> list[PoseVideo]:
     """Las poses de los pasos en el video con largo fijo (T21b), de un nudo libre (con o sin
     anfitrión). El depósito R es lo que el firme gana en todo el nudo (los pasos «firme» de
     `alinear`), y la cuerda mide lo que el paso más largo necesita con lo que todavía le falta al
-    firme: en el as de guía, el último paso, 109,8 d (550 nodos), con colas de más de 22,1,
-    22,1, 25,1, 22,9, 14,8, 7,1 y 0 d."""
+    firme: en el as de guía, el último paso, 109,8 d (550 nodos), con 22,1, 22,1, 25,1, 22,9,
+    14,8, 7,1 y 0 d de más.
+
+    La cuerda de más va acostada después de la punta si cabe sin cruzar el nudo. Si no, espera en
+    una bolsa (T21c), y también en los pasos de antes a los que se llega sin que la punta pase por
+    un cruce nuevo: ahí no hay por dónde tirar de ella. En el as de guía, la gaza grande de los
+    pasos 1 a 3 (que se achica al subir el chicote por la gaza pequeña en el paso 4) y la vuelta
+    del chicote alrededor del firme en el paso 6 (que se aprieta al bajarlo en el 7)."""
     spec = modelo.spec
     if spec.plantilla is not None:
         raise ValueError("las plantillas atan todavía con las poses de T18 (la madeja es T21d)")
     P = modelo.pasos
     h = float(P[-1].h)
     L = [(len(r.puntos) - 1) * float(r.h) for r in P]
-    modos, r1s, gan = [None], [None], [0.0]
+    Xf = [np.asarray(r.puntos, float) for r in P]
+    hf = [float(r.h) for r in P]
+    modos, r1s, gan, enhebra = [None], [None], [0.0], [True]
     for k in range(1, len(P)):
-        A, B = np.asarray(P[k - 1].puntos, float), np.asarray(P[k].puntos, float)
         r = int(round(P[k].resaltado[0] / P[k].h)) if P[k].resaltado else 0
-        modo, valor = alinear(A, B, r)
+        modo, valor = alinear(Xf[k - 1], Xf[k], r)
         modos.append(modo)
         r1s.append(int(valor) if modo == "punta" else None)
         gan.append(gan[-1] + (L[k] - L[k - 1] if modo == "firme" else 0.0))
+        enhebra.append(modo == "punta" and _enhebra(Xf[k], hf[k], int(valor)))
     G = gan[-1]
     N = int(round((DEPOSITO_FINAL + max(L[k] + G - gan[k] for k in range(len(P)))) / h)) + 1
     total = (N - 1) * h
+    o = [DEPOSITO_FINAL + G - gan[k] for k in range(len(P))]
+    cola = [max(0.0, total - o[k] - L[k]) for k in range(len(P))]
+    dep = [_deposito(Xf[k], hf[k], o[k], N, h) for k in range(len(P))]
+    acostada = [cola[k] <= 1e-9 or _cola(Xf[k], hf[k], cola[k] + h, [dep[k]]) is not None
+                for k in range(len(P))]
+    grupos, g = [], []
+    for k in range(len(P)):
+        if enhebra[k] and g:
+            grupos.append(g)
+            g = []
+        g.append(k)
+    grupos.append(g)
+    bolsas = {}
+    for g in grupos:
+        if all(acostada[k] for k in g):
+            continue
+        k0 = g[0]
+        desde = (o[k0] + (r1s[k0] - 1) * hf[k0] - BOLSA_RAMPA if k0 > 0 and enhebra[k0]
+                 else -math.inf)
+        try:
+            bolsas.update(_bolsas(g, Xf, hf, o, L, cola, dep, h, desde))
+        except TrazadoError as e:
+            raise TrazadoError(f"Pasos {', '.join(str(P[k].n) for k in g)}: {e}") from e
     out = []
     for k, r in enumerate(P):
-        Xf = np.asarray(r.puntos, float)
-        o = DEPOSITO_FINAL + G - gan[k]
-        cola = max(0.0, total - o - L[k])
+        b = bolsas.get(k)
         try:
-            X, arco = _pose_video(Xf, float(r.h), o, L[k], cola, N, h)
+            X, mapa = _pose_video(Xf[k], hf[k], o[k], L[k], cola[k], N, h, b)
         except TrazadoError as e:
             raise TrazadoError(f"Paso {r.n}: {e}") from e
-        res = (o + r.resaltado[0], o + r.resaltado[1]) if r.resaltado else None
-        out.append(PoseVideo(r.n, X, h, o, L[k], cola, Xf, float(r.h), res, r.esperada,
-                             modos[k], r1s[k], arco))
+        p = PoseVideo(r.n, X, h, o[k], L[k], 0.0 if b else cola[k], Xf[k], hf[k], None, r.esperada,
+                      modos[k], r1s[k], mapa=mapa, enhebra=enhebra[k])
+        if b:
+            p.bolsa = (p.en_video(b[0]), p.en_video(b[1]), cola[k])
+            p.bolsa_ficha = (b[0], b[1])
+        if r.resaltado:
+            # Si la ficha resalta hasta su punta, el video resalta hasta la de la cuerda: la cola
+            # acostada es el mismo chicote, y es la punta la que va adelante al enhebrar (en el
+            # paso 4 del as de guía, lo resaltado iba detrás, por el fondo de la gaza grande).
+            fin = total if r.resaltado[1] >= L[k] - hf[k] else p.en_video(r.resaltado[1])
+            p.resaltado = (p.en_video(r.resaltado[0]), fin)
+        out.append(p)
     return out
 
 
@@ -956,9 +1237,10 @@ def _distancia_a(P, Q) -> float:
 
 
 def comprobar_poses(poses: list[PoseVideo], solido=None) -> list[str]:
-    """Las fallas de las poses del video: otra cantidad de nodos, el tramo de la ficha a más de
-    TOL_FICHA de ella, la cola o el depósito que pasan por debajo de la cuerda (lo agregado solo
-    pasa por encima) o un par a menos de dmin."""
+    """Las fallas de las poses del video: otra cantidad de nodos, el tramo de la ficha (fuera de
+    la bolsa) a más de TOL_FICHA de ella, otros cruces que los de la ficha en ese tramo (la bolsa
+    no cruza nada), la cola o el depósito que pasan por debajo de la cuerda (lo agregado solo pasa
+    por encima) o un par a menos de dmin."""
     from .fisica.asentar import contacto
     fallas = []
     N = len(poses[0].X)
@@ -968,11 +1250,20 @@ def comprobar_poses(poses: list[PoseVideo], solido=None) -> list[str]:
             fallas.append(f"Paso {p.n}: la cuerda tiene {len(X)} nodos y no {N}.")
             continue
         a, b = p.tramo_ficha()
-        d = _distancia_a(p.ficha, X[max(0, a - 1):b + 2])
+        F = p.ficha
+        if p.bolsa_ficha is not None:
+            s_f = np.arange(len(F)) * p.h_ficha
+            F = F[(s_f < p.bolsa_ficha[0] - 1e-9) | (s_f > p.bolsa_ficha[1] + 1e-9)]
+        d = _distancia_a(F, X[max(0, a - 1):b + 2])
         if d > TOL_FICHA:
             fallas.append(f"Paso {p.n}: el tramo de la ficha queda a {d:.3f} d de ella.")
+        n_v = len(encontrar_cruces(X[a:b + 1], h))
+        n_f = len(encontrar_cruces(p.ficha, p.h_ficha))
+        if n_v != n_f:
+            fallas.append(f"Paso {p.n}: el tramo de la ficha tiene {n_v} cruces en el video y {n_f} "
+                          "en la ficha.")
         s = np.arange(N) * h
-        lo, hi = p.o - 1e-6, p.o + p.largo + 1e-6
+        lo, hi = p.o - 1e-6, p.fin + 1e-6
         for c in encontrar_cruces(X, h):
             en_a, en_b = lo <= c.sa <= hi, lo <= c.sb <= hi
             if en_a and en_b:
@@ -1110,6 +1401,94 @@ def _asentado(A: PoseVideo, B: PoseVideo) -> list[CuadroGuia]:
     return out
 
 
+CINTA_M = 400          # puntos de la curva que se achica (`_Cinta`)
+JUNTA_CINTA = 3.0      # d: lo que tarda la curva en juntarse con el camino en p*
+
+
+@dataclass
+class _Cinta:
+    """La bolsa de A que se achica mientras la mano tira de la punta por el camino de B (T21c),
+    cuando la punta de A ya está en ese camino (`_cinta`), así que no hay aire: es el chicote que
+    sube por la gaza pequeña del as de guía mientras la gaza grande se achica, y el que baja por
+    ella mientras se aprieta el collar. Lo que ya pasó por p* sigue el camino; lo de antes, de s1
+    a p*, es una curva que va de la forma de A a la de B y mide lo que queda de cuerda de ese
+    lado."""
+    u_ini: float          # la punta de A, en el camino de B (u = σ − o de B)
+    s_ent: float          # p*, en u
+    s1: float             # σ donde empieza la curva que se achica
+    s2: float             # σ de A que está en p*
+    A: np.ndarray         # (CINTA_M, 3): el tramo de A de s1 a s2, repartido igual a lo largo de él
+    B: np.ndarray         # el de B, de s1 a p*
+    pesos: np.ndarray
+    largos: np.ndarray    # lo que mide la mezcla de A y B con cada peso (sin crecer)
+
+    def curva(self, largo: float):
+        """La mezcla de A y B que mide `largo` y su largo hasta cada punto."""
+        w = float(np.interp(largo, self.largos[::-1], self.pesos[::-1]))
+        S = (1 - w) * self.A + w * self.B
+        return S, _largos_acum(S)
+
+
+def _cinta(A: PoseVideo, B: PoseVideo, V) -> _Cinta | None:
+    """Si la punta de A ya está en el camino V de B (a menos de TOL_CINTA vista desde arriba y de
+    ALTO_CINTA de alto, yendo para el mismo lado) y B la lleva más adelante, la mano tira de ella
+    sin levantarla por el aire. Lo que A tiene desde s2 hasta la punta ya está en el camino,
+    corrido lo que la punta va a avanzar; la curva que se achica va del comienzo de la bolsa de A
+    (s1) hasta p*, donde s2 entra al camino."""
+    h, N, o = B.h, len(B.X), B.o
+    if A.bolsa is None:
+        return None              # sin bolsa no hay cuerda de más de este lado de la punta
+    s_tip = (N - 1) * h
+
+    def en_camino(p, q) -> bool:
+        return (float(np.linalg.norm((p - q)[:2])) < TOL_CINTA
+                and abs(float(p[2] - q[2])) < ALTO_CINTA)
+
+    p = A.X[-1]
+    seg = np.diff(V, axis=0)
+    L2 = np.maximum(np.einsum("ij,ij->i", seg[:, :2], seg[:, :2]), 1e-18)
+    t = np.clip(np.einsum("ij,ij->i", (p - V[:-1])[:, :2], seg[:, :2]) / L2, 0.0, 1.0)
+    q = V[:-1] + t[:, None] * seg
+    # El más cercano desde arriba, pero entre dos pasadas por el mismo lugar (un cruce), la de la
+    # altura más parecida.
+    d = np.linalg.norm((q - p)[:, :2], axis=1) + 0.3 * np.abs(q[:, 2] - p[2])
+    i = int(np.argmin(d))
+    if not en_camino(p, q[i]):
+        return None
+    u_ini = (i + float(t[i])) * h
+    m = max(1, int(round(0.6 / h)))
+    ta = (A.X[-1] - A.X[-1 - m])[:2]
+    tv = (_en(V, h, min(u_ini + 0.3, (len(V) - 1) * h)) - _en(V, h, max(u_ini - 0.3, 0.0)))[:2]
+    if float(np.dot(ta, tv)) < 0.5 * float(np.linalg.norm(ta) * np.linalg.norm(tv)):
+        return None
+    delta = s_tip - o - u_ini
+    if delta < h:
+        return None
+    j = N - 1
+    while j > 0 and (j - 1) * h - o - delta >= 0 and \
+            en_camino(A.X[j - 1], _en(V, h, (j - 1) * h - o - delta)):
+        j -= 1
+    s2 = j * h
+    # La curva que se achica empieza donde empieza la bolsa de A. Lo de antes va de A a B nodo a
+    # nodo, como en «punta»: las fichas de dos pasos, asentadas cada una por su lado, difieren
+    # en todo el nudo (en el paso 4 del as de guía, el chicote que sube empuja la gaza pequeña
+    # más de 0,5 d), y la curva no puede tragarse los cruces.
+    i1 = int(math.floor(A.bolsa[0] / h + 1e-9))
+    s_ent = s2 - o - delta
+    sB = o + s_ent
+    if i1 * h > min(sB, s2) - 1.0:
+        return None
+    nB = int(math.floor(sB / h + 1e-9))
+    TB = B.X[i1:nB + 1]
+    if sB - nB * h > 1e-6:
+        TB = np.vstack([TB, _en(B.X, h, sB)])
+    TA, TB = _uniforme(A.X[i1:j + 1], CINTA_M), _uniforme(TB, CINTA_M)
+    pesos = np.linspace(0.0, 1.0, 201)
+    largos = np.array([float(np.sum(np.linalg.norm(np.diff((1 - w) * TA + w * TB, axis=0), axis=1)))
+                       for w in pesos])
+    return _Cinta(u_ini, s_ent, i1 * h, s2, TA, TB, pesos, np.minimum.accumulate(largos))
+
+
 def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
     """La guía del paso A al B con largo fijo, cuando B sigue el camino de A desde el firme y
     cambia hacia la punta (T21c). La mano toma la cuerda a PINZA de la punta, la lleva por el aire
@@ -1117,61 +1496,74 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
     T17) y tira de la cola hasta su lugar. Cada nodo que ya pasó la entrada sigue el camino que
     hizo la punta; lo que todavía no pasó queda suelto (sin resorte, con su peso) y se recoge solo
     al tirar. La pierna que va del nudo a la entrada vuelve a su lugar cuando queda poca cuerda
-    por pasar."""
+    por pasar.
+
+    Si la punta de A ya está en el camino de B (`_cinta`), no hay aire: la mano la toma ahí y
+    tira, y la cuerda que todavía no pasó es la bolsa de A, que se achica guiada hasta la forma de
+    B (la gaza grande del as de guía al subir el chicote por la gaza pequeña)."""
     h, N, o = B.h, len(B.X), B.o
     s_tip = (N - 1) * h
     u_fin = s_tip - o
-    s0 = (B.r1 - 1) * B.h_ficha
+    u_ficha = B.fin - o                       # la punta de la ficha de B, en u
+    s0 = B.en_video((B.r1 - 1) * B.h_ficha) - o
     sig = np.arange(N) * h
     # El camino de llegada, desde σ = o: la ficha de B y su cola, en u = σ − o.
     nV = int(math.floor(u_fin / h + 1e-9)) + 1
     V = np.array([_en(B.X, h, o + i * h) for i in range(nV)])
+    cinta = _cinta(A, B, V)
     # Los cruces de A que cuentan son los del tramo que ya está donde va a quedar (hasta s0): lo
     # que sigue (la punta vieja y la cola de más) cambia de lugar, y un cruce suyo por encima
-    # puede ser, en B, uno por debajo en el mismo lugar de la cuerda (la cola en arco del paso 6
-    # del as de guía pasa sobre el firme por donde el paso 7 pasa debajo). Lo de B, sin el
-    # depósito, que no entra en el camino.
+    # puede ser, en B, uno por debajo en el mismo lugar de la cuerda. Lo de B, sin el depósito,
+    # que no entra en el camino.
     refs_A = [(a - o, b - o, e) for a, b, e in _referencia(A.X, h)
               if min(a, b) >= o - 1e-9 and max(a, b) - o < s0 - h]
     refs_B = [(a - o, b - o, e) for a, b, e in _referencia(B.X, h) if min(a, b) >= o - 1e-9]
-    # Los cruces que la punta tiene que enhebrar: los del camino nuevo de la ficha. Los de la cola
-    # de más van en arco, por encima de todo.
-    nuevos = [c for c in refs_B if s0 - h <= max(c[0], c[1]) <= B.largo + 1e-6]
-    primero = min((max(a, b) for a, b, _ in nuevos), default=None)
-    s_ent = s0 + ENTRADA_MIN if primero is None else max(primero - ENTRADA, s0 + ENTRADA_MIN)
-    s_ent = min(s_ent, u_fin)
-    # El aire: de la punta, donde está, a la entrada, levantada ALTO_MANO.
-    m = max(1, int(round(0.6 / h)))
-    t_ini = A.X[-1] - A.X[-1 - m]
-    t_ini = t_ini / max(float(np.linalg.norm(t_ini)), 1e-12)
-    E = _en(V, h, s_ent) + np.array([0.0, 0.0, ALTO_MANO])
-    t_ent = _en(V, h, min(s_ent + 0.5, u_fin)) - _en(V, h, max(s_ent - 0.5, 0.0))
-    t_ent[2] = 0.0
-    t_ent = t_ent / max(float(np.linalg.norm(t_ent)), 1e-12)
-    nudo = A.X[sig <= o + s0 + 1e-9]
-    alto = max(float(np.max(nudo[:, 2])) + 1.5, float(A.X[-1, 2]) + 1.0, float(E[2]) + 0.5)
-    Q, lq = _por_largo(_aire(A.X[-1], t_ini, E, t_ent, alto))
-    u_ini = s_ent - float(lq[-1])
+    # Los cruces que la punta tiene que enhebrar: los del camino nuevo de la ficha (con la cinta,
+    # los que todavía tiene por delante; por los de atrás la cuerda solo corre).
+    umbral = cinta.u_ini if cinta else s0
+    nuevos = [c for c in refs_B if umbral - h <= max(c[0], c[1]) <= u_ficha + 1e-6]
     cerca = [max(a, b) for a, b, _ in nuevos]
+    if cinta is None:
+        primero = min(cerca, default=None)
+        s_ent = s0 + ENTRADA_MIN if primero is None else max(primero - ENTRADA, s0 + ENTRADA_MIN)
+        s_ent = min(s_ent, u_fin)
+        # El aire: de la punta, donde está, a la entrada, levantada ALTO_MANO.
+        m = max(1, int(round(0.6 / h)))
+        t_ini = A.X[-1] - A.X[-1 - m]
+        t_ini = t_ini / max(float(np.linalg.norm(t_ini)), 1e-12)
+        E = _en(V, h, s_ent) + np.array([0.0, 0.0, ALTO_MANO])
+        t_ent = _en(V, h, min(s_ent + 0.5, u_fin)) - _en(V, h, max(s_ent - 0.5, 0.0))
+        t_ent[2] = 0.0
+        t_ent = t_ent / max(float(np.linalg.norm(t_ent)), 1e-12)
+        nudo = A.X[sig <= o + s0 + 1e-9]
+        alto = max(float(np.max(nudo[:, 2])) + 1.5, float(A.X[-1, 2]) + 1.0, float(E[2]) + 0.5)
+        Q, lq = _por_largo(_aire(A.X[-1], t_ini, E, t_ent, alto))
+        u_ini = s_ent - float(lq[-1])
+    else:
+        s_ent, u_ini = cinta.s_ent, cinta.u_ini
 
     def vel(u):
         if u < s_ent:
             return VEL_AIRE
-        if u <= B.largo:
+        if u <= u_ficha:
             return VEL_CRUCE if min((abs(u - c) for c in cerca), default=math.inf) < CERCA_CRUCE else VEL
         return VEL_TIRAR
 
     U = _recorrido_largo(u_ini, u_fin, vel)
     F = len(U) - 1
     baja = max(1.0, ARRANQUE_LARGO * FPS)
-    lifts = [float(_suave5((F - f) / baja)) for f in range(F + 1)]
+    # Con la cinta, la mano levanta la punta al arrancar (en A está sobre la mesa); sin ella, la
+    # punta ya sube por el aire.
+    lifts = [float(_suave5((F - f) / baja)) * (float(_suave5(f / baja)) if cinta else 1.0)
+             for f in range(F + 1)]
     mira = ANTES_CRUCE + RAMPA
     uV = np.arange(nV) * h
+    mueve = min(s0, cinta.s1 - o) if cinta else s0
     borr = []
     for f, ut in enumerate(U):
         n_v = int(math.floor(min(u_fin, max(s_ent, ut) + mira) / h + 1e-9)) + 1
         mv = np.zeros(n_v)
-        mv[min(n_v, int(s0 / h)):] = 1.0
+        mv[min(n_v, max(0, int(mueve / h))):] = 1.0
         G = V[:n_v].copy()
         # La mano lleva la punta levantada ALTO_MANO, y lo de detrás baja en DETRAS_MANO: va en
         # la guía antes de las alturas, para que el tramo de encima de un cruce suba por encima
@@ -1187,7 +1579,7 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
 
         def hol(a, b, um=float(ut), lift=lifts[f]):
             nueva = max(a, b)
-            if nueva < s0 - 1e-9:
+            if nueva < umbral - 1e-9:
                 return 0.0, 1.0
             d = um - nueva
             antes = _rampa((d + ANTES_CRUCE + RAMPA) / RAMPA)
@@ -1199,10 +1591,17 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
     cruces = _seguir_cruces(borr, h, refs_A, refs_B, True)
     c_pinza = int(round((s_tip - PINZA) / h))
     manos = [0, c_pinza - 1, c_pinza, c_pinza + 1]
-    prefijo = sig <= o + s0 + 1e-9
+    prefijo = sig <= (cinta.s1 if cinta else o + s0) + 1e-9
     de_v = prefijo & (sig >= o - 1e-9)
     punta = sig >= s_tip - PUNTA_GUIA - 1e-9
     pierna_toda = ~prefijo & (sig <= o + s_ent + 1e-9)
+    if cinta:
+        # Lo que A ya tiene en el camino puede quedar hasta TOL_CINTA de él: esa diferencia se va
+        # en el arranque, sin saltar en el primer cuadro.
+        en_v = sig >= cinta.s2 - 1e-9
+        corrido = np.zeros((N, 3))
+        corrido[en_v] = A.X[en_v] - np.array([_en(V, h, u_ini - (s_tip - s)) for s in sig[en_v]])
+        junta_A = A.X[int(round(cinta.s2 / h))] - _en(V, h, s_ent)
     guia = []
     for f, (b, cr) in enumerate(zip(borr, cruces)):
         ut = float(U[f])
@@ -1217,6 +1616,25 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
         G[prefijo] += (A.X[prefijo] - B.X[prefijo]) * (1 - w_f)
         uj = ut - (s_tip - sig)
         enhebrado = (uj >= s_ent - 1e-9) & ~prefijo
+        if cinta:
+            queda = 1.0 - float(_suave5(f / baja))
+            for j in np.flatnonzero(enhebrado):
+                G[j] = _en(Vf, h, uj[j]) + corrido[j] * queda
+            # La bolsa que se achica: de s1 a p*, con lo que todavía no pasó.
+            s2 = s_tip - ut + s_ent + o
+            curva = ~prefijo & ~enhebrado
+            if curva.any():
+                largo = s2 - cinta.s1
+                S, lS = cinta.curva(largo)
+                ell = (sig[curva] - cinta.s1) * lS[-1] / largo
+                pos = np.column_stack([np.interp(ell, lS, S[:, i]) for i in range(3)])
+                # En p* se junta con el camino (levantado por la mano y con lo que A tenía corrido).
+                junta = _en(Vf, h, s_ent) + junta_A * queda - S[-1]
+                pos += junta * _suave5(1 - (largo - (sig[curva] - cinta.s1)) / JUNTA_CINTA)[:, None]
+                G[curva] = pos
+            k = np.full(N, RESORTE)
+            guia.append(_cuadro_largo(G, h, k, manos, largos=_largos_de(A, B, w_f)))
+            continue
         sel = (punta | enhebrado) & ~prefijo
         # El aire llega a la entrada levantado ALTO_MANO sobre la ficha, pero el camino puede ir ahí
         # más alto (sube sobre un cruce): los últimos MEZCLA d del aire se acomodan a él en cada
@@ -1242,26 +1660,42 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
             k[pierna] = RESORTE * _rampa((FLOJO - (u_fin - ut)) / FLOJO)
             G[pierna] = [_en(Vf, h, s - o) for s in sig[pierna]]
         guia.append(_cuadro_largo(G, h, k, manos, largos=_largos_de(A, B, w_f)))
-    fases = {"aire": (0, int(np.searchsorted(U, s_ent))),
-             "enhebrar": (int(np.searchsorted(U, s_ent)), int(np.searchsorted(U, B.largo))),
-             "tirar": (int(np.searchsorted(U, B.largo)), F)}
+    i_ent, i_ficha = int(np.searchsorted(U, s_ent)), int(np.searchsorted(U, u_ficha))
+    if cinta:
+        fases = {"enhebrar": (0, i_ficha), "tirar": (i_ficha, F)}
+    else:
+        fases = {"aire": (0, i_ent), "enhebrar": (i_ent, i_ficha), "tirar": (i_ficha, F)}
     guia += _asentado(A, B)
     fases["asentar"] = (F + 1, len(guia) - 1)
-    return Tramo(B.n, "punta", A.X.copy(), B.X.copy(), guia, fases)
+    return Tramo(B.n, "cinta" if cinta else "punta", A.X.copy(), B.X.copy(), guia, fases)
 
 
 VEL_DESLIZAR = 8.0     # d/s: el firme que corre a lo largo de sí mismo
 
 
-def _tramo_largo_firme(A: PoseVideo, B: PoseVideo) -> Tramo:
+def _tramo_largo_firme(A: PoseVideo, B: PoseVideo, mano: bool = False) -> Tramo:
     """La guía del paso A al B con largo fijo cuando B sigue igual hacia la punta y la cuerda que
     gana entra por el firme (la gaza pequeña del as de guía, que se forma en el medio): cada nodo
     va en línea recta de su lugar en A al de B, con las alturas de los cruces y arranque y frenado
     de quinto grado. El firme, que es recto, corre así a lo largo de sí mismo desde el depósito;
     la gaza todavía se infla en vez de formarse (un rizo de su ángulo deja su extremo a 14-17 d de
-    donde llega el firme, T21c)."""
+    donde llega el firme, T21c).
+
+    Con `mano`, es un paso «punta» en el que la punta no pasa por ningún cruce nuevo (acercar el
+    chicote a la gaza pequeña del as de guía): la mano toma la cuerda a PINZA de la punta y la
+    lleva levantada hasta ALTO_MANO a mitad de camino, y lo de detrás baja en DETRAS_MANO. Por el
+    aire y con lo de detrás suelto, el chicote se doblaba en un gancho (T21c)."""
     h, N = B.h, len(B.X)
     S, Bx = A.X, B.X
+    sig = np.arange(N) * h
+    if mano:
+        c = int(round(((N - 1) * h - PINZA) / h))
+        manos = [0, c - 1, c, c + 1]
+        uh = (N - 1) * h - PINZA
+        alza = np.where(sig >= uh, 1.0, _suave(1 - (uh - sig) / DETRAS_MANO))
+    else:
+        manos = [0, N - 1]
+        alza = np.zeros(N)
     mov = np.linalg.norm(Bx - S, axis=1)
     medio = mov[np.linalg.norm(Bx - np.array([_en(S, h, s + A.o - B.o) for s in np.arange(N) * h]),
                                axis=1) > 0.25]
@@ -1272,7 +1706,9 @@ def _tramo_largo_firme(A: PoseVideo, B: PoseVideo) -> Tramo:
     for f in range(nf + 1):
         u = float(_suave5(f / nf))
         env = math.sin(math.pi * u)
-        borr.append(_Borrador(G=S + u * (Bx - S), n=N, manos=[0, N - 1], hasta=(N - 1) * h, mov=mov,
+        G = S + u * (Bx - S)
+        G[:, 2] += ALTO_MANO * env * alza
+        borr.append(_Borrador(G=G, n=N, manos=manos, hasta=(N - 1) * h, mov=mov,
                               holgura=lambda a, b, env=env: (HOLGURA * env, 1.0),
                               exacto=Bx if f == nf else (S if f == 0 else None)))
     cruces = _seguir_cruces(borr, h, refs_A, refs_B, True)
@@ -1282,12 +1718,12 @@ def _tramo_largo_firme(A: PoseVideo, B: PoseVideo) -> Tramo:
         G[:, 2] = alturas(G, h, cr, b.holgura)
         if b.exacto is not None:
             G = b.exacto.copy()
-        guia.append(_cuadro_largo(G, h, np.full(N, RESORTE), [0, N - 1], suelto=False,
+        guia.append(_cuadro_largo(G, h, np.full(N, RESORTE), manos, suelto=False,
                                   largos=_largos_de(A, B, float(_suave5(f / nf)))))
     fases = {"acomodar": (0, nf)}
     guia += _asentado(A, B)
     fases["asentar"] = (nf + 1, len(guia) - 1)
-    return Tramo(B.n, "firme", S.copy(), Bx.copy(), guia, fases)
+    return Tramo(B.n, "mano" if mano else "firme", S.copy(), Bx.copy(), guia, fases)
 
 
 def animar_largo(A: PoseVideo, B: PoseVideo, solido=None) -> Animado:
@@ -1300,7 +1736,12 @@ def animar_largo(A: PoseVideo, B: PoseVideo, solido=None) -> Animado:
     from .cruces import secuencia_obtenida
     from .fisica.atar import comprobar, recta, seguir
     t0 = time.time()
-    tr = _tramo_largo_punta(A, B, solido) if B.modo == "punta" else _tramo_largo_firme(A, B)
+    # Si la punta no pasa por ningún cruce nuevo, la mano la lleva y todo va guiado nodo a nodo;
+    # con un anfitrión no, que la recta lo atravesaría.
+    if B.modo == "punta" and (B.enhebra or solido is not None):
+        tr = _tramo_largo_punta(A, B, solido)
+    else:
+        tr = _tramo_largo_firme(A, B, mano=B.modo == "punta")
     c = seguir(tr.x0, tr.guia, solido)
     fallas = []
     medidas = {"cuadros_guia": len(tr.guia), "esperas": c.esperas, "newton": c.newton,

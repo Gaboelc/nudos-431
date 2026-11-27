@@ -896,7 +896,7 @@ La cámara (las paradas y la aceleración) es de T22.
      - En el as de guía, R = 16,6 d y L ≈ 126 d (632 nodos), y las colas de más miden 22,1, 22,1, 25,1, 22,9, 14,8, 7,1 y 0 d.
    - **La cola de más:**
      - Se acuesta en la mesa en la primera dirección, vista desde arriba, que no cruza nada.
-     - Si no hay ninguna, queda en un arco levantado por fuera del nudo y fuera de la toma.
+     - Si no hay ninguna, queda en un arco levantado por fuera del nudo y fuera de la toma. *Cambió en T21c (Gabriel, 27 nov): el arco del paso 3 del as de guía subía 25 d en diagonal sobre el nudo. Ahora la cuerda de más espera en una bolsa dentro del nudo (ver «Cómo se hizo»).*
      - Un campo opcional del video (`video: {cola: …}`) la corrige donde la regla falle; las fichas lo ignoran.
    - **En una plantilla:** la pausa es la cuerda hasta el hito, más la cola en la mano, como hoy, y el resto va en la madeja.
    - **La regla de la pausa se mantiene, precisada:** el tramo que dibuja la ficha es la pose de la ficha, con su secuencia, y el depósito, la cola y la madeja solo pasan por encima. Así cada transición sigue corriendo en paralelo con las demás. Si cada una partiera del final de la anterior, atar un nudo tardaría de 5 a 6 veces más.
@@ -959,8 +959,21 @@ La cámara (las paradas y la aceleración) es de T22.
   - Las colas de más miden 22,1, 22,1, 25,1, 22,9, 14,9, 7,1 y 0 d.
 - **La cola de más:**
   - Se acuesta en la primera dirección que, vista desde arriba, no pasa a menos de 1,5 d de la cuerda, y sale con la dirección y la pendiente de la punta. Con una dirección promedio, el tramo de la ficha se separaba 0,025 d de ella en la punta.
-  - En los pasos 3 y 6, la punta está dentro del nudo y ninguna dirección cabe. Ahí la cola sube a 60° en 1 d y sale del cuadro, como en una mano que la sostiene, sin bajar nunca de la mesa.
-  - `comprobar_poses` revisa la cantidad de nodos, el tramo de la ficha a 0,02 d, que lo agregado pase solo por encima, y dmin.
+  - En los pasos 3 y 6, la punta está dentro del nudo y ninguna dirección cabe. Primero la cola subía a 60° y salía del cuadro; Gabriel vio en la previa que en el paso 3 subía 25 d en diagonal sobre el nudo (27 nov), y ahora va en una bolsa (abajo).
+  - `comprobar_poses` revisa la cantidad de nodos, el tramo de la ficha a 0,02 d (fuera de la bolsa), que tenga en el video los mismos cruces que en la ficha, que lo agregado pase solo por encima, y dmin.
+- **La bolsa** (`_bolsas`, `_inflar`; Gabriel, 27 nov):
+  - Los 25 d del paso 3 no son un error de cálculo: los cruces del as de guía quedan en el mismo punto de la cuerda en todos los pasos (se corren 0,3 d como mucho), y el chicote crece 2,2, 8,0, 7,8 y 7,1 d en los pasos 4 a 7. Con largo fijo, esa cuerda tiene que estar en algún lado.
+  - Si la cola no cabe acostada, la cuerda de más espera en un tramo libre de la ficha (entre dos cruces, o del último cruce a la punta, a 0,75 d de los cruces y a 3 d de la punta) que se infla hasta medir lo que sobra. Toma la forma de una cuerda floja: gira lo mismo que en la ficha pero más despacio, y un giro de más, ψ(t) = Σ a_k sen(kπt), la cierra en sus puntas doblando lo menos posible (una elástica, con Newton y la condición de la punta). No dobla más cerrado que la ficha ni que 1,5 d, ni se acerca a la cuerda más de 1,5 d.
+  - Antes, la bolsa se empujaba hacia afuera por la normal, pero con rampas de 3 d hacía codos de radio 0,3. También se probó tirarla hacia el nudo para que saliera más ancha y la cámara abriera menos, y las formas salían raras. El giro de la ficha se reparte en un tramo antes de estirarlo: dobla solo en los nodos, y estirada quedaba con codos.
+  - La cuerda de más no vuelve para atrás por un cruce. Los pasos a los que se llega sin que la punta pase por un cruce nuevo comparten la bolsa (la gaza grande de los pasos 1 a 3, también en los que la cola cabía), y la del primer paso de un grupo va en la cuerda que ese paso tiende (la vuelta del collar del paso 6, y no la gaza).
+  - En el as de guía, la gaza grande guarda 22,1 d en los pasos 1 y 2 y 25,1 en el 3: sale como una gota de unos 19 × 25 d, contra 14 × 15 en la ficha, y la cámara abre más en esos pasos. La vuelta del collar del paso 6 guarda 7,1 d y sale como una lengua hacia la derecha. Los pasos 4 y 5 llevan la cola acostada (22,9 y 14,9 d).
+  - En los pasos con bolsa, la punta de la cuerda es la del chicote de la ficha: se ve, y nada sube fuera del cuadro.
+- **La cinta** (`_Cinta`): si la punta de A ya está en el camino de B (a 0,3 d desde arriba y a 1 d de alto) y A tiene bolsa, la mano no la lleva por el aire: la levanta ahí y tira.
+  - Lo que pasó por p* sigue el camino, como al enhebrar. La bolsa, desde su comienzo hasta p*, es una mezcla de la forma de A y la de B que mide lo que queda de ese lado, con resortes en toda la cuerda.
+  - En el as de guía, el chicote sube por la gaza pequeña mientras la gaza grande se achica hasta su tamaño (paso 4), y baja por ella mientras la vuelta del collar se aprieta (paso 7).
+  - La curva empieza en la bolsa y no donde A y B se separan: las fichas de dos pasos, asentadas cada una por su lado, difieren en todo el nudo (el chicote que sube empuja la gaza pequeña más de 0,5 d), y con eso la curva se tragaba los cruces.
+- **La mano que acerca el chicote** (`_tramo_largo_firme(mano=True)`): en un paso «punta» en que la punta no pasa por ningún cruce nuevo (el paso 3 del as de guía), la mano toma la cuerda a 1,5 d de la punta y la lleva levantada hasta 1 d a mitad de camino, y todo va guiado nodo a nodo de A a B, con arranque y frenado de quinto grado. Con la punta por el aire y el resto suelto, el chicote se doblaba en un gancho. Con un anfitrión sigue yendo por el aire, porque la recta podría atravesarlo.
+- **El resaltado, hasta la punta de la cuerda:** si la ficha resalta hasta su punta, el video resalta hasta la de la cuerda, con la cola acostada. Es el mismo chicote, y al enhebrar va adelante. En el paso 4 del as de guía, la punta subía por la gaza pequeña sin resaltar, y lo resaltado iba detrás, por el fondo de la gaza grande.
 - **La guía** (`_tramo_largo_punta`):
   - La mano toma la cuerda a 1,5 d de la punta: tres nodos, con 200 N/d.
   - La trae por el aire a 10 d/s hasta la entrada, que queda 2,5 d antes del primer cruce nuevo.
@@ -1000,20 +1013,20 @@ La cámara (las paradas y la aceleración) es de T22.
 - **El video:** la velocidad de la línea de tiempo valía 0,9999999999999999 en vez de 1 (el promedio de unos), y `retiempo` corría un cuadro cada tanto.
 - **La medida del as de guía, antes y después** (`calidad`, el video entero):
 
-| | T21a (26 nov) | T21c (27 nov) |
-|---|---|---|
-| Duración | 45,2 s | 51,3 s |
-| Nodos | de 357 a 550; cambian 281 veces | 550; no cambian |
-| Largo de la cuerda | de 71,0 a 109,8 d (35 %) | de 109,64 a 110,12 d (0,44 %) |
-| Recoger y morph | 4,8 y 6,6 s | 0 y 3,3 s (la gaza pequeña) |
-| Aceleración p99 y máxima | 340 y 906 d/s² | 271 y 2192 d/s² (la cuerda que cae y se apoya) |
-| Brincos (más de 360 d/s²) | 7 | 6 |
-| Picos y temblores | sin medir | 0 y 0 |
-| Paradas en seco de la punta | 74 | 45 (28 frenadas: cambios de rapidez) |
-| Resaltado vacío o a medias | 31 % de los cuadros | ninguno |
+| | T21a (26 nov) | T21c (27 nov) | T21c con la bolsa (27 nov) |
+|---|---|---|---|
+| Duración | 45,2 s | 51,3 s | 42,0 s |
+| Nodos | de 357 a 550; cambian 281 veces | 550; no cambian | 550; no cambian |
+| Largo de la cuerda | de 71,0 a 109,8 d (35 %) | de 109,64 a 110,12 d (0,44 %) | de 109,63 a 110,05 d (0,39 %) |
+| Recoger y morph | 4,8 y 6,6 s | 0 y 3,3 s (la gaza pequeña) | 0 y 3,3 s (y 1,2 s de la mano que acerca el chicote) |
+| Aceleración p99 y máxima | 340 y 906 d/s² | 271 y 2192 d/s² (la cuerda que cae y se apoya) | 259 y 970 d/s² |
+| Brincos (más de 360 d/s²) | 7 | 6 | 4 |
+| Picos y temblores | sin medir | 0 y 0 | 0 y 0 |
+| Paradas en seco de la punta | 74 | 45 (28 frenadas: cambios de rapidez) | 18 (16 frenadas) |
+| Resaltado vacío o a medias | 31 % de los cuadros | ninguno | ninguno |
 
-  Las fases del nudo: 13,2 s en el aire, 8,3 enhebrando, 8,2 tirando de la cola, 3,3 la gaza pequeña, 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. Lo que más dura es traer la punta por el aire, que no enseña nada; se puede acortar en T22, con la voz. La cámara (14 paradas, quieta el 13 % del tiempo) es de T22.
-- **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9987 y 1,0037 del nominal y sin ningún pico ni temblor; 3,5 min de motor los seis a la vez.
+  Las fases del nudo, antes de la bolsa: 13,2 s en el aire, 8,3 enhebrando, 8,2 tirando de la cola, 3,3 la gaza pequeña, 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. Lo que más duraba era traer la punta por el aire, que no enseña nada. Con la bolsa, los pasos 3, 4 y 7 ya no van por el aire: 4,9 s en el aire, 9,9 enhebrando, 4,4 tirando, 4,5 acomodando (la gaza pequeña y el chicote que se acerca), 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. La cámara (14 paradas, quieta el 15 % del tiempo) es de T22.
+- **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9984 y 1,0023 del nominal y sin ningún pico ni temblor; unos 3 min de motor los seis a la vez.
 
 #### T22: El video completo
 

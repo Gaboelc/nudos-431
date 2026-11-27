@@ -134,8 +134,9 @@ def atar(modelo, rehacer: bool = False) -> tuple[list[Tramo], str]:
     huella."""
     from .animar import animar, animar_apretado, poses_atado
     P = poses_atado(modelo)
-    if modelo.spec.plantilla is None and modelo.apretado is not None and (P[-1].o > 0 or P[-1].cola > 0):
-        raise VideoError(f"{modelo.spec.slug}: el último paso lleva depósito o cola de más, y el "
+    if modelo.spec.plantilla is None and modelo.apretado is not None and (
+            P[-1].o > 0 or P[-1].cola > 0 or P[-1].bolsa is not None):
+        raise VideoError(f"{modelo.spec.slug}: el último paso lleva depósito o cuerda de más, y el "
                          "apretado del video todavía no los sabe llevar")
     ap = modelo.apretado.puntos if modelo.apretado is not None else np.zeros((0, 3))
     huella = _huella(*[p.puntos for p in P], ap, _codigo(*CODIGO_ATAR))
