@@ -102,7 +102,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Borrador del guion hablado de los dos pilotos (`config/guion/`) y su prueba (`prueba-guion`), a pedido de Gabriel, para que la voz suene natural (27 nov)
     - [x] Gabriel oyó el primer borrador: le gustó, pero la apertura sonaba a youtuber, no dice diminutivos ni «así», y los puntos suspensivos estiraban palabras. Segunda versión, con el estilo en el plan y las tomas sin titubeos (27 nov)
     - [x] Gabriel no quiere comparaciones («como un ojo», el conejo): tercera versión, sin ellas (27 nov)
-    - [ ] Gabriel oye la tercera versión del guion hablado y dice si ese es el estilo
+    - [x] Gabriel aprobó el estilo del guion hablado con la tercera versión de los dos pilotos (27 nov): las reglas están en el plan, en el guion de T22a, y valen para los guiones de los 36 nudos
     - [ ] T22a El diseño, el guion de un piloto (`guion <slug>`) y la maqueta de las tarjetas; punto de control
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
     - [ ] Los tres pilotos en 4K y en vertical; punto de control

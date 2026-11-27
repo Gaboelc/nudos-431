@@ -1039,7 +1039,7 @@ La cámara (las paradas y la aceleración) es de T22.
   - Pasa por la misma comprobación de términos de sección que la ficha, y va en tuteo.
   - `python -m nudos guion <slug>` arma una hoja de revisión del guion, en HTML, con la duración estimada de cada parte.
   - **Lo que pidió Gabriel al oír su voz (27 nov):** que la narración suene natural, enganche y no «suene a hecha por IA». El texto de la ficha dicho tal cual suena a lista (en el amarre, «por encima del palo de arriba, por debajo del de abajo…»), y «Paso N de M» en todos los pasos suena monótono. Hay un borrador del guion hablado de los dos pilotos en `config/guion/<slug>.yaml` (`apertura`, un texto por paso, `cierre` y `seguridad`), con su prueba `python -m nudos prueba-guion`, que arma la narración entera con el texto de la ficha y con el guion. T22a decide si esos textos pasan a la especificación como su campo `voz:`.
-  - **Cómo se escribe para la voz** (lo que siguió el borrador):
+  - **Cómo se escribe para la voz.** Gabriel aprobó este estilo el 27 nov, con la tercera versión de los guiones de los pilotos, y vale para los 36:
     - El anuncio del paso varía: «Primero», «Paso número dos de siete», «Ahora», «Paso cuatro», nada, «Último paso».
     - Frases cortas y largas mezcladas, en segunda persona y con conectores de quien enseña al lado: «ahora», «fíjate», «listo».
     - **Sin comparaciones** (Gabriel, 27 nov): «forma una gaza, como un ojo» o «es como un conejo que sale de su pozo» no le gustan. Las instrucciones van dichas tal cual; lo que evita que suenen a lista es el ritmo (frases cortas y largas, un anuncio de paso distinto cada vez), no las imágenes. `estilo_del_guion` marca «como un…», «como una…» y «como si…».
