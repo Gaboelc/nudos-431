@@ -231,3 +231,48 @@ def test_los_eventos_de_los_cuadros_de_hoy():
     # El soplido de cada tarjeta llega a su máximo justo cuando aparece.
     sop = [s for s in sonidos if s.tipo == "soplido"]
     assert all(s.ataque == pytest.approx(c.t) for s, c in zip(sop, clics))
+
+
+# --------------------------------------------------------------------------
+# El guion hablado (borrador para T22a)
+# --------------------------------------------------------------------------
+def test_los_guiones_de_los_pilotos_tienen_un_texto_por_paso():
+    from nudos.prueba_sonido import PILOTOS_MEZCLA, guion_hablado, lineas_del_guion
+    from nudos.spec import cargar
+    for slug in PILOTOS_MEZCLA:
+        g = guion_hablado(slug)
+        assert len(g["pasos"]) == len(cargar(slug).pasos) and g["apertura"] and g["cierre"]
+        dichos = [V.texto_dicho(V.para_decir(t)) for _, t in lineas_del_guion(slug)]
+        # El anuncio del paso varía: no todos dicen «Paso … de …».
+        anunciados = sum("de siete" in d.split(".")[0] for d in dichos)
+        assert 0 < anunciados < len(g["pasos"])
+
+
+def test_un_guion_con_otro_numero_de_pasos_falla(tmp_path, monkeypatch):
+    from nudos import prueba_sonido as P
+    (tmp_path / "as-de-guia.yaml").write_text("apertura: Hola.\npasos: [Uno, Dos]\ncierre: Listo.\n", encoding="utf-8")
+    monkeypatch.setattr(P, "GUIONES", tmp_path)
+    with pytest.raises(ValueError, match="2 pasos"):
+        P.guion_hablado("as-de-guia")
+
+
+def test_lo_que_oye_el_reconocimiento_sin_las_letras_que_suenan_igual():
+    from nudos.prueba_sonido import _parecido
+    assert _parecido("Haz una gaza pequeña.", "Haz una gasa pequeña") == []
+    assert _parecido("Haz una gaza pequeña.", "Hace una gasa pequeña") == ["«as» → «ase»"]
+    assert _parecido("Revísalo antes de usarlo.", "Revisa lo antes de usarlo") == []
+
+
+def test_la_narracion_va_una_tras_otra_con_sus_tarjetas_y_el_golpe():
+    from nudos.prueba_sonido import HUECO_PASO, narracion
+    lineas = [("apertura", "Este es el nudo."), ("pasos", "Primero, toma la cuerda."),
+              ("pasos", "Paso 2 de 2. Tira fuerte."), ("cierre", "Listo.")]
+    p, locs = narracion(lineas, "as-de-guia", voz=V.Voz("prueba", proveedor="falso"), aviso=callar,
+                        instrumentos=M.Sintetico(), alineador=False)
+    tarjetas = [s for s in p.sonidos if s.tipo == "clic"]
+    assert len(tarjetas) == 2
+    golpes = [s for s in p.sonidos if s.tipo == "golpe"]
+    assert len(golpes) == 1
+    # Entre los dos pasos, el hueco del movimiento; el golpe, antes del cierre.
+    assert p.musica is not None and [c.nombre for c in p.musica.capitulos] == ["apertura", "pasos", "cierre"]
+    assert p.segundos > sum(L.segundos for L in locs) + HUECO_PASO

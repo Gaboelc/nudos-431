@@ -94,6 +94,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [ ] T21d La madeja, con el amarre cuadrado; prueba de 10 s y punto de control
     - [ ] T21e El error y la aplicación
   - [ ] T22 El video completo: capítulos, guion, cámara, tarjetas, errores, aplicación y reel (L)
+    - [x] Borrador del guion hablado de los dos pilotos (`config/guion/`) y su prueba (`prueba-guion`), a pedido de Gabriel, para que la voz suene natural (27 nov)
+    - [ ] Gabriel oye el borrador del guion hablado y dice si ese es el estilo
     - [ ] T22a El diseño, el guion de un piloto (`guion <slug>`) y la maqueta de las tarjetas; punto de control
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
     - [ ] Los tres pilotos en 4K y en vertical; punto de control

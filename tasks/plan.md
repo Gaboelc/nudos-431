@@ -975,6 +975,15 @@ La cámara (las paradas y la aceleración) es de T22.
   - Un campo opcional `voz:` por paso, para cuando el texto escrito no suena bien dicho, y `aplicacion:` con la escena y su texto. Es la versión siguiente del formato.
   - Pasa por la misma comprobación de términos de sección que la ficha, y va en tuteo.
   - `python -m nudos guion <slug>` arma una hoja de revisión del guion, en HTML, con la duración estimada de cada parte.
+  - **Lo que pidió Gabriel al oír su voz (27 nov):** que la narración suene natural, enganche y no «suene a hecha por IA». El texto de la ficha dicho tal cual suena a lista (en el amarre, «por encima del palo de arriba, por debajo del de abajo…»), y «Paso N de M» en todos los pasos suena monótono. Hay un borrador del guion hablado de los dos pilotos en `config/guion/<slug>.yaml` (`apertura`, un texto por paso, `cierre` y `seguridad`), con su prueba `python -m nudos prueba-guion`, que arma la narración entera con el texto de la ficha y con el guion. T22a decide si esos textos pasan a la especificación como su campo `voz:`.
+  - **Cómo se escribe para la voz** (lo que siguió el borrador):
+    - El anuncio del paso varía: «Primero», «Paso número dos de siete», «Ahora», «Paso cuatro», nada, «Último paso».
+    - Frases cortas y largas mezcladas, en segunda persona y con conectores de quien enseña al lado: «ahora», «fíjate», «listo».
+    - Una imagen en vez de una lista: el conejo que sale del pozo, rodea el árbol y vuelve (as de guía); rodear el cruce como si tejieras (amarre).
+    - Un gancho en la apertura (una pregunta) y una prueba en el cierre («empuja un palo»).
+    - Nada de muletillas de video de IA («en el video de hoy», «¡increíble!», «sin más preámbulos»).
+    - Cada instrucción dice lo mismo que la ficha: los «por encima» y «por debajo» no cambian, y la seguridad conserva todo lo que dice la especificación.
+    - El reconocimiento de voz revisa que cada locución diga su texto, sin contar las letras que suenan igual.
 - **Las tarjetas nuevas,** primero como maqueta animada en HTML que Gabriel abre en el navegador:
   - El número grande en un distintivo de color, «Paso 4 de 7», el título y una barra de avance con un punto por paso.
   - Entran con un rebote suave y salen rápido, sobre un fondo esmerilado (el cuadro de atrás, desenfocado).

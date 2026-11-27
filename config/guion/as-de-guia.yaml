@@ -1,0 +1,37 @@
+# El guion hablado del video del as de guía: lo que dice la voz, más suelto que la ficha.
+# Borrador para T22a (27 nov de 2026), que decide si estos textos pasan a la especificación como
+# su campo `voz:`. Gabriel pidió que la voz suene natural y enganche: el anuncio del paso varía, las
+# frases cambian de largo y la imagen del conejo ayuda a recordar el camino. Cada instrucción dice
+# lo mismo que la ficha (specs/as-de-guia.yaml): los «por encima» y «por debajo» no cambian.
+apertura: >-
+  ¿Necesitas una gaza que no se cierre, por más que tires? Ese es el trabajo del as de guía.
+  Aguanta mucho peso… y aun así se desata fácil.
+pasos:
+  - >-
+    Primero, decide qué tan grande quieres la gaza, y deja bastante cuerda libre. Esa punta suelta
+    es el chicote; el tramo largo, el que sube, es el firme.
+  - >-
+    Paso 2 de 7. Con el firme, forma una gaza pequeña, como un ojo, con el lado del chicote por
+    encima. Fíjate bien en este cruce: si queda al revés, no te sale el as de guía.
+  - >-
+    Ahora acerca el chicote a esa gaza pequeña, desde el lado de la gaza grande.
+  - >-
+    Paso 4. Mete el chicote por la gaza pequeña: entra por debajo y sale por encima. Es como un
+    conejo que sale de su pozo.
+  - >-
+    El conejo rodea el árbol: lleva el chicote por debajo del firme. Con la cuerda en la mano, es
+    pasarlo por detrás.
+  - >-
+    Y vuelve cruzando el firme, esta vez por encima, hacia la gaza pequeña.
+  - >-
+    Último paso: el conejo regresa a su pozo. Baja el chicote por la gaza pequeña, junto al tramo
+    que subió. Sujeta el chicote y la gaza juntos, y tira del firme. Listo: el chicote queda
+    adentro de la gaza.
+cierre: >-
+  Ese es tu as de guía. Revisa que la gaza no se cierre cuando tiras, y que te sobre chicote, por lo
+  menos el largo de tu mano.
+seguridad: >-
+  Un aviso importante: en rescate, este nudo se usa alrededor del pecho de una persona, pero aquí es
+  solo para que lo sepas. En el grupo no lo uses para sostener, subir ni bajar a nadie; esa práctica
+  se hace solo con instructor y equipo certificados. Y si la cuerda queda sin carga, o es rígida o
+  resbalosa, el nudo se puede aflojar: revísalo cada vez antes de usarlo.

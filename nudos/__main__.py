@@ -135,6 +135,9 @@ def main(argv=None) -> int:
     pp.add_argument("carpeta", help="la carpeta con sus grabaciones (m4a, wav…), fuera de git")
     pp.add_argument("--slug", default="as-de-guia", help="el nudo de los textos y del video (por omisión, "
                                                          "el as de guía)")
+    pg = ordenes.add_parser("prueba-guion", help="la narración entera de cada piloto con el texto de la "
+                                                 "ficha y con su guion hablado, en revision/guion/")
+    pg.add_argument("slugs", nargs="*", help="los nudos (por omisión, los dos pilotos de T17)")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -185,6 +188,11 @@ def main(argv=None) -> int:
             from .prueba_sonido import prueba_voz_propia
             sys.stdout.reconfigure(line_buffering=True)
             print(f"Prueba con tu voz en {prueba_voz_propia(args.carpeta, args.slug)}")
+            return 0
+        if args.orden == "prueba-guion":
+            from .prueba_sonido import PILOTOS_MEZCLA, prueba_guion
+            sys.stdout.reconfigure(line_buffering=True)
+            print(f"Prueba del guion en {prueba_guion(args.slugs or PILOTOS_MEZCLA)}")
             return 0
         if args.orden == "estado":
             return _estado()

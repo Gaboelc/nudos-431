@@ -609,8 +609,14 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
         return so.limitar_pico(so.a_lufs(x, V.SR, NIVEL_VOZ), V.SR, TECHO)
 
     # La muestra para clonar: el mejor tramo limpio de todas las grabaciones, que diga palabra por
-    # palabra lo que está en la especificación de su nudo (si no hay ninguno, sin esa condición).
-    fuentes = [(RAIZ / "specs" / f"{s}.yaml").read_text(encoding="utf-8") if s else None for s in slugs]
+    # palabra lo que está en la especificación de su nudo o en su guion hablado (si no hay ninguno,
+    # sin esa condición).
+    def fuente(slug):
+        if not slug:
+            return None
+        textos = [RAIZ / "specs" / f"{slug}.yaml", GUIONES / f"{slug}.yaml"]
+        return "\n".join(r.read_text(encoding="utf-8") for r in textos if r.exists())
+    fuentes = [fuente(s) for s in slugs]
 
     def limpios(**kw):
         con = [(p, i, a, b) for i, t in enumerate(trans) for p, a, b in V.tramos_limpios(t, fuente=fuentes[i], **kw)]
@@ -729,5 +735,203 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
                   'es lo que usarían los subtítulos.</p><section class="demo">' + "".join(filas) + '</section>')
     (destino / "index.html").write_text(PAGINA_PROPIA.format(nivel=NIVEL_VOZ, cuerpo="\n".join(cuerpo)),
                                         encoding="utf-8")
+    (destino / "informe.json").write_text(json.dumps(informe, ensure_ascii=False, indent=1), encoding="utf-8")
+    return destino / "index.html"
+
+
+# --------------------------------------------------------------------------
+# El guion hablado (borrador para T22a)
+# --------------------------------------------------------------------------
+GUIONES = RAIZ / "config" / "guion"
+HUECO_PASO = 1.8           # s entre el fin de un paso dicho y el siguiente: lo que tardaría el movimiento
+HUECO = 1.0                # s entre la apertura y el primer paso, y antes del cierre
+
+
+def guion_hablado(slug: str) -> dict:
+    """El guion hablado de un nudo (config/guion/<slug>.yaml): `apertura`, un texto por paso
+    (`pasos`), `cierre` y, si hace falta, `seguridad`. Falla si no tiene un texto por cada paso de
+    la especificación o si usa términos de sección."""
+    import yaml
+
+    from .ficha import terminos_encontrados
+    from .spec import cargar
+    ruta = GUIONES / f"{slug}.yaml"
+    datos = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    sobran = set(datos) - {"apertura", "pasos", "cierre", "seguridad"}
+    if sobran:
+        raise ValueError(f"{ruta.name}: campos desconocidos: {', '.join(sorted(sobran))}")
+    pasos = [" ".join(str(t).split()) for t in datos.get("pasos") or []]
+    total = len(cargar(slug).pasos)
+    if len(pasos) != total:
+        raise ValueError(f"{ruta.name}: tiene {len(pasos)} pasos y la especificación {total}")
+    guion = {"apertura": " ".join(str(datos.get("apertura") or "").split()), "pasos": pasos,
+             "cierre": " ".join(str(datos.get("cierre") or "").split()),
+             "seguridad": " ".join(str(datos.get("seguridad") or "").split())}
+    malos = terminos_encontrados(" ".join([guion["apertura"], *pasos, guion["cierre"], guion["seguridad"]]))
+    if malos:
+        raise ValueError(f"{ruta.name}: usa términos de sección: {', '.join(malos)}")
+    return guion
+
+
+def lineas_de_la_ficha(slug: str) -> list[tuple[str, str]]:
+    """Lo que diría la voz con el texto de la ficha, como hasta ahora: el nombre y los usos, «Paso N
+    de M», el título y el texto de cada paso, y la seguridad o la primera precaución."""
+    from .spec import cargar
+    spec = cargar(slug)
+    total = len(spec.pasos)
+    out = [("apertura", f"{_punto(spec.nombre)} {_oracion(spec.usos or '')}")]
+    out += [("pasos", f"Paso {n} de {total}. {_punto(p.titulo)} {' '.join(p.texto.split())}")
+            for n, p in enumerate(spec.pasos, 1)]
+    aviso = " ".join((getattr(spec, "seguridad", "") or "").split()) or next(iter(spec.precauciones or ()), "")
+    if aviso:
+        out.append(("cierre", aviso))
+    return out
+
+
+def lineas_del_guion(slug: str) -> list[tuple[str, str]]:
+    g = guion_hablado(slug)
+    out = [("apertura", g["apertura"])] + [("pasos", t) for t in g["pasos"]]
+    out += [("cierre", t) for t in (g["cierre"], g["seguridad"]) if t]
+    return out
+
+
+def narracion(lineas: list[tuple[str, str]], slug: str, voz=None, aviso=print, instrumentos=None,
+              alineador=None):
+    """La pista de un video entero hecha solo de voz, como la armaría T22 («la voz manda el
+    tiempo»): cada locución después de la anterior, con HUECO_PASO entre pasos para el movimiento;
+    la tarjeta de cada paso 0,25 s antes de su voz, el golpe al empezar el cierre, y la canción del
+    nudo con sus capítulos. Da (pista, locuciones)."""
+    from . import foley as F
+    from . import mezcla as MZ
+    from . import musica as M
+    from . import voz as V
+    locs = V.locuciones([t for _, t in lineas], voz or V.VOZ, aviso=aviso, alineador=alineador)
+    t, dichos, eventos, inicios = 1.2, [], [], {}
+    previo = None
+    for (cap, _), loc in zip(lineas, locs):
+        if previo is not None:
+            t += HUECO_PASO if (cap == previo == "pasos") else HUECO
+        if cap not in inicios:
+            inicios[cap] = max(0.0, t - (0.6 if cap != "apertura" else t))
+        if cap == "pasos":
+            eventos.append(F.Evento("tarjeta", t - 0.25, -0.35))
+        dichos.append(MZ.Dicho(t, loc))
+        t += loc.segundos
+        previo = cap
+    dur = t + 2.5
+    golpe = inicios.get("cierre")
+    if golpe is not None:
+        eventos.append(F.Evento("golpe", golpe, 0.0))
+    nombres = list(inicios)
+    capitulos = [M.Capitulo(c, inicios[c], inicios[nombres[k + 1]] if k + 1 < len(nombres) else dur)
+                 for k, c in enumerate(nombres)]
+    capitulos[0] = M.Capitulo(capitulos[0].nombre, 0.0, capitulos[0].fin)
+    p = MZ.pista(dur, capitulos=capitulos, golpe=golpe, slug=slug, dichos=dichos, eventos=eventos,
+                 instrumentos=instrumentos, aviso=aviso)
+    return p, locs
+
+
+def _parecido(dicho: str, oido: str) -> list[str]:
+    """Las diferencias entre lo que se pidió decir y lo que entendió el reconocimiento, sin contar
+    las letras que suenan igual (s, z y c; b y v; ll e y; la h), la puntuación ni los espacios."""
+    import difflib
+
+    def normal(s: str) -> list[str]:
+        s = "".join(c for c in unicodedata.normalize("NFD", s.casefold()) if unicodedata.category(c) != "Mn")
+        s = re.sub(r"c(?=[ei])", "s", s).replace("z", "s").replace("v", "b").replace("ll", "y").replace("h", "")
+        return re.findall(r"[a-zñ0-9]+", s)
+    a, b = normal(dicho), normal(oido)
+    out = []
+    for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        # Lo que solo cambia en los espacios («revísalo» y «revisa lo») no cuenta.
+        if op != "equal" and "".join(a[i1:i2]) != "".join(b[j1:j2]):
+            out.append(f"«{' '.join(a[i1:i2])}» → «{' '.join(b[j1:j2])}»")
+    return out
+
+
+PAGINA_GUION = """<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El guion hablado</title>
+<style>
+  :root {{ color-scheme: light; --tinta: #16202f; --suave: #586273; --fondo: #f6f4ef; }}
+  body {{ margin: 0; background: var(--fondo); color: var(--tinta);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }}
+  main {{ max-width: 900px; margin: 0 auto; padding: 32px 20px 64px; }}
+  h1 {{ font-size: 28px; margin: 0 0 6px; }}
+  h2 {{ font-size: 21px; margin: 28px 0 6px; }}
+  .bajada {{ color: var(--suave); margin: 0 0 14px; }}
+  .demo {{ background: #fff; border-radius: 14px; padding: 14px 18px; margin: 0 0 14px;
+           box-shadow: 0 2px 10px rgba(22, 32, 47, .06); }}
+  .clips {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }}
+  .clip b {{ display: block; font-size: 14px; margin-bottom: 2px; }}
+  audio {{ width: 100%; }}
+  ol {{ margin: 10px 0 0; padding-left: 22px; color: var(--suave); font-size: 15px; }}
+  li {{ margin: 4px 0; }}
+</style></head>
+<body><main>
+<h1>El guion hablado</h1>
+<p class="bajada">La narración entera de cada piloto con tu voz, la música, el clic de cada tarjeta y el golpe
+del final, como sonaría el video si la voz manda el tiempo. «Antes» es el texto de la ficha con «Paso número N de
+M» en cada paso; «después», el guion nuevo.</p>
+{cuerpo}
+</main></body></html>
+"""
+
+
+def prueba_guion(slugs=PILOTOS_MEZCLA, aviso=print) -> Path:
+    """Arma revision/guion/index.html: la narración entera de cada nudo con el texto de la ficha
+    y con su guion hablado (config/guion/), con la música, las tarjetas y el golpe, y revisa con el
+    reconocimiento de voz que cada locución del guion diga lo que tiene que decir. Deja
+    informe.json con la duración y lo que no calzó."""
+    from . import ia
+    from . import mezcla as MZ
+    from . import voz as V
+    from .spec import cargar
+    destino = REVISION / "guion"
+    destino.mkdir(parents=True, exist_ok=True)
+    informe, cuerpo = {}, []
+    for slug in slugs:
+        nombre = cargar(slug).nombre
+        guion = lineas_del_guion(slug)
+        partes = {}
+        for clave, lineas in (("antes", lineas_de_la_ficha(slug)), ("despues", guion)):
+            p, locs = narracion(lineas, slug, aviso=aviso)
+            archivo = f"{slug}-{clave}.m4a"
+            _m4a(destino / archivo, p.audio, MZ.SR, kbps=256)
+            partes[clave] = (p, locs)
+            informe[archivo] = {"segundos": round(p.segundos, 1), "lufs": round(p.lufs, 2),
+                                "pico_dbtp": round(p.pico, 2),
+                                "silabas_por_s": round(float(np.mean([_ritmo(L.palabras) for L in locs])), 2)}
+            aviso(f"  {archivo}: {p.segundos:.0f} s, {p.lufs:.1f} LUFS")
+        # Lo que entiende el reconocimiento de cada locución del guion.
+        locs = partes["despues"][1]
+        tmp = destino / "_oir"
+        tmp.mkdir(exist_ok=True)
+        rutas = []
+        for k, L in enumerate(locs):
+            ruta = tmp / f"{slug}-{k}.wav"
+            V._escribir_wav(ruta, L.audio, V.SR)
+            rutas.append(ruta)
+        res = ia.correr("qwen-asr", "transcribir.py", {"tareas": [
+            {"audio": str(r.resolve()), "idioma": "Spanish", "contexto": V.CONTEXTO} for r in rutas]}, aviso=aviso)
+        diferencias = {}
+        for (cap, texto), L, h in zip(guion, locs, res["hechas"]):
+            # Los números que escriba el reconocimiento, en letras, como se pidieron.
+            d = _parecido(V.texto_dicho(L.palabras) if L.palabras else texto, V.texto_dicho(V.para_decir(h["texto"])))
+            if d:
+                diferencias[texto[:60]] = d
+        for r in rutas:
+            r.unlink(missing_ok=True)
+        informe[f"{slug}-diferencias"] = diferencias
+        if diferencias:
+            aviso(f"  {slug}: el reconocimiento oyó otra cosa en {len(diferencias)} locuciones")
+        textos = "".join(f"<li>{html.escape(t)}</li>" for _, t in guion)
+        cuerpo.append(f'<h2>{html.escape(nombre)}</h2><section class="demo"><div class="clips">'
+                      f'<div class="clip"><b>Antes ({partes["antes"][0].segundos:.0f} s)</b>'
+                      f'<audio controls preload="none" src="{slug}-antes.m4a"></audio></div>'
+                      f'<div class="clip"><b>Después ({partes["despues"][0].segundos:.0f} s)</b>'
+                      f'<audio controls preload="none" src="{slug}-despues.m4a"></audio></div></div>'
+                      f'<ol>{textos}</ol></section>')
+    (destino / "index.html").write_text(PAGINA_GUION.format(cuerpo="\n".join(cuerpo)), encoding="utf-8")
     (destino / "informe.json").write_text(json.dumps(informe, ensure_ascii=False, indent=1), encoding="utf-8")
     return destino / "index.html"
