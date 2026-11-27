@@ -285,6 +285,10 @@ def test_el_estilo_del_guion():
     problemas = estilo_del_guion("Tira del chicote… y así queda cortito.")
     assert len(problemas) == 2 and "suspensivos" in problemas[0]
     assert "así" in problemas[1] and "cortito" in problemas[1]
+    # Sin comparaciones; «como en su ficha» no compara.
+    assert estilo_del_guion("Ata un ballestrinque, como en su ficha.") == []
+    problemas = estilo_del_guion("Forma una gaza, como un ojo. Es como un conejo que sale de su pozo.")
+    assert len(problemas) == 1 and "«como un ojo»" in problemas[0] and "«como un conejo que sale de su pozo»" in problemas[0]
 
 
 def test_un_guion_con_puntos_suspensivos_falla(tmp_path, monkeypatch):
@@ -295,3 +299,12 @@ def test_un_guion_con_puntos_suspensivos_falla(tmp_path, monkeypatch):
     monkeypatch.setattr(P, "GUIONES", tmp_path)
     with pytest.raises(ValueError, match="suspensivos"):
         P.guion_hablado("as-de-guia")
+
+
+
+def test_la_vocal_que_se_pierde_al_juntar_dos_palabras_no_cuenta():
+    from nudos.prueba_sonido import _parecido, _sinalefa
+    assert _parecido("Rodea el firme con el chicote.", "Rodeal firme con el chicote") == []
+    assert _parecido("no te sale el as de guía", "no te sale las de guía") == []
+    assert _parecido("Con el firme, forma una gaza.", "Con el firme, formo una gaza") == ["«forma» → «formo»"]
+    assert _sinalefa("rodeael", "rodeal") and not _sinalefa("forma", "formo") and not _sinalefa("pasa", "paso")

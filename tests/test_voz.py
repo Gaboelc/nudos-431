@@ -505,3 +505,22 @@ def test_la_toma_que_titubea_se_repite_con_otra_semilla(monkeypatch):
     locs = V.locuciones_sin_titubeos(["Primero.", "Tira del chicote ya."], voz, aviso=lambda *_: None)
     assert locs[1] is bien and locs[0] is bien
     assert llamadas == [(("Primero.", "Tira del chicote ya."), 431), (("Tira del chicote ya.",), 432)]
+
+
+
+def test_la_toma_que_no_se_entiende_tambien_se_repite(monkeypatch):
+    primera = _locucion([("Forma", 0, 0.3), ("una", 0.3, 0.42), ("gaza", 0.42, 0.7), ("pequeña.", 0.7, 1.1)])
+    segunda = _locucion([("Forma", 0, 0.3), ("una", 0.3, 0.42), ("gaza", 0.42, 0.7), ("pequeña.", 0.7, 1.1)])
+
+    def locuciones(textos, voz, proveedor=None, aviso=print, alineador=None):
+        return [primera if voz.semilla == 431 else segunda for _ in textos]
+    monkeypatch.setattr(V, "locuciones", locuciones)
+    vistos = []
+
+    def revisar(textos, locs):
+        # El reconocimiento oye «formo» en la primera toma y entiende la segunda.
+        vistos.append([L is segunda for L in locs])
+        return [L is segunda for L in locs]
+    locs = V.locuciones_sin_titubeos(["Forma una gaza pequeña."], V.Voz("prueba", proveedor="falso"),
+                                     revisar=revisar, aviso=lambda *_: None)
+    assert locs[0] is segunda and vistos == [[False], [True]]

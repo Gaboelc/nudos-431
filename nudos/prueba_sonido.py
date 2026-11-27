@@ -782,7 +782,9 @@ def guion_hablado(slug: str) -> dict:
 
 
 def estilo_del_guion(texto: str) -> list[str]:
-    """Lo que el guion hablado no debe tener: puntos suspensivos y las PALABRAS_EVITAR."""
+    """Lo que el guion hablado no debe tener: puntos suspensivos, las PALABRAS_EVITAR y
+    comparaciones («como un ojo», «es como un conejo que sale de su pozo», «como si fuera un
+    tejido»), que a Gabriel no le gustan (27 nov). «Como en su ficha» sí va: no compara."""
     out = []
     if "…" in texto or "..." in texto:
         out.append("tiene puntos suspensivos, que la voz dice estirando la palabra de antes")
@@ -790,6 +792,9 @@ def estilo_del_guion(texto: str) -> list[str]:
     malas = [w for w in PALABRAS_EVITAR if w in palabras]
     if malas:
         out.append(f"usa palabras que Gabriel no diría: {', '.join(malas)}")
+    comparaciones = re.findall(r"\bcomo (?:un|una|si)\b[^.,;:]*", texto.casefold())
+    if comparaciones:
+        out.append("tiene comparaciones, que a Gabriel no le gustan: " + "; ".join(f"«{c.strip()}»" for c in comparaciones))
     return out
 
 
@@ -818,7 +823,7 @@ def lineas_del_guion(slug: str) -> list[tuple[str, str]]:
 
 
 def narracion(lineas: list[tuple[str, str]], slug: str, voz=None, aviso=print, instrumentos=None,
-              alineador=None):
+              alineador=None, revisar=None):
     """La pista de un video entero hecha solo de voz, como la armaría T22 («la voz manda el
     tiempo»): cada locución después de la anterior, con HUECO_PASO entre pasos para el movimiento;
     la tarjeta de cada paso 0,25 s antes de su voz, el golpe al terminar los pasos (el nudo
@@ -828,7 +833,8 @@ def narracion(lineas: list[tuple[str, str]], slug: str, voz=None, aviso=print, i
     from . import mezcla as MZ
     from . import musica as M
     from . import voz as V
-    locs = V.locuciones_sin_titubeos([t for _, t in lineas], voz or V.VOZ, aviso=aviso, alineador=alineador)
+    locs = V.locuciones_sin_titubeos([t for _, t in lineas], voz or V.VOZ, aviso=aviso, alineador=alineador,
+                                     revisar=revisar)
     t, dichos, eventos, inicios = 1.2, [], [], {}
     previo = None
     for (cap, _), loc in zip(lineas, locs):
@@ -857,7 +863,8 @@ def narracion(lineas: list[tuple[str, str]], slug: str, voz=None, aviso=print, i
 
 def _parecido(dicho: str, oido: str) -> list[str]:
     """Las diferencias entre lo que se pidió decir y lo que entendió el reconocimiento, sin contar
-    las letras que suenan igual (s, z y c; b y v; ll e y; la h), la puntuación ni los espacios."""
+    las letras que suenan igual (s, z y c; b y v; ll e y; la h), la puntuación, los espacios ni
+    una vocal que se pierde al juntar dos palabras («rodea el» y «rodeal», «el as» y «las»)."""
     import difflib
 
     def normal(s: str) -> list[str]:
@@ -867,10 +874,41 @@ def _parecido(dicho: str, oido: str) -> list[str]:
     a, b = normal(dicho), normal(oido)
     out = []
     for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
-        # Lo que solo cambia en los espacios («revísalo» y «revisa lo») no cuenta.
-        if op != "equal" and "".join(a[i1:i2]) != "".join(b[j1:j2]):
+        # Lo que solo cambia en los espacios («revísalo» y «revisa lo») o en una vocal que se
+        # pierde al juntar dos palabras en una no cuenta; dentro de una palabra («haz» y «hace») sí.
+        x, y = "".join(a[i1:i2]), "".join(b[j1:j2])
+        junta = (i2 - i1) != (j2 - j1) and _sinalefa(x, y)
+        if op != "equal" and x != y and not junta:
             out.append(f"«{' '.join(a[i1:i2])}» → «{' '.join(b[j1:j2])}»")
     return out
+
+
+def _sinalefa(x: str, y: str) -> bool:
+    """Si una de las dos es la otra con una vocal menos («rodeael» y «rodeal»)."""
+    largo, corto = (x, y) if len(x) > len(y) else (y, x)
+    return len(largo) == len(corto) + 1 and any(
+        largo[i] in "aeiou" and largo[:i] + largo[i + 1:] == corto for i in range(len(largo)))
+
+
+def _se_entiende(textos: list[str], locs, aviso=print) -> list[bool]:
+    """Si el reconocimiento de voz entiende en cada locución lo que se pidió decir (`_parecido`)."""
+    from . import ia
+    from . import voz as V
+    tmp = REVISION / "guion" / "_oir"
+    tmp.mkdir(parents=True, exist_ok=True)
+    rutas = []
+    for k, L in enumerate(locs):
+        ruta = tmp / f"oir-{k}.wav"
+        V._escribir_wav(ruta, L.audio, V.SR)
+        rutas.append(ruta)
+    try:
+        res = ia.correr("qwen-asr", "transcribir.py", {"tareas": [
+            {"audio": str(r.resolve()), "idioma": "Spanish", "contexto": V.CONTEXTO} for r in rutas]}, aviso=aviso)
+    finally:
+        for r in rutas:
+            r.unlink(missing_ok=True)
+    return [not _parecido(V.texto_dicho(L.palabras) if L.palabras else t, V.texto_dicho(V.para_decir(h["texto"])))
+            for t, L, h in zip(textos, locs, res["hechas"])]
 
 
 PAGINA_GUION = """<!doctype html>
@@ -919,7 +957,9 @@ def prueba_guion(slugs=PILOTOS_MEZCLA, aviso=print) -> Path:
         guion = lineas_del_guion(slug)
         partes = {}
         for clave, lineas in (("antes", lineas_de_la_ficha(slug)), ("despues", guion)):
-            p, locs = narracion(lineas, slug, aviso=aviso)
+            # El guion nuevo, con las tomas que el reconocimiento no entiende dichas otra vez.
+            revisar = (lambda ts, ls: _se_entiende(ts, ls, aviso)) if clave == "despues" else None
+            p, locs = narracion(lineas, slug, aviso=aviso, revisar=revisar)
             archivo = f"{slug}-{clave}.m4a"
             _m4a(destino / archivo, p.audio, MZ.SR, kbps=256)
             partes[clave] = (p, locs)

@@ -1,9 +1,10 @@
 # El guion hablado del video del as de guía: lo que dice la voz, más suelto que la ficha.
 # Borrador para T22a (27 nov de 2026), que decide si estos textos pasan a la especificación como
 # su campo `voz:`. Sigue el estilo que pidió Gabriel (ver el plan, en el guion de T22a): natural y
-# directo, sin tono de youtuber, sin diminutivos ni «así», sin puntos suspensivos (la voz los dice
-# estirando la palabra de antes) y pensado para que lo vean completo en YouTube. Cada instrucción
-# dice lo mismo que la ficha (specs/as-de-guia.yaml): los «por encima» y «por debajo» no cambian.
+# directo, sin tono de youtuber, sin comparaciones («como un ojo», el conejo del pozo), sin
+# diminutivos ni «así», sin puntos suspensivos (la voz los dice estirando la palabra de antes) y
+# pensado para que lo vean completo en YouTube. Cada instrucción dice lo mismo que la ficha
+# (specs/as-de-guia.yaml): los «por encima» y «por debajo» no cambian.
 apertura: >-
   El as de guía hace una gaza fija en la punta de la cuerda: no se cierra ni se corre, aunque cargue
   mucho peso, y después se desata fácil. Te lo enseño en siete pasos, y al final, cómo revisar que
@@ -13,22 +14,19 @@ pasos:
     Primero, decide qué tan grande quieres la gaza, y deja bastante cuerda libre. Esa punta suelta
     es el chicote; el tramo largo, el que sube, es el firme.
   - >-
-    Paso 2 de 7. Con el firme, forma una gaza pequeña, como un ojo, con el lado del chicote por
-    encima. Fíjate bien en este cruce: si queda al revés, no te va a salir este nudo.
+    Paso 2 de 7. Con el firme, forma una gaza pequeña, con el lado del chicote por encima. Fíjate
+    bien en este cruce: si queda al revés, no te va a salir este nudo.
   - >-
     Ahora acerca el chicote a esa gaza pequeña, desde el lado de la gaza grande.
   - >-
-    Paso 4. Mete el chicote por la gaza pequeña: entra por debajo y sale por encima. Es como un
-    conejo que sale de su pozo.
+    Paso 4. Mete el chicote por la gaza pequeña: entra por debajo y sale por encima.
   - >-
-    El conejo rodea el árbol: lleva el chicote por debajo del firme. Con la cuerda en la mano, es
-    pasarlo por detrás.
+    Rodea el firme con el chicote, por debajo. Con la cuerda en la mano, es pasarlo por detrás.
   - >-
     Y vuelve cruzando el firme, esta vez por encima, hacia la gaza pequeña.
   - >-
-    Último paso: el conejo regresa a su pozo. Baja el chicote por la gaza pequeña, junto al tramo
-    que subió. Sujeta el chicote y la gaza juntos, y tira del firme. Listo: el chicote queda
-    dentro de la gaza.
+    Último paso. Baja el chicote por la gaza pequeña, junto al tramo que subió. Sujeta el chicote y
+    la gaza juntos, y tira del firme. Listo: el chicote queda dentro de la gaza.
 seguridad: >-
   Un aviso importante: en rescate, este nudo se usa alrededor del pecho de una persona, pero aquí es
   solo para que lo sepas. En el grupo no lo uses para sostener, subir ni bajar a nadie; esa práctica

@@ -843,22 +843,31 @@ def titubeos(L: Locucion) -> list[Palabra]:
 
 
 def locuciones_sin_titubeos(textos: list[str], voz: Voz, intentos: int = 3, proveedor: Proveedor | None = None,
-                            aviso=print, alineador: Alineador | None | bool = None) -> list[Locucion]:
-    """Como `locuciones`, pero la que titubea (`titubeos`) se vuelve a decir con la semilla
-    siguiente, hasta `intentos` tomas, y queda la que titubea menos (a igualdad, la primera). Sale
-    igual cada vez: las tomas se piden en orden y quedan en el caché."""
+                            aviso=print, alineador: Alineador | None | bool = None, revisar=None) -> list[Locucion]:
+    """Como `locuciones`, pero la toma mala se vuelve a decir con la semilla siguiente, hasta
+    `intentos` tomas. Una toma es mala si titubea (`titubeos`) o si no pasa `revisar`, que recibe
+    los textos y sus locuciones y dice cuáles están bien (por ejemplo, con el reconocimiento de
+    voz). Queda la mejor: primero la que pasa `revisar`, después la que titubea menos; a igualdad,
+    la primera. Sale igual cada vez: las tomas se piden en orden y quedan en el caché."""
     from dataclasses import replace
+
+    def notas(idx, ls):
+        bien = revisar([textos[i] for i in idx], [ls[i] for i in idx]) if (revisar and idx) else [True] * len(idx)
+        return {i: (0 if b else 1, len(titubeos(ls[i]))) for i, b in zip(idx, bien)}
     locs = locuciones(textos, voz, proveedor, aviso, alineador)
+    nota = notas(list(range(len(textos))), locs)
     for k in range(1, intentos):
-        malas = [i for i, L in enumerate(locs) if titubeos(L)]
+        malas = [i for i, n in nota.items() if n != (0, 0)]
         if not malas:
             break
-        aviso(f"  {len(malas)} locuciones titubean: otra toma (semilla {voz.semilla + k})")
-        otras = locuciones([textos[i] for i in malas], replace(voz, semilla=voz.semilla + k), proveedor, aviso,
-                           alineador)
-        for i, L in zip(malas, otras):
-            if len(titubeos(L)) < len(titubeos(locs[i])):
-                locs[i] = L
+        aviso(f"  {len(malas)} locuciones salieron mal: otra toma (semilla {voz.semilla + k})")
+        otras = list(locs)
+        for i, L in zip(malas, locuciones([textos[i] for i in malas], replace(voz, semilla=voz.semilla + k),
+                                          proveedor, aviso, alineador)):
+            otras[i] = L
+        for i, n in notas(malas, otras).items():
+            if n < nota[i]:
+                locs[i], nota[i] = otras[i], n
     return locs
 
 
