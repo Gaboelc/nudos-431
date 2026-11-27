@@ -83,7 +83,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] T20a El cuadro final en cuatro aspectos, con Cycles y EEVEE y su costo (`prueba-aspecto`, `build/aspecto/prueba.pdf`) (26 nov)
     - [x] Punto de control: Gabriel eligió la cuerda real en el estudio (paso a paso y errores) y en el campamento J&E Gray 02 (apertura, aplicación y cierre), con Cycles a 16 muestras (26 nov)
     - [x] T20b El aspecto elegido en los videos (`nudos/aspecto.py`, `render/blender/video.py`), sin el modo video viejo de `escena.py`, y la prueba de 10 s en 4K (`video <slug> --prueba`) (26 nov)
-    - [ ] Punto de control: Gabriel revisa la prueba de 10 s en 4K del as de guía (`build/videos/as-de-guia/as-de-guia-prueba-4k.mp4`, en el worktree de la sesión «el aspecto»)
+    - [x] Punto de control: Gabriel aprobó la prueba de 10 s en 4K del as de guía (26 nov)
     - [ ] Gabriel decide el costo del render: en el video, Cycles con 16 muestras va a unos 6 s por cuadro de 4K (7,7 en promedio con la máquina ocupada): de 20 a 25 días para los 36, no 14
     - [ ] T20c Las fichas, solo si se nota en papel
   - [ ] T21 El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga (XL; la sesión del plan)

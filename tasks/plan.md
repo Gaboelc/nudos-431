@@ -843,6 +843,8 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
 - **El costo en el video, medido con la prueba:** 585 cuadros de 4K en unos 75 min, 7,7 s por cuadro en promedio, y unos 6 s en los tramos sin otras cosas corriendo en la máquina; T20a medía 4,6 s con la cámara quieta y sin desenfoque. Con 6 s, los 36 nudos (7200 cuadros de 4K y 3000 del reel cada uno) son unos 20 días; con 7,7 s, unos 25. Lo decide Gabriel antes de T19.
 - **Las fichas no cambian:** `referencia` desde `main` (d358b3a) y con el código nuevo, y `comparar`. Los 36 `modelo.json`, iguales byte a byte; las imágenes de los 36 nudos con three.js, iguales (dos nudos salieron con unos píxeles en 1 o 2 niveles al imprimir dos corridas a la vez, e iguales al reimprimirlos); y las de Blender de los cuatro pilotos, iguales. El código de Blender que dibuja las fichas es el mismo para todos los nudos.
 
+**Punto de control de T20b:** Gabriel aprobó la prueba de 10 s en 4K del as de guía (26 nov). Preguntó si la cuerda puede tener un largo fijo y solo cruzarse y moverse, en vez de encogerse o estirarse en cada paso: es el diseño de T21 (abajo), que espera su aprobación en el punto de control de T21a.
+
 **T20c, las fichas (S, solo si se nota en papel).** La trenza nueva entra a las imágenes de impresión solo si la página de prueba impresa, en color y en gris, se ve mejor (la regla de T7b). Si no, las fichas no cambian. `referencia` y `comparar` muestran qué se movió.
 
 #### T21: El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga
