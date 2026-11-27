@@ -30,7 +30,7 @@ def test_los_numeros_van_en_letras():
 
 def test_la_pronunciacion_dice_las_medidas_y_recuerda_como_se_ve():
     ps = V.para_decir("Paso 4 de 7. Usa «una cuerda» de unos 2 m (o 1,5 m) y de 6 a 10 mm.")
-    assert V.texto_dicho(ps) == ("Paso cuatro de siete. Usa una cuerda de unos dos metros o un metro y medio "
+    assert V.texto_dicho(ps) == ("Paso número cuatro de siete. Usa una cuerda de unos dos metros o un metro y medio "
                                  "y de seis a diez milímetros.")
     vistas = [p.texto for p in ps]
     assert "4" in vistas and "7." in vistas and "2 m" in vistas and "1,5 m" in vistas and "10 mm." in vistas
@@ -449,3 +449,16 @@ def test_la_misma_voz_con_otra_semilla_es_otra_locucion():
     assert la.huella != lb.huella
     # Pedidas por separado dan las mismas: el caché distingue las dos.
     assert V.locuciones(["Tira del firme."], b, **callar)[0].huella == lb.huella
+
+
+def test_paso_numero_n_de_m():
+    # Gabriel eligió «Paso número dos de siete» (27 nov); se ve «Paso 2 de 7».
+    ps = V.para_decir("Paso 2 de 7. Haz una gaza.")
+    assert V.texto_dicho(ps) == "Paso número dos de siete. Haz una gaza."
+    assert [p.texto for p in ps[:4]] == ["Paso", "2", "de", "7."]
+    # Solo en el encabezado de un paso: lo demás se dice como antes.
+    assert V.texto_dicho(V.para_decir("En el paso 3 hiciste un seno.")) == "En el paso tres hiciste un seno."
+    assert V.texto_dicho(V.para_decir("Paso 21. Sube.")) == "Paso veintiuno. Sube."
+    assert V.texto_dicho(V.para_decir("De 2 de 7 cuerdas.")) == "De dos de siete cuerdas."
+    # «número dos» son dos trozos para el alineador, y caen en la misma palabra vista.
+    assert V._trozos(ps[1].dicha) == 2

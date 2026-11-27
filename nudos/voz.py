@@ -230,7 +230,18 @@ def para_decir(texto: str) -> list[Palabra]:
         vista = m.group(0)
         out.append(Palabra(abre + vista, abre + _decir_pieza(m)))
         abre = ""
+    _paso_numero(out)
     return out
+
+
+def _paso_numero(palabras: list[Palabra]) -> None:
+    """«Paso 2 de 7» se dice «Paso número dos de siete», y se ve igual. Con la voz de Gabriel, el
+    «dos» de «Paso dos de siete» sonaba mal; él eligió esta de seis versiones (27 nov), y va en
+    todos los pasos para que suenen parejos."""
+    for paso, n, de, total in zip(palabras, palabras[1:], palabras[2:], palabras[3:]):
+        if (paso.texto.casefold() == "paso" and n.texto.isdigit() and de.texto.casefold() == "de"
+                and total.texto.rstrip(".,;:").isdigit()):
+            n.dicha = "número " + n.dicha
 
 
 def texto_dicho(palabras: list[Palabra]) -> str:
