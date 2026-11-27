@@ -66,12 +66,14 @@ class Voz:
     etiqueta: str = ""               # cómo se presenta en la prueba, en español
     limpiar: bool = False            # cada locución pasa por `limpiar()`: para una voz clonada de una
                                      # grabación con ruido de fondo, que el clon reproduce
+    restaurar: bool = False          # cada locución pasa por `restaurar()` (Sidon): como de estudio, a 48 kHz
 
     def huella(self) -> dict:
         d = asdict(self)
         d.pop("etiqueta")
-        if not self.limpiar:
-            d.pop("limpiar")             # así no cambia la huella de las voces de antes
+        for clave in ("limpiar", "restaurar"):
+            if not d[clave]:
+                d.pop(clave)             # así no cambia la huella de las voces de antes
         if self.referencia:
             d["referencia"] = _huella_archivo(self.ruta_referencia())
         return d
@@ -746,12 +748,20 @@ def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, av
     if faltan:
         aviso(f"  {len(faltan)} de {len(pedidos)} locuciones por generar ({prov.nombre})")
         hechos = prov.generar([(piezas[k], pedidos[k][1]) for k in faltan], aviso=aviso)
+        listos = []
         for k, (x, sr, tiempos) in zip(faltan, hechos):
             x = np.asarray(x, np.float64)
             if not len(x) or not np.isfinite(x).all():
                 raise VozError(f"{prov.nombre} devolvió un audio vacío para «{pedidos[k][0][:40]}»")
             if pedidos[k][1].limpiar:
                 x = np.asarray(limpiar(x, sr), np.float64)
+            listos.append([k, x, sr, tiempos])
+        # Como de estudio: todas las que lo piden pasan juntas por Sidon, del mismo largo.
+        pulir = [e for e in listos if pedidos[e[0]][1].restaurar]
+        if pulir:
+            for e, y in zip(pulir, restaurar([_a_sr(e[1], e[2]) for e in pulir], aviso=aviso, cache=False)):
+                e[1], e[2] = np.asarray(y, np.float64), SR
+        for k, x, sr, tiempos in listos:
             fuente = "proveedor" if tiempos else "estimados"
             tiempos = tiempos or estimar_tiempos(x, sr, piezas[k])
             _escribir_wav(cache / f"{huellas[k]}.wav", x, sr)
@@ -827,6 +837,44 @@ def limpiar(x, sr: int = SR, reduccion: float = REDUCCION) -> np.ndarray:
     G = np.maximum(uniform_filter(G, size=(3, 5)), 10 ** (-reduccion / 20))
     _, y = istft(Z * G, sr, nperseg=n, noverlap=3 * n // 4)
     return y[:len(x)].astype(np.float32)
+
+
+def restaurar(audios: list[np.ndarray], aviso=print, cache: bool = True) -> list[np.ndarray]:
+    """Cada audio (mono, a SR) como de estudio, con Sidon (sonido/restaurar.py): sin el eco del
+    cuarto, el ruido ni el sonido del celular, a SR y del mismo largo. Rehace la voz con un
+    vocoder, así que no cambia el texto ni el tono. Con `cache`, cada uno se guarda con la huella
+    de su audio y no se restaura dos veces (`decir` no lo usa: guarda la locución ya restaurada)."""
+    from . import ia
+    carpeta = carpeta_cache() / "restauradas"
+    huellas = [_huella("restaurar/1", hashlib.sha256(np.asarray(x, np.float32).tobytes()).hexdigest())
+               for x in audios]
+    faltan = [k for k, h in enumerate(huellas) if not (cache and (carpeta / f"{h}.wav").exists())]
+    hechos: dict[int, np.ndarray] = {}
+    if faltan:
+        aviso(f"  restaurando {len(faltan)} audios (Sidon)")
+        tmp = carpeta_cache() / "tmp"
+        entradas = [tmp / f"restaurar-{os.getpid()}-{k}.wav" for k in faltan]
+        salidas = [tmp / f"restaurada-{os.getpid()}-{k}.wav" for k in faltan]
+        for r, k in zip(entradas, faltan):
+            _escribir_wav(r, audios[k], SR)
+        try:
+            ia.correr("qwen-asr", "restaurar.py", {"tareas": [{"audio": str(a), "salida": str(b)}
+                                                              for a, b in zip(entradas, salidas)]}, aviso=aviso)
+            for k, salida in zip(faltan, salidas):
+                y, sr = _leer_wav(salida)
+                hechos[k] = _a_sr(y, sr)
+                if cache:
+                    _escribir_wav(carpeta / f"{huellas[k]}.wav", hechos[k], SR)
+        finally:
+            for r in entradas + salidas:
+                r.unlink(missing_ok=True)
+    out = []
+    for k, h in enumerate(huellas):
+        if k not in hechos:
+            y, sr = _leer_wav(carpeta / f"{h}.wav")
+            hechos[k] = _a_sr(y, sr)
+        out.append(np.asarray(hechos[k], np.float32))
+    return out
 
 
 @dataclass

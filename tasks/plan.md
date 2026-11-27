@@ -1215,6 +1215,17 @@ La cámara (las paradas y la aceleración) es de T22.
   - Una voz que se limpia cambia su huella, y las de antes no.
   - El nudo de cada grabación sale de su nombre.
 
+**La voz clonada como de estudio (27 nov de 2026; falta que Gabriel la oiga):**
+- **Lo que pidió:** le gustan las dos voces y prefiere su voz clonada, pero quiere que suene como de estudio, sin volver a grabar si se puede.
+- **Lo que hacía falta:** el clon copia cómo suena la muestra. La de su celular tiene el eco del cuarto: la caída al final de las frases equivale a un T60 de unos 1,1 s en la grabación y en el clon, contra 0,6 s en la voz D. Además, Qwen3-TTS genera a 24 kHz, así que nada pasa de 12 kHz.
+- **Por cómo vienen, parecen del DJI Mic Mini en modo Ms** (mono con pista de seguridad): el canal derecho es justo el izquierdo a −6 dB. El izquierdo rozaba 0 dBFS, y la grabadora del celular las guardó en AAC de 130 kbps.
+- **La búsqueda:** Sidon v0.1 (laboratorio Saruwatari de la Universidad de Tokio, MIT; el artículo es de septiembre de 2025 y los pesos de diciembre) rehace la voz con un w2v-BERT 2.0 afinado y un vocoder, a 48 kHz. Según su artículo, restaura tan bien como Miipher, el restaurador interno de Google, y funciona en decenas de idiomas. VoiceRestore (MIT) pesaba más (1,2 GB por punto de control, con BigVGAN aparte). DBP-Net y VoiceBridge quedaron sin probar.
+- **La instalación (con permiso de Gabriel):** de `sarulab-speech/sidon-v0.1` solo los dos archivos para la tarjeta (1,0 GB, TorchScript, con el SHA-256 comparado), más la configuración del preprocesador de `facebook/w2v-bert-2.0`. Corre en el entorno `qwen-asr`, sin paquetes nuevos. `sonido/restaurar.py` sigue la demo oficial: unos 10 s de voz en menos de 4 s.
+- **Lo medido en la muestra** (con pocas pausas para medir la cola): entre la voz y los silencios pasó de 42 a 54 dB, y la cola de eco de 1,8 a 0,6 s, como la voz D. Los agudos de 4 a 20 kHz subieron unos 5 dB, y el tono no cambió (104 Hz contra 105). En los espectrogramas, el fondo queda limpio entre palabras y los armónicos, más nítidos.
+- **La cadena de estudio:** la muestra pasa por Sidon, Qwen3-TTS clona la voz desde ella y cada locución vuelve a pasar por Sidon (`Voz(restaurar=True)`), que le devuelve los agudos hasta 20 kHz. Todas las locuciones de un pedido van juntas a Sidon, y la huella de las voces de antes no cambia.
+- **La prueba (`prueba-voz-propia`)** suma la muestra con Sidon, su grabación con Sidon en las dos frases y en la lectura con la música, y la voz clonada de estudio en los textos y en el video.
+- **Las pruebas:** `restaurar()` con un Sidon falso (y desde el caché), y una voz de estudio que pasa por Sidon en una sola llamada.
+
 #### T24: El visor
 
 - **La trenza:** material físico con anisotropía y *sheen* (ya están en three.js 0.160) y un relieve más fino, con ruido de lygia.

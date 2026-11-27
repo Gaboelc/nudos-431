@@ -1,5 +1,6 @@
 """Los programas que corren aparte (T23), como Blender: la voz (Qwen3-TTS), el alineador forzado
-(Qwen3-ForcedAligner) y el reconocimiento de voz (Qwen3-ASR, para las grabaciones de Gabriel) piden PyTorch con CUDA y Python 3.12, así que cada uno vive en su propio
+(Qwen3-ForcedAligner), el reconocimiento de voz (Qwen3-ASR, para las grabaciones de Gabriel) y la
+restauración de voz (Sidon, que la deja como de estudio) piden PyTorch con CUDA y Python 3.12, así que cada uno vive en su propio
 entorno, fuera de A: y del venv del proyecto, y se llama con un script de `sonido/` y un archivo de
 trabajo en JSON. La música no necesita entorno: la toca FluidSynth (nudos/musica.py).
 
@@ -10,7 +11,7 @@ Dónde viven: `NUDOS_IA` o, por omisión, `D:\\nudos\\ia` (si existe D:) o `%LOC
       python/, uv-cache/            el Python 3.12 y los paquetes que bajó uv
       hf/                           los modelos de Hugging Face (HF_HOME)
       qwen-tts/.venv/               Qwen3-TTS: qwen-tts 0.1.1 con torch 2.7.1+cu128
-      qwen-asr/.venv/               el alineador y el reconocimiento: qwen-asr 0.0.6 con torch 2.7.1+cu128
+      qwen-asr/.venv/               el alineador, el reconocimiento y Sidon: qwen-asr 0.0.6 con torch 2.7.1+cu128
       musica/fluidsynth/            FluidSynth 2.6.3 para Windows x64
       musica/bancos/                GeneralUser GS 2.0 y las muestras del VCSL (CC0)
 
@@ -29,6 +30,12 @@ Cómo se instaló (26 nov, con permiso de Gabriel para cada descarga):
                                       revision="c7cbfc2048c462b0d63a45797104fc9db3ad62b7")
     huggingface_hub.snapshot_download("Qwen/Qwen3-ASR-1.7B", max_workers=1,       (4,7 GB, el 26 nov)
                                       revision="7278e1e70fe206f11671096ffdd38061171dd6e5")
+    huggingface_hub.snapshot_download("sarulab-speech/sidon-v0.1", max_workers=1,  (1,0 GB, el 27 nov)
+                                      revision="b3b02d8bbd55fdbc410e6e46e76ef95ace4fbf52",
+                                      allow_patterns=["*_cuda.pt", "README.md"])
+    huggingface_hub.snapshot_download("facebook/w2v-bert-2.0", max_workers=1,      (solo la configuración
+                                      revision="da985ba0987f70aaeb84a80f2851cfac8c697a7b",  del preprocesador)
+                                      allow_patterns=["preprocessor_config.json"])
 
 En Windows sin modo de desarrollador, Hugging Face no puede crear enlaces simbólicos y copia los
 archivos; con varias descargas a la vez a veces lo intenta igual y falla, de ahí `max_workers=1`.

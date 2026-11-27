@@ -574,11 +574,13 @@ def _hasta_unos(palabras, segundos: float, pausa: float = 0.3) -> int:
 def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
     """Arma revision/voz-propia/index.html con la voz de Gabriel junto a la voz D (T23).
 
-    De sus grabaciones (`carpeta`, fuera de git): cada una limpia y transcrita; su voz clonada con
-    Qwen3-TTS desde el mejor tramo limpio de todas (`voz.tramos_limpios`); un tramo de otras dos
-    grabaciones dicho por él, por su voz clonada y por la voz D; los textos de `prueba-voz` en las
-    dos voces; su lectura de `slug` con la música, y la previa de `slug` con los pasos 2 y 4 en
-    cada voz. Deja informe.json con lo medido."""
+    De sus grabaciones (`carpeta`, fuera de git), cada una limpia y transcrita, clona su voz con
+    Qwen3-TTS desde el mejor tramo limpio de todas (`voz.tramos_limpios`) de dos maneras: desde la
+    grabación limpia, y como de estudio, con la muestra y cada locución pasadas por Sidon
+    (`voz.restaurar`). Compara un tramo de otras dos grabaciones dicho por él (también con Sidon),
+    por cada voz clonada y por la voz D; los textos de `prueba-voz`; su lectura de `slug` con la
+    música, y la previa de `slug` con los pasos 2 y 4 en cada voz. Deja informe.json con lo
+    medido."""
     import os
 
     from . import mezcla as MZ
@@ -601,6 +603,11 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
                                           "tiempos": t.tiempos, "silabas_por_s": round(_ritmo(t.palabras), 2),
                                           "texto": t.texto}
 
+    def a_nivel(x):
+        # A NIVEL_VOZ y bajo el techo: el AAC del celular decodifica con picos sobre 0 dBFS, y el
+        # WAV de 16 bits los cortaría.
+        return so.limitar_pico(so.a_lufs(x, V.SR, NIVEL_VOZ), V.SR, TECHO)
+
     # La muestra para clonar: el mejor tramo limpio de todas las grabaciones, que diga palabra por
     # palabra lo que está en la especificación de su nudo (si no hay ninguno, sin esa condición).
     fuentes = [(RAIZ / "specs" / f"{s}.yaml").read_text(encoding="utf-8") if s else None for s in slugs]
@@ -614,55 +621,62 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
     _, i0, a0, b0 = max(tramos)
     w0 = trans[i0].palabras
     texto_muestra = " ".join(p.texto for p in w0[a0:b0])
-    # A NIVEL_VOZ y bajo el techo: el AAC del celular decodifica con picos sobre 0 dBFS, y el WAV
-    # de 16 bits los cortaría.
-    muestra = so.limitar_pico(so.a_lufs(V.recorte(limpias[i0], w0[a0].inicio, w0[b0 - 1].fin), V.SR, NIVEL_VOZ),
-                              V.SR, TECHO)
+    muestra = a_nivel(V.recorte(limpias[i0], w0[a0].inicio, w0[b0 - 1].fin))
     ruta_muestra = destino / "muestra.wav"
     _wav16(ruta_muestra, muestra, V.SR)
-    clon = V.Voz("gabriel", referencia=str(ruta_muestra.resolve()), texto_referencia=texto_muestra,
-                 etiqueta="Gabriel, clonada de su grabación", limpiar=True)
+    # La misma muestra como de estudio: Sidon le quita el eco del cuarto y el sonido del celular.
+    muestra_estudio = a_nivel(V.restaurar([muestra], aviso=aviso)[0])
+    ruta_estudio = destino / "muestra-estudio.wav"
+    _wav16(ruta_estudio, muestra_estudio, V.SR)
+    voces = (("voz-d", "Voz D", V.VOZ),
+             ("clonada", "Clonada de tu grabación",
+              V.Voz("gabriel", referencia=str(ruta_muestra.resolve()), texto_referencia=texto_muestra,
+                    etiqueta="Gabriel, clonada de su grabación", limpiar=True)),
+             ("estudio", "Clonada de estudio",
+              V.Voz("gabriel-estudio", referencia=str(ruta_estudio.resolve()), texto_referencia=texto_muestra,
+                    etiqueta="Gabriel, clonada de su muestra restaurada, como de estudio", restaurar=True)))
     informe["muestra"] = {"grabacion": rutas[i0].name, "desde": w0[a0].inicio, "hasta": w0[b0 - 1].fin,
                           "texto": texto_muestra}
 
     # La misma frase: un tramo limpio de otras dos grabaciones.
     frases, usadas = [], {i0}
-    otros = limpios(largo=(5.0, 10.0), ideal=8.0)
-    for _, i, a, b in sorted(otros, reverse=True):
+    for _, i, a, b in sorted(limpios(largo=(5.0, 10.0), ideal=8.0), reverse=True):
         if i not in usadas and len(frases) < 2:
             usadas.add(i)
             frases.append((i, a, b))
     textos = textos_prueba(slug)
     dichas = [" ".join(p.texto for p in trans[i].palabras[a:b]) for i, a, b in frases]
     todos = [t for _, t in textos] + dichas
-    locs = V.decir([(t, v) for v in (V.VOZ, clon) for t in todos], aviso=aviso)
-    loc_d, loc_g = locs[:len(todos)], locs[len(todos):]
-    informe["silabas_por_s"] = {"voz D": round(float(np.mean([_ritmo(L.palabras) for L in loc_d])), 2),
-                                "clonada": round(float(np.mean([_ritmo(L.palabras) for L in loc_g])), 2)}
+    locs = V.decir([(t, v) for _, _, v in voces for t in todos], aviso=aviso)
+    de = {clave: locs[j * len(todos):(j + 1) * len(todos)] for j, (clave, _, _) in enumerate(voces)}
+    informe["silabas_por_s"] = {etiqueta: round(float(np.mean([_ritmo(L.palabras) for L in de[clave]])), 2)
+                                for clave, etiqueta, _ in voces}
+    reales = [V.recorte(limpias[i], trans[i].palabras[a].inicio, trans[i].palabras[b - 1].fin) for i, a, b in frases]
+    reales_estudio = V.restaurar(reales, aviso=aviso)
 
     cuerpo = [f'<h2>La muestra que se clonó</h2><section class="demo"><div class="clips">'
               f'{_clip(destino, "muestra.m4a", muestra, "De tu grabación: " + rutas[i0].stem)}'
+              f'{_clip(destino, "muestra-estudio.m4a", muestra_estudio, "La misma, con Sidon")}'
               f'</div><div class="texto">{html.escape(texto_muestra)}</div></section>',
-              '<h2>La misma frase</h2><p class="nota">Un tramo de otra grabación: como lo dijiste, '
-              'dicho por tu voz clonada y por la voz D.</p>']
+              '<h2>La misma frase</h2><p class="nota">Un tramo de otra grabación: como lo dijiste, con Sidon, '
+              'dicho por cada voz clonada y por la voz D.</p>']
     for k, (i, a, b) in enumerate(frases):
-        w = trans[i].palabras
-        real = V.recorte(limpias[i], w[a].inicio, w[b - 1].fin)
-        clips = (_clip(destino, f"frase-{k + 1}-tu-voz.m4a", real, "Tu grabación")
-                 + _clip(destino, f"frase-{k + 1}-clonada.m4a", loc_g[len(textos) + k].audio, "Tu voz clonada")
-                 + _clip(destino, f"frase-{k + 1}-voz-d.m4a", loc_d[len(textos) + k].audio, "Voz D"))
+        clips = (_clip(destino, f"frase-{k + 1}-tu-voz.m4a", reales[k], "Tu grabación")
+                 + _clip(destino, f"frase-{k + 1}-tu-voz-estudio.m4a", reales_estudio[k], "Tu grabación con Sidon")
+                 + "".join(_clip(destino, f"frase-{k + 1}-{clave}.m4a", de[clave][len(textos) + k].audio, etiqueta)
+                           for clave, etiqueta, _ in voces[1:] + voces[:1]))
         cuerpo.append(f'<section class="demo"><div class="clips">{clips}</div>'
                       f'<div class="texto">{html.escape(rutas[i].stem)}: {html.escape(dichas[k])}</div></section>')
     cuerpo.append('<h2>Los textos de la prueba de voz</h2><p class="nota">Los mismos de la prueba a ciegas: '
                   'la apertura y los pasos 2 y 4.</p>')
     for k, (nombre, texto) in enumerate(textos):
-        clips = (_clip(destino, f"prueba-{k + 1}-voz-d.m4a", loc_d[k].audio, "Voz D")
-                 + _clip(destino, f"prueba-{k + 1}-clonada.m4a", loc_g[k].audio, "Tu voz clonada"))
+        clips = "".join(_clip(destino, f"prueba-{k + 1}-{clave}.m4a", de[clave][k].audio, etiqueta)
+                        for clave, etiqueta, _ in voces)
         cuerpo.append(f'<section class="demo"><b>{html.escape(nombre)}</b><div class="clips">{clips}</div>'
                       f'<div class="texto">{html.escape(texto)}</div></section>')
 
     # Su lectura con la música: lo que leyó de `slug` (o la grabación de la muestra), hasta unos
-    # 30 s, cortada en una pausa.
+    # 30 s, cortada en una pausa; limpia y con Sidon.
     i = slugs.index(slug) if slug in slugs else i0
     w = trans[i].palabras
     if w and trans[i].tiempos == "alineados":
@@ -670,25 +684,30 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
         x = V.recorte(limpias[i], w[0].inicio, w[b - 1].fin)
         corrida = max(0.0, w[0].inicio - 0.12)
         palabras = [V.Palabra(p.texto, p.dicha, p.inicio - corrida, p.fin - corrida) for p in w[:b]]
-        loc = V.locucion_grabada(x, palabras, voz="gabriel")
-        dur = loc.segundos + 4.0
-        p = MZ.pista(dur, capitulos=[M.Capitulo("apertura", 0.0, 2.5), M.Capitulo("pasos", 2.5, dur)],
-                     slug=slug, dichos=[MZ.Dicho(2.0, loc)], aviso=aviso)
-        _m4a(destino / "lectura-con-musica.m4a", p.audio, MZ.SR, kbps=256)
-        informe["lectura_con_musica"] = {"segundos": round(dur, 1), "lufs": round(p.lufs, 2),
-                                         "pico_dbtp": round(p.pico, 2), "voz_sobre_musica_db": _voz_sobre_musica(p)}
-        cuerpo.append('<h2>Tu lectura con la música</h2><p class="nota">Tu grabación, limpia, con la canción del '
-                      'nudo debajo, como en el video: la música baja sola mientras hablas.</p>'
-                      '<section class="demo"><audio controls preload="none" src="lectura-con-musica.m4a"></audio>'
+        clips = []
+        for archivo, etiqueta, audio in (("lectura-con-musica.m4a", "Tu grabación", x),
+                                         ("lectura-con-musica-estudio.m4a", "Con Sidon",
+                                          V.restaurar([x], aviso=aviso)[0])):
+            loc = V.locucion_grabada(audio, palabras, voz="gabriel")
+            dur = loc.segundos + 4.0
+            p = MZ.pista(dur, capitulos=[M.Capitulo("apertura", 0.0, 2.5), M.Capitulo("pasos", 2.5, dur)],
+                         slug=slug, dichos=[MZ.Dicho(2.0, loc)], aviso=aviso)
+            _m4a(destino / archivo, p.audio, MZ.SR, kbps=256)
+            informe[archivo] = {"segundos": round(dur, 1), "lufs": round(p.lufs, 2), "pico_dbtp": round(p.pico, 2),
+                                "voz_sobre_musica_db": _voz_sobre_musica(p)}
+            clips.append(f'<div class="clip"><b>{etiqueta}</b><audio controls preload="none" src="{archivo}"></audio></div>')
+        cuerpo.append('<h2>Tu lectura con la música</h2><p class="nota">Tu grabación con la canción del nudo '
+                      'debajo, como en el video: la música baja sola mientras hablas.</p>'
+                      f'<section class="demo"><div class="clips">{"".join(clips)}</div>'
                       f'<div class="texto">{html.escape(" ".join(q.texto for q in w[:b]))}</div></section>')
 
     # La previa del nudo, con los pasos 2 y 4 en cada voz.
     os.environ["NUDOS_MOTOR"] = "1"
     pv = Previa(VI.construir([slug])[slug], aviso)
     videos = []
-    for nombre, etiqueta, ls in (("voz-d", "Voz D", loc_d), ("clonada", "Tu voz clonada", loc_g)):
-        p = pv.pista(pv.en_las_tarjetas([ls[1], ls[2]]), aviso)
-        salida = destino / f"{slug}-{nombre}.mp4"
+    for clave, etiqueta, _ in voces:
+        p = pv.pista(pv.en_las_tarjetas([de[clave][1], de[clave][2]]), aviso)
+        salida = destino / f"{slug}-{clave}.mp4"
         MZ.pegar(pv.video, p, salida)
         informe[salida.name] = {"lufs": round(p.lufs, 2), "pico_dbtp": round(p.pico, 2),
                                 "voz_sobre_musica_db": _voz_sobre_musica(p)}
@@ -702,7 +721,7 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
     filas = []
     for k, (r, x, t) in enumerate(zip(rutas, limpias, trans)):
         archivo = f"grabacion-{k + 1}.m4a"
-        _m4a(destino / archivo, so.limitar_pico(so.a_lufs(x, V.SR, NIVEL_VOZ), V.SR, TECHO), V.SR, kbps=128)
+        _m4a(destino / archivo, a_nivel(x), V.SR, kbps=128)
         filas.append(f'<details><summary>{html.escape(r.stem)} ({len(x) / V.SR:.0f} s)</summary>'
                      f'<audio controls preload="none" src="{archivo}"></audio>'
                      f'<div class="texto">{html.escape(t.texto)}</div></details>')

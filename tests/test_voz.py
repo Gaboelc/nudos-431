@@ -384,3 +384,46 @@ def test_una_voz_que_se_limpia_cambia_su_huella_y_su_audio(cache):
     a = V.locuciones(["Tira del firme y aprieta."], normal, **callar)[0]
     b = V.locuciones(["Tira del firme y aprieta."], limpia, **callar)[0]
     assert a.huella != b.huella and not np.allclose(a.audio[:len(b.audio)], b.audio[:len(a.audio)])
+
+
+def _sidon_falso(llamadas):
+    """Un Sidon de mentira: «restaura» dejando el audio a la mitad, a 48 kHz."""
+    from scipy.io import wavfile
+
+    def correr(entorno, script, trabajo, aviso=print, **kw):
+        llamadas.append((entorno, script, len(trabajo["tareas"])))
+        for t in trabajo["tareas"]:
+            _, x = wavfile.read(t["audio"])
+            wavfile.write(t["salida"], 48000, np.asarray(x, np.float32) * 0.5)
+        return {"hechas": len(trabajo["tareas"])}
+    return correr
+
+
+def test_restaurar_con_sidon_falso(monkeypatch):
+    from nudos import ia
+    llamadas = []
+    monkeypatch.setattr(ia, "correr", _sidon_falso(llamadas))
+    a = np.full(V.SR // 2, 0.4, np.float32)
+    y = V.restaurar([a], aviso=lambda *_: None)[0]
+    assert llamadas == [("qwen-asr", "restaurar.py", 1)]
+    assert len(y) == len(a) and np.allclose(y, 0.2, atol=1e-6)
+    # Del caché, sin volver a llamar a Sidon, y sin restos en la carpeta temporal.
+    assert np.allclose(V.restaurar([a], aviso=lambda *_: None)[0], y)
+    assert len(llamadas) == 1
+    assert not list((V.carpeta_cache() / "tmp").glob("*.wav"))
+
+
+def test_una_voz_de_estudio_pasa_por_sidon(monkeypatch):
+    from nudos import ia
+    llamadas = []
+    monkeypatch.setattr(ia, "correr", _sidon_falso(llamadas))
+    callar = {"aviso": lambda *_: None, "alineador": False}
+    textos = ["Tira del firme.", "Aprieta el nudo."]
+    normal = V.locuciones(textos, V.Voz("prueba", proveedor="falso"), **callar)
+    estudio = V.locuciones(textos, V.Voz("prueba", proveedor="falso", restaurar=True), **callar)
+    assert llamadas == [("qwen-asr", "restaurar.py", 2)]          # las dos en una sola llamada
+    for a, b in zip(normal, estudio):
+        assert a.huella != b.huella and len(a.audio) == len(b.audio)
+        assert np.allclose(b.audio, a.audio * 0.5, atol=1e-4)
+    assert not (V.carpeta_cache() / "restauradas").exists()        # decir guarda solo la locución
+    assert "restaurar" not in V.Voz("prueba").huella()
