@@ -7,6 +7,24 @@ three@0.160.0 (licencia MIT, three/LICENSE.txt)
   three/OrbitControls.js      examples/jsm/controls/OrbitControls.js, con un solo cambio:
                               importa './three.module.min.js' en vez de 'three', para que
                               el sitio no necesite un import map.
+  three/addons/<carpeta>/*.js examples/jsm/<carpeta>/*.js, del mismo paquete (bajado otra vez el
+                              26 de noviembre de 2026 para T24 y comprobado contra el hash de npm),
+                              con un solo cambio: importan '../../three.module.min.js' en vez de
+                              'three'. Son los del visor físico (sitio/fisico.js):
+                              environments/RoomEnvironment.js; postprocessing/EffectComposer.js,
+                              Pass.js, RenderPass.js, ShaderPass.js, MaskPass.js, OutputPass.js y
+                              GTAOPass.js; shaders/CopyShader.js, OutputShader.js, GTAOShader.js y
+                              PoissonDenoiseShader.js; y math/SimplexNoise.js.
+
+lygia, commit aa7580bec667100068038fbeb36fa37d961035ee de
+github.com/patriciogonzalezvivo/lygia (bajado el 26 de noviembre de 2026 para T24). Cada archivo
+dice su licencia en su encabezado: generative/snoise.glsl y las funciones de math/ que usa (mod289,
+permute, taylorInvSqrt y grad4), MIT; el tramado (color/dither/interleavedGradientNoise.glsl y
+math/decimate.glsl), Prosperity 3.0.0, que permite el uso no comercial, o la licencia Patron.
+lygia/LICENCIA.txt es el texto de la Prosperity (LICENSE.md del repositorio).
+  lygia/lygia.js              esos siete archivos .glsl sin cambios, como cadenas de JavaScript con
+                              su ruta (el sitio no publica archivos .glsl), y glsl(ruta), que arma
+                              un archivo con sus #include.
 
 @fontsource/big-shoulders-display@5.3.0, @fontsource/ibm-plex-mono@5.3.0 y
 @fontsource/literata@5.3.0 (SIL Open Font License 1.1, fuentes/LICENCIA-*.txt)

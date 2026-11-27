@@ -289,7 +289,13 @@ function altoDeEncuadre(modelo, B) {
    nombres, por ejemplo el número del paso que la ficha impresa pone encima de la imagen.
    «mejoras» (T7b): «contacto», la sombra de contacto; «sombrasSuaves», sombras más claras y
    de borde blando. */
-export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null, reservado = [], mejoras = {} } = {}) {
+/* Marca un material con su papel, para exportar la escena a Blender. */
+function rol(material, nombre) {
+  material.userData.rol = nombre;
+  return material;
+}
+
+export function crearEscena(contenedor, modelo, { interactiva = true, movimientoReducido = false, alRenderizar = null, medidasNombres = null, reservado = [], mejoras = {}, fisico = null } = {}) {
   // Si el navegador no tiene WebGL, esto lanza una excepción y quien llama muestra el aviso.
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: !interactiva });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -307,6 +313,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, 0.5, 500);
   camera.up.set(0, 0, 1);
+  // T24: el visor con material físico, entorno, AgX y postprocesado (sitio/fisico.js). Sin él,
+  // la escena de siempre, que es la de las imágenes de impresión.
+  if (fisico) fisico.preparar(renderer, scene, camera);
 
   const B = cajaDeEncuadre(modelo);
   const cx = (B.x0 + B.x1) / 2, cy = (B.y0 + B.y1) / 2;
@@ -331,8 +340,8 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const dentro = (p) => p.x >= interior.x0 && p.x <= interior.x1 && p.y >= interior.y0 && p.y <= interior.y1;
 
   // Luces
-  scene.add(new THREE.HemisphereLight(0xf4f7ff, 0x8a8f99, 1.5));
-  const sol = new THREE.DirectionalLight(0xffffff, 2.4);
+  scene.add(new THREE.HemisphereLight(0xf4f7ff, 0x8a8f99, fisico ? fisico.luz.cielo : 1.5));
+  const sol = new THREE.DirectionalLight(0xffffff, fisico ? fisico.luz.sol : 2.4);
   sol.position.set(cx - 10, cy + 12, 26);
   sol.target.position.set(cx, cy, 0);
   sol.castShadow = true;
@@ -353,20 +362,21 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     sol.shadow.blurSamples = 25;
   }
   scene.add(sol, sol.target);
-  const relleno = new THREE.DirectionalLight(0xdfe8ff, 0.6);
+  const relleno = new THREE.DirectionalLight(0xdfe8ff, fisico ? fisico.luz.relleno : 0.6);
   relleno.position.set(cx + 14, cy - 16, 10);
   scene.add(relleno);
 
   const matSombra = new THREE.ShadowMaterial({ opacity: mejoras.sombrasSuaves ? SOMBRA_MESA_SUAVE : SOMBRA_MESA });
   const mesa = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), matSombra);
   mesa.receiveShadow = true;
+  mesa.userData.mesa = true;
   scene.add(mesa);
 
   // El anfitrión (nudos/anfitrion.py), de madera: un poste horizontal a lo largo de x, la
   // cruz de los amarres, los palos paralelos o el tubo de la cabeza de turco, centrado en x = 0. El cilindro de
   // three.js va a lo largo de y. El destorcedor, de metal, y la estaca van más abajo.
   const a = modelo.anfitrion;
-  const madera = () => new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 });
+  const madera = () => rol(new THREE.MeshStandardMaterial({ color: 0xc8a27a, roughness: 0.62, metalness: 0 }), "madera");
   const palo = (largo, x, y, z, aLoLargoDeX) => {
     const geo = new THREE.CylinderGeometry(a.radio, a.radio, largo, 64, 1, false);
     const mat = madera();
@@ -405,12 +415,12 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     const tr = texturasTrenza(renderer, cl, cm, co, cm);
     const rep = a.largo / (Math.PI * 2 * a.radio);
     tr.map.repeat.set(rep, 1); tr.bump.repeat.set(rep, 1);
-    const mat = new THREE.MeshStandardMaterial({ map: tr.map, bumpMap: tr.bump, bumpScale: 2.2, roughness: 0.8, metalness: 0 });
+    const mat = rol(new THREE.MeshStandardMaterial({ map: tr.map, bumpMap: tr.bump, bumpScale: 2.2, roughness: 0.8, metalness: 0 }), "cabo");
     const cabo = new THREE.Mesh(geo, mat);
     cabo.castShadow = true; cabo.receiveShadow = true;
     scene.add(cabo);
-    const corte = new THREE.MeshStandardMaterial({ color: new THREE.Color(...COLORES.crema[1].map((v) => v / 255)).convertSRGBToLinear(),
-      roughness: 0.95, metalness: 0 });
+    const corte = rol(new THREE.MeshStandardMaterial({ color: new THREE.Color(...COLORES.crema[1].map((v) => v / 255)).convertSRGBToLinear(),
+      roughness: 0.95, metalness: 0 }), "corte");
     for (const [x, giro] of [[0, Math.PI / 2], [-a.largo, -Math.PI / 2]]) {
       const tapa = new THREE.Mesh(new THREE.CircleGeometry(a.radio, 96), corte);
       tapa.rotation.y = giro;
@@ -440,7 +450,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     geo.applyMatrix4(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)));
     // Las dos testas (el grupo 0 de ExtrudeGeometry) van más oscuras, como la madera cortada
     // a través de la veta: así se lee como una tabla y no como un palo.
-    const testa = new THREE.MeshStandardMaterial({ color: 0x9c7650, roughness: 0.85, metalness: 0 });
+    const testa = rol(new THREE.MeshStandardMaterial({ color: 0x9c7650, roughness: 0.85, metalness: 0 }), "testa");
     const m = new THREE.Mesh(geo, [testa, madera()]);
     m.position.set(a.desde, a.y, a.z);
     m.castShadow = true; m.receiveShadow = true;
@@ -454,7 +464,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   // el eje a la altura «z», y el pie, un bloque de «pie» de largo y del ancho de la barra, con
   // las puntas redondas vistas desde arriba, que va de la mesa a la barra.
   if (a && a.tipo === "cornamusa") {
-    const metal = new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38, metalness: 0.55 });
+    const metal = rol(new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38, metalness: 0.55 }), "metal");
     const barra = new THREE.Mesh(new THREE.CapsuleGeometry(a.radio, a.largo - 2 * a.radio, 16, 48), metal);
     barra.rotation.z = Math.PI / 2;
     barra.position.set(0, 0, a.z);
@@ -494,7 +504,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
         tapa.push(new THREE.Vector2(r, z));
       }
     }
-    const plastico = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0 });
+    const plastico = (color) => rol(new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0 }), "plastico");
     for (const [perfil, color] of [[cuerpo, 0xf7d64a], [tapa, 0xf2ecdc]]) {
       const m = new THREE.Mesh(new THREE.LatheGeometry(perfil, 96), plastico(color));
       m.rotation.x = Math.PI / 2;
@@ -508,8 +518,8 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   // no confundirlo con la madera; la estaca es de madera, como los palos.
   if (a && (a.tipo === "destorcedor" || a.tipo === "estaca")) {
     const geo = new THREE.CylinderGeometry(a.radio, a.radio, a.alto, 64, 1, false);
-    const mat = a.tipo === "estaca" ? madera() : new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38,
-      metalness: 0.55 });
+    const mat = a.tipo === "estaca" ? madera() : rol(new THREE.MeshStandardMaterial({ color: 0xaab0b8, roughness: 0.38,
+      metalness: 0.55 }), "metal");
     const m = new THREE.Mesh(geo, mat);
     m.rotation.x = Math.PI / 2;
     m.position.set(0, 0, a.alto / 2);
@@ -527,12 +537,15 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   const materiales = cuerdas.map((c) => {
     const color = texturasTrenza(renderer, ...COLORES[c.color]);
     const ambar = texturasTrenza(renderer, ...AMBAR);
-    const base = new THREE.MeshStandardMaterial({ map: color.map, bumpMap: color.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0, vertexColors });
-    const matAmbar = new THREE.MeshStandardMaterial({ map: ambar.map, bumpMap: ambar.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0, vertexColors });
+    const trenza = (t, cols) => (fisico ? fisico.materialCuerda(t, cols, { vertexColors })
+      : new THREE.MeshStandardMaterial({ map: t.map, bumpMap: t.bump, bumpScale: 2.2, roughness: 0.78, metalness: 0, vertexColors }));
+    const base = rol(trenza(color, COLORES[c.color]), "cuerda");
+    base.userData.color = c.color;
+    const matAmbar = trenza(ambar, AMBAR);
     const remate = new THREE.MeshStandardMaterial({ map: texturaRemate(), roughness: 0.6, metalness: 0 });
     return { base, ambar: matAmbar, remate, mats: [base, matAmbar, remate] };
   });
-  const matPunta = new THREE.MeshStandardMaterial({ color: 0x1b1517, roughness: 0.45, metalness: 0 });
+  const matPunta = rol(new THREE.MeshStandardMaterial({ color: 0x1b1517, roughness: 0.45, metalness: 0 }), "punta");
   const geoTapa = new THREE.SphereGeometry(RADIO, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
   // La tapa del comienzo usa el material de la cuerda: con la sombra de contacto, sin oscurecer.
   if (vertexColors) geoTapa.setAttribute("color", new THREE.BufferAttribute(new Float32Array(geoTapa.attributes.position.count * 3).fill(1), 3));
@@ -578,7 +591,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
 
   // Los dedos en que se ata el puño de mono, en los pasos que los tienen: dos cilindros
   // parados sobre la mesa, color piel y con la punta redonda.
-  const matDedo = new THREE.MeshStandardMaterial({ color: 0xe2b896, roughness: 0.7, metalness: 0 });
+  const matDedo = rol(new THREE.MeshStandardMaterial({ color: 0xe2b896, roughness: 0.7, metalness: 0 }), "dedo");
   function dedos(d, grupo) {
     const ejes = [];
     for (const x of d.x) {
@@ -621,6 +634,8 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
       });
       const tubo = new THREE.Mesh(geo, materiales[n].mats);
       tubo.castShadow = true; tubo.receiveShadow = true;
+      // Para el render de las fichas en Blender (exportar): el eje del tubo y sus tramos.
+      tubo.userData.tubo = { curva, T, radio: RADIO * c.grosor, grosor: c.grosor, color: c.color, L, w0, a, b, w };
       grupo.add(tubo);
       geos.push({ geo, n, T, L, radio: RADIO * c.grosor, RS });
       const tapa = (t, mat) => {
@@ -677,7 +692,10 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     for (const t of c.tubos) {
       const m = materiales[t.n];
       const rep = t.L / (Math.PI * t.grosor);
-      for (const mm of [m.base, m.ambar]) { mm.map.repeat.set(rep, 1); mm.bumpMap.repeat.set(rep, 1); }
+      for (const mm of [m.base, m.ambar]) {
+        mm.map.repeat.set(rep, 1); mm.bumpMap.repeat.set(rep, 1);
+        if (mm.anisotropyMap) mm.anisotropyMap.repeat.set(rep, 1);
+      }
       m.remate.map.repeat.set(t.L / (0.5 * t.grosor), 1);
     }
     colocarNombres();
@@ -802,7 +820,9 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
   }
 
   function renderizar() {
-    renderer.render(scene, camera);
+    // Con el visor físico, el postprocesado solo con la cámara quieta.
+    if (fisico) fisico.renderizar(!anim && !enMovimiento);
+    else renderer.render(scene, camera);
     pendiente = false;
     if (alRenderizar) alRenderizar();
   }
@@ -811,6 +831,7 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     const w = contenedor.clientWidth, h = contenedor.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
+    if (fisico) fisico.redimensionar();
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     if (!movidoPorUsuario && !anim) vista(vistaActual, true);
@@ -836,9 +857,52 @@ export function crearEscena(contenedor, modelo, { interactiva = true, movimiento
     if (pendiente || movio) renderizar();
   }
 
+  /* La escena tal como se ve, para dibujarla en Blender (nudos/blender.py, T16): la cámara, el
+     eje de cada cuerda con sus tramos (base, resaltado y remate) y las demás mallas (el
+     anfitrión, las tapas de las puntas y los dedos), en coordenadas del mundo y con el papel
+     de su material. La mesa no va: en Blender es un receptor de sombras. */
+  function exportar() {
+    camera.updateMatrixWorld();
+    scene.updateMatrixWorld(true);
+    const cuerdasExp = [], mallas = [];
+    const normal = new THREE.Matrix3(), v = new THREE.Vector3();
+    const descr = (m) => ({ rol: m.userData.rol || "otro", color: "#" + m.color.getHexString(),
+      rugosidad: m.roughness, metal: m.metalness, cuerda: m.userData.color || null });
+    scene.traverseVisible((o) => {
+      if (!o.isMesh || o.userData.mesa) return;
+      const t = o.userData.tubo;
+      if (t) {
+        const espina = [];
+        for (let i = 0; i <= t.T; i++) { t.curva.getPointAt(i / t.T, v); espina.push(v.x, v.y, v.z); }
+        const resaltado = o.material[1] && o.material[1].userData.rol !== "cuerda";
+        cuerdasExp.push({ color: t.color, grosor: t.grosor, radio: t.radio, L: t.L, espina,
+          tramos: [[0, t.w0, 2], [t.w0, t.a, 0], [t.a, t.b, resaltado ? 1 : 0], [t.b, t.w, 0], [t.w, t.T, 2]].filter(([s0, s1]) => s1 > s0) });
+        return;
+      }
+      const g = o.geometry, pos = g.attributes.position, nor = g.attributes.normal;
+      normal.getNormalMatrix(o.matrixWorld);
+      const P = new Array(pos.count * 3), N = new Array(pos.count * 3);
+      for (let k = 0; k < pos.count; k++) {
+        v.fromBufferAttribute(pos, k).applyMatrix4(o.matrixWorld); P[3 * k] = v.x; P[3 * k + 1] = v.y; P[3 * k + 2] = v.z;
+        v.fromBufferAttribute(nor, k).applyMatrix3(normal).normalize(); N[3 * k] = v.x; N[3 * k + 1] = v.y; N[3 * k + 2] = v.z;
+      }
+      const idx = g.index ? Array.from(g.index.array) : Array.from({ length: pos.count }, (_, k) => k);
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      const grupos = Array.isArray(o.material) && g.groups.length ? g.groups : [{ start: 0, count: idx.length, materialIndex: 0 }];
+      for (const gr of grupos) {
+        mallas.push({ ...descr(mats[gr.materialIndex]), pos: P, nor: N, idx: idx.slice(gr.start, gr.start + gr.count) });
+      }
+    });
+    return {
+      camara: { matriz: camera.matrixWorld.toArray(), fov: camera.fov, aspecto: camera.aspect, cerca: camera.near, lejos: camera.far },
+      centro: [cx, cy], extension: Math.max(B.x1 - B.x0, B.y1 - B.y0) / 2,
+      cuerdas: cuerdasExp, mallas,
+    };
+  }
+
   new ResizeObserver(redimensionar).observe(contenedor);
   redimensionar();
   requestAnimationFrame(cuadro);
 
-  return { lienzo: renderer.domElement, mostrarPaso, vista, resaltar, opacidadSombra, proyectar, anclas, colocarNombres, renderizar, pedirCuadro };
+  return { lienzo: renderer.domElement, mostrarPaso, vista, resaltar, opacidadSombra, proyectar, anclas, colocarNombres, renderizar, pedirCuadro, exportar };
 }
