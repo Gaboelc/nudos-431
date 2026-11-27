@@ -130,6 +130,11 @@ def main(argv=None) -> int:
                                                   "piloto con la pista nueva, en revision/sonido/")
     pz.add_argument("slugs", nargs="*", help="los nudos (por omisión, los dos pilotos de T17)")
     pz.add_argument("--sin-voz", action="store_true", help="sin la voz de los pasos 2 y 4")
+    pp = ordenes.add_parser("prueba-voz-propia", help="la voz de Gabriel, grabada y clonada, junto a la "
+                                                      "voz D, en revision/voz-propia/")
+    pp.add_argument("carpeta", help="la carpeta con sus grabaciones (m4a, wav…), fuera de git")
+    pp.add_argument("--slug", default="as-de-guia", help="el nudo de los textos y del video (por omisión, "
+                                                         "el as de guía)")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -176,6 +181,11 @@ def main(argv=None) -> int:
             return 0
         if args.orden == "prueba-aspecto":
             return _prueba_aspecto(args.aspectos, args.motores, args.tomas_de_nuevo, args.solo_pdf, args.tomas)
+        if args.orden == "prueba-voz-propia":
+            from .prueba_sonido import prueba_voz_propia
+            sys.stdout.reconfigure(line_buffering=True)
+            print(f"Prueba con tu voz en {prueba_voz_propia(args.carpeta, args.slug)}")
+            return 0
         if args.orden == "estado":
             return _estado()
         if args.orden == "revision":

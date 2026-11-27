@@ -64,10 +64,14 @@ class Voz:
     id: str = ""                     # ElevenLabs: el voice_id
     semilla: int = 431
     etiqueta: str = ""               # cómo se presenta en la prueba, en español
+    limpiar: bool = False            # cada locución pasa por `limpiar()`: para una voz clonada de una
+                                     # grabación con ruido de fondo, que el clon reproduce
 
     def huella(self) -> dict:
         d = asdict(self)
         d.pop("etiqueta")
+        if not self.limpiar:
+            d.pop("limpiar")             # así no cambia la huella de las voces de antes
         if self.referencia:
             d["referencia"] = _huella_archivo(self.ruta_referencia())
         return d
@@ -746,6 +750,8 @@ def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, av
             x = np.asarray(x, np.float64)
             if not len(x) or not np.isfinite(x).all():
                 raise VozError(f"{prov.nombre} devolvió un audio vacío para «{pedidos[k][0][:40]}»")
+            if pedidos[k][1].limpiar:
+                x = np.asarray(limpiar(x, sr), np.float64)
             fuente = "proveedor" if tiempos else "estimados"
             tiempos = tiempos or estimar_tiempos(x, sr, piezas[k])
             _escribir_wav(cache / f"{huellas[k]}.wav", x, sr)
@@ -771,3 +777,165 @@ def locuciones(textos: list[str], voz: Voz, proveedor: Proveedor | None = None, 
                alineador: Alineador | None | bool = None) -> list[Locucion]:
     """Cada texto dicho por una voz (ver `decir`)."""
     return decir([(t, voz) for t in textos], proveedor, aviso, alineador)
+
+
+# --------------------------------------------------------------------------
+# Las grabaciones: la voz de Gabriel
+# --------------------------------------------------------------------------
+# Lo que el reconocimiento de voz debería reconocer: los nombres de los nudos y las palabras de las
+# fichas, para que escriba «gaza» y no «gasa», o «ahorcados» aunque se diga «ahorcaos».
+CONTEXTO = ("Nudos de cuerda: as de guía, ballestrinque, nudo simple, nudo ocho, ocho doble, nudo de "
+            "pescador, amarre cuadrado, amarre diagonal, vuelta de escota, cote, rizo. Chicote, firme, gaza, "
+            "seno, vuelta, ahorcados, palo, travesaño, argolla, mosquetón.")
+REDUCCION = 12.0       # dB: lo más que `limpiar` baja el ruido de fondo
+# «Este» y «esto» también son palabras de verdad («este nudo»), pero aquí solo descartan tramos
+# para la muestra, y sobran tramos.
+MULETILLAS = {"eh", "em", "mm", "mmm", "ah", "este", "esto"}
+EXTENSIONES = (".m4a", ".mp3", ".wav", ".ogg", ".opus", ".aac", ".flac")
+
+
+def leer_grabacion(ruta) -> np.ndarray:
+    """Una grabación en cualquier formato que lea ffmpeg (m4a, mp3, wav…), en mono y a SR."""
+    import subprocess
+    p = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", str(ruta), "-ac", "1", "-ar", str(SR),
+                        "-f", "f32le", "-"], capture_output=True)
+    if p.returncode != 0:
+        raise VozError(f"no se pudo leer {ruta}: {p.stderr.decode(errors='replace').strip()[:200]}")
+    return np.frombuffer(p.stdout, np.float32).copy()
+
+
+def limpiar(x, sr: int = SR, reduccion: float = REDUCCION) -> np.ndarray:
+    """Una grabación de celular lista para la mezcla o para clonarla: sin los graves que no son voz
+    (pasa altos de 70 Hz) y con el ruido de fondo hasta `reduccion` dB más bajo. Es una compuerta
+    espectral suave: el espectro del ruido sale del 10 % de los cuadros más callados, y cada banda
+    baja más cuanto más cerca está del ruido. La ganancia se suaviza en el tiempo y en la
+    frecuencia, para que no queden pitidos, y nunca baja más que `reduccion`."""
+    from scipy.ndimage import uniform_filter
+    from scipy.signal import butter, istft, sosfiltfilt, stft
+    x = np.asarray(x, np.float64)
+    if len(x) < sr // 10:
+        return x.astype(np.float32)
+    x = sosfiltfilt(butter(4, 70, "high", fs=sr, output="sos"), x)
+    n = 2048 if sr >= 32000 else 1024
+    _, _, Z = stft(x, sr, nperseg=n, noverlap=3 * n // 4)
+    P = np.abs(Z) ** 2
+    e = P.sum(axis=0)
+    ruido = P[:, e <= np.percentile(e, 10)].mean(axis=1, keepdims=True)
+    snr = P / np.maximum(ruido, 1e-20)
+    G = np.sqrt(np.clip(1 - 2.0 / np.maximum(snr, 1e-9), 0, 1))     # sobresustracción: 2 veces el ruido
+    G = np.maximum(uniform_filter(G, size=(3, 5)), 10 ** (-reduccion / 20))
+    _, y = istft(Z * G, sr, nperseg=n, noverlap=3 * n // 4)
+    return y[:len(x)].astype(np.float32)
+
+
+@dataclass
+class Transcripcion:
+    texto: str
+    palabras: list[Palabra]      # como las escribió el modelo, con su inicio y su fin
+    segundos: float
+    tiempos: str                 # «alineados», o «sin» si el alineador no calzó
+
+
+def transcribir(audios: list[np.ndarray], contexto: str = CONTEXTO, aviso=print) -> list[Transcripcion]:
+    """Lo que dice cada grabación (mono, a SR), con el tiempo de cada palabra: Qwen3-ASR escribe el
+    texto (sonido/transcribir.py) y el alineador lo pone en el tiempo (sonido/alinear.py). Cada una
+    se guarda en el caché con la huella de su audio, así que nada se transcribe dos veces."""
+    from . import ia
+    carpeta = carpeta_cache() / "transcripciones"
+    huellas = [_huella("transcribir/1", hashlib.sha256(np.asarray(x, np.float32).tobytes()).hexdigest(), contexto)
+               for x in audios]
+    faltan = [k for k, h in enumerate(huellas) if not (carpeta / f"{h}.json").exists()]
+    if faltan:
+        aviso(f"  transcribiendo {len(faltan)} grabaciones (Qwen3-ASR)")
+        tmp = carpeta_cache() / "tmp"
+        rutas = [tmp / f"transcribir-{os.getpid()}-{k}.wav" for k in faltan]
+        for r, k in zip(rutas, faltan):
+            _escribir_wav(r, audios[k], SR)
+        try:
+            res = ia.correr("qwen-asr", "transcribir.py", {"tareas": [
+                {"audio": str(r), "idioma": "Spanish", "contexto": contexto} for r in rutas]}, aviso=aviso)
+        finally:
+            for r in rutas:
+                r.unlink(missing_ok=True)
+        textos = [h["texto"].strip() for h in res["hechas"]]
+        piezas = [[Palabra(t, t) for t in texto.split()] for texto in textos]
+        alineadas = QwenAlineador().alinear([(audios[k], SR, p) for k, p in zip(faltan, piezas)], aviso=aviso)
+        for k, texto, p, al in zip(faltan, textos, piezas, alineadas):
+            meta = {"texto": texto, "segundos": round(len(audios[k]) / SR, 3), "tiempos": "alineados" if al else "sin",
+                    "palabras": [asdict(w) for w in (al or p)]}
+            carpeta.mkdir(parents=True, exist_ok=True)
+            (carpeta / f"{huellas[k]}.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1),
+                                                        encoding="utf-8")
+    out = []
+    for h in huellas:
+        meta = json.loads((carpeta / f"{h}.json").read_text(encoding="utf-8"))
+        out.append(Transcripcion(meta["texto"], [Palabra(**w) for w in meta["palabras"]], meta["segundos"],
+                                 meta["tiempos"]))
+    return out
+
+
+def _clave(palabra: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", palabra.casefold()) if c.isalnum())
+
+
+def _tropieza(palabras: list[Palabra], ventana: int = 3) -> bool:
+    """Si hay un tropiezo: una muletilla, o una palabra que se repite a menos de `ventana` palabras
+    («no se cierra ni se, ni se corre», «por por una argolla»)."""
+    claves = [_clave(p.texto) for p in palabras]
+    for i, c in enumerate(claves):
+        if c in MULETILLAS or (c and c in claves[max(0, i - ventana):i]):
+            return True
+    return False
+
+
+def tramos_limpios(t: Transcripcion, largo: tuple[float, float] = (8.0, 14.0), pausa: float = 0.3,
+                   ideal: float = 11.0, fuente: str | None = None) -> list[tuple[float, int, int]]:
+    """Los tramos de una transcripción que sirven de muestra: entre pausas de por lo menos `pausa`
+    s, de `largo` s y sin tropiezos. Con `fuente`, el texto que se leyó (la especificación del
+    nudo), solo los tramos que dicen palabra por palabra un pedazo de él: así el texto de la
+    muestra es justo lo que se oye, sin tropiezos que no se repiten («de distinto todo grosor») ni
+    palabras mal reconocidas. Da (puntaje, primera palabra, última + 1), del mejor al peor: mejor
+    cuanto más cerca de `ideal` s y si empieza y termina con una oración."""
+    w = t.palabras
+    if t.tiempos != "alineados" or not w:
+        return []
+    leido = None
+    if fuente:
+        leido = " " + " ".join(c for c in (_clave(x) for x in texto_dicho(para_decir(fuente)).split()) if c) + " "
+    corte = [0] + [i for i in range(1, len(w)) if w[i].inicio - w[i - 1].fin >= pausa] + [len(w)]
+    out = []
+    for a in corte[:-1]:
+        for b in corte:
+            if b <= a:
+                continue
+            dur = w[b - 1].fin - w[a].inicio
+            if dur > largo[1]:
+                break
+            if dur < largo[0] or _tropieza(w[a:b]):
+                continue
+            if leido is not None and (" " + " ".join(c for c in (_clave(p.texto) for p in w[a:b]) if c) + " ") not in leido:
+                continue
+            puntos = -abs(dur - ideal)
+            puntos += 2.0 if (a == 0 or w[a - 1].texto.endswith((".", ":"))) else 0.0
+            puntos += 2.0 if w[b - 1].texto.endswith((".", ":")) else 0.0
+            out.append((puntos, a, b))
+    return sorted(out, reverse=True)
+
+
+def recorte(x, desde: float, hasta: float, margen: float = 0.12, fundido: float = 0.03) -> np.ndarray:
+    """Un tramo de una grabación (a SR), con `margen` s de aire a cada lado y fundidos cortos."""
+    a, b = max(0, int((desde - margen) * SR)), min(len(x), int((hasta + margen) * SR))
+    y = np.array(x[a:b], np.float64)
+    k = min(int(fundido * SR), len(y) // 2)
+    if k:
+        rampa = np.linspace(0, 1, k)
+        y[:k] *= rampa
+        y[-k:] *= rampa[::-1]
+    return y.astype(np.float32)
+
+
+def locucion_grabada(x, palabras: list[Palabra], texto: str = "", voz: str = "grabada") -> Locucion:
+    """Una grabación como si fuera una locución, para ponerla en la mezcla (nudos/mezcla.py)."""
+    x = np.asarray(x, np.float32)
+    texto = texto or " ".join(p.texto for p in palabras)
+    return Locucion(texto, x, palabras, "alineados", _huella("grabada", hashlib.sha256(x.tobytes()).hexdigest()), voz)

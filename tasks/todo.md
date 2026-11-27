@@ -103,7 +103,9 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Cinco canciones parecidas a la elegida, repartidas entre los 36 nudos en `config/musica.yaml` (26 nov)
     - [x] Gabriel eligió la celesta para el motivo (las otras opciones empezaban como campanas). Se bajó el alineador forzado y se borró ACE-Step (26 nov)
     - [x] T23c El diseño sonoro y la mezcla: `nudos/foley.py`, `nudos/mezcla.py` y `prueba-mezcla` (26 nov)
-    - [ ] Gabriel oye la prueba de la mezcla (`prueba-mezcla`) y decide si se quedan los tics de los cruces y si están bien los niveles del foley y de los efectos. Con eso T23 se cierra y su bloque pasa al historial
+    - [x] Gabriel oyó la mezcla: sin los tics de los cruces, que se quitaron (26 nov)
+    - [x] La prueba con la voz de Gabriel (`prueba-voz-propia`): sus grabaciones de seis fichas, transcritas con Qwen3-ASR, y su voz clonada con Qwen3-TTS junto a la D (26 nov)
+    - [ ] Gabriel oye la prueba con su voz y decide con qué voz van los videos: la D, la suya clonada o la suya grabada. Con eso T23 se cierra y su bloque pasa al historial
   - [x] T24 El visor: material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`) (26 nov)
   - [ ] Punto de control de T24: Gabriel abre el visor en la computadora y en un celular de gama baja
   - [ ] Borrar los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel)

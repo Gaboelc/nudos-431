@@ -8,8 +8,7 @@
   de «Fogata»; Gabriel eligió la celesta) y las cinco canciones sobre la misma línea de tiempo,
   sin voz y con la voz elegida.
 - `prueba_mezcla()`: la previa de cada piloto (T18) con la pista de T23c pegada: su canción, el
-  foley del motor, los soplidos, las tarjetas, el golpe y la voz de dos pasos; en los nudos libres,
-  con los tics de los cruces y sin ellos.
+  foley del motor, los soplidos, las tarjetas, el golpe y la voz de dos pasos.
 """
 from __future__ import annotations
 
@@ -393,74 +392,93 @@ donde aparecen sus tarjetas: el tiempo de cada parte lo pone T22. Mejor con aud�
 """
 
 
+class Previa:
+    """La previa de un nudo (T18, 960 × 540): sus cuadros y su video, para pegarle una pista."""
+
+    def __init__(self, m, aviso=print):
+        from . import video as VI
+        from .prueba_atar import mallas_anfitrion
+        self.m, self.slug = m, m.spec.slug
+        self.fps = VI.FORMATOS["previa"]["fps"]
+        tramos, _ = VI.atar(m)
+        self.cuadros = VI.cuadros_de(m, tramos, "previa")
+        self.video = VI.carpeta_videos(self.slug) / f"{self.slug}-previa.mp4"
+        if not self.video.exists() or VI.cuadros_del_video(self.video) != len(self.cuadros):
+            aviso(f"  {self.slug}: dibujando la previa")
+            VI.video(m, previa=True, aviso=aviso)
+        self.h = m.pasos[-1].h
+        self.mallas = mallas_anfitrion(m)
+        self.capitulos = capitulos_t18(self.cuadros, self.fps)
+
+    def en_las_tarjetas(self, locs, pasos=(2, 4)) -> list:
+        """Cada locución, 0,25 s después de que aparece la tarjeta de su paso."""
+        from . import mezcla as MZ
+        c = self.cuadros
+        tarjeta = {c[k].titulo: k / self.fps for k in range(1, len(c)) if c[k].titulo != c[k - 1].titulo}
+        return [MZ.Dicho(tarjeta[n] + 0.25, loc) for n, loc in zip(pasos, locs)]
+
+    def pista(self, dichos=(), aviso=print):
+        from . import mezcla as MZ
+        return MZ.pista_de_cuadros(self.cuadros, self.fps, self.h, self.mallas, formato="previa",
+                                   capitulos=self.capitulos, slug=self.slug, dichos=dichos, aviso=aviso)
+
+
+def _voz_sobre_musica(p) -> list[float]:
+    """Por cada frase de la voz, cuántos dB queda sobre lo más fuerte de la música."""
+    from . import mezcla as MZ
+    from . import sonoridad as so
+    out = []
+    for a, b in p.frases:
+        i, j = int(a * MZ.SR), int(b * MZ.SR)
+        _, mc = so.corto(p.buses["musica"][i:j], MZ.SR, 0.4, 0.05)
+        if len(mc):
+            out.append(round(so.lufs(p.buses["voz"][i:j], MZ.SR) - float(mc.max()), 1))
+    return out
+
+
 def prueba_mezcla(slugs=PILOTOS_MEZCLA, voz: bool = True, aviso=print) -> Path:
     """Arma revision/sonido/index.html con la previa de cada piloto (960 × 540) y la pista de
-    T23c pegada; en los nudos sin anfitrión, una con los tics de los cruces y otra sin ellos. Si
-    la previa no está o tiene otros cuadros, la dibuja (Blender). Deja informe.json con las
-    medidas: la sonoridad y el pico antes y después del AAC, la voz sobre la música en cada frase
-    y cuántos sonidos de cada tipo."""
+    T23c pegada. Si la previa no está o tiene otros cuadros, la dibuja (Blender). Deja
+    informe.json con las medidas: la sonoridad y el pico antes y después del AAC, la voz sobre la
+    música en cada frase y cuántos sonidos de cada tipo."""
     import os
 
     from . import mezcla as MZ
-    from . import sonoridad as so
     from . import video as VI
     from . import voz as V
-    from .prueba_atar import mallas_anfitrion
     os.environ["NUDOS_MOTOR"] = "1"
     destino = REVISION / "sonido"
     destino.mkdir(parents=True, exist_ok=True)
     modelos = VI.construir(list(slugs))
     bloques, informe = [], {}
-    fps = VI.FORMATOS["previa"]["fps"]
     for slug in slugs:
         m = modelos[slug]
-        tramos, _ = VI.atar(m)
-        cuadros = VI.cuadros_de(m, tramos, "previa")
-        previa = VI.carpeta_videos(slug) / f"{slug}-previa.mp4"
-        if not previa.exists() or VI.cuadros_del_video(previa) != len(cuadros):
-            aviso(f"  {slug}: dibujando la previa")
-            VI.video(m, previa=True, aviso=aviso)
-        h = m.pasos[-1].h
-        mallas = mallas_anfitrion(m)
-        caps = capitulos_t18(cuadros, fps)
+        pv = Previa(m, aviso)
         dichos = []
         if voz and len(m.spec.pasos) >= 4:
             textos = dict(textos_prueba(slug))
-            locs = V.locuciones([textos["Paso 2"], textos["Paso 4"]], V.VOZ, aviso=aviso)
-            tarjeta = {cuadros[k].titulo: k / fps for k in range(1, len(cuadros))
-                       if cuadros[k].titulo != cuadros[k - 1].titulo}
-            dichos = [MZ.Dicho(tarjeta[2] + 0.25, locs[0]), MZ.Dicho(tarjeta[4] + 0.25, locs[1])]
-        variantes = [("", None, "")] if mallas else [
-            ("", True, "Con un tic por cada cruce nuevo: agudo si la punta pasa por encima, grave si pasa por debajo."),
-            ("-sin-tics", False, "Sin los tics de los cruces.")]
-        for sufijo, tics, nota in variantes:
-            p = MZ.pista_de_cuadros(cuadros, fps, h, mallas, formato="previa", capitulos=caps, slug=slug,
-                                    dichos=dichos, tics=tics, aviso=aviso)
-            nombre = f"{slug}-sonido{sufijo}"
-            salida = destino / f"{nombre}.mp4"
-            MZ.pegar(previa, p, salida)
-            lufs_aac, pico_aac = _medidas_aac(salida)
-            separacion = []
-            for a, b in p.frases:
-                i, j = int(a * MZ.SR), int(b * MZ.SR)
-                _, mc = so.corto(p.buses["musica"][i:j], MZ.SR, 0.4, 0.05)
-                if len(mc):
-                    separacion.append(round(so.lufs(p.buses["voz"][i:j], MZ.SR) - float(mc.max()), 1))
-            cuenta: dict[str, int] = {}
-            for s in p.sonidos:
-                cuenta[s.tipo] = cuenta.get(s.tipo, 0) + 1
-            informe[nombre] = {"segundos": round(p.segundos, 1), "cancion": p.musica.cancion if p.musica else None,
-                               "lufs": round(p.lufs, 2), "pico_dbtp": round(p.pico, 2),
-                               "lufs_aac": round(lufs_aac, 2), "pico_aac_dbtp": round(pico_aac, 2),
-                               "voz_sobre_musica_db": separacion, "sonidos": cuenta}
-            aviso(f"  {nombre}: {p.lufs:.1f} LUFS, {p.pico:.1f} dBTP (en AAC, {lufs_aac:.1f} y {pico_aac:.1f}); "
-                  f"la voz, {min(separacion, default=float('nan')):.1f} dB sobre la música")
-            titulo = m.spec.nombre + (" (sin tics)" if tics is False else "")
-            cancion = _nombre_cancion(p.musica.cancion) if p.musica else "sin música"
-            texto = (f"Canción «{cancion}». {nota} {p.lufs:.1f} LUFS y {p.pico:.1f} dBTP "
-                     f"({lufs_aac:.1f} y {pico_aac:.1f} ya en AAC).")
-            bloques.append(f'<section class="demo"><h2>{html.escape(titulo)}</h2><p>{html.escape(texto)}</p>'
-                           f'<video controls preload="metadata" src="{salida.name}"></video></section>')
+            dichos = pv.en_las_tarjetas(V.locuciones([textos["Paso 2"], textos["Paso 4"]], V.VOZ, aviso=aviso))
+        p = pv.pista(dichos, aviso)
+        nombre = f"{slug}-sonido"
+        salida = destino / f"{nombre}.mp4"
+        MZ.pegar(pv.video, p, salida)
+        lufs_aac, pico_aac = _medidas_aac(salida)
+        separacion = _voz_sobre_musica(p)
+        cuenta: dict[str, int] = {}
+        for s in p.sonidos:
+            cuenta[s.tipo] = cuenta.get(s.tipo, 0) + 1
+        informe[nombre] = {"segundos": round(p.segundos, 1), "cancion": p.musica.cancion if p.musica else None,
+                           "lufs": round(p.lufs, 2), "pico_dbtp": round(p.pico, 2),
+                           "lufs_aac": round(lufs_aac, 2), "pico_aac_dbtp": round(pico_aac, 2),
+                           "voz_sobre_musica_db": separacion, "sonidos": cuenta}
+        aviso(f"  {nombre}: {p.lufs:.1f} LUFS, {p.pico:.1f} dBTP (en AAC, {lufs_aac:.1f} y {pico_aac:.1f}); "
+              f"la voz, {min(separacion, default=float('nan')):.1f} dB sobre la música")
+        titulo = m.spec.nombre
+        cancion = _nombre_cancion(p.musica.cancion) if p.musica else "sin música"
+        texto = (f"Canción «{cancion}». {p.lufs:.1f} LUFS y {p.pico:.1f} dBTP "
+                 f"({lufs_aac:.1f} y {pico_aac:.1f} ya en AAC).")
+        bloques.append(f'<section class="demo"><h2>{html.escape(titulo)}</h2><p>{html.escape(texto)}</p>'
+                       f'<video controls preload="metadata" src="{salida.name}"></video></section>')
     (destino / "index.html").write_text(PAGINA_MEZCLA.format(demos="\n".join(bloques)), encoding="utf-8")
     (destino / "informe.json").write_text(json.dumps(informe, ensure_ascii=False, indent=1), encoding="utf-8")
     return destino / "index.html"
@@ -470,3 +488,227 @@ def _nombre_cancion(clave: str) -> str:
     """El nombre de una canción, desde su clave."""
     from .musica import CANCIONES
     return CANCIONES[clave].nombre if clave in CANCIONES else clave
+
+
+# --------------------------------------------------------------------------
+# La voz de Gabriel
+# --------------------------------------------------------------------------
+PAGINA_PROPIA = """<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba con tu voz</title>
+<style>
+  :root {{ color-scheme: light; --tinta: #16202f; --suave: #586273; --fondo: #f6f4ef; --marca: #d1801a; }}
+  body {{ margin: 0; background: var(--fondo); color: var(--tinta);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }}
+  main {{ max-width: 1000px; margin: 0 auto; padding: 32px 20px 64px; }}
+  h1 {{ font-size: 28px; margin: 0 0 6px; }}
+  h2 {{ font-size: 21px; margin: 28px 0 6px; }}
+  .bajada, .nota {{ color: var(--suave); margin: 0 0 14px; }}
+  .demo {{ background: #fff; border-radius: 14px; padding: 14px 18px; margin: 0 0 14px;
+           box-shadow: 0 2px 10px rgba(22, 32, 47, .06); }}
+  .clips {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }}
+  .clip b {{ display: block; font-size: 14px; margin-bottom: 2px; }}
+  .texto {{ font-size: 14px; color: var(--suave); margin-top: 8px; }}
+  audio {{ width: 100%; }}
+  video {{ width: 100%; border-radius: 8px; background: #000; }}
+  details {{ margin: 0 0 10px; }}
+  summary {{ cursor: pointer; font-weight: 600; }}
+</style></head>
+<body><main>
+<h1>Prueba con tu voz</h1>
+<p class="bajada">Tu voz grabada y tu voz clonada con Qwen3-TTS, junto a la voz D que elegiste. Las voces
+sueltas están todas a {nivel:.0f} LUFS. Mejor con audífonos.</p>
+{cuerpo}
+</main></body></html>
+"""
+
+
+def _slug_de(nombre: str) -> str | None:
+    """El nudo de una grabación por el nombre de su archivo («as de guia» → as-de-guia, «nudo
+    simple» → simple), o None si no es ninguno."""
+    s = "".join(c for c in unicodedata.normalize("NFD", nombre.casefold()) if unicodedata.category(c) != "Mn")
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    for c in (s, s.removeprefix("nudo-")):
+        if c and (RAIZ / "specs" / f"{c}.yaml").exists():
+            return c
+    return None
+
+
+def _m4a(ruta: Path, x, sr: int, kbps: int = 192) -> None:
+    """Un audio (mono o estéreo) en AAC, para la página y el celular."""
+    import subprocess
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="nudos-m4a-") as tmp:
+        wav = Path(tmp) / "a.wav"
+        _wav16(wav, x, sr)
+        subprocess.run(["ffmpeg", "-nostdin", "-y", "-loglevel", "error", "-i", str(wav), "-c:a", "aac",
+                        "-b:a", f"{kbps}k", str(ruta)], check=True, timeout=300)
+
+
+def _ritmo(palabras) -> float:
+    """Sílabas por segundo, con las pausas de más de 0,3 s contadas como de 0,3."""
+    from . import voz as V
+    if not palabras:
+        return 0.0
+    habla = sum(p.fin - p.inicio for p in palabras)
+    habla += sum(min(b.inicio - a.fin, 0.3) for a, b in zip(palabras, palabras[1:]) if b.inicio > a.fin)
+    return sum(V.silabas(p.texto) for p in palabras) / max(habla, 0.1)
+
+
+def _clip(destino: Path, archivo: str, x, etiqueta: str) -> str:
+    """Un audio suelto a NIVEL_VOZ, con su reproductor."""
+    from . import sonoridad as so
+    from . import voz as V
+    _m4a(destino / archivo, so.limitar_pico(so.a_lufs(x, V.SR, NIVEL_VOZ), V.SR, TECHO), V.SR)
+    return (f'<div class="clip"><b>{html.escape(etiqueta)}</b>'
+            f'<audio controls preload="none" src="{archivo}"></audio></div>')
+
+
+def _hasta_unos(palabras, segundos: float, pausa: float = 0.3) -> int:
+    """Cuántas palabras caben en unos `segundos` desde la primera, cortando en una pausa."""
+    cortes = [k + 1 for k in range(len(palabras)) if palabras[k].fin - palabras[0].inicio <= segundos
+              and (k + 1 == len(palabras) or palabras[k + 1].inicio - palabras[k].fin >= pausa)]
+    return max(cortes or [len(palabras)])
+
+
+def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
+    """Arma revision/voz-propia/index.html con la voz de Gabriel junto a la voz D (T23).
+
+    De sus grabaciones (`carpeta`, fuera de git): cada una limpia y transcrita; su voz clonada con
+    Qwen3-TTS desde el mejor tramo limpio de todas (`voz.tramos_limpios`); un tramo de otras dos
+    grabaciones dicho por él, por su voz clonada y por la voz D; los textos de `prueba-voz` en las
+    dos voces; su lectura de `slug` con la música, y la previa de `slug` con los pasos 2 y 4 en
+    cada voz. Deja informe.json con lo medido."""
+    import os
+
+    from . import mezcla as MZ
+    from . import musica as M
+    from . import sonoridad as so
+    from . import video as VI
+    from . import voz as V
+    destino = REVISION / "voz-propia"
+    destino.mkdir(parents=True, exist_ok=True)
+    rutas = sorted(p for p in Path(carpeta).iterdir() if p.suffix.lower() in V.EXTENSIONES)
+    if not rutas:
+        raise ValueError(f"no hay grabaciones en {carpeta}")
+    aviso(f"  {len(rutas)} grabaciones en {carpeta}")
+    limpias = [V.limpiar(V.leer_grabacion(r)) for r in rutas]
+    trans = V.transcribir(limpias, aviso=aviso)
+    slugs = [_slug_de(r.stem) for r in rutas]
+    informe: dict = {"grabaciones": {}}
+    for r, x, t in zip(rutas, limpias, trans):
+        informe["grabaciones"][r.name] = {"segundos": round(len(x) / V.SR, 1), "lufs": round(so.lufs(x, V.SR), 1),
+                                          "tiempos": t.tiempos, "silabas_por_s": round(_ritmo(t.palabras), 2),
+                                          "texto": t.texto}
+
+    # La muestra para clonar: el mejor tramo limpio de todas las grabaciones, que diga palabra por
+    # palabra lo que está en la especificación de su nudo (si no hay ninguno, sin esa condición).
+    fuentes = [(RAIZ / "specs" / f"{s}.yaml").read_text(encoding="utf-8") if s else None for s in slugs]
+
+    def limpios(**kw):
+        con = [(p, i, a, b) for i, t in enumerate(trans) for p, a, b in V.tramos_limpios(t, fuente=fuentes[i], **kw)]
+        return con or [(p, i, a, b) for i, t in enumerate(trans) for p, a, b in V.tramos_limpios(t, **kw)]
+    tramos = limpios()
+    if not tramos:
+        raise ValueError("ninguna grabación tiene un tramo limpio de 8 a 14 s para clonar la voz")
+    _, i0, a0, b0 = max(tramos)
+    w0 = trans[i0].palabras
+    texto_muestra = " ".join(p.texto for p in w0[a0:b0])
+    # A NIVEL_VOZ y bajo el techo: el AAC del celular decodifica con picos sobre 0 dBFS, y el WAV
+    # de 16 bits los cortaría.
+    muestra = so.limitar_pico(so.a_lufs(V.recorte(limpias[i0], w0[a0].inicio, w0[b0 - 1].fin), V.SR, NIVEL_VOZ),
+                              V.SR, TECHO)
+    ruta_muestra = destino / "muestra.wav"
+    _wav16(ruta_muestra, muestra, V.SR)
+    clon = V.Voz("gabriel", referencia=str(ruta_muestra.resolve()), texto_referencia=texto_muestra,
+                 etiqueta="Gabriel, clonada de su grabación", limpiar=True)
+    informe["muestra"] = {"grabacion": rutas[i0].name, "desde": w0[a0].inicio, "hasta": w0[b0 - 1].fin,
+                          "texto": texto_muestra}
+
+    # La misma frase: un tramo limpio de otras dos grabaciones.
+    frases, usadas = [], {i0}
+    otros = limpios(largo=(5.0, 10.0), ideal=8.0)
+    for _, i, a, b in sorted(otros, reverse=True):
+        if i not in usadas and len(frases) < 2:
+            usadas.add(i)
+            frases.append((i, a, b))
+    textos = textos_prueba(slug)
+    dichas = [" ".join(p.texto for p in trans[i].palabras[a:b]) for i, a, b in frases]
+    todos = [t for _, t in textos] + dichas
+    locs = V.decir([(t, v) for v in (V.VOZ, clon) for t in todos], aviso=aviso)
+    loc_d, loc_g = locs[:len(todos)], locs[len(todos):]
+    informe["silabas_por_s"] = {"voz D": round(float(np.mean([_ritmo(L.palabras) for L in loc_d])), 2),
+                                "clonada": round(float(np.mean([_ritmo(L.palabras) for L in loc_g])), 2)}
+
+    cuerpo = [f'<h2>La muestra que se clonó</h2><section class="demo"><div class="clips">'
+              f'{_clip(destino, "muestra.m4a", muestra, "De tu grabación: " + rutas[i0].stem)}'
+              f'</div><div class="texto">{html.escape(texto_muestra)}</div></section>',
+              '<h2>La misma frase</h2><p class="nota">Un tramo de otra grabación: como lo dijiste, '
+              'dicho por tu voz clonada y por la voz D.</p>']
+    for k, (i, a, b) in enumerate(frases):
+        w = trans[i].palabras
+        real = V.recorte(limpias[i], w[a].inicio, w[b - 1].fin)
+        clips = (_clip(destino, f"frase-{k + 1}-tu-voz.m4a", real, "Tu grabación")
+                 + _clip(destino, f"frase-{k + 1}-clonada.m4a", loc_g[len(textos) + k].audio, "Tu voz clonada")
+                 + _clip(destino, f"frase-{k + 1}-voz-d.m4a", loc_d[len(textos) + k].audio, "Voz D"))
+        cuerpo.append(f'<section class="demo"><div class="clips">{clips}</div>'
+                      f'<div class="texto">{html.escape(rutas[i].stem)}: {html.escape(dichas[k])}</div></section>')
+    cuerpo.append('<h2>Los textos de la prueba de voz</h2><p class="nota">Los mismos de la prueba a ciegas: '
+                  'la apertura y los pasos 2 y 4.</p>')
+    for k, (nombre, texto) in enumerate(textos):
+        clips = (_clip(destino, f"prueba-{k + 1}-voz-d.m4a", loc_d[k].audio, "Voz D")
+                 + _clip(destino, f"prueba-{k + 1}-clonada.m4a", loc_g[k].audio, "Tu voz clonada"))
+        cuerpo.append(f'<section class="demo"><b>{html.escape(nombre)}</b><div class="clips">{clips}</div>'
+                      f'<div class="texto">{html.escape(texto)}</div></section>')
+
+    # Su lectura con la música: lo que leyó de `slug` (o la grabación de la muestra), hasta unos
+    # 30 s, cortada en una pausa.
+    i = slugs.index(slug) if slug in slugs else i0
+    w = trans[i].palabras
+    if w and trans[i].tiempos == "alineados":
+        b = _hasta_unos(w, 30.0)
+        x = V.recorte(limpias[i], w[0].inicio, w[b - 1].fin)
+        corrida = max(0.0, w[0].inicio - 0.12)
+        palabras = [V.Palabra(p.texto, p.dicha, p.inicio - corrida, p.fin - corrida) for p in w[:b]]
+        loc = V.locucion_grabada(x, palabras, voz="gabriel")
+        dur = loc.segundos + 4.0
+        p = MZ.pista(dur, capitulos=[M.Capitulo("apertura", 0.0, 2.5), M.Capitulo("pasos", 2.5, dur)],
+                     slug=slug, dichos=[MZ.Dicho(2.0, loc)], aviso=aviso)
+        _m4a(destino / "lectura-con-musica.m4a", p.audio, MZ.SR, kbps=256)
+        informe["lectura_con_musica"] = {"segundos": round(dur, 1), "lufs": round(p.lufs, 2),
+                                         "pico_dbtp": round(p.pico, 2), "voz_sobre_musica_db": _voz_sobre_musica(p)}
+        cuerpo.append('<h2>Tu lectura con la música</h2><p class="nota">Tu grabación, limpia, con la canción del '
+                      'nudo debajo, como en el video: la música baja sola mientras hablas.</p>'
+                      '<section class="demo"><audio controls preload="none" src="lectura-con-musica.m4a"></audio>'
+                      f'<div class="texto">{html.escape(" ".join(q.texto for q in w[:b]))}</div></section>')
+
+    # La previa del nudo, con los pasos 2 y 4 en cada voz.
+    os.environ["NUDOS_MOTOR"] = "1"
+    pv = Previa(VI.construir([slug])[slug], aviso)
+    videos = []
+    for nombre, etiqueta, ls in (("voz-d", "Voz D", loc_d), ("clonada", "Tu voz clonada", loc_g)):
+        p = pv.pista(pv.en_las_tarjetas([ls[1], ls[2]]), aviso)
+        salida = destino / f"{slug}-{nombre}.mp4"
+        MZ.pegar(pv.video, p, salida)
+        informe[salida.name] = {"lufs": round(p.lufs, 2), "pico_dbtp": round(p.pico, 2),
+                                "voz_sobre_musica_db": _voz_sobre_musica(p)}
+        videos.append(f'<div class="clip"><b>{etiqueta}</b><video controls preload="metadata" '
+                      f'src="{salida.name}"></video></div>')
+    cuerpo.append('<h2>En el video</h2><p class="nota">La previa con la mezcla nueva: los pasos 2 y 4 donde '
+                  'aparecen sus tarjetas.</p><section class="demo"><div class="clips">' + "".join(videos)
+                  + '</div></section>')
+
+    # Las grabaciones enteras, limpias, con lo que entendió el reconocimiento de voz.
+    filas = []
+    for k, (r, x, t) in enumerate(zip(rutas, limpias, trans)):
+        archivo = f"grabacion-{k + 1}.m4a"
+        _m4a(destino / archivo, so.limitar_pico(so.a_lufs(x, V.SR, NIVEL_VOZ), V.SR, TECHO), V.SR, kbps=128)
+        filas.append(f'<details><summary>{html.escape(r.stem)} ({len(x) / V.SR:.0f} s)</summary>'
+                     f'<audio controls preload="none" src="{archivo}"></audio>'
+                     f'<div class="texto">{html.escape(t.texto)}</div></details>')
+    cuerpo.append('<h2>Tus grabaciones, limpias y transcritas</h2><p class="nota">Lo que escribió Qwen3-ASR: '
+                  'es lo que usarían los subtítulos.</p><section class="demo">' + "".join(filas) + '</section>')
+    (destino / "index.html").write_text(PAGINA_PROPIA.format(nivel=NIVEL_VOZ, cuerpo="\n".join(cuerpo)),
+                                        encoding="utf-8")
+    (destino / "informe.json").write_text(json.dumps(informe, ensure_ascii=False, indent=1), encoding="utf-8")
+    return destino / "index.html"

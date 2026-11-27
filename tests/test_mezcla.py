@@ -177,7 +177,7 @@ def test_el_roce_sigue_la_rapidez_y_la_presion():
 def test_el_roce_suena_solo_cuando_algo_se_desliza():
     quieta = [_recta()] * 30
     moviendo = [_recta(x0=3.0 * k / FPS) for k in range(30)]
-    s = [x for x in F.del_motor(_cuadros(quieta + moviendo), FPS, H, tics=False) if x.tipo == "roce"]
+    s = [x for x in F.del_motor(_cuadros(quieta + moviendo), FPS, H) if x.tipo == "roce"]
     assert len(s) == 1 and s[0].bus == "foley"
     a = s[0].audio
     mitad = int(0.5 * SR)
@@ -188,54 +188,13 @@ def test_el_roce_suena_solo_cuando_algo_se_desliza():
 def test_el_tac_cuando_la_cuerda_cae_en_la_mesa():
     def cayendo(rapidez, desde=3.0):
         return [_recta(z=max(0.5, desde - rapidez * k / FPS)) for k in range(60)]
-    tacs = [s for s in F.del_motor(_cuadros(cayendo(6.0)), FPS, H, tics=False) if s.tipo == "tac"]
+    tacs = [s for s in F.del_motor(_cuadros(cayendo(6.0)), FPS, H) if s.tipo == "tac"]
     llega = next(k for k in range(1, 60) if 3.0 - 6.0 * k / FPS < F.SOBRE_LA_MESA)
     assert len(tacs) == 1 and tacs[0].t == pytest.approx(llega / FPS) and tacs[0].bus == "foley"
     # Bajada lenta: se apoya sin sonar.
     lenta = _cuadros(cayendo(0.5, desde=0.7))
     assert lenta[-1].X[0, 2] < F.SOBRE_LA_MESA
-    assert not [s for s in F.del_motor(lenta, FPS, H, tics=False) if s.tipo == "tac"]
-
-
-def _cruzando(z_quieta, z_movil):
-    """Una cuerda: un tramo quieto a lo largo de x (en y = 0), una vuelta lejos y la punta, que
-    avanza por x = 0 hacia +y a 6 d/s y pasa sobre (o bajo) el tramo quieto."""
-    quieto = np.column_stack([-6.0 + np.arange(60) * H, np.zeros(60), np.full(60, z_quieta)])
-    vuelta = np.vstack([np.column_stack([np.full(40, 6.0), -np.arange(1, 41) * H, np.full(40, 0.5)]),
-                        np.column_stack([6.0 - np.arange(1, 31) * H, np.full(30, -8.0), np.full(30, 0.5)])])
-    out = []
-    for k in range(60):
-        movil = np.column_stack([np.zeros(25), PUNTA0 - 24 * H + 6.0 * k / FPS + np.arange(25) * H,
-                                 np.full(25, z_movil)])
-        out.append(np.vstack([quieto, vuelta, movil]))
-    return out
-
-
-PUNTA0 = -1.25      # dónde está la punta al empezar: pasa y = 0 entre los cuadros 12 y 13
-
-
-def test_un_tic_por_cruce_nuevo_agudo_encima_y_grave_debajo():
-    def tics(z_quieta, z_movil):
-        return [s for s in F.del_motor(_cuadros(_cruzando(z_quieta, z_movil)), FPS, H, tics=True)
-                if s.tipo.startswith("tic")]
-    encima = tics(0.5, 1.5)
-    assert [s.tipo for s in encima] == ["tic_encima"]
-    # El cruce aparece cuando la punta pasa y = 0: en el cuadro 13.
-    aparece = next(k for k in range(60) if PUNTA0 + 6.0 * k / FPS > 0)
-    assert aparece == 13 and abs(encima[0].t - aparece / FPS) <= 1.5 / FPS
-    assert [s.tipo for s in tics(1.5, 0.5)] == ["tic_debajo"]
-    # Agudo y grave: la frecuencia más fuerte de cada uno.
-    rng = np.random.default_rng(0)
-    def tono(x):
-        return np.fft.rfftfreq(len(x), 1 / SR)[np.argmax(np.abs(np.fft.rfft(x)))]
-    assert tono(F.tic(True, rng)) == pytest.approx(1750, rel=0.05)
-    assert tono(F.tic(False, rng)) == pytest.approx(620, rel=0.05)
-    # Por omisión, tics (TICS) en los nudos libres y no en los que tienen anfitrión.
-    libre = F.del_motor(_cuadros(_cruzando(0.5, 1.5)), FPS, H, tics=None)
-    assert any(s.tipo.startswith("tic") for s in libre) == F.TICS
-    palo = [{"rol": "madera", "pos": [30, 30, 0, 31, 30, 0, 30, 31, 0], "nor": [0, 0, 1] * 3, "idx": [0, 1, 2]}]
-    con_anfitrion = F.del_motor(_cuadros(_cruzando(0.5, 1.5)), FPS, H, mallas=palo, tics=None)
-    assert not any(s.tipo.startswith("tic") for s in con_anfitrion)
+    assert not [s for s in F.del_motor(lenta, FPS, H) if s.tipo == "tac"]
 
 
 def _camara(objetivo_x):

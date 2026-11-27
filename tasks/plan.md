@@ -1025,7 +1025,7 @@ La cámara (las paradas y la aceleración) es de T22.
   - El roce sigue la presión de contacto y la velocidad de deslizamiento.
   - Suena un «tac» cuando la cuerda se apoya en la mesa y un crujido al apretar.
   - Soplidos suaves en los movimientos de cámara y en las entradas de tarjeta.
-  - Para probar: un tic por cada cruce nuevo, agudo si pasa por encima y grave si pasa por debajo, para reforzar la lectura de los cruces.
+  - Para probar: un tic por cada cruce nuevo, agudo si pasa por encima y grave si pasa por debajo, para reforzar la lectura de los cruces. Gabriel no los quiso al oírlos, y se quitaron.
 - **Opcional:** si Gabriel graba 2 o 3 minutos de su cuerda con el celular (rozarla, apretarla, dejarla caer), los granos salen de esa grabación.
 - **La mezcla:** la música baja sola cuando habla la voz (*sidechain*). Todo queda a −14 LUFS y −1 dBTP (con pyloudnorm), en estéreo y en AAC de 256 kbps.
 - **Las pruebas:**
@@ -1127,7 +1127,7 @@ La cámara (las paradas y la aceleración) es de T22.
     - El MIDI, la altura medida, la música con instrumentos sintéticos y los 15 dB bajo la voz.
   - Ninguna usa red, tarjeta ni bancos.
 
-**Cómo se hizo T23c (26 nov de 2026; falta que Gabriel oiga `prueba-mezcla`):**
+**Cómo se hizo T23c (26 nov de 2026):**
 - **Lo que decidió Gabriel antes de empezar (26 nov).**
   - **El motivo:** la celesta (`musica.MOTIVO = "gm:8"`). Odió que las otras opciones empezaran el video como campanas.
   - **ACE-Step:** que se borre. Se borraron `D:\nudos\ia\ace-step` (15,6 GB, con sus modelos y su entorno), su entrada vacía en `hf/` y 150 MB de paquetes del caché de uv que solo usaba él.
@@ -1146,9 +1146,9 @@ La cámara (las paradas y la aceleración) es de T22.
     - En la cámara: cuando la imagen se mueve rápido, va de un lado al otro como se mueve. Uno en el as de guía y cinco en el amarre.
     - En cada tarjeta: sube hasta que la tarjeta aparece.
   - **El clic y el golpe** son los de T18. El clic suena justo cuando aparece la tarjeta.
-  - **Los tics, para probar (`TICS`):** uno por cada cruce nuevo visto desde arriba, como los del libro, que dure 3 cuadros. Es agudo (1,75 kHz) si la parte que se mueve pasa por encima y grave (620 Hz) si pasa por debajo, y dos tics van por lo menos a 0,25 s.
-    - En el as de guía salen 7.
-    - En el amarre cuadrado salían 42 en 48 s, porque la cuerda da vueltas a los palos, así que por omisión no van en los nudos con anfitrión.
+  - **Los tics de los cruces, que se probaron y se quitaron:** sonaba uno por cada cruce nuevo visto desde arriba, como los del libro, que durara 3 cuadros: agudo (1,75 kHz) si la parte que se mueve pasaba por encima y grave (620 Hz) si pasaba por debajo.
+    - En el as de guía salían 7. En el amarre cuadrado, 42 en 48 s, porque la cuerda da vueltas a los palos, así que no iban en los nudos con anfitrión.
+    - Gabriel oyó la prueba y no los quiso (26 nov): salieron del código y de la prueba. Buscar los cruces era lo más lento de la pista.
   - **De dónde salen:** `del_motor(cuadros, fps, h, mallas)`, `de_la_camara(cuadros, fps)` y `de_eventos(eventos)`. `eventos_de_cuadros` saca las tarjetas y el golpe de los cuadros de hoy.
 - **`nudos/mezcla.py`: la pista.** `pista(duracion, capitulos=, golpe=, slug=, dichos=, eventos=, sonidos=)` es lo que usa T22.
   - **La voz:** cada locución a −16 LUFS, medida como suena en el centro del estéreo, casi seca.
@@ -1158,16 +1158,16 @@ La cámara (las paradas y la aceleración) es de T22.
   - **El máster:** −14 LUFS con `sonoridad.py` y el pico real a −1,5 dBTP, con una vuelta más si el limitador le quita sonoridad, y el ruido a −80 dB que necesita el AAC. El pico va medio dB más abajo de lo que pide el plan porque el AAC lo sube: con −1 en el máster, el as de guía quedaba justo en −1,0 ya en AAC.
   - **El video:** `pegar()` lo pone en AAC estéreo de 256 kbps, sin tocar la imagen.
   - **Los cuadros de hoy:** `pista_de_cuadros` arma todo desde los cuadros de T18.
-- **La prueba (`python -m nudos prueba-mezcla`).** Deja en `revision/sonido/` la previa de los dos pilotos con la pista pegada: el as de guía con tics y sin ellos, y el amarre cuadrado. Lleva su canción y la voz de los pasos 2 y 4 donde aparecen sus tarjetas. La página privada de escucha la tiene también.
+- **La prueba (`python -m nudos prueba-mezcla`).** Deja en `revision/sonido/` la previa de los dos pilotos, el as de guía y el amarre cuadrado, con la pista pegada. Lleva su canción y la voz de los pasos 2 y 4 donde aparecen sus tarjetas. La página privada de escucha la tiene también.
   - **Lo medido:**
     - Los tres videos quedan a −14,2 LUFS y −1,6 dBTP; ya en AAC, a −14,3 y −1,5.
     - La voz queda de 19 a 21 dB sobre la música en cada frase.
-    - En el as de guía suenan 7 tarjetas, el golpe, 4 tacs, el crujido, 7 tics y un soplido de cámara.
+    - En el as de guía suenan 7 tarjetas, el golpe, 4 tacs, el crujido y un soplido de cámara.
     - En el amarre cuadrado suenan también el crujido, contra los palos, y 5 soplidos de cámara.
-    - La pista de 45 s se arma en 5 s sin tics y en unos 18 s con ellos.
+    - La pista de 45 s se arma en unos 5 s.
   - **Los niveles de `foley.NIVELES` se midieron, no se oyeron.** Con la música, el roce de T18 quedaba unos 17 dB bajo ella, así que subió 5 dB.
   - **Un tropiezo:** en el worktree no hay `build/videos`, así que la prueba empezó a dibujar la previa. `NUDOS_VIDEOS` apunta a las de A:.
-- **Las pruebas (`tests/test_mezcla.py`, 12, sin red ni tarjeta):**
+- **Las pruebas (`tests/test_mezcla.py`, 11, sin red ni tarjeta):**
   - La pista a −14 LUFS y bajo −1,5 dBTP, y bajo −1 ya en AAC.
   - La música por lo menos 15 dB bajo cada frase, y de vuelta entre frases.
   - El clic de cada tarjeta a ±20 ms de cuando aparece, medido en la mezcla entre 2 y 6 kHz con un filtro sin desfase.
@@ -1175,10 +1175,39 @@ La cámara (las paradas y la aceleración) es de T22.
   - El AAC estéreo de 256 kbps.
   - El roce según la rapidez y la presión, y solo cuando algo se desliza.
   - El tac al caer, y nada al bajar lento.
-  - Un tic agudo por encima y uno grave por debajo, en el cuadro en que aparece el cruce.
   - El soplido cuando la cámara se mueve, y del lado hacia donde va la imagen.
   - Los eventos de los cuadros de hoy.
   - En `tests/test_voz.py`, además: las palabras alineadas con sus trozos, el alineador que pone los tiempos sin volver a generar, y Qwen alineando en su entorno con el script falso.
+
+**La prueba con la voz de Gabriel (26 nov de 2026; falta que la oiga):**
+- **Lo que pidió (26 nov):** sin tics (ver T23c), y probar con su voz. Grabó con el celular la ficha de seis nudos: el nombre, los usos, los materiales, la verificación, las precauciones y las alternativas, de 80 a 101 s cada una.
+- **Las grabaciones:** AAC a 48 kHz, en mono (el canal derecho es el izquierdo a la mitad), con unos 31 dB entre la voz y el ruido de fondo y sin recortes. Leyó con algunos tropiezos («no se cierra ni se, ni se corre»). Quedan fuera de git.
+- **El reconocimiento de voz:** Qwen3-ASR-1.7B (Apache-2.0, 4,7 GB, revisión 7278e1e, con el SHA-256 comparado con el de Hugging Face), en el entorno `qwen-asr`, sin paquetes nuevos.
+  - `sonido/transcribir.py` escribe el texto, en unos 25 s por grabación. Después el alineador pone cada palabra en el tiempo, y `voz.transcribir()` guarda las dos cosas en el caché por la huella del audio.
+  - Con un contexto de nombres de nudos escribe «gaza», no «gasa», y «ahorcados» aunque se diga «ahorcaos».
+  - **Un tropiezo:** otra sesión dibujaba en Blender la prueba de T20b. La primera transcripción, con el reconocimiento y el alineador juntos en la tarjeta, frenó ese render 11 minutos, y se detuvo. Ahora van por separado: junto a los 4,4 GB del render cabe cada uno, y el render siguió a un cuadro cada 6 s.
+- **`voz.limpiar()`:** un pasa altos de 70 Hz y una compuerta espectral suave, que baja el ruido de fondo hasta 12 dB sin tocar la voz. En el as de guía, el ruido bajó 8 dB y la voz quedó igual.
+- **La muestra para clonar (`voz.tramos_limpios`):** el mejor tramo de 8 a 14 s entre pausas, sin muletillas ni palabras repetidas a menos de tres, que diga palabra por palabra un pedazo de la especificación de su nudo.
+  - Sin esa última condición se colaba un tropiezo que no repite palabras («de distinto todo grosor»), y el texto de la muestra no habría sido lo que se oye.
+  - Salió la de los materiales del pescador (10 s).
+- **La voz clonada (`Voz(referencia=..., limpiar=True)`):** Qwen3-TTS Base la clona como a la D.
+  - El clon copiaba el ruido de fondo de la muestra: de 23 a 42 dB entre la voz y los silencios, contra 52 a 67 de la D. Con `limpiar`, cada locución pasa por `limpiar()` y queda en 52 a 55.
+  - Su tono: unos 106 Hz de mediana, cerca de los 117 de las grabaciones; la muestra la leyó más grave. La D anda por los 200 Hz.
+  - Dice 6,0 sílabas por segundo; Gabriel lee a entre 4,8 y 5,5.
+- **La prueba (`python -m nudos prueba-voz-propia <carpeta>`)** deja en `revision/voz-propia/`:
+  - la muestra;
+  - una frase del ballestrinque y otra del ocho, grabadas, clonadas y en la voz D;
+  - los textos de `prueba-voz` en las dos voces;
+  - su lectura del as de guía con la canción, con la voz 19 dB sobre la música;
+  - la previa del as de guía con los pasos 2 y 4 en cada voz.
+  Los seis archivos clave se le mandaron al celular. Su voz no va a la página privada de escucha si él no lo pide.
+- **Las pruebas (`tests/test_voz.py`, sin red ni tarjeta):**
+  - La limpieza baja el ruido y deja la voz.
+  - Cualquier formato se lee con ffmpeg.
+  - Los tramos limpios esquivan los tropiezos y, con la ficha, lo que no la dice.
+  - El recorte, y la transcripción con los modelos falsos y desde el caché.
+  - Una voz que se limpia cambia su huella, y las de antes no.
+  - El nudo de cada grabación sale de su nombre.
 
 #### T24: El visor
 

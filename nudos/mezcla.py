@@ -10,7 +10,7 @@ que usa T22: da la pista de un video, lista para el AAC.
   durante cada frase, lo justo para quedar SEPARACION dB bajo esa frase, medido con la sonoridad
   de corto plazo de la norma.
 - **Los efectos y el foley** (nudos/foley.py: las tarjetas, el golpe, el roce, los tacs, el
-  crujido, los soplidos y los tics) van cada uno donde se ve en el cuadro, en una sala chica:
+  crujido y los soplidos) van cada uno donde se ve en el cuadro, en una sala chica:
   reverberación por convolución con una respuesta sintetizada (`sala_chica`).
 - **El máster:** todo junto a OBJETIVO LUFS con el pico real en TECHO dBTP (BS.1770, con
   nudos/sonoridad.py), medio dB bajo el −1 que se pide porque el AAC sube los picos, y un ruido a
@@ -272,7 +272,7 @@ def pista(duracion: float, *, capitulos=None, golpe: float | None = None, slug: 
 
 def pista_de_cuadros(cuadros, fps: float, h: float, mallas=(), *, formato: str = "horizontal",
                      capitulos=None, golpe: float | None = None, slug: str | None = None, cancion=None,
-                     dichos=(), tics: bool | None = None, instrumentos=None, aviso=print) -> Pista:
+                     dichos=(), instrumentos=None, aviso=print) -> Pista:
     """La pista de los cuadros de hoy (T18, `video.cuadros_de`): las tarjetas en cada cambio de
     título, el golpe al final del apretado, el foley del motor y los soplidos de la cámara, con
     la música de `capitulos` (si los hay) y las locuciones de `dichos`. Sin `golpe`, el del
@@ -281,7 +281,7 @@ def pista_de_cuadros(cuadros, fps: float, h: float, mallas=(), *, formato: str =
     eventos = F.eventos_de_cuadros(cuadros, fps, F.ANCHO_TARJETA.get(formato, 0.0))
     if golpe is None:
         golpe = next((e.t for e in eventos if e.tipo == "golpe"), None)
-    sonidos = F.del_motor(cuadros, fps, h, mallas, tics=tics) + F.de_la_camara(cuadros, fps)
+    sonidos = F.del_motor(cuadros, fps, h, mallas) + F.de_la_camara(cuadros, fps)
     return pista(len(cuadros) / fps, capitulos=capitulos, golpe=golpe, slug=slug, cancion=cancion,
                  dichos=dichos, eventos=eventos, sonidos=sonidos, instrumentos=instrumentos, aviso=aviso)
 

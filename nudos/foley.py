@@ -13,24 +13,22 @@ golpe del apretado y el roce de la cuerda) y los afina:
   contra sí misma o contra el anfitrión.
 - **Los soplidos,** suaves: en cada movimiento de cámara que se nota (más agudo cuanto más rápido
   se mueve la imagen, y de un lado al otro, como se mueve) y cuando entra una tarjeta.
-- **Para probar,** un tic por cada cruce nuevo, visto desde arriba como los del libro: agudo si
-  la parte que se mueve pasa por encima y grave si pasa por debajo (TICS). Solo en los nudos sin
-  anfitrión: en un amarre la cuerda da vueltas a los palos y, vista desde arriba, cruza decenas de
-  veces (42 cruces nuevos en los 48 s del amarre cuadrado), y los tics serían ruido.
 
 Cada sonido es un `Sonido`: su audio mono, ya a su nivel; cuándo empieza, y dónde se ve en el
 cuadro, de −1 (izquierda) a 1 (derecha), con la cámara de cada cuadro. nudos/mezcla.py los pone
 en estéreo, en una sala chica, con la voz y la música.
 
 De dónde salen:
-- `del_motor(cuadros, fps, h, mallas)`: el roce, los tacs, el crujido y los tics, de las
-  posiciones de cada cuadro (como las de nudos/video.py: `X`, `fase` y `camara`).
+- `del_motor(cuadros, fps, h, mallas)`: el roce, los tacs y el crujido, de las posiciones de
+  cada cuadro (como las de nudos/video.py: `X`, `fase` y `camara`).
 - `de_la_camara(cuadros, fps)`: los soplidos de la cámara.
 - `de_eventos(eventos)`: las tarjetas (un soplido y el clic, justo cuando aparece la tarjeta) y el
   golpe. `eventos_de_cuadros()` los saca de los cuadros de hoy (T18): una tarjeta en cada cambio de
   título y el golpe en el último cuadro del apretado. T22 da los suyos.
 
-Todo se sintetiza aquí, sin grabaciones, con una semilla fija: sale igual cada vez.
+Todo se sintetiza aquí, sin grabaciones, con una semilla fija: sale igual cada vez. Los tics de
+los cruces que se probaron en T23c (uno por cada cruce nuevo, agudo por encima y grave por
+debajo) se quitaron: Gabriel no los quiso al oírlos (26 nov).
 """
 from __future__ import annotations
 
@@ -43,16 +41,14 @@ from . import audio as A
 
 SR = A.SR
 SEMILLA = 431
-TICS = True                # para probar (T23c): Gabriel decide al oírlo si se quedan
 
 # El pico de cada sonido, en dBFS, en la mezcla antes del máster (con la voz a −16 LUFS y la
 # música sola a −22; ver nudos/mezcla.py). El máster sube o baja todo junto. Con la música, el roce
 # de T18 (los granos 8 dB bajo el clic) quedaba unos 17 dB bajo ella y casi no se oía: aquí va 5 dB
 # más arriba. Son una primera estimación medida, sin oír: se ajustan aquí.
-NIVELES = {"clic": -15.0, "golpe": -9.0, "soplido": -24.0, "soplido_tarjeta": -26.0, "tic": -16.0,
-           "tac": -17.0, "crujido": -20.0, "grano": -20.0, "roce_pico": -12.0}
-SALA = {"clic": 0.10, "golpe": 0.18, "soplido": 0.25, "tic": 0.12, "tac": 0.20, "crujido": 0.15,
-        "roce": 0.18}
+NIVELES = {"clic": -15.0, "golpe": -9.0, "soplido": -24.0, "soplido_tarjeta": -26.0, "tac": -17.0,
+           "crujido": -20.0, "grano": -20.0, "roce_pico": -12.0}
+SALA = {"clic": 0.10, "golpe": 0.18, "soplido": 0.25, "tac": 0.20, "crujido": 0.15, "roce": 0.18}
 
 # Los contactos (en d, el diámetro de la cuerda).
 DIAMETRO = 1.0             # dos ejes a esta distancia apenas se tocan
@@ -74,11 +70,6 @@ CRUJIDO_MIN = 0.4          # d²/s: el apretado (Σ presión² × deslizamiento 
 SOPLIDO_MIN = 0.18         # medio cuadro por segundo: la imagen que se mueve más lento no sopla
 SOPLIDO_PLENO = 1.6        # medio cuadro por segundo: así sopla a su nivel
 SOPLIDO_PICO_MIN = 0.35    # un movimiento cuyo máximo no llega a esto no sopla
-
-CRUCE_RADIO = 1.0          # d: un cruce a menos de esto de uno visto hace poco es el mismo
-CRUCE_MEMORIA = 0.4        # s: lo que se recuerda un cruce que dejó de verse
-CRUCE_PERSISTE = 3         # cuadros seguidos que tiene que durar un cruce nuevo para sonar
-TIC_ENTRE = 0.25           # s: un tic más cerca que esto del anterior no suena (un lazo hace dos o tres a la vez)
 
 ANCHO_TARJETA = {"horizontal": -0.35, "previa": -0.35, "vertical": 0.0}   # dónde están las tarjetas de T18
 
@@ -259,86 +250,9 @@ def medir(cuadros, fps: float, h: float, solidos=()) -> Contactos:
     return Contactos(roce, largo, presion, donde, apretado, tacs)
 
 
-def cruces_nuevos(cuadros, fps: float, h: float, validos=None) -> list[tuple[int, bool, np.ndarray]]:
-    """Cada cruce que aparece, visto desde arriba (como los del libro): el cuadro en que aparece,
-    si la parte que se mueve pasa por encima, y dónde (3D). Un cruce cuenta si dura
-    CRUCE_PERSISTE cuadros y no estaba a menos de CRUCE_RADIO de uno visto en los últimos
-    CRUCE_MEMORIA s; los del primer cuadro no son nuevos."""
-    from .cruces import cruces_2d
-    K = len(cuadros)
-    if K == 0:
-        return []
-    memoria = max(1, int(round(CRUCE_MEMORIA * fps)))
-
-    def cruces_de(X):
-        X = np.asarray(X, float)
-        val = np.ones(len(X) - 1, bool) if validos is None else validos
-        out = []
-        for sa, sb, _, p in cruces_2d(X[:, :2], val, h):
-            out.append((np.asarray(p, float), sa, sb))
-        return out
-
-    def en(X, s):
-        u = np.clip(s / h, 0, len(X) - 1)
-        i = min(int(u), len(X) - 2)
-        f = u - i
-        return X[i] * (1 - f) + X[i + 1] * f
-
-    vistos = [(p, 0) for p, _, _ in cruces_de(cuadros[0].X)]     # (punto, último cuadro visto)
-    pendientes = []                                               # [punto, primer cuadro, veces, datos]
-    out = []
-    previos = cruces_de(cuadros[0].X)
-    for k in range(1, K):
-        A0, B0 = _pares(cuadros[k - 1].X, cuadros[k].X)
-        if np.abs(B0 - A0).max() < 1e-7:
-            actuales = previos
-        else:
-            actuales = cruces_de(cuadros[k].X)
-        previos = actuales
-        X = np.asarray(cuadros[k].X, float)
-        Xa = np.asarray(cuadros[k - 1].X, float)
-        sigue = []
-        for p, sa, sb in actuales:
-            cerca = [i for i, (q, ult) in enumerate(vistos)
-                     if k - ult <= memoria and np.linalg.norm(q - p) < CRUCE_RADIO]
-            if cerca:
-                vistos[cerca[0]] = (p, k)
-                continue
-            pend = next((e for e in pendientes if np.linalg.norm(e[0] - p) < CRUCE_RADIO), None)
-            if pend is None:
-                # Quién se mueve: la pasada más rápida entre este cuadro y el anterior.
-                va, vb = (np.linalg.norm(en(X, s) - en(Xa, s)) if len(X) == len(Xa) else 0.0 for s in (sa, sb))
-                za, zb = en(X, sa)[2], en(X, sb)[2]
-                encima = (za > zb) if va >= vb else (zb > za)
-                pend = [p, k, 0, (encima, np.array([p[0], p[1], (za + zb) / 2]))]
-                pendientes.append(pend)
-            pend[0] = p
-            pend[2] += 1
-            sigue.append(pend)
-            if pend[2] == CRUCE_PERSISTE:
-                out.append((pend[1], *pend[3]))
-                vistos.append((p, k))
-        pendientes = [e for e in sigue if e[2] < CRUCE_PERSISTE]
-    return out
-
-
 # --------------------------------------------------------------------------
 # Los sonidos
 # --------------------------------------------------------------------------
-def tic(encima: bool, rng) -> np.ndarray:
-    """Un toque de madera corto: agudo (1,75 kHz) si pasa por encima, grave (620 Hz) si pasa por
-    debajo."""
-    f = (1750.0 if encima else 620.0) * (1 + 0.01 * rng.standard_normal())
-    d = int(0.08 * SR)
-    t = np.arange(d) / SR
-    caida = 0.010 if encima else 0.018
-    s = np.sin(2 * np.pi * f * t) * np.exp(-t / caida)
-    s += 0.45 * np.sin(2 * np.pi * 2.76 * f * t) * np.exp(-t / (caida * 0.4))
-    s += (0.18 if encima else 0.07) * A._filtro(rng.standard_normal(d), "high", 2500) * np.exp(-t / 0.0012)
-    s *= np.minimum(1.0, t / 0.0002)
-    return s / np.abs(s).max()
-
-
 def tac(rng) -> np.ndarray:
     """La cuerda que cae sobre la mesa de madera: un golpe sordo, la madera y un chasquido."""
     d = int(0.10 * SR)
@@ -421,11 +335,9 @@ def eventos_de_cuadros(cuadros, fps: float, x_tarjeta: float = ANCHO_TARJETA["ho
     return ev
 
 
-def del_motor(cuadros, fps: float, h: float, mallas=(), tics: bool | None = None, semilla: int = SEMILLA,
-              validos=None) -> list[Sonido]:
-    """El roce (un sonido por canal, que se mueve por el cuadro con lo que roza), los tacs, el
-    crujido del apretado y, con `tics`, un tic por cada cruce nuevo (por omisión, TICS en los
-    nudos sin anfitrión)."""
+def del_motor(cuadros, fps: float, h: float, mallas=(), semilla: int = SEMILLA) -> list[Sonido]:
+    """El roce (un sonido por canal, que se mueve por el cuadro con lo que roza), los tacs y el
+    crujido del apretado."""
     from .blender import _muestras_solidos
     rng = np.random.default_rng(semilla)
     K = len(cuadros)
@@ -473,17 +385,6 @@ def del_motor(cuadros, fps: float, h: float, mallas=(), tics: bool | None = None
         lugar = np.where(np.isfinite(con.donde["cuerda"]), con.donde["cuerda"], con.donde["anfitrion"])
         xs = np.array([pantalla(lugar[k], cams[k]) if np.isfinite(lugar[k]).all() else np.nan for k in range(K)])
         out.append(Sonido(0.0, x, _x_por_muestra(xs, fps, n), SALA["crujido"], "foley", "crujido"))
-    # Para probar: un tic por cada cruce nuevo.
-    if tics is None:
-        tics = TICS and not mallas
-    if tics:
-        ultimo = -1e9
-        for k, encima, P in cruces_nuevos(cuadros, fps, h, validos):
-            if (k - ultimo) / fps < TIC_ENTRE:
-                continue
-            ultimo = k
-            out.append(Sonido(k / fps, tic(encima, rng) * db(NIVELES["tic"]), pantalla(P, cams[k]), SALA["tic"],
-                              "efectos", "tic_encima" if encima else "tic_debajo"))
     return out
 
 

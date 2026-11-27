@@ -254,3 +254,133 @@ def test_los_textos_de_la_prueba_salen_de_la_especificacion():
     assert t[1][1].startswith("Paso 2 de 7. Haz una gaza pequeña. ")
     assert not terminos_encontrados(" ".join(x for _, x in t))
     assert len(V.VOCES_PRUEBA) == 4 and len({v.nombre for v in V.VOCES_PRUEBA}) == 4
+
+
+# --------------------------------------------------------------------------
+# Las grabaciones: la voz de Gabriel
+# --------------------------------------------------------------------------
+def _rms_db(x):
+    return 10 * np.log10(np.mean(np.asarray(x, np.float64) ** 2) + 1e-20)
+
+
+def test_limpiar_baja_el_ruido_y_deja_la_voz():
+    sr = V.SR
+    rng = np.random.default_rng(3)
+    t = np.arange(4 * sr) / sr
+    voz = sum(np.sin(2 * np.pi * f * t) / k for k, f in enumerate((180, 360, 540, 900, 1800), 1))
+    activa = (t % 1.0) < 0.5                                     # medio segundo sí, medio no
+    limpio = 0.2 * voz * activa
+    ruido = 10 ** (-45 / 20) * rng.standard_normal(len(t))
+    y = V.limpiar(limpio + ruido)
+    hueco = ~activa & ((t % 1.0) > 0.6) & ((t % 1.0) < 0.9)      # lejos de los bordes
+    lleno = activa & ((t % 1.0) > 0.1) & ((t % 1.0) < 0.4)
+    baja = _rms_db(ruido[hueco]) - _rms_db(y[hueco])
+    assert 8.0 < baja <= V.REDUCCION + 0.5
+    assert abs(_rms_db(y[lleno]) - _rms_db((limpio + ruido)[lleno])) < 1.0
+    assert len(y) == len(t) and y.dtype == np.float32
+
+
+def test_leer_grabacion_en_mono_a_48_khz(tmp_path):
+    from scipy.io import wavfile
+    sr = 44100
+    t = np.arange(int(1.5 * sr)) / sr
+    x = np.column_stack([0.5 * np.sin(2 * np.pi * 440 * t), 0.25 * np.sin(2 * np.pi * 440 * t)])
+    wavfile.write(tmp_path / "toma.wav", sr, (x * 32767).astype(np.int16))
+    y = V.leer_grabacion(tmp_path / "toma.wav")
+    assert y.ndim == 1 and abs(len(y) - 1.5 * V.SR) < 0.01 * V.SR
+    with pytest.raises(V.VozError):
+        V.leer_grabacion(tmp_path / "no-esta.m4a")
+
+
+def _transcripcion(frases, pausa=0.5, ritmo=0.3):
+    """Una transcripción alineada: cada frase, una palabra cada `ritmo` s, y `pausa` s entre frases."""
+    palabras, t = [], 0.2
+    for frase in frases:
+        for w in frase.split():
+            palabras.append(V.Palabra(w, w, round(t, 3), round(t + ritmo - 0.05, 3)))
+            t += ritmo
+        t += pausa
+    return V.Transcripcion(" ".join(frases), palabras, t, "alineados")
+
+
+def test_los_tramos_limpios_esquivan_los_tropiezos():
+    limpia = ("Forma una gaza fija en el extremo de la cuerda que no se cierra cuando tiras "
+              "del firme y sirve para rodear un poste.")
+    tropiezo = ("No se cierra ni se, ni se corre cuando tiras del firme y sirve para pasar la "
+                "cuerda por una argolla o colgar algo.")
+    t = _transcripcion([tropiezo, limpia])
+    tramos = V.tramos_limpios(t, largo=(6.0, 14.0))
+    assert tramos
+    _, a, b = tramos[0]
+    assert " ".join(p.texto for p in t.palabras[a:b]) == limpia
+    assert all(a >= len(tropiezo.split()) for _, a, _ in tramos)
+    assert V._tropieza([V.Palabra(w, w) for w in "pasa por por una argolla".split()])
+    assert V._tropieza([V.Palabra(w, w) for w in "eh pasa la cuerda".split()])
+    assert not V._tropieza([V.Palabra(w, w) for w in "pasa una vez por encima y una por debajo".split()])
+    # Sin tiempos no hay tramos.
+    assert V.tramos_limpios(V.Transcripcion("a", t.palabras, 1.0, "sin")) == []
+    # Con el texto que se leyó, solo lo que lo dice palabra por palabra (los números, en letras).
+    leida = _transcripcion(["Usa una de seis a diez milímetros de grosor que no sea rígida y que no tenga nudos.",
+                            "Usa una de seis a diez milímetros de grosor que no sea muy rígida y sin nudos."])
+    fuente = "materiales: >-\n  Usa una de 6 a 10 mm de grosor que no sea rígida y que no tenga nudos."
+    tramos = V.tramos_limpios(leida, largo=(4.0, 14.0), fuente=fuente)
+    assert tramos and all(b <= 18 for _, _, b in tramos)      # la primera frase tiene 18 palabras
+    assert len(V.tramos_limpios(leida, largo=(4.0, 14.0))) > len(tramos)
+
+
+def test_recorte_con_aire_y_fundidos():
+    x = np.ones(3 * V.SR, np.float32)
+    y = V.recorte(x, 1.0, 2.0, margen=0.1, fundido=0.02)
+    assert abs(len(y) - 1.2 * V.SR) <= 1
+    assert y[0] == 0 and y[-1] == 0 and y[len(y) // 2] == 1
+
+
+def test_transcribir_con_el_reconocimiento_falso(monkeypatch):
+    from pathlib import Path
+    from nudos import ia
+    vistos = []
+
+    def correr(entorno, script, trabajo, aviso=print, **kw):
+        vistos.append(script)
+        assert entorno == "qwen-asr" and all(Path(t["audio"]).exists() for t in trabajo["tareas"])
+        if script == "transcribir.py":
+            assert "gaza" in trabajo["tareas"][0]["contexto"]
+            return {"hechas": [{"texto": "Haz una gaza, chica.", "idioma": "Spanish"}] * len(trabajo["tareas"])}
+        return {"alineadas": [[{"texto": w, "inicio": 0.2 + 0.4 * i, "fin": 0.5 + 0.4 * i}
+                               for i, w in enumerate(["Haz", "una", "gaza", "chica"])] for _ in trabajo["tareas"]]}
+    monkeypatch.setattr(ia, "correr", correr)
+    audio = np.zeros(2 * V.SR, np.float32)
+    t = V.transcribir([audio], aviso=lambda *_: None)[0]
+    assert vistos == ["transcribir.py", "alinear.py"]
+    assert t.texto == "Haz una gaza, chica." and t.tiempos == "alineados" and t.segundos == 2.0
+    assert [(p.texto, p.inicio, p.fin) for p in t.palabras] == [
+        ("Haz", 0.2, 0.5), ("una", 0.6, 0.9), ("gaza,", 1.0, 1.3), ("chica.", 1.4, 1.7)]
+    # Del caché, sin volver a llamar a los modelos; y sin restos en la carpeta temporal.
+    assert V.transcribir([audio], aviso=lambda *_: None)[0].palabras == t.palabras
+    assert vistos == ["transcribir.py", "alinear.py"]
+    assert not list((V.carpeta_cache() / "tmp").glob("*.wav"))
+
+
+def test_una_grabacion_entra_a_la_mezcla_como_locucion():
+    x = np.zeros(V.SR, np.float32)
+    loc = V.locucion_grabada(x, [V.Palabra("Hola.", "Hola.", 0.1, 0.4)])
+    assert loc.texto == "Hola." and loc.tiempos == "alineados" and loc.segundos == 1.0
+
+
+def test_el_nudo_de_cada_grabacion_por_su_nombre():
+    from nudos.prueba_sonido import _slug_de
+    assert _slug_de("nudo simple") == "simple"
+    assert _slug_de("As de Guía") == "as-de-guia"
+    assert _slug_de("amarre cuadrado ") == "amarre-cuadrado"
+    assert _slug_de("receta de pan") is None
+
+
+def test_una_voz_que_se_limpia_cambia_su_huella_y_su_audio(cache):
+    callar = {"aviso": lambda *_: None, "alineador": False}
+    normal = V.Voz("prueba", proveedor="falso")
+    assert "limpiar" not in normal.huella()                     # las voces de antes no cambian
+    limpia = V.Voz("prueba", proveedor="falso", limpiar=True)
+    assert limpia.huella()["limpiar"] is True
+    a = V.locuciones(["Tira del firme y aprieta."], normal, **callar)[0]
+    b = V.locuciones(["Tira del firme y aprieta."], limpia, **callar)[0]
+    assert a.huella != b.huella and not np.allclose(a.audio[:len(b.audio)], b.audio[:len(a.audio)])
