@@ -998,6 +998,21 @@ La cámara (las paradas y la aceleración) es de T22.
   - La cola se apoya donde descansa la cuerda suelta, a unos 0,55 d, y no a 0,5: el contacto con la mesa la subía 0,1 d de golpe.
   - Ahora el primer cuadro se mueve 0,02-0,04 d.
 - **El video:** la velocidad de la línea de tiempo valía 0,9999999999999999 en vez de 1 (el promedio de unos), y `retiempo` corría un cuadro cada tanto.
+- **La medida del as de guía, antes y después** (`calidad`, el video entero):
+
+| | T21a (26 nov) | T21c (27 nov) |
+|---|---|---|
+| Duración | 45,2 s | 51,3 s |
+| Nodos | de 357 a 550; cambian 281 veces | 550; no cambian |
+| Largo de la cuerda | de 71,0 a 109,8 d (35 %) | de 109,64 a 110,12 d (0,44 %) |
+| Recoger y morph | 4,8 y 6,6 s | 0 y 3,3 s (la gaza pequeña) |
+| Aceleración p99 y máxima | 340 y 906 d/s² | 271 y 2192 d/s² (la cuerda que cae y se apoya) |
+| Brincos (más de 360 d/s²) | 7 | 6 |
+| Picos y temblores | sin medir | 0 y 0 |
+| Paradas en seco de la punta | 74 | 45 (28 frenadas: cambios de rapidez) |
+| Resaltado vacío o a medias | 31 % de los cuadros | ninguno |
+
+  Las fases del nudo: 13,2 s en el aire, 8,3 enhebrando, 8,2 tirando de la cola, 3,3 la gaza pequeña, 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. Lo que más dura es traer la punta por el aire, que no enseña nada; se puede acortar en T22, con la voz. La cámara (14 paradas, quieta el 13 % del tiempo) es de T22.
 - **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9987 y 1,0037 del nominal y sin ningún pico ni temblor; 3,5 min de motor los seis a la vez.
 
 #### T22: El video completo
