@@ -855,12 +855,14 @@ def _iniciar_armar(titulos: dict) -> None:
     _TITULOS = {k: Image.open(v).convert("RGBA") for k, v in titulos.items()}
 
 
-def _componer(args) -> bytes:
+def _componer(args) -> str:
     """El cuadro del video: el render con la viñeta y el grano de T20b (un grano distinto en
-    cada cuadro, con la semilla de su número) y el título encima con su fundido, en RGB."""
+    cada cuadro, con la semilla de su número) y el título encima con su fundido. Lo escribe en
+    RGB crudo en `crudo` y da esa ruta: un cuadro de 4K son 25 MB, y mandarlos de vuelta por la
+    tubería del proceso hacía fallar a Windows («recursos insuficientes», T20b)."""
     global _ULTIMO
     from .aspecto import posproceso_video
-    ruta, titulo, alfa, indice = args
+    ruta, titulo, alfa, indice, crudo = args
     if _ULTIMO[0] != ruta:
         with Image.open(ruta) as im:
             fondo = Image.new("RGBA", im.size, (255, 255, 255, 255))
@@ -870,12 +872,16 @@ def _componer(args) -> bytes:
     t = _TITULOS.get(titulo)
     if t is not None and alfa > 0:
         im.alpha_composite(t if alfa >= 1 else _con_alfa(t, alfa))
-    return im.convert("RGB").tobytes()
+    Path(crudo).write_bytes(im.convert("RGB").tobytes())
+    return crudo
 
 
 def armar(cuadros: list[Cuadro], rutas: list[Path], tits: dict, formato: str, salida: Path) -> None:
     """Le pone a cada render la viñeta y el grano, y el título encima con su fundido, y se lo
-    pasa a ffmpeg. Los cuadros se componen en varios procesos, en orden."""
+    pasa a ffmpeg. Los cuadros se componen en varios procesos, cada uno a un archivo crudo, con
+    a lo más EN_VUELO por delante de ffmpeg (así el disco no se llena si ffmpeg va más lento), y
+    pasan a ffmpeg en orden."""
+    from collections import deque
     from concurrent.futures import ProcessPoolExecutor
     F = FORMATOS[formato]
     ancho, alto = F["tam"]
@@ -891,19 +897,35 @@ def armar(cuadros: list[Cuadro], rutas: list[Path], tits: dict, formato: str, sa
             if f == formato:
                 rutas_tit[n] = str(Path(carpeta) / f"t{n}.png")
                 im.save(rutas_tit[n])
-        args = [(str(r), c.titulo, c.alfa, i) for i, (c, r) in enumerate(zip(cuadros, rutas))]
+        args = iter([(str(r), c.titulo, c.alfa, i, str(Path(carpeta) / f"c{i:06d}.rgb"))
+                     for i, (c, r) in enumerate(zip(cuadros, rutas))])
         proc = subprocess.Popen(orden, stdin=subprocess.PIPE)
         try:
-            with ProcessPoolExecutor(_procesos(), initializer=_iniciar_armar,
-                                     initargs=(rutas_tit,)) as pool:
-                for datos in pool.map(_componer, args, chunksize=8):
-                    proc.stdin.write(datos)
+            n = _procesos()
+            with ProcessPoolExecutor(n, initializer=_iniciar_armar, initargs=(rutas_tit,)) as pool:
+                en_vuelo = deque()
+
+                def lanzar():
+                    a = next(args, None)
+                    if a is not None:
+                        en_vuelo.append(pool.submit(_componer, a))
+
+                for _ in range(EN_VUELO * n):
+                    lanzar()
+                while en_vuelo:
+                    crudo = Path(en_vuelo.popleft().result())
+                    proc.stdin.write(crudo.read_bytes())
+                    crudo.unlink()
+                    lanzar()
             proc.stdin.close()
         except BrokenPipeError:
             pass
         if proc.wait() != 0:
             raise VideoError(f"ffmpeg no pudo armar {salida.name}")
     tmp.replace(salida)
+
+
+EN_VUELO = 2     # cuadros compuestos por proceso que pueden esperar a ffmpeg
 
 
 def _con_alfa(im: Image.Image, a: float) -> Image.Image:

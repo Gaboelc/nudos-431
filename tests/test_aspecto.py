@@ -310,3 +310,23 @@ def test_blender_dibuja_los_cuadros_del_video(con_blender, tmp_path):
     for k in range(2):
         with Image.open(tmp_path / f"r{k}.png") as im:
             assert im.size == (128, 72) and im.mode == "RGB"
+
+
+def test_armar_pasa_los_cuadros_por_archivos_y_en_orden(tmp_path):
+    import shutil
+    import subprocess
+    from nudos import video
+    if shutil.which("ffmpeg") is None:
+        pytest.skip("falta ffmpeg")
+    rutas = []
+    for k in range(5):
+        r = tmp_path / f"r{k}.png"
+        Image.new("RGB", (960, 540), (40 * k, 90, 160)).save(r)
+        rutas.append(r)
+    cuadros = [video.Cuadro(_cuerda(5), 1, "pausa", None, titulo=0, alfa=1.0) for _ in rutas]
+    salida = tmp_path / "v.mp4"
+    video.armar(cuadros, rutas, {}, "previa", salida)
+    assert salida.exists() and not list(tmp_path.glob("*.rgb"))
+    n = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_frames", "-show_entries",
+                        "stream=nb_read_frames", "-of", "csv=p=0", str(salida)], capture_output=True, text=True)
+    assert n.stdout.strip() == "5"
