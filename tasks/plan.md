@@ -1225,6 +1225,11 @@ La cámara (las paradas y la aceleración) es de T22.
 - **La cadena de estudio:** la muestra pasa por Sidon, Qwen3-TTS clona la voz desde ella y cada locución vuelve a pasar por Sidon (`Voz(restaurar=True)`), que le devuelve los agudos hasta 20 kHz. Todas las locuciones de un pedido van juntas a Sidon, y la huella de las voces de antes no cambia.
 - **La prueba (`prueba-voz-propia`)** suma la muestra con Sidon, su grabación con Sidon en las dos frases y en la lectura con la música, y la voz clonada de estudio en los textos y en el video.
 - **Las pruebas:** `restaurar()` con un Sidon falso (y desde el caché), y una voz de estudio que pasa por Sidon en una sola llamada.
+- **La muestra nueva (27 nov):** Gabriel volvió a grabar con el DJI en Audacity, en WAV de 24 bits a 48 kHz, la ficha del ballestrinque y la del nudo simple.
+  - **Contra las del celular:** la voz queda 57 dB sobre el silencio (antes, 40), la cola de eco baja de 1,1–1,4 s a 0,4–0,65 s y hay unos 5 dB más de agudos.
+  - **Quedaron bajas:** −39 LUFS, con picos en −20 dBFS. En 24 bits no pierden nada, pero para grabar más conviene que los picos lleguen a unos −10 dBFS.
+  - **La muestra** salió del nudo simple (9 s). La voz clonada desde ella queda seca y limpia; con Sidon, además, llega a 20 kHz.
+  - **Para que la muestra se compare con la ficha,** cada archivo lleva el nombre de su nudo (`ballestrinque.wav`, `nudo simple.wav`).
 
 #### T24: El visor
 
