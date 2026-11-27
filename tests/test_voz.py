@@ -78,14 +78,101 @@ def test_los_tiempos_estimados_quedan_cerca_de_los_reales():
 
 
 def test_sin_tiempos_del_proveedor_se_estiman(monkeypatch):
-    class SinTiempos(V.Falso):
-        def generar(self, pedidos, aviso=print):
-            return [(x, sr, None) for x, sr, _ in super().generar(pedidos, aviso)]
     L = V.locuciones(["Sube por la gaza, entra por debajo."], V.Voz("x"), proveedor=SinTiempos(),
-                     aviso=lambda *_: None)[0]
+                     aviso=lambda *_: None, alineador=False)[0]
     assert L.tiempos == "estimados"
     assert [p.texto for p in L.palabras] == ["Sube", "por", "la", "gaza,", "entra", "por", "debajo."]
     assert L.palabras[0].inicio < 0.4 and L.palabras[-1].fin <= L.segundos
+
+
+class SinTiempos(V.Falso):
+    """El falso, pero sin decir los tiempos, como el modelo local."""
+    def generar(self, pedidos, aviso=print):
+        return [(x, sr, None) for x, sr, _ in super().generar(pedidos, aviso)]
+
+
+class AlineadorFalso(V.Alineador):
+    """Da los tiempos exactos del falso; o nada («nada»), o falla como un entorno roto («falla»)."""
+    nombre = "falso"
+
+    def __init__(self, modo="exacto"):
+        self.modo, self.llamadas = modo, 0
+
+    def alinear(self, pedidos, aviso=print):
+        from nudos import ia
+        self.llamadas += 1
+        if self.modo == "falla":
+            raise ia.IAError("sin modelo")
+        if self.modo == "nada":
+            return [None for _ in pedidos]
+        return [V.Falso().generar([(p, V.Voz("x"))])[0][2] for _, _, p in pedidos]
+
+
+def test_las_palabras_alineadas_calzan_con_los_trozos():
+    ps = V.para_decir("Paso 35. Sube por la gaza.")
+    assert V.texto_dicho(ps) == "Paso treinta y cinco. Sube por la gaza."
+    # Un trozo por cada pedazo entre espacios, en pasos de 80 ms; la última sin duración, pegada al
+    # final, como la deja el modelo.
+    t = [(0.40, 0.72), (0.72, 0.96), (0.96, 1.04), (1.04, 1.36), (1.92, 2.16), (2.16, 2.32), (2.32, 2.80),
+         (2.80, 2.80)]
+    trozos = [{"texto": "", "inicio": a, "fin": b} for a, b in t]
+    al = V.palabras_alineadas(ps, trozos, 2.9)
+    assert [p.texto for p in al] == ["Paso", "35.", "Sube", "por", "la", "gaza."]
+    assert (al[1].inicio, al[1].fin) == (0.72, 1.36)        # «treinta y cinco»: del primer trozo al último
+    assert al[4].inicio == 2.32 and al[5].fin == 2.8 and al[4].fin == al[5].inicio
+    assert al[5].fin - al[5].inicio > al[4].fin - al[4].inicio > V.MIN_PALABRA   # por sílabas
+    # Si no calzan, None: otro número de trozos, o tiempos fuera del audio o hacia atrás.
+    assert V.palabras_alineadas(ps, trozos[:-1], 2.9) is None
+    assert V.palabras_alineadas(ps, trozos, 2.5) is None
+    assert V.palabras_alineadas(ps, trozos[:4] + [{"inicio": 0.1, "fin": 0.2}] + trozos[5:], 2.9) is None
+
+
+def test_el_alineador_pone_los_tiempos_sin_volver_a_generar():
+    texto = "Sube por la gaza, entra por debajo y sale por encima."
+    voz, prov = V.Voz("x"), SinTiempos()
+    callar = dict(aviso=lambda *_: None)
+    assert V.locuciones([texto], voz, proveedor=prov, alineador=False, **callar)[0].tiempos == "estimados"
+    al = AlineadorFalso()
+    L = V.locuciones([texto], voz, proveedor=prov, alineador=al, **callar)[0]
+    assert prov.llamadas == 1 and al.llamadas == 1             # la del caché se alinea, no se genera
+    assert L.tiempos == "alineados"
+    verdad = V.Falso().generar([(V.para_decir(texto), voz)])[0][2]
+    assert [(p.inicio, p.fin) for p in L.palabras] == [(p.inicio, p.fin) for p in verdad]
+    V.locuciones([texto], voz, proveedor=prov, alineador=al, **callar)
+    assert al.llamadas == 1                                    # ya alineada con este alineador
+    # Si no calza, quedan los estimados y no se vuelve a intentar con el mismo alineador.
+    nada = AlineadorFalso("nada")
+    assert V.locuciones(["Haz una gaza."], voz, proveedor=prov, alineador=nada, **callar)[0].tiempos == "estimados"
+    V.locuciones(["Haz una gaza."], voz, proveedor=prov, alineador=nada, **callar)
+    assert nada.llamadas == 1
+    # Si el alineador falla, también, pero se vuelve a intentar la próxima vez.
+    roto = AlineadorFalso("falla")
+    assert V.locuciones(["Tira del firme."], voz, proveedor=prov, alineador=roto, **callar)[0].tiempos == "estimados"
+    V.locuciones(["Tira del firme."], voz, proveedor=prov, alineador=roto, **callar)
+    assert roto.llamadas == 2
+
+
+def test_qwen_alinea_en_su_entorno(monkeypatch, tmp_path):
+    from pathlib import Path
+    from nudos import ia
+    vistos = []
+
+    def correr(entorno, script, trabajo, aviso=print, **kw):
+        vistos.append((entorno, script, trabajo["tareas"]))
+        assert all(Path(t["audio"]).exists() for t in trabajo["tareas"])
+        return {"alineadas": [[{"texto": w, "inicio": 0.2 + 0.3 * i, "fin": 0.5 + 0.3 * i}
+                               for i, w in enumerate(t["texto"].split())] for t in trabajo["tareas"]]}
+    monkeypatch.setattr(ia, "correr", correr)
+    res = V.QwenAlineador().alinear([(np.zeros(3 * 48000), 48000, V.para_decir("Paso 21. Sube."))],
+                                    aviso=lambda *_: None)
+    assert vistos[0][:2] == ("qwen-asr", "alinear.py")
+    assert vistos[0][2][0]["texto"] == "Paso veintiuno. Sube." and vistos[0][2][0]["idioma"] == "Spanish"
+    assert [(p.texto, p.inicio, p.fin) for p in res[0]] == [("Paso", 0.2, 0.5), ("21.", 0.5, 0.8),
+                                                            ("Sube.", 0.8, 1.1)]
+    assert not list((V.carpeta_cache() / "tmp").glob("alinear-*"))     # sin restos
+    # Sin su entorno, por omisión no hay alineador y los tiempos se estiman.
+    monkeypatch.setenv("NUDOS_IA", str(tmp_path / "sin-ia"))
+    assert V._el_alineador(None) is None and V._el_alineador(False) is None
 
 
 def test_elevenlabs_con_una_api_falsa(monkeypatch):
@@ -136,7 +223,8 @@ def test_qwen_disena_una_vez_y_clona_cada_texto(monkeypatch):
         return {"hechas": []}
     monkeypatch.setattr(ia, "correr", correr)
     voz = V.Voz("diseñada", descripcion="A calm voice.", semilla=7)
-    a = V.locuciones(["Haz una gaza.", "Sube por la gaza."], voz, proveedor=V.QwenTTS(), aviso=lambda *_: None)
+    a = V.locuciones(["Haz una gaza.", "Sube por la gaza."], voz, proveedor=V.QwenTTS(), aviso=lambda *_: None,
+                     alineador=False)
     assert [len(c) for c in llamadas] == [1, 2]
     assert llamadas[0][0]["tipo"] == "disenar" and llamadas[0][0]["instruccion"] == "A calm voice."
     assert {t["tipo"] for t in llamadas[1]} == {"clonar"}
@@ -144,7 +232,8 @@ def test_qwen_disena_una_vez_y_clona_cada_texto(monkeypatch):
     assert all(t["texto_referencia"] == V.TEXTO_REFERENCIA for t in llamadas[1])
     assert a[0].tiempos == "estimados"
     # Otra vez: ni diseño ni clon.
-    V.locuciones(["Haz una gaza.", "Sube por la gaza."], voz, proveedor=V.QwenTTS(), aviso=lambda *_: None)
+    V.locuciones(["Haz una gaza.", "Sube por la gaza."], voz, proveedor=V.QwenTTS(), aviso=lambda *_: None,
+                 alineador=False)
     assert len(llamadas) == 2
 
 

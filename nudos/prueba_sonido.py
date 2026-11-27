@@ -1,10 +1,15 @@
-"""Las pruebas de escucha de T23: `prueba-voz` y `prueba-musica`, en revision/ (fuera de git).
+"""Las pruebas de escucha de T23: `prueba-voz`, `prueba-musica` y `prueba-mezcla`, en revision/
+(fuera de git).
 
 - `prueba_voz()`: la apertura y dos pasos del as de guía, dichos por cada voz de
   `voz.VOCES_PRUEBA`, todos a la misma sonoridad, en una página para escuchar a ciegas: las voces
   van con una letra, en un orden al azar con semilla fija, y la clave queda escondida al final.
 - `prueba_musica()`: el instrumento del motivo de la serie (cada opción en la apertura y el cierre
-  de «Fogata») y las cinco canciones sobre la misma línea de tiempo, sin voz y con la voz elegida.
+  de «Fogata»; Gabriel eligió la celesta) y las cinco canciones sobre la misma línea de tiempo,
+  sin voz y con la voz elegida.
+- `prueba_mezcla()`: la previa de cada piloto (T18) con la pista de T23c pegada: su canción, el
+  foley del motor, los soplidos, las tarjetas, el golpe y la voz de dos pasos; en los nudos libres,
+  con los tics de los cruces y sin ellos.
 """
 from __future__ import annotations
 
@@ -240,9 +245,9 @@ PAGINA_MUSICA = """<!doctype html>
 </style></head>
 <body><main>
 <h1>Prueba de música: las canciones</h1>
-<p class="bajada">Primero, el instrumento del motivo de la serie (la kalimba sonaba «tuc tuc tuc»): la apertura y el
-cierre de «Fogata» con cada uno. Después, las cinco canciones sobre la misma línea de tiempo, sin voz y con la voz
-elegida. La barra marca en qué capítulo vas; toca un capítulo para ir ahí.</p>
+<p class="bajada">Primero, las opciones del instrumento del motivo de la serie: la apertura y el cierre de «Fogata»
+con cada una (Gabriel eligió la celesta el 26 nov). Después, las cinco canciones sobre la misma línea de tiempo, con
+la celesta, sin voz y con la voz elegida. La barra marca en qué capítulo vas; toca un capítulo para ir ahí.</p>
 {demos}
 </main>
 <script>
@@ -321,3 +326,147 @@ def prueba_musica(cancion: str | None = None, aviso=print) -> Path:
     (destino / "index.html").write_text(PAGINA_MUSICA.format(demos="\n".join(bloques)), encoding="utf-8")
     (destino / "indice.json").write_text(json.dumps(indice, ensure_ascii=False, indent=1), encoding="utf-8")
     return destino / "index.html"
+
+
+# --------------------------------------------------------------------------
+# La mezcla (T23c)
+# --------------------------------------------------------------------------
+PILOTOS_MEZCLA = ("as-de-guia", "amarre-cuadrado")
+
+
+def capitulos_t18(cuadros, fps: float):
+    """Los capítulos de la música sobre la línea de tiempo de hoy (T18): la apertura hasta la
+    primera tarjeta, el paso a paso hasta el apretado y el cierre. Los de verdad los pone T22."""
+    from .musica import Capitulo
+    dur = len(cuadros) / fps
+    cambios = [k for k in range(1, len(cuadros)) if cuadros[k].titulo != cuadros[k - 1].titulo]
+    if not cambios:
+        return [Capitulo("pasos", 0.0, dur)]
+    t1 = cambios[0] / fps
+    tc = next((k / fps for k in cambios if cuadros[k].titulo == 0), dur)
+    caps = [Capitulo("apertura", 0.0, t1), Capitulo("pasos", t1, tc)]
+    if tc < dur:
+        caps.append(Capitulo("cierre", tc, dur))
+    return caps
+
+
+def _medidas_aac(ruta: Path) -> tuple[float, float]:
+    """La sonoridad y el pico real del audio de un video, ya en AAC."""
+    import subprocess
+    import tempfile
+
+    from scipy.io import wavfile
+
+    from . import sonoridad as so
+    with tempfile.TemporaryDirectory(prefix="nudos-aac-") as tmp:
+        wav = Path(tmp) / "a.wav"
+        subprocess.run(["ffmpeg", "-nostdin", "-y", "-loglevel", "error", "-i", str(ruta), "-vn", "-c:a",
+                        "pcm_f32le", str(wav)], check=True, timeout=300)
+        sr, x = wavfile.read(wav)
+    return so.lufs(x, sr), so.pico_real(x, sr)
+
+
+PAGINA_MEZCLA = """<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba de la mezcla</title>
+<style>
+  :root {{ color-scheme: light; --tinta: #16202f; --suave: #586273; --fondo: #f6f4ef; }}
+  body {{ margin: 0; background: var(--fondo); color: var(--tinta);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }}
+  main {{ max-width: 1000px; margin: 0 auto; padding: 32px 20px 64px; }}
+  h1 {{ font-size: 28px; margin: 0 0 6px; }}
+  .bajada {{ color: var(--suave); margin: 0 0 16px; }}
+  .demo {{ background: #fff; border-radius: 14px; padding: 16px 20px; margin: 0 0 16px;
+           box-shadow: 0 2px 10px rgba(22, 32, 47, .06); }}
+  .demo h2 {{ margin: 0 0 4px; font-size: 20px; }}
+  .demo p {{ margin: 0 0 10px; color: var(--suave); font-size: 14px; }}
+  video {{ width: 100%; border-radius: 8px; background: #000; }}
+</style></head>
+<body><main>
+<h1>Prueba de la mezcla</h1>
+<p class="bajada">La previa de cada piloto con la pista nueva: su canción, el foley que sale del motor (el roce según
+la presión y el deslizamiento, el «tac» en la mesa, el crujido al apretar), los soplidos de la cámara y de las
+tarjetas, el clic de cada tarjeta y el golpe, cada cosa donde se ve, en una sala chica. La voz dice los pasos 2 y 4
+donde aparecen sus tarjetas: el tiempo de cada parte lo pone T22. Mejor con audífonos.</p>
+{demos}
+</main></body></html>
+"""
+
+
+def prueba_mezcla(slugs=PILOTOS_MEZCLA, voz: bool = True, aviso=print) -> Path:
+    """Arma revision/sonido/index.html con la previa de cada piloto (960 × 540) y la pista de
+    T23c pegada; en los nudos sin anfitrión, una con los tics de los cruces y otra sin ellos. Si
+    la previa no está o tiene otros cuadros, la dibuja (Blender). Deja informe.json con las
+    medidas: la sonoridad y el pico antes y después del AAC, la voz sobre la música en cada frase
+    y cuántos sonidos de cada tipo."""
+    import os
+
+    from . import mezcla as MZ
+    from . import sonoridad as so
+    from . import video as VI
+    from . import voz as V
+    from .prueba_atar import mallas_anfitrion
+    os.environ["NUDOS_MOTOR"] = "1"
+    destino = REVISION / "sonido"
+    destino.mkdir(parents=True, exist_ok=True)
+    modelos = VI.construir(list(slugs))
+    bloques, informe = [], {}
+    fps = VI.FORMATOS["previa"]["fps"]
+    for slug in slugs:
+        m = modelos[slug]
+        tramos, _ = VI.atar(m)
+        cuadros = VI.cuadros_de(m, tramos, "previa")
+        previa = VI.carpeta_videos(slug) / f"{slug}-previa.mp4"
+        if not previa.exists() or VI.cuadros_del_video(previa) != len(cuadros):
+            aviso(f"  {slug}: dibujando la previa")
+            VI.video(m, previa=True, aviso=aviso)
+        h = m.pasos[-1].h
+        mallas = mallas_anfitrion(m)
+        caps = capitulos_t18(cuadros, fps)
+        dichos = []
+        if voz and len(m.spec.pasos) >= 4:
+            textos = dict(textos_prueba(slug))
+            locs = V.locuciones([textos["Paso 2"], textos["Paso 4"]], V.VOZ, aviso=aviso)
+            tarjeta = {cuadros[k].titulo: k / fps for k in range(1, len(cuadros))
+                       if cuadros[k].titulo != cuadros[k - 1].titulo}
+            dichos = [MZ.Dicho(tarjeta[2] + 0.25, locs[0]), MZ.Dicho(tarjeta[4] + 0.25, locs[1])]
+        variantes = [("", None, "")] if mallas else [
+            ("", True, "Con un tic por cada cruce nuevo: agudo si la punta pasa por encima, grave si pasa por debajo."),
+            ("-sin-tics", False, "Sin los tics de los cruces.")]
+        for sufijo, tics, nota in variantes:
+            p = MZ.pista_de_cuadros(cuadros, fps, h, mallas, formato="previa", capitulos=caps, slug=slug,
+                                    dichos=dichos, tics=tics, aviso=aviso)
+            nombre = f"{slug}-sonido{sufijo}"
+            salida = destino / f"{nombre}.mp4"
+            MZ.pegar(previa, p, salida)
+            lufs_aac, pico_aac = _medidas_aac(salida)
+            separacion = []
+            for a, b in p.frases:
+                i, j = int(a * MZ.SR), int(b * MZ.SR)
+                _, mc = so.corto(p.buses["musica"][i:j], MZ.SR, 0.4, 0.05)
+                if len(mc):
+                    separacion.append(round(so.lufs(p.buses["voz"][i:j], MZ.SR) - float(mc.max()), 1))
+            cuenta: dict[str, int] = {}
+            for s in p.sonidos:
+                cuenta[s.tipo] = cuenta.get(s.tipo, 0) + 1
+            informe[nombre] = {"segundos": round(p.segundos, 1), "cancion": p.musica.cancion if p.musica else None,
+                               "lufs": round(p.lufs, 2), "pico_dbtp": round(p.pico, 2),
+                               "lufs_aac": round(lufs_aac, 2), "pico_aac_dbtp": round(pico_aac, 2),
+                               "voz_sobre_musica_db": separacion, "sonidos": cuenta}
+            aviso(f"  {nombre}: {p.lufs:.1f} LUFS, {p.pico:.1f} dBTP (en AAC, {lufs_aac:.1f} y {pico_aac:.1f}); "
+                  f"la voz, {min(separacion, default=float('nan')):.1f} dB sobre la música")
+            titulo = m.spec.nombre + (" (sin tics)" if tics is False else "")
+            cancion = _nombre_cancion(p.musica.cancion) if p.musica else "sin música"
+            texto = (f"Canción «{cancion}». {nota} {p.lufs:.1f} LUFS y {p.pico:.1f} dBTP "
+                     f"({lufs_aac:.1f} y {pico_aac:.1f} ya en AAC).")
+            bloques.append(f'<section class="demo"><h2>{html.escape(titulo)}</h2><p>{html.escape(texto)}</p>'
+                           f'<video controls preload="metadata" src="{salida.name}"></video></section>')
+    (destino / "index.html").write_text(PAGINA_MEZCLA.format(demos="\n".join(bloques)), encoding="utf-8")
+    (destino / "informe.json").write_text(json.dumps(informe, ensure_ascii=False, indent=1), encoding="utf-8")
+    return destino / "index.html"
+
+
+def _nombre_cancion(clave: str) -> str:
+    """El nombre de una canción, desde su clave."""
+    from .musica import CANCIONES
+    return CANCIONES[clave].nombre if clave in CANCIONES else clave

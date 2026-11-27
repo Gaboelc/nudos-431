@@ -100,8 +100,9 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] T23b La música, compuesta en código y con ACE-Step 1.5 (`prueba-musica`) (26 nov)
     - [x] Punto de control: Gabriel eligió la voz D («joven») y la música compuesta en código (26 nov)
     - [x] Cinco canciones parecidas a la elegida, repartidas entre los 36 nudos en `config/musica.yaml` (26 nov)
-    - [ ] Gabriel elige el instrumento del motivo (la kalimba sonaba «tuc tuc tuc») y escucha las cinco canciones; y si se baja el alineador forzado
-    - [ ] T23c El diseño sonoro y la mezcla
+    - [x] Gabriel eligió la celesta para el motivo (las otras opciones empezaban como campanas). Se bajó el alineador forzado y se borró ACE-Step (26 nov)
+    - [x] T23c El diseño sonoro y la mezcla: `nudos/foley.py`, `nudos/mezcla.py` y `prueba-mezcla` (26 nov)
+    - [ ] Gabriel oye la prueba de la mezcla (`prueba-mezcla`) y decide si se quedan los tics de los cruces y si están bien los niveles del foley y de los efectos. Con eso T23 se cierra y su bloque pasa al historial
   - [ ] T24 El visor: material, luz y postprocesado (M; sesión «el aspecto»); punto de control en la computadora y en un celular de gama baja
   - [ ] Borrar los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel)
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36

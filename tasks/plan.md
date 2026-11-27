@@ -977,7 +977,7 @@ La cámara (las paradas y la aceleración) es de T22.
   - La sonoridad y el pico.
   - La voz siempre se entiende: mientras hay voz, la música queda 15 dB abajo.
 
-**Cómo se hicieron T23a y T23b (26 nov de 2026; falta que Gabriel elija la voz y la música):**
+**Cómo se hicieron T23a y T23b (26 nov de 2026):**
 - **La búsqueda de voces (26 nov).** Las licencias se comprobaron en la ficha de cada modelo en Hugging Face.
   - **Los candidatos que caben en la RTX 4070, con licencia libre:**
     - Qwen3-TTS 1.7B (Apache-2.0).
@@ -991,7 +991,7 @@ La cámara (las paradas y la aceleración) es de T22.
     - dots.tts: pronuncia mal el 2,6 % de las palabras en español.
     - OmniVoice: no queda claro si sus pesos son no comerciales.
     - Ming-3.0-tts tiny: 16,8 GB.
-  - **Lo que autorizó Gabriel:** de la voz, solo Qwen3-TTS. Tampoco autorizó el alineador forzado (Qwen3-ForcedAligner, 1,7 GB) ni pyloudnorm. Su voz clonada queda para después, si las voces de la prueba no lo convencen.
+  - **Lo que autorizó Gabriel:** de la voz, solo Qwen3-TTS. Tampoco autorizó el alineador forzado (Qwen3-ForcedAligner, 1,7 GB) ni pyloudnorm. Su voz clonada queda para después, si las voces de la prueba no lo convencen. El alineador lo autorizó después, el mismo 26 nov (ver T23c).
 - **La instalación (con permiso de cada descarga), en `D:\nudos\ia` (`NUDOS_IA`), fuera de A:.**
   - **Los entornos:** uv 0.13.10 (con el hash verificado), Python 3.12 y torch 2.7.1+cu128, compartido en el caché de uv.
   - **Qwen3-TTS:** `qwen-tts` 0.1.1, con VoiceDesign y Base de 1.7B (8,4 GB).
@@ -1046,7 +1046,7 @@ La cámara (las paradas y la aceleración) es de T22.
   - Las dos pruebas están también en una página privada para el celular: https://claude.ai/artifact/GqEhKz4kp3jCH5QhXruDjk.
 - **Lo que eligió Gabriel (26 nov).**
   - **La voz:** la D, «joven» (hombre de unos 25 años, alegre y conversador). Su muestra quedó en el repositorio, en `sonido/voces/joven.wav` (`voz.VOZ`), para que las 36 locuciones la clonen igual aunque se borre el caché.
-  - **La música:** la candidata compuesta en código. ACE-Step salió del código; su versión queda en el commit b4583a0, y su entorno sigue en `D:\nudos\ia\ace-step` hasta que Gabriel diga si se borra.
+  - **La música:** la candidata compuesta en código. ACE-Step salió del código; su versión queda en el commit b4583a0. Su entorno se borró el mismo día, a pedido de Gabriel (ver T23c).
   - **El motivo:** no le gustó el «tuc tuc tuc» de la apertura y el cierre. Era la kalimba del VCSL, una mbira de sonido seco, lo único que suena solo en esos dos capítulos. `prueba-musica` lo pone en glockenspiel, celesta, caja de música y vibráfono, para que elija.
   - **Más canciones:** pidió varias, parecidas a la elegida y distintas entre sí, una por familia o cinco repartidas al azar.
 - **Las cinco canciones (26 nov).** `musica.py` pasó a componer cualquier `Cancion`.
@@ -1070,6 +1070,59 @@ La cámara (las paradas y la aceleración) es de T22.
     - El pulso, que los compases caigan en los capítulos, que la semilla repita y que el arreglo cambie en cada capítulo.
     - El MIDI, la altura medida, la música con instrumentos sintéticos y los 15 dB bajo la voz.
   - Ninguna usa red, tarjeta ni bancos.
+
+**Cómo se hizo T23c (26 nov de 2026; falta que Gabriel oiga `prueba-mezcla`):**
+- **Lo que decidió Gabriel antes de empezar (26 nov).**
+  - **El motivo:** la celesta (`musica.MOTIVO = "gm:8"`). Odió que las otras opciones empezaran el video como campanas.
+  - **ACE-Step:** que se borre. Se borraron `D:\nudos\ia\ace-step` (15,6 GB, con sus modelos y su entorno), su entrada vacía en `hf/` y 150 MB de paquetes del caché de uv que solo usaba él.
+  - **El alineador:** que se baje.
+- **El alineador forzado (cierra lo que faltaba de T23a).**
+  - **La instalación:** Qwen3-ForcedAligner-0.6B (Apache-2.0, 1,7 GB, revisión c7cbfc2, con el SHA-256 comparado con el de Hugging Face). Va en su propio entorno, `qwen-asr` (qwen-asr 0.0.6, que fija transformers 4.57.6, y la voz fija la 4.57.3). Bajó 60 MB de paquetes nuevos; torch salió del caché de uv.
+  - **Un tropiezo:** en Windows sin modo de desarrollador, Hugging Face copia los archivos en vez de enlazarlos. Con varias descargas a la vez intentó un enlace igual y falló, así que se bajó con `max_workers=1`.
+  - **Cómo se usa:** `sonido/alinear.py` lo corre, y `voz.QwenAlineador` le manda en una sola llamada todo lo que falta alinear. Carga en 6 s y alinea cada locución en un instante.
+  - **Lo que da:** los tiempos van en pasos de 80 ms, y a veces la última palabra queda sin duración, pegada al final. Esa palabra comparte el tramo de su vecina, repartido por sílabas (`palabras_alineadas`). En las tres locuciones de la voz D, difiere de la estimación entre 46 y 66 ms de media.
+  - **Si no está, falla o no calza:** quedan los tiempos estimados. Una locución del caché con tiempos estimados se alinea en cuanto hay alineador, sin volver a generarla.
+- **`nudos/foley.py`: qué suena, cuándo y dónde.** Cada sonido es un `Sonido`: su audio mono ya a su nivel (`NIVELES`), cuándo empieza, su bus y dónde se ve, con una x de −1 a 1 que puede moverse muestra a muestra. La x sale de proyectar con la cámara de cada cuadro, como `video.toma`.
+  - **El roce** (`medir`): por cuadro y por canal (cuerda, anfitrión y mesa), la rapidez de deslizamiento por el largo que roza da cuántos granos suenan. La presión da su fuerza: sale de cuánto se acercan los ejes, como empuja el contacto IPC del motor. Cada canal suena donde está lo que roza.
+  - **El «tac»:** cuando un tramo cae sobre la mesa a más de 1,5 d/s, más fuerte cuanto más rápido y más largo. En el as de guía suena 4 veces.
+  - **El crujido:** granos graves y resonantes mientras se aprieta, según la presión al cuadrado por el deslizamiento de la cuerda contra sí misma o contra el anfitrión. En el as de guía, al apretar mide 29 de mediana, contra 0,4 en el resto del video.
+  - **Los soplidos:** de ruido que se funde entre siete bandas, para que el color siga la rapidez sin filtros que cambien en cada muestra.
+    - En la cámara: cuando la imagen se mueve rápido, va de un lado al otro como se mueve. Uno en el as de guía y cinco en el amarre.
+    - En cada tarjeta: sube hasta que la tarjeta aparece.
+  - **El clic y el golpe** son los de T18. El clic suena justo cuando aparece la tarjeta.
+  - **Los tics, para probar (`TICS`):** uno por cada cruce nuevo visto desde arriba, como los del libro, que dure 3 cuadros. Es agudo (1,75 kHz) si la parte que se mueve pasa por encima y grave (620 Hz) si pasa por debajo, y dos tics van por lo menos a 0,25 s.
+    - En el as de guía salen 7.
+    - En el amarre cuadrado salían 42 en 48 s, porque la cuerda da vueltas a los palos, así que por omisión no van en los nudos con anfitrión.
+  - **De dónde salen:** `del_motor(cuadros, fps, h, mallas)`, `de_la_camara(cuadros, fps)` y `de_eventos(eventos)`. `eventos_de_cuadros` saca las tarjetas y el golpe de los cuadros de hoy.
+- **`nudos/mezcla.py`: la pista.** `pista(duracion, capitulos=, golpe=, slug=, dichos=, eventos=, sonidos=)` es lo que usa T22.
+  - **La voz:** cada locución a −16 LUFS, medida como suena en el centro del estéreo, casi seca.
+  - **La música:** la canción del nudo para esos capítulos, sola a −22 LUFS.
+  - **Bajo la voz (`ganancia_bajo_voz`):** en cada frase, la música baja lo justo para que su sonoridad de corto plazo (0,4 s) quede 15 dB y 1 de margen bajo la de esa frase. Antes bajaba una cantidad fija para todo el video. La bajada empieza 0,15 s antes, y las rampas de 0,2 s van por fuera de la frase, sin saltos.
+  - **Los efectos y el foley:** cada uno donde se ve (con potencia constante y el estéreo a 0,8), en una sala chica sintetizada de 0,35 s.
+  - **El máster:** −14 LUFS con `sonoridad.py` y el pico real a −1,5 dBTP, con una vuelta más si el limitador le quita sonoridad, y el ruido a −80 dB que necesita el AAC. El pico va medio dB más abajo de lo que pide el plan porque el AAC lo sube: con −1 en el máster, el as de guía quedaba justo en −1,0 ya en AAC.
+  - **El video:** `pegar()` lo pone en AAC estéreo de 256 kbps, sin tocar la imagen.
+  - **Los cuadros de hoy:** `pista_de_cuadros` arma todo desde los cuadros de T18.
+- **La prueba (`python -m nudos prueba-mezcla`).** Deja en `revision/sonido/` la previa de los dos pilotos con la pista pegada: el as de guía con tics y sin ellos, y el amarre cuadrado. Lleva su canción y la voz de los pasos 2 y 4 donde aparecen sus tarjetas. La página privada de escucha la tiene también.
+  - **Lo medido:**
+    - Los tres videos quedan a −14,2 LUFS y −1,6 dBTP; ya en AAC, a −14,3 y −1,5.
+    - La voz queda de 19 a 21 dB sobre la música en cada frase.
+    - En el as de guía suenan 7 tarjetas, el golpe, 4 tacs, el crujido, 7 tics y un soplido de cámara.
+    - En el amarre cuadrado suenan también el crujido, contra los palos, y 5 soplidos de cámara.
+    - La pista de 45 s se arma en 5 s sin tics y en unos 18 s con ellos.
+  - **Los niveles de `foley.NIVELES` se midieron, no se oyeron.** Con la música, el roce de T18 quedaba unos 17 dB bajo ella, así que subió 5 dB.
+  - **Un tropiezo:** en el worktree no hay `build/videos`, así que la prueba empezó a dibujar la previa. `NUDOS_VIDEOS` apunta a las de A:.
+- **Las pruebas (`tests/test_mezcla.py`, 12, sin red ni tarjeta):**
+  - La pista a −14 LUFS y bajo −1,5 dBTP, y bajo −1 ya en AAC.
+  - La música por lo menos 15 dB bajo cada frase, y de vuelta entre frases.
+  - El clic de cada tarjeta a ±20 ms de cuando aparece, medido en la mezcla entre 2 y 6 kHz con un filtro sin desfase.
+  - Cada cosa del lado donde se ve, y la sala chica.
+  - El AAC estéreo de 256 kbps.
+  - El roce según la rapidez y la presión, y solo cuando algo se desliza.
+  - El tac al caer, y nada al bajar lento.
+  - Un tic agudo por encima y uno grave por debajo, en el cuadro en que aparece el cruce.
+  - El soplido cuando la cámara se mueve, y del lado hacia donde va la imagen.
+  - Los eventos de los cuadros de hoy.
+  - En `tests/test_voz.py`, además: las palabras alineadas con sus trozos, el alineador que pone los tiempos sin volver a generar, y Qwen alineando en su entorno con el script falso.
 
 #### T24: El visor
 

@@ -111,6 +111,10 @@ def main(argv=None) -> int:
     pm = ordenes.add_parser("prueba-musica", help="las demos de la música de T23: el instrumento del "
                                                   "motivo y las cinco canciones, en revision/musica/")
     pm.add_argument("--cancion", help="solo esa canción (fogata, sendero, rocio, lumbre o amanecer)")
+    pz = ordenes.add_parser("prueba-mezcla", help="la prueba de la mezcla de T23c: la previa de cada "
+                                                  "piloto con la pista nueva, en revision/sonido/")
+    pz.add_argument("slugs", nargs="*", help="los nudos (por omisión, los dos pilotos de T17)")
+    pz.add_argument("--sin-voz", action="store_true", help="sin la voz de los pasos 2 y 4")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -147,6 +151,11 @@ def main(argv=None) -> int:
             from .prueba_sonido import prueba_musica
             sys.stdout.reconfigure(line_buffering=True)
             print(f"Prueba de música en {prueba_musica(args.cancion)}")
+            return 0
+        if args.orden == "prueba-mezcla":
+            from .prueba_sonido import PILOTOS_MEZCLA, prueba_mezcla
+            sys.stdout.reconfigure(line_buffering=True)
+            print(f"Prueba de la mezcla en {prueba_mezcla(args.slugs or PILOTOS_MEZCLA, not args.sin_voz)}")
             return 0
         if args.orden == "estado":
             return _estado()

@@ -16,8 +16,9 @@ cada acorde, con la menor distancia al anterior.
 
 **El motivo de la serie** es el mismo en todas, transportado a su tono: sube por el acorde
 (5, 1, 3, 2-1) y contesta; en la apertura queda abierto (en la quinta) y en el cierre llega al
-golpe, donde suena el acorde final. Va en MOTIVO (Gabriel lo elige: la kalimba sonaba «tuc tuc
-tuc»).
+golpe, donde suena el acorde final. Lo toca la celesta (MOTIVO), que eligió Gabriel el 26 nov: la
+kalimba sonaba «tuc tuc tuc», y el glockenspiel, la caja de música y el vibráfono empezaban el
+video como campanas.
 
 **Los arreglos** (`arreglo`): constante y despejado bajo la voz en los pasos; más ralo en los
 errores; más lleno en la aplicación.
@@ -160,9 +161,10 @@ CANCIONES = {
         descripcion="Fa mayor, 94: guitarra de nailon a medio tiempo, cajón muy suave, marimba y glockenspiel."),
 }
 
-# El instrumento del motivo de la serie (el mismo en todas las canciones). La kalimba del VCSL
-# (una mbira) sonaba «tuc tuc tuc» (Gabriel, 26 nov); las opciones se escuchan en prueba-musica.
-MOTIVO = "vcsl:glock"
+# El instrumento del motivo de la serie, el mismo en todas las canciones: la celesta de GeneralUser
+# GS, que eligió Gabriel el 26 nov entre las opciones de prueba-musica. La kalimba del VCSL (una
+# mbira) sonaba «tuc tuc tuc», y las demás opciones empezaban el video como campanas.
+MOTIVO = "gm:8"
 MOTIVOS_PRUEBA = {"glockenspiel": "vcsl:glock", "celesta": "gm:8", "caja de música": "gm:10", "vibráfono": "gm:11"}
 
 # El motivo en corcheas: (índice de corchea, semitonos desde la tónica, duración en corcheas), en

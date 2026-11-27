@@ -19,10 +19,13 @@ los ajustes, fuera de git (`NUDOS_VOZ`; por omisión, `%LOCALAPPDATA%\\nudos\\vo
 que el modelo diga mal se corrigen en PRONUNCIACION. Cada palabra recuerda cómo se ve, para los
 subtítulos.
 
-**El tiempo de cada palabra:** ElevenLabs lo da. Con el modelo local, hasta tener un alineador
-forzado (Gabriel no autorizó el de Qwen el 26 nov; se vuelve a pedir en el punto de control), se
-estima (`estimar_tiempos`): las pausas del audio se emparejan con la puntuación del texto y cada
-tramo se reparte por sílabas. La locución dice cuáles son («estimados» o «proveedor»).
+**El tiempo de cada palabra**, para los subtítulos palabra por palabra y la sincronía: ElevenLabs lo
+da. Con el modelo local lo da el alineador forzado (`QwenAlineador`: Qwen3-ForcedAligner-0.6B,
+Apache-2.0, en su entorno; nudos/ia.py, sonido/alinear.py), que Gabriel autorizó el 26 nov. Si el
+alineador no está instalado, falla o no calza con el texto, se estima (`estimar_tiempos`): las
+pausas del audio se emparejan con la puntuación del texto y cada tramo se reparte por sílabas. La
+locución dice cuáles son («proveedor», «alineados» o «estimados»). Una locución del caché con
+tiempos estimados se alinea en cuanto hay alineador, sin volver a generarla.
 """
 from __future__ import annotations
 
@@ -578,9 +581,146 @@ def palabras_de_letras(palabras: list[Palabra], texto: str, letras, inicios, fin
 PROVEEDORES = {"qwen": QwenTTS, "elevenlabs": ElevenLabs, "falso": Falso}
 
 
-def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, aviso=print) -> list[Locucion]:
+# --------------------------------------------------------------------------
+# El tiempo de cada palabra, alineado
+# --------------------------------------------------------------------------
+def _trozos(dicha: str) -> int:
+    """Cuántos trozos ve el alineador en una palabra dicha: los pedazos entre espacios que tienen
+    alguna letra, número o apóstrofo («treinta y cinco» son tres; «gaza,» es uno)."""
+    return sum(1 for s in dicha.split()
+               if any(c == "'" or unicodedata.category(c)[0] in "LN" for c in s))
+
+
+MIN_PALABRA = 0.04     # s: una palabra alineada más corta que esto se reparte con su vecina
+
+
+def palabras_alineadas(palabras: list[Palabra], trozos: list[dict], segundos: float) -> list[Palabra] | None:
+    """Los tiempos de cada palabra a partir de los trozos que alineó el modelo (cada uno con su
+    «inicio» y su «fin» en s). None si no calzan: otro número de trozos, tiempos que van hacia
+    atrás o que se salen del audio.
+
+    El modelo da los tiempos en pasos de 80 ms y a veces deja una palabra sin duración (sobre
+    todo la última, pegada al final del audio): esa palabra comparte el tramo de su vecina,
+    repartido por sílabas."""
+    cuantos = [_trozos(p.dicha) for p in palabras]
+    if not palabras or sum(cuantos) != len(trozos):
+        return None
+    out, k, antes = [], 0, 0.0
+    for p, n in zip(palabras, cuantos):
+        if n == 0:                       # sin nada que decir: dura cero, donde terminó la anterior
+            out.append(Palabra(p.texto, p.dicha, antes, antes))
+            continue
+        a = float(trozos[k]["inicio"])
+        b = max(a, float(trozos[k + n - 1]["fin"]))
+        if a < antes - 0.02 or b > segundos + 0.05:
+            return None
+        out.append(Palabra(p.texto, p.dicha, a, b))
+        antes, k = b, k + n
+    con_voz = [i for i, n in enumerate(cuantos) if n]
+    for j, i in enumerate(con_voz):
+        if out[i].fin - out[i].inicio >= MIN_PALABRA or len(con_voz) < 2:
+            continue
+        v = con_voz[j - 1] if j > 0 else con_voz[j + 1]
+        a, b = min(out[i].inicio, out[v].inicio), max(out[i].fin, out[v].fin)
+        primero, segundo = (out[v], out[i]) if v < i else (out[i], out[v])
+        s1, s2 = silabas(primero.dicha) + 0.35, silabas(segundo.dicha) + 0.35
+        medio = a + (b - a) * s1 / (s1 + s2)
+        primero.inicio, primero.fin, segundo.inicio, segundo.fin = a, medio, medio, b
+    for p in out:
+        p.inicio, p.fin = round(p.inicio, 3), round(p.fin, 3)
+    return out
+
+
+class Alineador:
+    """Lo común: `alinear(pedidos)` da, por cada (audio, frecuencia, palabras), las palabras con
+    sus tiempos, o None si no pudo."""
+    nombre = ""
+
+    def huella(self) -> dict:
+        return {"alineador": self.nombre}
+
+    def alinear(self, pedidos: list[tuple[np.ndarray, int, list[Palabra]]], aviso=print
+                ) -> list[list[Palabra] | None]:
+        raise NotImplementedError
+
+
+class QwenAlineador(Alineador):
+    """Qwen3-ForcedAligner-0.6B, en su entorno (sonido/alinear.py). Una sola llamada alinea
+    todo lo que falta: el modelo tarda unos segundos en cargar y casi nada en cada locución."""
+    nombre = "qwen3-forcedaligner-0.6b"
+    ENTORNO = "qwen-asr"
+
+    def huella(self):
+        return {"alineador": self.nombre, "script": "alinear.py/1"}
+
+    @classmethod
+    def disponible(cls) -> bool:
+        from . import ia
+        return (ia.carpeta() / ia.ENTORNOS[cls.ENTORNO]).exists()
+
+    def alinear(self, pedidos, aviso=print):
+        from . import ia
+        tmp = carpeta_cache() / "tmp"
+        tareas, rutas = [], []
+        for k, (x, sr, palabras) in enumerate(pedidos):
+            ruta = tmp / f"alinear-{os.getpid()}-{k}.wav"
+            _escribir_wav(ruta, x, sr)
+            rutas.append(ruta)
+            tareas.append({"audio": str(ruta), "texto": texto_dicho(palabras), "idioma": "Spanish"})
+        try:
+            res = ia.correr(self.ENTORNO, "alinear.py", {"tareas": tareas}, aviso=aviso)
+        finally:
+            for r in rutas:
+                r.unlink(missing_ok=True)
+        return [palabras_alineadas(p, trozos, len(x) / sr)
+                for (x, sr, p), trozos in zip(pedidos, res["alineadas"])]
+
+
+def _el_alineador(alineador) -> Alineador | None:
+    """None (por omisión): el de Qwen si está instalado. False: ninguno."""
+    if alineador is False:
+        return None
+    if alineador is None:
+        return QwenAlineador() if QwenAlineador.disponible() else None
+    return alineador
+
+
+def _alinear_cache(cache: Path, pendientes: list[tuple[str, list[Palabra]]], al: Alineador, aviso=print) -> None:
+    """Alinea las locuciones del caché que no traen tiempos del proveedor ni se alinearon ya
+    con este alineador, y deja el resultado en su JSON. Si una no calza, se queda con los tiempos
+    estimados y no se vuelve a intentar con el mismo alineador; si el alineador falla, se vuelve
+    a intentar la próxima vez."""
+    from . import ia
+    hal = al.huella()
+    faltan = []
+    for h, piezas in pendientes:
+        meta = json.loads((cache / f"{h}.json").read_text(encoding="utf-8"))
+        if meta["tiempos"] != "proveedor" and meta.get("alineador") != hal:
+            faltan.append((h, piezas, meta))
+    if not faltan:
+        return
+    aviso(f"  alineando {len(faltan)} locuciones ({al.nombre})")
+    audios = [_leer_wav(cache / f"{h}.wav") for h, _, _ in faltan]
+    try:
+        res = al.alinear([(x, sr, p) for (_, p, _), (x, sr) in zip(faltan, audios)], aviso=aviso)
+    except ia.IAError as e:
+        aviso(f"  el alineador falló; quedan los tiempos estimados: {str(e).splitlines()[0]}")
+        return
+    for (h, _, meta), palabras in zip(faltan, res):
+        meta["alineador"] = hal
+        if palabras:
+            meta["tiempos"], meta["palabras"] = "alineados", [asdict(p) for p in palabras]
+        else:
+            aviso(f"  «{meta['texto'][:40]}» no calzó con el alineador; quedan los tiempos estimados")
+        (cache / f"{h}.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, aviso=print,
+          alineador: Alineador | None | bool = None) -> list[Locucion]:
     """Cada (texto, voz) dicho, desde el caché si ya se generó. Lo que falta se pide junto al
-    proveedor, que es el mismo para todas las voces (Qwen carga sus modelos una sola vez)."""
+    proveedor, que es el mismo para todas las voces (Qwen carga sus modelos una sola vez). Lo que
+    no trae tiempos del proveedor se alinea (`alineador`: por omisión, el de Qwen si está
+    instalado; False, ninguno)."""
     if not pedidos:
         return []
     nombres = {v.proveedor for _, v in pedidos}
@@ -614,6 +754,10 @@ def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, av
                     "tiempos": fuente, "palabras": [asdict(p) for p in tiempos]}
             (cache / f"{huellas[k]}.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1),
                                                       encoding="utf-8")
+    al = _el_alineador(alineador)
+    if al is not None:
+        unicas = {h: p for h, p in zip(huellas, piezas)}
+        _alinear_cache(cache, list(unicas.items()), al, aviso)
     out = []
     for (t, v), h in zip(pedidos, huellas):
         meta = json.loads((cache / f"{h}.json").read_text(encoding="utf-8"))
@@ -623,6 +767,7 @@ def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, av
     return out
 
 
-def locuciones(textos: list[str], voz: Voz, proveedor: Proveedor | None = None, aviso=print) -> list[Locucion]:
+def locuciones(textos: list[str], voz: Voz, proveedor: Proveedor | None = None, aviso=print,
+               alineador: Alineador | None | bool = None) -> list[Locucion]:
     """Cada texto dicho por una voz (ver `decir`)."""
-    return decir([(t, voz) for t in textos], proveedor, aviso)
+    return decir([(t, voz) for t in textos], proveedor, aviso, alineador)
