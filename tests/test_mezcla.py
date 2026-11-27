@@ -276,3 +276,22 @@ def test_la_narracion_va_una_tras_otra_con_sus_tarjetas_y_el_golpe():
     # Entre los dos pasos, el hueco del movimiento; el golpe, antes del cierre.
     assert p.musica is not None and [c.nombre for c in p.musica.capitulos] == ["apertura", "pasos", "cierre"]
     assert p.segundos > sum(L.segundos for L in locs) + HUECO_PASO
+
+
+
+def test_el_estilo_del_guion():
+    from nudos.prueba_sonido import estilo_del_guion
+    assert estilo_del_guion("Deja el chicote corto. Tira fuerte y listo.") == []
+    problemas = estilo_del_guion("Tira del chicote… y así queda cortito.")
+    assert len(problemas) == 2 and "suspensivos" in problemas[0]
+    assert "así" in problemas[1] and "cortito" in problemas[1]
+
+
+def test_un_guion_con_puntos_suspensivos_falla(tmp_path, monkeypatch):
+    from nudos import prueba_sonido as P
+    pasos = ", ".join(f"Paso {n}." for n in range(1, 8))
+    (tmp_path / "as-de-guia.yaml").write_text(f"apertura: Hola…\npasos: [{pasos}]\ncierre: Listo.\n",
+                                             encoding="utf-8")
+    monkeypatch.setattr(P, "GUIONES", tmp_path)
+    with pytest.raises(ValueError, match="suspensivos"):
+        P.guion_hablado("as-de-guia")

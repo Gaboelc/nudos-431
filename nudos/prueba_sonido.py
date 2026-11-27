@@ -746,11 +746,16 @@ GUIONES = RAIZ / "config" / "guion"
 HUECO_PASO = 1.8           # s entre el fin de un paso dicho y el siguiente: lo que tardaría el movimiento
 HUECO = 1.0                # s entre la apertura y el primer paso, y antes del cierre
 
+# Lo que Gabriel no diría (27 nov): diminutivos y «así», que no van con su manera de hablar. Los
+# puntos suspensivos tampoco: la voz clonada los dice estirando la palabra de antes («deeel»).
+PALABRAS_EVITAR = ("así", "chiquito", "chiquitito", "pequeñito", "pequeñita", "cortito", "cortita", "poquito",
+                   "poquita", "ratito", "ahorita", "despacito", "rapidito", "facilito", "tantito", "bonito")
+
 
 def guion_hablado(slug: str) -> dict:
     """El guion hablado de un nudo (config/guion/<slug>.yaml): `apertura`, un texto por paso
     (`pasos`), `cierre` y, si hace falta, `seguridad`. Falla si no tiene un texto por cada paso de
-    la especificación o si usa términos de sección."""
+    la especificación, si usa términos de sección o si no sigue el estilo (`estilo_del_guion`)."""
     import yaml
 
     from .ficha import terminos_encontrados
@@ -770,7 +775,22 @@ def guion_hablado(slug: str) -> dict:
     malos = terminos_encontrados(" ".join([guion["apertura"], *pasos, guion["cierre"], guion["seguridad"]]))
     if malos:
         raise ValueError(f"{ruta.name}: usa términos de sección: {', '.join(malos)}")
+    estilo = estilo_del_guion(" ".join([guion["apertura"], *pasos, guion["cierre"], guion["seguridad"]]))
+    if estilo:
+        raise ValueError(f"{ruta.name}: {'; '.join(estilo)}")
     return guion
+
+
+def estilo_del_guion(texto: str) -> list[str]:
+    """Lo que el guion hablado no debe tener: puntos suspensivos y las PALABRAS_EVITAR."""
+    out = []
+    if "…" in texto or "..." in texto:
+        out.append("tiene puntos suspensivos, que la voz dice estirando la palabra de antes")
+    palabras = set(re.findall(r"[^\W\d_]+", texto.casefold()))
+    malas = [w for w in PALABRAS_EVITAR if w in palabras]
+    if malas:
+        out.append(f"usa palabras que Gabriel no diría: {', '.join(malas)}")
+    return out
 
 
 def lineas_de_la_ficha(slug: str) -> list[tuple[str, str]]:
@@ -784,14 +804,16 @@ def lineas_de_la_ficha(slug: str) -> list[tuple[str, str]]:
             for n, p in enumerate(spec.pasos, 1)]
     aviso = " ".join((getattr(spec, "seguridad", "") or "").split()) or next(iter(spec.precauciones or ()), "")
     if aviso:
-        out.append(("cierre", aviso))
+        out.append(("seguridad", aviso))
     return out
 
 
 def lineas_del_guion(slug: str) -> list[tuple[str, str]]:
+    """El guion hablado en el orden de los capítulos de T22: la apertura, los pasos, la seguridad y
+    el cierre, que termina con el nudo que sigue (para la pantalla final de YouTube)."""
     g = guion_hablado(slug)
     out = [("apertura", g["apertura"])] + [("pasos", t) for t in g["pasos"]]
-    out += [("cierre", t) for t in (g["cierre"], g["seguridad"]) if t]
+    out += [(cap, g[cap]) for cap in ("seguridad", "cierre") if g[cap]]
     return out
 
 
@@ -799,13 +821,14 @@ def narracion(lineas: list[tuple[str, str]], slug: str, voz=None, aviso=print, i
               alineador=None):
     """La pista de un video entero hecha solo de voz, como la armaría T22 («la voz manda el
     tiempo»): cada locución después de la anterior, con HUECO_PASO entre pasos para el movimiento;
-    la tarjeta de cada paso 0,25 s antes de su voz, el golpe al empezar el cierre, y la canción del
-    nudo con sus capítulos. Da (pista, locuciones)."""
+    la tarjeta de cada paso 0,25 s antes de su voz, el golpe al terminar los pasos (el nudo
+    apretado), y la canción del nudo con sus capítulos. Una locución que titubea se vuelve a decir
+    (`voz.locuciones_sin_titubeos`). Da (pista, locuciones)."""
     from . import foley as F
     from . import mezcla as MZ
     from . import musica as M
     from . import voz as V
-    locs = V.locuciones([t for _, t in lineas], voz or V.VOZ, aviso=aviso, alineador=alineador)
+    locs = V.locuciones_sin_titubeos([t for _, t in lineas], voz or V.VOZ, aviso=aviso, alineador=alineador)
     t, dichos, eventos, inicios = 1.2, [], [], {}
     previo = None
     for (cap, _), loc in zip(lineas, locs):
@@ -819,7 +842,8 @@ def narracion(lineas: list[tuple[str, str]], slug: str, voz=None, aviso=print, i
         t += loc.segundos
         previo = cap
     dur = t + 2.5
-    golpe = inicios.get("cierre")
+    despues = [c for c in inicios if c not in ("apertura", "pasos")]
+    golpe = inicios[despues[0]] if despues else None
     if golpe is not None:
         eventos.append(F.Evento("golpe", golpe, 0.0))
     nombres = list(inicios)

@@ -815,6 +815,54 @@ def locuciones(textos: list[str], voz: Voz, proveedor: Proveedor | None = None, 
 
 
 # --------------------------------------------------------------------------
+# Los titubeos
+# --------------------------------------------------------------------------
+TITUBEO = 0.35         # s por sílaba: una palabra más lenta que esto suena a que se piensa («deeel»)
+TITUBEO_FINAL = 0.60   # s por sílaba en la última palabra de una frase, que se alarga natural
+PAUSA_DUDA = 0.45      # s: un silencio más largo que esto entre dos palabras sin puntuación
+
+
+def titubeos(L: Locucion) -> list[Palabra]:
+    """Las palabras de una locución que suenan a duda: estiradas, como «deeel» (más de TITUBEO s
+    por sílaba; TITUBEO_FINAL antes de una coma o un punto, donde se alarga natural), o seguidas de
+    un silencio de más de PAUSA_DUDA s donde el texto no pide pausa. Solo con tiempos alineados o
+    del proveedor. La primera palabra no cuenta, porque se lleva la respiración de antes, ni la
+    última, porque el alineador a veces la pega al final. Con la voz de Gabriel, el «del» de «el
+    trabajo del as de guía» duró 0,40 s, y las palabras dichas bien, de 0,08 a 0,32 s por sílaba."""
+    if L.tiempos not in ("alineados", "proveedor") or len(L.palabras) < 2:
+        return []
+    out = []
+    for p, sig in zip(L.palabras[1:], L.palabras[2:]):
+        sil = max(1, sum(silabas(w) for w in p.dicha.split()))
+        final = p.texto.endswith((",", ".", ":", ";", "?", "!", "…"))
+        lenta = (p.fin - p.inicio) / sil > (TITUBEO_FINAL if final else TITUBEO)
+        duda = not final and sig.inicio - p.fin > PAUSA_DUDA
+        if lenta or duda:
+            out.append(p)
+    return out
+
+
+def locuciones_sin_titubeos(textos: list[str], voz: Voz, intentos: int = 3, proveedor: Proveedor | None = None,
+                            aviso=print, alineador: Alineador | None | bool = None) -> list[Locucion]:
+    """Como `locuciones`, pero la que titubea (`titubeos`) se vuelve a decir con la semilla
+    siguiente, hasta `intentos` tomas, y queda la que titubea menos (a igualdad, la primera). Sale
+    igual cada vez: las tomas se piden en orden y quedan en el caché."""
+    from dataclasses import replace
+    locs = locuciones(textos, voz, proveedor, aviso, alineador)
+    for k in range(1, intentos):
+        malas = [i for i, L in enumerate(locs) if titubeos(L)]
+        if not malas:
+            break
+        aviso(f"  {len(malas)} locuciones titubean: otra toma (semilla {voz.semilla + k})")
+        otras = locuciones([textos[i] for i in malas], replace(voz, semilla=voz.semilla + k), proveedor, aviso,
+                           alineador)
+        for i, L in zip(malas, otras):
+            if len(titubeos(L)) < len(titubeos(locs[i])):
+                locs[i] = L
+    return locs
+
+
+# --------------------------------------------------------------------------
 # Las grabaciones: la voz de Gabriel
 # --------------------------------------------------------------------------
 # Lo que el reconocimiento de voz debería reconocer: los nombres de los nudos y las palabras de las

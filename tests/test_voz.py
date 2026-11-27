@@ -462,3 +462,46 @@ def test_paso_numero_n_de_m():
     assert V.texto_dicho(V.para_decir("De 2 de 7 cuerdas.")) == "De dos de siete cuerdas."
     # «número dos» son dos trozos para el alineador, y caen en la misma palabra vista.
     assert V._trozos(ps[1].dicha) == 2
+
+
+# --------------------------------------------------------------------------
+# Los titubeos
+# --------------------------------------------------------------------------
+def _locucion(palabras, tiempos="alineados"):
+    """Una locución con estas palabras: (texto, inicio, fin)."""
+    ps = [V.Palabra(t, V.texto_dicho(V.para_decir(t)), a, b) for t, a, b in palabras]
+    return V.Locucion(" ".join(t for t, _, _ in palabras), np.zeros(V.SR * 3, np.float32), ps, tiempos, "h")
+
+
+def test_un_del_estirado_es_un_titubeo():
+    # «el trabajo deeel as de guía»: el «del» de 0,40 s que oyó Gabriel.
+    L = _locucion([("Ese", 0.0, 0.2), ("es", 0.2, 0.3), ("el", 0.3, 0.38), ("trabajo", 0.38, 0.78),
+                   ("del", 0.78, 1.18), ("as", 1.18, 1.3), ("de", 1.3, 1.38), ("guía.", 1.38, 1.8)])
+    assert [p.texto for p in V.titubeos(L)] == ["del"]
+    # Dicho bien, nada; y sin tiempos alineados, tampoco se mide.
+    bien = _locucion([("Ese", 0.0, 0.2), ("es", 0.2, 0.3), ("el", 0.3, 0.38), ("trabajo", 0.38, 0.78),
+                      ("del", 0.78, 0.94), ("as", 0.94, 1.06), ("de", 1.06, 1.14), ("guía.", 1.14, 1.5)])
+    assert V.titubeos(bien) == []
+    assert V.titubeos(_locucion([("Ese", 0, 0.2), ("del", 0.2, 1.5), ("as.", 1.5, 2)], "estimados")) == []
+
+
+def test_una_pausa_donde_el_texto_no_la_pide_es_un_titubeo():
+    L = _locucion([("Tira", 0.0, 0.3), ("del", 0.3, 0.45), ("chicote,", 1.2, 1.6), ("y", 2.4, 2.5),
+                   ("listo.", 2.5, 2.9)])
+    # Tras «del» calla 0,75 s sin una coma: duda. Tras «chicote,» la coma pide la pausa.
+    assert [p.texto for p in V.titubeos(L)] == ["del"]
+
+
+def test_la_toma_que_titubea_se_repite_con_otra_semilla(monkeypatch):
+    llamadas = []
+    estirada = _locucion([("Tira", 0, 0.3), ("del", 0.3, 0.9), ("chicote", 0.9, 1.3), ("ya.", 1.3, 1.6)])
+    bien = _locucion([("Tira", 0, 0.3), ("del", 0.3, 0.42), ("chicote", 0.42, 0.9), ("ya.", 0.9, 1.2)])
+
+    def locuciones(textos, voz, proveedor=None, aviso=print, alineador=None):
+        llamadas.append((tuple(textos), voz.semilla))
+        return [estirada if (t == "Tira del chicote ya." and voz.semilla == 431) else bien for t in textos]
+    monkeypatch.setattr(V, "locuciones", locuciones)
+    voz = V.Voz("prueba", proveedor="falso")
+    locs = V.locuciones_sin_titubeos(["Primero.", "Tira del chicote ya."], voz, aviso=lambda *_: None)
+    assert locs[1] is bien and locs[0] is bien
+    assert llamadas == [(("Primero.", "Tira del chicote ya."), 431), (("Tira del chicote ya.",), 432)]

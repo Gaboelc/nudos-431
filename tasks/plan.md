@@ -1014,10 +1014,13 @@ La cámara (las paradas y la aceleración) es de T22.
     - El anuncio del paso varía: «Primero», «Paso número dos de siete», «Ahora», «Paso cuatro», nada, «Último paso».
     - Frases cortas y largas mezcladas, en segunda persona y con conectores de quien enseña al lado: «ahora», «fíjate», «listo».
     - Una imagen en vez de una lista: el conejo que sale del pozo, rodea el árbol y vuelve (as de guía); rodear el cruce como si tejieras (amarre).
-    - Un gancho en la apertura (una pregunta) y una prueba en el cierre («empuja un palo»).
+    - **La apertura va directa, sin tono de youtuber** (Gabriel, 27 nov: «¿Necesitas una gaza que no se cierre…?» le sonó a video de Yuya): el nombre del nudo y para qué sirve en la primera frase, y lo que vas a aprender «en siete pasos, y al final, cómo revisar que quedó bien».
+    - **Pensado para YouTube,** para que lo vean completo: el nombre del nudo al empezar, una promesa que se cumple al final (la revisión o la prueba, como «empuja un palo»), y el cierre termina con el nudo que sigue, sacado de sus alternativas, para la pantalla final. La seguridad va antes del cierre.
+    - **Sin diminutivos ni «así»** («cortito», «pequeñito»): no van con la manera de hablar de Gabriel. **Sin puntos suspensivos:** la voz los dice estirando la palabra de antes («deeel»). `estilo_del_guion` revisa las dos cosas, con la lista `PALABRAS_EVITAR`.
     - Nada de muletillas de video de IA («en el video de hoy», «¡increíble!», «sin más preámbulos»).
     - Cada instrucción dice lo mismo que la ficha: los «por encima» y «por debajo» no cambian, y la seguridad conserva todo lo que dice la especificación.
     - El reconocimiento de voz revisa que cada locución diga su texto, sin contar las letras que suenan igual.
+    - **Sin titubeos:** `voz.titubeos` marca la palabra estirada (más de 0,35 s por sílaba; 0,60 al final de una frase) o la pausa de duda (más de 0,45 s donde el texto no tiene puntuación), y `voz.locuciones_sin_titubeos` vuelve a decir esa locución con la semilla siguiente, hasta tres tomas. Con la voz de Gabriel, el «del» de «el trabajo del as de guía» duró 0,40 s, y las palabras dichas bien, de 0,08 a 0,32 s por sílaba.
 - **Las tarjetas nuevas,** primero como maqueta animada en HTML que Gabriel abre en el navegador:
   - El número grande en un distintivo de color, «Paso 4 de 7», el título y una barra de avance con un punto por paso.
   - Entran con un rebote suave y salen rápido, sobre un fondo esmerilado (el cuadro de atrás, desenfocado).

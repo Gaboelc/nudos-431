@@ -1,18 +1,20 @@
 # El guion hablado del video del as de guía: lo que dice la voz, más suelto que la ficha.
 # Borrador para T22a (27 nov de 2026), que decide si estos textos pasan a la especificación como
-# su campo `voz:`. Gabriel pidió que la voz suene natural y enganche: el anuncio del paso varía, las
-# frases cambian de largo y la imagen del conejo ayuda a recordar el camino. Cada instrucción dice
-# lo mismo que la ficha (specs/as-de-guia.yaml): los «por encima» y «por debajo» no cambian.
+# su campo `voz:`. Sigue el estilo que pidió Gabriel (ver el plan, en el guion de T22a): natural y
+# directo, sin tono de youtuber, sin diminutivos ni «así», sin puntos suspensivos (la voz los dice
+# estirando la palabra de antes) y pensado para que lo vean completo en YouTube. Cada instrucción
+# dice lo mismo que la ficha (specs/as-de-guia.yaml): los «por encima» y «por debajo» no cambian.
 apertura: >-
-  ¿Necesitas una gaza que no se cierre, por más que tires? Ese es el trabajo del as de guía.
-  Aguanta mucho peso… y aun así se desata fácil.
+  El as de guía hace una gaza fija en la punta de la cuerda: no se cierra ni se corre, aunque cargue
+  mucho peso, y después se desata fácil. Te lo enseño en siete pasos, y al final, cómo revisar que
+  quedó bien.
 pasos:
   - >-
     Primero, decide qué tan grande quieres la gaza, y deja bastante cuerda libre. Esa punta suelta
     es el chicote; el tramo largo, el que sube, es el firme.
   - >-
     Paso 2 de 7. Con el firme, forma una gaza pequeña, como un ojo, con el lado del chicote por
-    encima. Fíjate bien en este cruce: si queda al revés, no te sale el as de guía.
+    encima. Fíjate bien en este cruce: si queda al revés, no te va a salir este nudo.
   - >-
     Ahora acerca el chicote a esa gaza pequeña, desde el lado de la gaza grande.
   - >-
@@ -26,12 +28,12 @@ pasos:
   - >-
     Último paso: el conejo regresa a su pozo. Baja el chicote por la gaza pequeña, junto al tramo
     que subió. Sujeta el chicote y la gaza juntos, y tira del firme. Listo: el chicote queda
-    adentro de la gaza.
-cierre: >-
-  Ese es tu as de guía. Revisa que la gaza no se cierre cuando tiras, y que te sobre chicote, por lo
-  menos el largo de tu mano.
+    dentro de la gaza.
 seguridad: >-
   Un aviso importante: en rescate, este nudo se usa alrededor del pecho de una persona, pero aquí es
   solo para que lo sepas. En el grupo no lo uses para sostener, subir ni bajar a nadie; esa práctica
   se hace solo con instructor y equipo certificados. Y si la cuerda queda sin carga, o es rígida o
   resbalosa, el nudo se puede aflojar: revísalo cada vez antes de usarlo.
+cierre: >-
+  Para revisarlo: la gaza no se cierra cuando tiras del firme, y te sobra chicote, por lo menos el
+  largo de tu mano. Y si necesitas dos gazas en vez de una, el que sigue es el as de guía español.
