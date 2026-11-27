@@ -108,7 +108,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] La prueba con la voz de Gabriel (`prueba-voz-propia`): sus grabaciones de seis fichas, transcritas con Qwen3-ASR, y su voz clonada con Qwen3-TTS junto a la D (26 nov)
     - [x] Gabriel oyó su voz: le gustan las dos y prefiere la clonada, pero con sonido de estudio. Se bajó Sidon y la prueba suma la voz clonada de estudio (27 nov)
     - [x] Gabriel grabó una muestra nueva con el DJI en Audacity (27 nov)
-    - [ ] Gabriel oye la voz clonada de estudio desde la muestra nueva y decide si es la de los videos, y si su muestra va en el repositorio (público) o fuera de git. Si quiere grabar una muestra mejor, con el DJI Mic Mini, se vuelve a correr `prueba-voz-propia` con ella. Con eso T23 se cierra y su bloque pasa al historial
+    - [x] Gabriel eligió su voz clonada de estudio desde la muestra del DJI para los videos, con la muestra fuera de git, en `entradas/_voz/` (27 nov)
+    - [ ] Gabriel elige cómo se dice «Paso 2 de 7»: el «dos» le sonó mal y se le mandaron seis versiones. Con eso se ajusta la pronunciación, T23 se cierra y su bloque pasa al historial
   - [x] T24 El visor: material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`) (26 nov)
   - [x] Publicar el sitio con el visor nuevo (27 nov, a pedido de Gabriel: construido desde 23a88ae, `gh-pages` ac05c20; los visores del as de guía, el amarre cuadrado y la cabeza de turco cargan en línea sin errores, con el postprocesado en 2 a 8 ms)
   - [ ] Punto de control de T24: Gabriel abre el visor en la computadora y en un celular de gama baja (ya está en línea; con `?simple` en la dirección, el visor de antes)

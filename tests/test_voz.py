@@ -237,12 +237,24 @@ def test_qwen_disena_una_vez_y_clona_cada_texto(monkeypatch):
     assert len(llamadas) == 2
 
 
-def test_la_voz_elegida_esta_en_el_repositorio():
-    assert V.VOZ.nombre == "joven"
-    ruta = V.VOZ.ruta_referencia()
+def test_la_voz_d_esta_en_el_repositorio():
+    assert V.VOZ_D.nombre == "joven"
+    ruta = V.VOZ_D.ruta_referencia()
     assert ruta.exists() and ruta.stat().st_size > 100_000
-    assert V.VOZ.huella()["referencia"] == V._huella_archivo(ruta)
-    assert V.QwenTTS().muestra(V.VOZ) == (ruta, V.TEXTO_REFERENCIA)
+    assert V.VOZ_D.huella()["referencia"] == V._huella_archivo(ruta)
+    assert V.QwenTTS().muestra(V.VOZ_D) == (ruta, V.TEXTO_REFERENCIA)
+
+
+def test_la_voz_de_los_videos_es_la_de_gabriel_fuera_de_git(monkeypatch, tmp_path):
+    # Su muestra va en entradas/ (fuera de git), y cada locución pasa por Sidon.
+    assert V.VOZ.restaurar and V.VOZ.referencia.startswith("entradas/") and V.VOZ.texto_referencia
+    monkeypatch.setenv("NUDOS_ENTRADAS", str(tmp_path))
+    assert V.VOZ.ruta_referencia() == tmp_path / "_voz" / "gabriel-estudio.wav"
+    with pytest.raises(V.VozError):
+        V.VOZ.huella()                                      # sin la muestra, un error que dice cuál falta
+    (tmp_path / "_voz").mkdir()
+    (tmp_path / "_voz" / "gabriel-estudio.wav").write_bytes(b"muestra")
+    assert V.VOZ.huella()["referencia"] == V._huella_archivo(tmp_path / "_voz" / "gabriel-estudio.wav")
 
 
 def test_los_textos_de_la_prueba_salen_de_la_especificacion():
@@ -427,3 +439,13 @@ def test_una_voz_de_estudio_pasa_por_sidon(monkeypatch):
         assert np.allclose(b.audio, a.audio * 0.5, atol=1e-4)
     assert not (V.carpeta_cache() / "restauradas").exists()        # decir guarda solo la locución
     assert "restaurar" not in V.Voz("prueba").huella()
+
+
+def test_la_misma_voz_con_otra_semilla_es_otra_locucion():
+    callar = {"aviso": lambda *_: None, "alineador": False}
+    a = V.Voz("prueba", proveedor="falso")
+    b = V.Voz("prueba", proveedor="falso", semilla=432)
+    la, lb = V.decir([("Tira del firme.", a), ("Tira del firme.", b)], **callar)
+    assert la.huella != lb.huella
+    # Pedidas por separado dan las mismas: el caché distingue las dos.
+    assert V.locuciones(["Tira del firme."], b, **callar)[0].huella == lb.huella

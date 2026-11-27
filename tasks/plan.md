@@ -1230,6 +1230,11 @@ La cámara (las paradas y la aceleración) es de T22.
   - **Quedaron bajas:** −39 LUFS, con picos en −20 dBFS. En 24 bits no pierden nada, pero para grabar más conviene que los picos lleguen a unos −10 dBFS.
   - **La muestra** salió del nudo simple (9 s). La voz clonada desde ella queda seca y limpia; con Sidon, además, llega a 20 kHz.
   - **Para que la muestra se compare con la ficha,** cada archivo lleva el nombre de su nudo (`ballestrinque.wav`, `nudo simple.wav`).
+- **Lo que eligió Gabriel (27 nov):** su voz clonada de estudio desde la muestra del DJI es la de los videos (`voz.VOZ`); la D queda como `voz.VOZ_D`.
+  - **La muestra va fuera de git,** en `entradas/_voz/gabriel-estudio.wav`, con sus grabaciones y un LEEME, porque el repositorio es público y con ella cualquiera podría clonar su voz. `Voz.ruta_referencia()` busca las muestras de `entradas/` donde diga `NUDOS_ENTRADAS`, como en un worktree.
+  - **La voz tiene la misma huella que la de la prueba,** así que las locuciones que ya oyó no se vuelven a generar.
+  - **Un error que apareció al probar:** `decir` juntaba en el caché las voces con el mismo nombre, así que la misma voz con otra semilla salía idéntica. Ahora cada voz distinta cuenta aparte, y las huellas de antes no cambian.
+  - **«Paso 2 de 7»:** el «dos» le sonó mal en el video. El reconocimiento lo entiende y la «s» se ve en el espectrograma, así que es algo de cómo suena. Se le mandaron seis versiones del inicio del paso 2: como estaba, dos tomas con otra semilla, con una pausa («Paso dos, de siete»), «Paso número dos de siete» y «Segundo paso de siete».
 
 #### T24: El visor
 

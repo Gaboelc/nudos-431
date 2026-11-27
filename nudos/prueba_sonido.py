@@ -628,7 +628,7 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
     muestra_estudio = a_nivel(V.restaurar([muestra], aviso=aviso)[0])
     ruta_estudio = destino / "muestra-estudio.wav"
     _wav16(ruta_estudio, muestra_estudio, V.SR)
-    voces = (("voz-d", "Voz D", V.VOZ),
+    voces = (("voz-d", "Voz D", V.VOZ_D),
              ("clonada", "Clonada de tu grabación",
               V.Voz("gabriel", referencia=str(ruta_muestra.resolve()), texto_referencia=texto_muestra,
                     etiqueta="Gabriel, clonada de su grabación", limpiar=True)),

@@ -79,10 +79,15 @@ class Voz:
         return d
 
     def ruta_referencia(self) -> Path:
-        """La muestra, relativa a la raíz del repositorio si no es absoluta."""
+        """La muestra, relativa a la raíz del repositorio si no es absoluta. Las de `entradas/`
+        (fuera de git) se buscan donde diga NUDOS_ENTRADAS, como en un worktree."""
         from . import RAIZ
         p = Path(self.referencia)
-        return p if p.is_absolute() else RAIZ / p
+        if p.is_absolute():
+            return p
+        if p.parts and p.parts[0] == "entradas":
+            return Path(os.environ.get("NUDOS_ENTRADAS", RAIZ / "entradas")).joinpath(*p.parts[1:])
+        return RAIZ / p
 
 
 def _huella_archivo(ruta: Path) -> str:
@@ -114,11 +119,19 @@ VOCES_PRUEBA = (
         semilla=4314, etiqueta="Mujer de unos 45 años, serena y segura, como de documental"),
 )
 
-# La voz de los videos: Gabriel eligió la D de la prueba a ciegas, «joven», el 26 nov. Su muestra
-# (la que VoiceDesign creó con la semilla 4313) va en el repositorio, para que las locuciones de
-# los 36 nudos la clonen siempre igual aunque se borre el caché.
-VOZ = Voz("joven", referencia="sonido/voces/joven.wav", texto_referencia=TEXTO_REFERENCIA,
-          etiqueta="Hombre de unos 25 años, alegre y conversador")
+# La D de la prueba a ciegas, «joven», que Gabriel eligió el 26 nov antes de probar la suya. Su
+# muestra (la que VoiceDesign creó con la semilla 4313) va en el repositorio.
+VOZ_D = Voz("joven", referencia="sonido/voces/joven.wav", texto_referencia=TEXTO_REFERENCIA,
+            etiqueta="Hombre de unos 25 años, alegre y conversador")
+
+# La voz de los videos: la de Gabriel, clonada como de estudio (la eligió el 27 nov). La muestra
+# son 9 s de su lectura de la ficha del nudo simple con el DJI Mic Mini, limpios y pasados por
+# Sidon, y cada locución vuelve a pasar por Sidon. Va fuera de git, en entradas/_voz/, porque el
+# repositorio es público y con ella cualquiera podría clonar su voz; ver su LEEME.
+VOZ = Voz("gabriel-estudio", referencia="entradas/_voz/gabriel-estudio.wav",
+          texto_referencia=("Usa una de seis a diez milímetros de grosor que no sea rígida. Verificación se ve "
+                            "una sola vuelta con el chicote atravesándola."),
+          restaurar=True, etiqueta="Gabriel, como de estudio")
 
 
 # --------------------------------------------------------------------------
@@ -734,11 +747,12 @@ def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, av
         raise VozError(f"las voces de un mismo pedido usan un solo proveedor, no {sorted(nombres)}")
     prov = proveedor or PROVEEDORES[nombres.pop()]()
     cache = carpeta_cache()
-    voces = list({v.nombre: v for _, v in pedidos}.values())
+    # Cada voz distinta cuenta aparte, aunque comparta el nombre (otra semilla, otra muestra).
+    voces = list(dict.fromkeys(v for _, v in pedidos))
     prov.preparar(voces, aviso=aviso)
-    hv = {v.nombre: prov.huella_voz(v) for v in voces}
+    hv = {v: prov.huella_voz(v) for v in voces}
     piezas = [para_decir(t) for t, _ in pedidos]
-    huellas = [_huella(VERSION, prov.huella(), hv[v.nombre], texto_dicho(p))
+    huellas = [_huella(VERSION, prov.huella(), hv[v], texto_dicho(p))
                for (_, v), p in zip(pedidos, piezas)]
     faltan, vistas = [], set()
     for k, h in enumerate(huellas):
@@ -765,7 +779,7 @@ def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, av
             fuente = "proveedor" if tiempos else "estimados"
             tiempos = tiempos or estimar_tiempos(x, sr, piezas[k])
             _escribir_wav(cache / f"{huellas[k]}.wav", x, sr)
-            meta = {"texto": pedidos[k][0], "dicho": texto_dicho(piezas[k]), "voz": hv[pedidos[k][1].nombre],
+            meta = {"texto": pedidos[k][0], "dicho": texto_dicho(piezas[k]), "voz": hv[pedidos[k][1]],
                     "proveedor": prov.huella(), "sr": sr, "segundos": round(len(x) / sr, 3),
                     "tiempos": fuente, "palabras": [asdict(p) for p in tiempos]}
             (cache / f"{huellas[k]}.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1),
