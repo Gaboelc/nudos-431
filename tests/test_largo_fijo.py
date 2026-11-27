@@ -13,8 +13,9 @@ import numpy as np
 import pytest
 
 from nudos.animar import (ALTO_MANO, BOLSA_RAMPA, RADIO_GUIA, _cola, _inflar, _por_largo,
-                          _recorrido_largo, _tramo_largo_firme, _tramo_largo_punta, animar_largo,
-                          comprobar_poses, poses_video, radio_minimo)
+                          _recorrido_largo, _tramo_largo_enhebrar, _tramo_largo_firme,
+                          _tramo_largo_punta, animar_largo, comprobar_poses, poses_video,
+                          radio_minimo)
 from nudos.cruces import encontrar_cruces, secuencia_obtenida
 from nudos.fisica.asentar import separar
 from nudos.fisica.atar import FPS
@@ -163,6 +164,59 @@ def test_acercar_el_chicote_lo_lleva_la_mano(modelo_as_de_guia):
     recta = (A.X[-1] + B.X[-1]) / 2
     assert medio[-1, 2] > recta[2] + 0.8 * ALTO_MANO          # la punta va levantada
     assert np.allclose(tr.guia[f1].G, B.X)
+
+
+def _sin_saltos(tr, A, B, fin: str):
+    """La guía parte de A, llega a B al terminar la fase `fin` y no salta más de 0,5 d."""
+    G = [g.G for g in tr.guia]
+    assert np.max(np.linalg.norm(G[0] - A.X, axis=1)) < 0.05
+    assert np.max(np.linalg.norm(G[tr.fases[fin][1]] - B.X, axis=1)) < 0.05
+    assert max(float(np.max(np.linalg.norm(b - a, axis=1))) for a, b in zip(G[:-1], G[1:])) < 0.5
+    largo = np.array([np.sum(np.linalg.norm(np.diff(g, axis=0), axis=1)) for g in G]) / ((len(B.X) - 1) * B.h)
+    assert largo.min() > 0.98 and largo.max() < 1.05
+    return G
+
+
+def test_cada_paso_del_as_de_guia_se_ata_a_su_manera(modelo_as_de_guia):
+    # La punta enhebra en los pasos 4 a 7: con la cinta si ya está en el camino (4 y 7); si no,
+    # con el lazo o el barrido, según quepa la bolsa (6 y 5). Nunca por el aire con la cola
+    # suelta, que se amontonaba en un rollo.
+    PV = poses_video(modelo_as_de_guia)
+    assert [_tramo_largo_enhebrar(A, B).modo for A, B in zip(PV[2:-1], PV[3:])] == \
+        ["cinta", "barrido", "lazo", "cinta"]
+
+
+def test_pasar_bajo_el_firme_barre_la_cola(modelo_as_de_guia):
+    # Paso 5: la punta está lejos, al final de la cola acostada (23 d), y la bolsa del lazo se
+    # cruzaría a sí misma (las dos puntas de la bolsa van casi paralelas junto al nudo): la cola
+    # gira entera por debajo del firme, sin estirarse, y el firme sube mientras pasa.
+    PV = poses_video(modelo_as_de_guia)
+    A, B = PV[3], PV[4]
+    tr = _tramo_largo_enhebrar(A, B)
+    assert tr.modo == "barrido"
+    G = _sin_saltos(tr, A, B, "barrer")
+    h = B.h
+    s = np.arange(len(B.X)) * h
+    firme = min(min(c.sa, c.sb) for c in encontrar_cruces(A.X, h))     # donde empieza la gaza pequeña
+    cola = B.en_video((B.r1 - 1) * B.h_ficha)
+    for g in G[:tr.fases["barrer"][1] + 1]:
+        for c in encontrar_cruces(g, h):
+            lo, hi = sorted((c.sa, c.sb))
+            if lo < firme and hi >= cola:
+                assert np.interp(lo, s, g[:, 2]) > np.interp(hi, s, g[:, 2])   # el firme, encima
+
+
+def test_volver_por_encima_dobla_la_cola_en_un_lazo(modelo_as_de_guia):
+    # Paso 6: la cola acostada (15 d) se dobla, sin estirarse ni cruzarse, en una bolsa junto al
+    # firme; después la punta lo cruza por encima y la bolsa se achica hasta la vuelta del collar.
+    PV = poses_video(modelo_as_de_guia)
+    A, B = PV[4], PV[5]
+    tr = _tramo_largo_enhebrar(A, B)
+    assert tr.modo == "lazo" and {"aire", "enhebrar", "asentar"} <= set(tr.fases)
+    G = _sin_saltos(tr, A, B, "tirar")
+    cola = B.en_video((B.r1 - 1) * B.h_ficha)
+    for g in G:
+        assert not [c for c in encontrar_cruces(g, B.h) if min(c.sa, c.sb) >= cola]
 
 
 @pytest.mark.parametrize("n", [4, 7])

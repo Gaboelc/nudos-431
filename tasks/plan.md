@@ -973,6 +973,15 @@ La cámara (las paradas y la aceleración) es de T22.
   - En el as de guía, el chicote sube por la gaza pequeña mientras la gaza grande se achica hasta su tamaño (paso 4), y baja por ella mientras la vuelta del collar se aprieta (paso 7).
   - La curva empieza en la bolsa y no donde A y B se separan: las fichas de dos pasos, asentadas cada una por su lado, difieren en todo el nudo (el chicote que sube empuja la gaza pequeña más de 0,5 d), y con eso la curva se tragaba los cruces.
 - **La mano que acerca el chicote** (`_tramo_largo_firme(mano=True)`): en un paso «punta» en que la punta no pasa por ningún cruce nuevo (el paso 3 del as de guía), la mano toma la cuerda a 1,5 d de la punta y la lleva levantada hasta 1 d a mitad de camino, y todo va guiado nodo a nodo de A a B, con arranque y frenado de quinto grado. Con la punta por el aire y el resto suelto, el chicote se doblaba en un gancho. Con un anfitrión sigue yendo por el aire, porque la recta podría atravesarlo.
+- **El barrido y el lazo** (Gabriel, 27 nov: en el paso 5 la cola se enrollaba):
+  - En el paso 5 la mano traía la punta, 23 d lejos al final de la cola acostada, hasta junto al nudo para pasarla bajo el firme, y la cola suelta se amontonaba en un rollo.
+  - **El barrido** (`_tramo_largo_barrido`, `_mezcla_angular`): la cola gira entera, como un limpiaparabrisas, desde donde el paso se separa del anterior. Cada tramo va de su ángulo en A al de B y la cuerda se arma tramo a tramo, así que no se estira ni se encoge, y pasa por debajo del firme, que sube donde la cruza.
+    - Con la cola casi paralela al firme, el cruce corre hasta 1,7 d por cuadro: se sigue con 5 d de tolerancia (`_seguir_cruces(salto=)`), porque con 1 d cada cuadro era un cruce nuevo, con la cola encima, y la guía la subía 8 d.
+    - Lo que sube cada tramo se empareja en 9 cuadros (el máximo y después el promedio): el cruce aparecía y desaparecía junto a la punta del firme, que saltaba a 3300 d/s².
+    - Dura lo que tarda en girar, a 10 d/s, la cuerda a 15 d de donde empieza: unos 3 s.
+  - **El lazo** (`_lazo`, `_tramo_largo_lazo`): en el paso 6, la cola acostada se dobla, con la misma mezcla de ángulos, en una bolsa junto al firme: el camino de B hasta la entrada, inflado con toda la cuerda que sigue. Después la punta cruza el firme por encima y la bolsa se achica con la cinta. Doblarla mezclando los lugares nodo a nodo la dejaba un 1 % más corta a mitad de camino, y el motor la arrugaba.
+  - En el paso 5 el lazo no cabe: las dos puntas de la bolsa van casi paralelas junto al nudo, y 21 d de cuerda entre ellas se cruzan a sí mismos, en un ocho.
+  - El orden (`_tramo_largo_enhebrar`): la cinta si la punta ya está en el camino; si no, el lazo, el barrido y, si nada cabe o hay un anfitrión, el aire con lo de detrás suelto. En el as de guía: 4 cinta, 5 barrido, 6 lazo y 7 cinta; ninguno va por el aire.
 - **El resaltado, hasta la punta de la cuerda:** si la ficha resalta hasta su punta, el video resalta hasta la de la cuerda, con la cola acostada. Es el mismo chicote, y al enhebrar va adelante. En el paso 4 del as de guía, la punta subía por la gaza pequeña sin resaltar, y lo resaltado iba detrás, por el fondo de la gaza grande.
 - **La guía** (`_tramo_largo_punta`):
   - La mano toma la cuerda a 1,5 d de la punta: tres nodos, con 200 N/d.
@@ -1013,20 +1022,20 @@ La cámara (las paradas y la aceleración) es de T22.
 - **El video:** la velocidad de la línea de tiempo valía 0,9999999999999999 en vez de 1 (el promedio de unos), y `retiempo` corría un cuadro cada tanto.
 - **La medida del as de guía, antes y después** (`calidad`, el video entero):
 
-| | T21a (26 nov) | T21c (27 nov) | T21c con la bolsa (27 nov) |
+| | T21a (26 nov) | T21c (27 nov) | T21c con la bolsa, el barrido y el lazo (27 nov) |
 |---|---|---|---|
-| Duración | 45,2 s | 51,3 s | 42,0 s |
+| Duración | 45,2 s | 51,3 s | 40,2 s |
 | Nodos | de 357 a 550; cambian 281 veces | 550; no cambian | 550; no cambian |
-| Largo de la cuerda | de 71,0 a 109,8 d (35 %) | de 109,64 a 110,12 d (0,44 %) | de 109,63 a 110,05 d (0,39 %) |
+| Largo de la cuerda | de 71,0 a 109,8 d (35 %) | de 109,64 a 110,12 d (0,44 %) | de 109,63 a 109,97 d (0,31 %) |
 | Recoger y morph | 4,8 y 6,6 s | 0 y 3,3 s (la gaza pequeña) | 0 y 3,3 s (y 1,2 s de la mano que acerca el chicote) |
-| Aceleración p99 y máxima | 340 y 906 d/s² | 271 y 2192 d/s² (la cuerda que cae y se apoya) | 259 y 970 d/s² |
-| Brincos (más de 360 d/s²) | 7 | 6 | 4 |
+| Aceleración p99 y máxima | 340 y 906 d/s² | 271 y 2192 d/s² (la cuerda que cae y se apoya) | 194 y 970 d/s² (la gaza pequeña) |
+| Brincos (más de 360 d/s²) | 7 | 6 | 2 |
 | Picos y temblores | sin medir | 0 y 0 | 0 y 0 |
-| Paradas en seco de la punta | 74 | 45 (28 frenadas: cambios de rapidez) | 18 (16 frenadas) |
+| Paradas en seco de la punta | 74 | 45 (28 frenadas: cambios de rapidez) | 12 (11 frenadas) |
 | Resaltado vacío o a medias | 31 % de los cuadros | ninguno | ninguno |
 
-  Las fases del nudo, antes de la bolsa: 13,2 s en el aire, 8,3 enhebrando, 8,2 tirando de la cola, 3,3 la gaza pequeña, 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. Lo que más duraba era traer la punta por el aire, que no enseña nada. Con la bolsa, los pasos 3, 4 y 7 ya no van por el aire: 4,9 s en el aire, 9,9 enhebrando, 4,4 tirando, 4,5 acomodando (la gaza pequeña y el chicote que se acerca), 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. La cámara (14 paradas, quieta el 15 % del tiempo) es de T22.
-- **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9984 y 1,0023 del nominal y sin ningún pico ni temblor; unos 3 min de motor los seis a la vez.
+  Las fases del nudo, antes de la bolsa: 13,2 s en el aire, 8,3 enhebrando, 8,2 tirando de la cola, 3,3 la gaza pequeña, 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. Lo que más duraba era traer la punta por el aire, que no enseña nada. Con la bolsa, el barrido y el lazo ya nada va por el aire con la cola suelta: 3,2 s doblando la cola en el lazo del paso 6, 2,9 barriendo en el 5, 8,6 enhebrando, 2,6 tirando, 4,5 acomodando (la gaza pequeña y el chicote que se acerca), 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. La cámara (14 paradas, quieta el 16 % del tiempo) es de T22.
+- **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9984 y 1,0018 del nominal y sin ningún pico ni temblor; unos 3 min de motor los seis a la vez.
 
 #### T22: El video completo
 

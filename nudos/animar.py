@@ -248,12 +248,12 @@ def _rampa(x) -> float:
     return float(_suave(np.clip(x, 0.0, 1.0)))
 
 
-def _seguir_cruces(borradores, h, refs_A, refs_B, libre):
+def _seguir_cruces(borradores, h, refs_A, refs_B, libre, salto: float = 1.0):
     """Los cruces de la guía vista desde arriba en cada cuadro, seguidos de un cuadro al
-    siguiente, con su encima decidido para toda su vida: el de B si el cruce llega hasta el
-    final, el de A si está desde el principio, el del tramo que más se mueve si no. Un cruce de
-    A que llega a B con el encima al revés es una TrazadoError. Da, por cuadro, la lista de
-    (sa, sb, seno, primera encima)."""
+    siguiente (si se corren menos de `salto` a lo largo de las dos cuerdas), con su encima
+    decidido para toda su vida: el de B si el cruce llega hasta el final, el de A si está desde
+    el principio, el del tramo que más se mueve si no. Un cruce de A que llega a B con el encima
+    al revés es una TrazadoError. Da, por cuadro, la lista de (sa, sb, seno, primera encima)."""
     por_cuadro = [encontrar_cruces(b.G, h) if libre else [] for b in borradores]
     pistas = []          # [primer cuadro, último cuadro, [(cuadro, k)], (sa, sb) del último]
     activas = []
@@ -261,7 +261,7 @@ def _seguir_cruces(borradores, h, refs_A, refs_B, libre):
         nuevas = []
         libres = list(range(len(activas)))
         for k, c in enumerate(cruces):
-            mejor, dmin = None, 1.0
+            mejor, dmin = None, salto
             for j in libres:
                 ta, tb = activas[j][3]
                 d = abs(c.sa - ta) + abs(c.sb - tb)
@@ -1474,7 +1474,14 @@ def _cinta(A: PoseVideo, B: PoseVideo, V) -> _Cinta | None:
     # en todo el nudo (en el paso 4 del as de guía, el chicote que sube empuja la gaza pequeña
     # más de 0,5 d), y la curva no puede tragarse los cruces.
     i1 = int(math.floor(A.bolsa[0] / h + 1e-9))
-    s_ent = s2 - o - delta
+    return _cinta_de(A, B, u_ini, s2 - o - delta, j, i1)
+
+
+def _cinta_de(A: PoseVideo, B: PoseVideo, u_ini: float, s_ent: float, j: int, i1: int) -> _Cinta | None:
+    """La cinta con la punta de A en u_ini del camino de B, p* en s_ent (u) y la curva que se
+    achica de los nodos i1 a j de A (j: el que está en p*) a la cuerda de B de i1 a p*."""
+    h, o = B.h, B.o
+    s2 = j * h
     sB = o + s_ent
     if i1 * h > min(sB, s2) - 1.0:
         return None
@@ -1489,7 +1496,199 @@ def _cinta(A: PoseVideo, B: PoseVideo, V) -> _Cinta | None:
     return _Cinta(u_ini, s_ent, i1 * h, s2, TA, TB, pesos, np.minimum.accumulate(largos))
 
 
-def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
+LAZO_MIN = 4.0         # d: con menos cuerda de más que esto entre el nudo y la punta, la mano la
+                       # lleva por el aire con lo de detrás suelto (`_tramo_largo_punta`)
+
+
+def _entrada(refs_B, s0: float, u_ficha: float, u_fin: float, h: float) -> float:
+    """La entrada al camino de B (en u): ENTRADA antes del primer cruce nuevo, y al menos
+    ENTRADA_MIN después de donde B se separa de A (s0)."""
+    cerca = [max(a, b) for a, b, _ in refs_B if s0 - h <= max(a, b) <= u_ficha + 1e-6]
+    primero = min(cerca, default=None)
+    s_ent = s0 + ENTRADA_MIN if primero is None else max(primero - ENTRADA, s0 + ENTRADA_MIN)
+    return min(s_ent, u_fin)
+
+
+def _lazo(A: PoseVideo, B: PoseVideo, V):
+    """El lazo (T21c): la punta de A está lejos, al final de la cola acostada, y vuelve junto
+    al nudo para entrar al camino de B (a pasar bajo el firme en el paso 5 del as de guía). Por el
+    aire y con la cola suelta, la cola se amontonaba en un rollo junto al nudo (Gabriel, 27 nov).
+    La pose intermedia A' guarda toda esa cuerda en una bolsa: el camino de B desde donde se separa
+    de A hasta la entrada, inflado (`_inflar`), con la punta en la entrada y levantada por la mano.
+    Da (A', la cinta de A' a B), o None si la cuerda de más es poca o la bolsa no cabe."""
+    import dataclasses
+    h, N, o = B.h, len(B.X), B.o
+    s_tip = (N - 1) * h
+    u_fin = s_tip - o
+    s0 = B.en_video((B.r1 - 1) * B.h_ficha) - o
+    refs_B = [(a - o, b - o, e) for a, b, e in _referencia(B.X, h) if min(a, b) >= o - 1e-9]
+    s_ent = _entrada(refs_B, s0, B.fin - o, u_fin, h)
+    i1 = int(math.ceil((o + s0) / h - 1e-9))
+    sa = i1 * h
+    if sa > o + s_ent - 1.0:
+        return None
+    P, _ = _tramo_fino(V, h, sa - o, s_ent, h / 4)
+    largo = s_tip - sa
+    sobra = largo - float(np.sum(np.linalg.norm(np.diff(P, axis=0), axis=1)))
+    if sobra < LAZO_MIN:
+        return None
+    Y = _inflar(P, sobra)
+    if Y is None:
+        return None
+    sig = np.arange(N) * h
+    uV = np.arange(len(V)) * h
+    # Lo que la bolsa no puede pisar: el nudo de B y el camino que la punta va a hacer.
+    resto = np.vstack([B.X[sig < sa - BOLSA_VECINOS], V[uV > s_ent + BOLSA_VECINOS]])
+    if not _bolsa_cabe(Y, P, resto, h):
+        return None
+    Xp = B.X.copy()
+    l = _largos_acum(Y)
+    ell = (sig[i1:] - sa) * l[-1] / largo
+    Xp[i1:] = np.column_stack([np.interp(ell, l, Y[:, i]) for i in range(3)])
+    # La mano lleva la punta levantada, y lo de detrás baja en DETRAS_MANO.
+    uh = s_tip - PINZA
+    Xp[:, 2] += ALTO_MANO * np.where(sig >= uh, 1.0, _suave(1 - (uh - sig) / DETRAS_MANO))
+    Ap = dataclasses.replace(B, X=Xp, cola=0.0, bolsa=(sa, s_tip, sobra), bolsa_ficha=None)
+    cinta = _cinta_de(Ap, B, s_ent, s_ent, N - 1, i1)
+    return None if cinta is None else (Ap, cinta)
+
+
+BARRIDO_RADIO = 15.0   # d: el barrido dura lo que tarda en girar, a VEL_AIRE, la cuerda a esto de
+                       # donde empieza a girar (la punta, lejos, va más rápido). Con 10, lo que se
+                       # ve de la cola pasaba a 19 d/s en el medio del giro
+DOBLAR_RADIO = 10.0    # d: lo mismo para la cola que se dobla en la bolsa del lazo
+BARRIDO_MAX = 0.9 * math.pi   # lo que puede girar la cola: más que eso ya no es un barrido
+BARRIDO_SUAVE = 9      # cuadros: lo que sube cada tramo sobre un cruce, parejo en este tiempo
+BARRIDO_SALTO = 5.0    # d: con la cola casi paralela al firme, el cruce corre por los dos hasta
+                       # 1,7 d por cuadro; con el seguimiento de siempre (1 d), cada cuadro era un
+                       # cruce nuevo, con la cola encima, y la guía la subía 8 d
+
+
+def _mezcla_angular(A: PoseVideo, B: PoseVideo, ia: int, maximo: float = math.inf,
+                    asentar: bool = True, fase: str = "barrer", modo: str = "barrido",
+                    radio: float = BARRIDO_RADIO) -> Tramo | None:
+    """La guía de A a B que mezcla los ángulos de la cuerda desde el nodo ia (T21c): cada tramo
+    gira de su ángulo en A al de B (visto desde arriba) y se alarga de su largo en A al de B, y la
+    cuerda se arma tramo a tramo desde ia, así que no se estira ni se encoge (mezclando los
+    lugares nodo a nodo, la cola que se dobla queda más corta que la cuerda a mitad de camino, y
+    el motor la arrugaba). Lo de antes de ia va nodo a nodo. Lo que se cruza sube con `alturas`
+    (el firme, sobre la cola que pasa por debajo). None si algún tramo gira más que `maximo`.
+    Sin `asentar`, no lleva el asentado del final (lo sigue otro tramo)."""
+    h, N = B.h, len(B.X)
+    dA, dB = np.diff(A.X[ia:, :2], axis=0), np.diff(B.X[ia:, :2], axis=0)
+    lA, lB = np.linalg.norm(dA, axis=1), np.linalg.norm(dB, axis=1)
+    tA = np.unwrap(np.arctan2(dA[:, 1], dA[:, 0]))
+    tB = np.unwrap(np.arctan2(dB[:, 1], dB[:, 0]))
+    tB = tB - 2 * math.pi * round((tB[0] - tA[0]) / (2 * math.pi))
+    giro = tB - tA
+    if float(np.max(np.abs(giro))) > maximo:
+        return None
+    zA, zB = A.X[ia:, 2], B.X[ia:, 2]
+    seg = max(ACOMODAR_MIN, float(np.max(np.abs(giro))) * radio / VEL_AIRE)
+    nf = max(int(round(seg * FPS)), 2)
+    S, Bx = A.X, B.X
+    mov = np.linalg.norm(Bx - S, axis=1)
+    refs_A, refs_B = _referencia(S, h), _referencia(Bx, h)
+    c = int(round(((N - 1) * h - PINZA) / h))
+    manos = [0, c - 1, c, c + 1]
+    borr = []
+    for f in range(nf + 1):
+        w = float(_suave5(f / nf))
+        env = math.sin(math.pi * w)
+        G = S + w * (Bx - S)
+        th = tA + w * giro
+        ll = lA + w * (lB - lA)
+        G[ia + 1:, :2] = G[ia, :2] + np.cumsum(ll[:, None] * np.column_stack([np.cos(th), np.sin(th)]), axis=0)
+        G[ia:, 2] = zA + w * (zB - zA)
+        borr.append(_Borrador(G=G, n=N, manos=manos, hasta=(N - 1) * h, mov=mov,
+                              holgura=lambda a, b, env=env: (HOLGURA * env, 1.0),
+                              exacto=Bx if f == nf else (S if f == 0 else None)))
+    cruces = _seguir_cruces(borr, h, refs_A, refs_B, True, salto=BARRIDO_SALTO)
+    # Lo que sube cada tramo, parejo en el tiempo: el máximo de BARRIDO_SUAVE cuadros, promediado.
+    # Con la cola casi paralela al firme, el cruce aparecía y desaparecía junto a la punta del
+    # firme, que saltaba (un pico de 3300 d/s²).
+    from scipy.ndimage import maximum_filter1d, uniform_filter1d
+    base = np.array([b.G[:, 2] for b in borr])
+    sube = np.array([alturas(b.G, h, cr, b.holgura) for b, cr in zip(borr, cruces)]) - base
+    sube = uniform_filter1d(maximum_filter1d(sube, BARRIDO_SUAVE, axis=0, mode="nearest"),
+                            BARRIDO_SUAVE, axis=0, mode="nearest")
+    guia = []
+    for f, b in enumerate(borr):
+        G = b.G.copy()
+        G[:, 2] = base[f] + sube[f]
+        if b.exacto is not None:
+            G = b.exacto.copy()
+        guia.append(_cuadro_largo(G, h, np.full(N, RESORTE), manos, suelto=False,
+                                  largos=_largos_de(A, B, float(_suave5(f / nf)))))
+    fases = {fase: (0, nf)}
+    if asentar:
+        guia += _asentado(A, B)
+        fases["asentar"] = (nf + 1, len(guia) - 1)
+    return Tramo(B.n, modo, S.copy(), Bx.copy(), guia, fases)
+
+
+def _tramo_largo_barrido(A: PoseVideo, B: PoseVideo) -> Tramo | None:
+    """La guía del paso A al B por un barrido (T21c): la cola gira entera, como un
+    limpiaparabrisas, hasta su lugar en B (`_mezcla_angular`), y pasa por debajo (o por encima)
+    de lo que cruza, que sube mientras pasa. Es pasar el chicote por debajo del firme en el paso
+    5 del as de guía: la cola de 23 d está acostada arriba a la izquierda y termina a la derecha.
+    Traer la punta junto al nudo la amontonaba en un rollo, y con dos puntas casi paralelas junto
+    al nudo la bolsa del lazo se cruzaba a sí misma (Gabriel, 27 nov). None si la cola gira más
+    que BARRIDO_MAX (no es un barrido) o si A y B no tienen el mismo depósito."""
+    h, N, o = B.h, len(B.X), B.o
+    if abs(A.o - o) > 1e-9:
+        return None
+    s0 = B.en_video((B.r1 - 1) * B.h_ficha) - o
+    ia = int(math.ceil((o + s0) / h - 1e-9))
+    if ia > N - 4:
+        return None
+    return _mezcla_angular(A, B, ia, maximo=BARRIDO_MAX)
+
+
+def _tramo_largo_enhebrar(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
+    """La guía de un paso «punta» en que la punta pasa por algún cruce nuevo, por la primera
+    manera que sirve: si la punta de A ya está en el camino de B, la cinta (la bolsa de A se achica
+    mientras la mano tira); si no, el lazo (la cola se dobla en una bolsa junto a la entrada y
+    después se achica), el barrido (la cola gira entera por debajo de lo que cruza) y, si nada de
+    eso cabe o hay un anfitrión (que ni la bolsa ni el barrido conocen), por el aire con lo de
+    detrás suelto (`_tramo_largo_punta`)."""
+    h, N, o = B.h, len(B.X), B.o
+    nV = int(math.floor(((N - 1) * h - o) / h + 1e-9)) + 1
+    V = np.array([_en(B.X, h, o + i * h) for i in range(nV)])
+    cinta = _cinta(A, B, V)
+    if cinta is None and solido is None:
+        tr = _tramo_largo_lazo(A, B) or _tramo_largo_barrido(A, B)
+        if tr is not None:
+            return tr
+    return _tramo_largo_punta(A, B, solido, cinta=cinta)
+
+
+def _tramo_largo_lazo(A: PoseVideo, B: PoseVideo) -> Tramo | None:
+    """La guía del paso A al B por el lazo (`_lazo`): la mano trae la punta hasta la entrada y la
+    cola se dobla, guiada, hasta la bolsa (`_mezcla_angular`, sin estirarse), y después tira por el
+    camino y la bolsa se achica, como la gaza grande al subir el chicote por la gaza pequeña (la
+    cinta de `_tramo_largo_punta`). Es volver por encima del firme en el paso 6 del as de guía.
+    None si no va por el lazo: la punta ya está en el camino (cinta) o la cuerda de más es poca o
+    no cabe."""
+    h, N, o = B.h, len(B.X), B.o
+    nV = int(math.floor(((N - 1) * h - o) / h + 1e-9)) + 1
+    V = np.array([_en(B.X, h, o + i * h) for i in range(nV)])
+    if _cinta(A, B, V) is not None:
+        return None
+    lazo = _lazo(A, B, V)
+    if lazo is None:
+        return None
+    Ap, cinta = lazo
+    t1 = _mezcla_angular(A, Ap, int(round(Ap.bolsa[0] / h)), asentar=False, fase="aire", modo="lazo",
+                         radio=DOBLAR_RADIO)
+    t2 = _tramo_largo_punta(Ap, B, cinta=cinta)
+    n1 = len(t1.guia)
+    fases = {"aire": (0, n1 - 1)}
+    fases.update({k: (a + n1, b + n1) for k, (a, b) in t2.fases.items()})
+    return Tramo(B.n, "lazo", A.X.copy(), B.X.copy(), t1.guia + t2.guia, fases)
+
+
+def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None, cinta=None) -> Tramo:
     """La guía del paso A al B con largo fijo, cuando B sigue el camino de A desde el firme y
     cambia hacia la punta (T21c). La mano toma la cuerda a PINZA de la punta, la lleva por el aire
     hasta el camino nuevo, la enhebra por él (los tramos de encima suben con `alturas`, como en
@@ -1498,9 +1697,10 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
     al tirar. La pierna que va del nudo a la entrada vuelve a su lugar cuando queda poca cuerda
     por pasar.
 
-    Si la punta de A ya está en el camino de B (`_cinta`), no hay aire: la mano la toma ahí y
-    tira, y la cuerda que todavía no pasó es la bolsa de A, que se achica guiada hasta la forma de
-    B (la gaza grande del as de guía al subir el chicote por la gaza pequeña)."""
+    Si la punta de A ya está en el camino de B (`_cinta`, o la que se le da), no hay aire: la
+    mano la toma ahí y tira, y la cuerda que todavía no pasó es la bolsa de A, que se achica
+    guiada hasta la forma de B (la gaza grande del as de guía al subir el chicote por la gaza
+    pequeña)."""
     h, N, o = B.h, len(B.X), B.o
     s_tip = (N - 1) * h
     u_fin = s_tip - o
@@ -1510,7 +1710,7 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
     # El camino de llegada, desde σ = o: la ficha de B y su cola, en u = σ − o.
     nV = int(math.floor(u_fin / h + 1e-9)) + 1
     V = np.array([_en(B.X, h, o + i * h) for i in range(nV)])
-    cinta = _cinta(A, B, V)
+    cinta = cinta or _cinta(A, B, V)
     # Los cruces de A que cuentan son los del tramo que ya está donde va a quedar (hasta s0): lo
     # que sigue (la punta vieja y la cola de más) cambia de lugar, y un cruce suyo por encima
     # puede ser, en B, uno por debajo en el mismo lugar de la cuerda. Lo de B, sin el depósito,
@@ -1524,9 +1724,7 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
     nuevos = [c for c in refs_B if umbral - h <= max(c[0], c[1]) <= u_ficha + 1e-6]
     cerca = [max(a, b) for a, b, _ in nuevos]
     if cinta is None:
-        primero = min(cerca, default=None)
-        s_ent = s0 + ENTRADA_MIN if primero is None else max(primero - ENTRADA, s0 + ENTRADA_MIN)
-        s_ent = min(s_ent, u_fin)
+        s_ent = _entrada(refs_B, s0, u_ficha, u_fin, h)
         # El aire: de la punta, donde está, a la entrada, levantada ALTO_MANO.
         m = max(1, int(round(0.6 / h)))
         t_ini = A.X[-1] - A.X[-1 - m]
@@ -1673,7 +1871,8 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
 VEL_DESLIZAR = 8.0     # d/s: el firme que corre a lo largo de sí mismo
 
 
-def _tramo_largo_firme(A: PoseVideo, B: PoseVideo, mano: bool = False) -> Tramo:
+def _tramo_largo_firme(A: PoseVideo, B: PoseVideo, mano: bool = False, asentar: bool = True,
+                       vel: float = VEL) -> Tramo:
     """La guía del paso A al B con largo fijo cuando B sigue igual hacia la punta y la cuerda que
     gana entra por el firme (la gaza pequeña del as de guía, que se forma en el medio): cada nodo
     va en línea recta de su lugar en A al de B, con las alturas de los cruces y arranque y frenado
@@ -1684,7 +1883,9 @@ def _tramo_largo_firme(A: PoseVideo, B: PoseVideo, mano: bool = False) -> Tramo:
     Con `mano`, es un paso «punta» en el que la punta no pasa por ningún cruce nuevo (acercar el
     chicote a la gaza pequeña del as de guía): la mano toma la cuerda a PINZA de la punta y la
     lleva levantada hasta ALTO_MANO a mitad de camino, y lo de detrás baja en DETRAS_MANO. Por el
-    aire y con lo de detrás suelto, el chicote se doblaba en un gancho (T21c)."""
+    aire y con lo de detrás suelto, el chicote se doblaba en un gancho (T21c). Sin `asentar`, no
+    lleva el asentado del final (lo sigue otro tramo, como en `_tramo_largo_lazo`), y `vel` es la
+    de lo que más se mueve."""
     h, N = B.h, len(B.X)
     S, Bx = A.X, B.X
     sig = np.arange(N) * h
@@ -1699,7 +1900,7 @@ def _tramo_largo_firme(A: PoseVideo, B: PoseVideo, mano: bool = False) -> Tramo:
     mov = np.linalg.norm(Bx - S, axis=1)
     medio = mov[np.linalg.norm(Bx - np.array([_en(S, h, s + A.o - B.o) for s in np.arange(N) * h]),
                                axis=1) > 0.25]
-    seg = max(ACOMODAR_MIN, float(medio.max()) / VEL if len(medio) else 0.0, (A.o - B.o) / VEL_DESLIZAR)
+    seg = max(ACOMODAR_MIN, float(medio.max()) / vel if len(medio) else 0.0, (A.o - B.o) / VEL_DESLIZAR)
     nf = max(int(round(seg * FPS)), 2)
     refs_A, refs_B = _referencia(S, h), _referencia(Bx, h)
     borr = []
@@ -1721,8 +1922,9 @@ def _tramo_largo_firme(A: PoseVideo, B: PoseVideo, mano: bool = False) -> Tramo:
         guia.append(_cuadro_largo(G, h, np.full(N, RESORTE), manos, suelto=False,
                                   largos=_largos_de(A, B, float(_suave5(f / nf)))))
     fases = {"acomodar": (0, nf)}
-    guia += _asentado(A, B)
-    fases["asentar"] = (nf + 1, len(guia) - 1)
+    if asentar:
+        guia += _asentado(A, B)
+        fases["asentar"] = (nf + 1, len(guia) - 1)
     return Tramo(B.n, "mano" if mano else "firme", S.copy(), Bx.copy(), guia, fases)
 
 
@@ -1739,7 +1941,7 @@ def animar_largo(A: PoseVideo, B: PoseVideo, solido=None) -> Animado:
     # Si la punta no pasa por ningún cruce nuevo, la mano la lleva y todo va guiado nodo a nodo;
     # con un anfitrión no, que la recta lo atravesaría.
     if B.modo == "punta" and (B.enhebra or solido is not None):
-        tr = _tramo_largo_punta(A, B, solido)
+        tr = _tramo_largo_enhebrar(A, B, solido)
     else:
         tr = _tramo_largo_firme(A, B, mano=B.modo == "punta")
     c = seguir(tr.x0, tr.guia, solido)
