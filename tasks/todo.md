@@ -93,7 +93,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [ ] T21c La guía nueva, el tiempo y la gravedad, con el as de guía; prueba de 10 s y punto de control
       - [x] La guía con la mano que agarra, lo suelto con su peso y el tiempo de quinto grado; los seis tramos del as de guía sin fallas (27 nov)
       - [x] La medida de `calidad`: 550 nodos fijos, el largo a 0,44 %, sin picos ni temblores y el resaltado siempre entero (27 nov)
-      - [ ] La previa entera y la prueba de 10 s en 4K
+      - [x] La previa entera (`build/videos/as-de-guia/as-de-guia-previa.mp4`, 51 s, 27 nov)
+      - [x] La prueba de 10 s en 4K (`build/videos/as-de-guia/as-de-guia-prueba-4k.mp4`, el paso 4; 62 min de render, 27 nov)
       - [ ] Punto de control: Gabriel revisa la previa y la prueba de 10 s
       - [ ] La gaza pequeña (el paso «firme») todavía se infla en línea recta
     - [ ] T21d La madeja, con el amarre cuadrado; prueba de 10 s y punto de control
