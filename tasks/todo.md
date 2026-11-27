@@ -85,7 +85,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] T20b El aspecto elegido en los videos (`nudos/aspecto.py`, `render/blender/video.py`), sin el modo video viejo de `escena.py`, y la prueba de 10 s en 4K (`video <slug> --prueba`) (26 nov)
     - [x] Punto de control: Gabriel aprobó la prueba de 10 s en 4K del as de guía (26 nov)
     - [ ] Gabriel decide el costo del render: en el video, Cycles con 16 muestras va a unos 6 s por cuadro de 4K (7,7 en promedio con la máquina ocupada): de 20 a 25 días para los 36, no 14
-    - [ ] T20c Las fichas, solo si se nota en papel
+    - [x] T20c Las fichas: Gabriel decidió que no hace falta (26 nov); las fichas quedan como están
   - [ ] T21 El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga (XL; la sesión del plan)
     - [x] T21a Medir el movimiento de hoy: `python -m nudos calidad` (`nudos/fisica/calidad.py`), con la medida de los dos pilotos en el plan (26 nov)
     - [ ] Punto de control: Gabriel aprueba el diseño de T21 (en el plan, con la medida y la meta)
@@ -108,8 +108,9 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] La prueba con la voz de Gabriel (`prueba-voz-propia`): sus grabaciones de seis fichas, transcritas con Qwen3-ASR, y su voz clonada con Qwen3-TTS junto a la D (26 nov)
     - [ ] Gabriel oye la prueba con su voz y decide con qué voz van los videos: la D, la suya clonada o la suya grabada. Con eso T23 se cierra y su bloque pasa al historial
   - [x] T24 El visor: material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`) (26 nov)
-  - [ ] Punto de control de T24: Gabriel abre el visor en la computadora y en un celular de gama baja
-  - [ ] Borrar los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel)
+  - [x] Publicar el sitio con el visor nuevo (27 nov, a pedido de Gabriel: construido desde 23a88ae, `gh-pages` ac05c20; los visores del as de guía, el amarre cuadrado y la cabeza de turco cargan en línea sin errores, con el postprocesado en 2 a 8 ms)
+  - [ ] Punto de control de T24: Gabriel abre el visor en la computadora y en un celular de gama baja (ya está en línea; con `?simple` en la dirección, el visor de antes)
+  - [x] Borrar los 36 GB de cuadros viejos del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel; 27 nov: los 1080 cuadros del 25 nov, 35,9 GB. Quedan los 585 de la prueba de 10 s, 14,6 GB, y los `atado` de los dos pilotos)
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36
 - [ ] Punto de control de la fase 5
 

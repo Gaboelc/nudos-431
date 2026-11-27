@@ -847,6 +847,8 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
 
 **T20c, las fichas (S, solo si se nota en papel).** La trenza nueva entra a las imágenes de impresión solo si la página de prueba impresa, en color y en gris, se ve mejor (la regla de T7b). Si no, las fichas no cambian. `referencia` y `comparar` muestran qué se movió.
 
+**T20c no se hace:** Gabriel decidió que no hace falta (26 nov). Las fichas quedan como están, con la cuerda de siempre.
+
 #### T21: El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga
 
 **Solo cambia el modo «atar».** Asentar y apretar no se tocan: todo cambio en `nudos/fisica/` entra con valores por omisión que dejan todo como hoy. `referencia` y `comparar --reimprimir` comprueban que los 36 `modelo.json` y las imágenes no cambian, como en T15f, y la huella de `tests/test_apretar.py` tampoco.
@@ -1231,6 +1233,7 @@ La cámara (las paradas y la aceleración) es de T22.
 - **Sin SMAA:** dejaba un filo claro en el borde de la cuerda y de los palos, porque el fondo del visor es transparente. Por lo mismo, el `OutputPass` divide por el alfa antes del tonemap y vuelve a multiplicar después.
 - **Lo copiado** a `sitio/vendor/` (con permiso de Gabriel; anotado en `LEEME.txt`): 13 complementos de three@0.160.0 (el paquete, comprobado contra el hash de npm; el `three.module.min.js` del sitio es idéntico al del paquete) y 7 archivos de lygia del commit aa7580b, como texto dentro de `lygia/lygia.js` (el sitio no publica `.glsl`), con `LICENCIA.txt`.
 - **Pruebas:** `tests/test_visor.py`: cada módulo encuentra lo que importa, la impresión no carga el visor físico, lygia va con su licencia y el visor carga sin errores con y sin `?simple`.
+- **Publicado** (27 nov, a pedido de Gabriel): el sitio, construido desde 23a88ae (`gh-pages` ac05c20). Como la carpeta de A: era de otra sesión, `scripts/publicar.sh` corrió desde un clon nuevo de GitHub en `main`, con el venv de A:. En línea, los visores del as de guía, el amarre cuadrado y la cabeza de turco cargan sin errores en la consola, con el postprocesado (de 2 a 8 ms por cuadro en la RTX 4070), y con `?simple`, sin él. Falta el punto de control en un celular de gama baja.
 
 #### Los repositorios sugeridos: qué se usa y por qué
 
