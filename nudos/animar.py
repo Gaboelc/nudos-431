@@ -738,9 +738,11 @@ PINZA = 1.5            # d: la mano toma la cuerda a esto de la punta, así que 
 PUNTA_GUIA = 2.0       # d: lo que lleva la mano, desde la punta
 ENTRADA = 2.5          # d: la punta entra al camino nuevo esto antes de su primer cruce nuevo
 ENTRADA_MIN = 1.5      # d: y al menos esto después de donde el paso se separa del anterior
+MEZCLA = 2.0           # d: lo que tarda el aire en juntarse con el camino a la entrada
 VEL_AIRE = 10.0        # d/s: la mano que trae la punta por el aire (no enseña nada: rápido)
 VEL_TIRAR = 10.0       # d/s: la mano que tira de la cola, ya enhebrada
-SUAVIZAR = 1.0         # d: los cambios de velocidad de la mano se reparten en esto (dos veces)
+SUAVIZAR = 2.5         # d: los cambios de velocidad de la mano se reparten en esto (dos veces);
+                       # con 1 d, la punta llegaba a frenar 80 d/s² al pasar de 10 a 2,5 d/s
 ARRANQUE_LARGO = 0.5   # s: lo que tardan el arranque y el frenado (de quinto grado)
 VISC_LIBRE = 0.0       # N·s/d: el aire casi no frena la cuerda suelta, que cuelga y cae
 FLOJO = 3.0            # d: con menos cuerda por pasar, la de la entrada vuelve a su lugar
@@ -1156,9 +1158,12 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
         # La mano lleva la punta levantada ALTO_MANO, y lo de detrás baja en DETRAS_MANO: va en
         # la guía antes de las alturas, para que el tramo de encima de un cruce suba por encima
         # de la punta levantada (como en T17). Si no, quedaban tocándose y la punta se trababa.
+        # Lo que viene por delante, por donde va a pasar la punta, también va levantado: cortado
+        # en la punta, la punta caía entre un nodo levantado y otro no, y su altura iba y venía
+        # 1 d cada vez que pasaba un nodo.
         u = uV[:n_v]
         uh = ut - PINZA
-        mano = (u >= s_ent - 1e-9) & (u <= ut + 1e-9)
+        mano = u >= s_ent - 1e-9
         w = np.where(u >= uh, 1.0, _suave(1 - (uh - u) / DETRAS_MANO))
         G[mano, 2] += ALTO_MANO * lifts[f] * w[mano]
 
@@ -1195,12 +1200,17 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None) -> Tramo:
         uj = ut - (s_tip - sig)
         enhebrado = (uj >= s_ent - 1e-9) & ~prefijo
         sel = (punta | enhebrado) & ~prefijo
+        # El aire llega a la entrada levantado ALTO_MANO sobre la ficha, pero el camino puede ir ahí
+        # más alto (sube sobre un cruce): los últimos MEZCLA d del aire se acomodan a él en cada
+        # cuadro. Si no, la punta y, 1,5 d después, la mano saltaban al entrar.
+        junta = _en(Vf, h, s_ent) - E
         for j in np.flatnonzero(sel):
             u = uj[j]
             if u >= s_ent - 1e-9:
                 p = _en(Vf, h, u)          # ya con la punta levantada
             elif u >= u_ini:
                 p = np.array([np.interp(u - u_ini, lq, Q[:, i]) for i in range(3)])
+                p = p + junta * float(_suave5((u - (s_ent - MEZCLA)) / MEZCLA))
             else:
                 p = _en(A.X, h, s_tip - (u_ini - u))
             G[j] = p

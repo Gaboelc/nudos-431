@@ -169,13 +169,15 @@ class Sistema:
         return E, g, H
 
     def paso(self, x, v=None, dt: float | None = None, amortiguacion: float = 2.0,
-             viscosidad: float = 0.0) -> Paso:
+             viscosidad: float = 0.0, rayleigh: float = 0.0) -> Paso:
         """Un paso desde la cuerda en x (N, 3) con velocidad v. Con `dt` (en segundos), Euler
         implícito, con un roce viscoso `viscosidad` (N·s/d, uno para todos los nodos o uno por
-        nodo); sin `dt`, cuasiestático, con `amortiguacion` (N/d por nodo). Los nodos fijos
-        quedan donde están en x."""
+        nodo) y, con `rayleigh` (en s), una amortiguación proporcional a la rigidez de la cuerda:
+        frena sus cambios de forma en ese tiempo sin frenar la caída por su peso (T21). Sin `dt`,
+        cuasiestático, con `amortiguacion` (N/d por nodo). Los nodos fijos quedan donde están en x."""
         x0 = np.asarray(x, float).reshape(self.N, 3)
         v0 = np.zeros_like(x0) if v is None else np.asarray(v, float).reshape(self.N, 3)
+        D = None
         if dt is None:
             A = np.full(3 * self.N, amortiguacion)
             meta = x0.ravel()
@@ -186,6 +188,19 @@ class Sistema:
             visc = np.broadcast_to(np.asarray(viscosidad, float), (self.N,))
             A = np.repeat(self.masa, 3) / dt ** 2 + np.repeat(visc, 3) / dt
             meta = (x0 + dt * v0 * (self.masa / (self.masa + visc * dt))[:, None]).ravel()
+            if rayleigh > 0:
+                # La rigidez de las varillas en x0 (estiramiento y flexión, proyectada), sin los
+                # resortes de la guía: la amortiguación es de la cuerda, no de la mano.
+                bloques = []
+                for var, a, b in zip(self.varillas, self.cortes[:-1], self.cortes[1:]):
+                    r = var.evaluar(x0.ravel()[3 * a:3 * b], 2, True)
+                    if r[2] is None:
+                        bloques = None
+                        break
+                    bloques.append(r[2])
+                if bloques:
+                    D = (rayleigh / dt) * sp.block_diag(bloques, format="csr")
+        x0r = x0.ravel()
         m = self.malla
         roce = m.roce_retrasado(x0, self.kappa, self.eps_roce) if m is not None and self.roce else None
         if roce is not None and len(roce) == 0:
@@ -194,6 +209,10 @@ class Sistema:
         def evaluar(y, orden, proyectar=False):
             d = y - meta
             inercia = 0.5 * float(np.sum(A * d * d))
+            if D is not None:
+                e = y - x0r
+                De = D @ e
+                inercia += 0.5 * float(e @ De)
             if orden == 0:
                 E = self.elastica(y, 0) + inercia
                 if m is not None:
@@ -205,6 +224,9 @@ class Sistema:
             E += inercia
             g = g + A * d
             H = H + sp.diags(A, format="csr")
+            if D is not None:
+                g = g + De
+                H = H + D
             for parte in ((m.barrera(y, self.kappa),) if m is not None else ()) +                     ((roce.evaluar(y),) if roce is not None else ()):
                 E += parte[0]
                 g = g + parte[1]

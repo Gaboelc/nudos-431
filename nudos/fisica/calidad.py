@@ -18,7 +18,9 @@ Mide en los cuadros que ve quien mira el video lo que lo hace verse tosco:
   cambia de sentido una sola vez.
 - **Las paradas en seco** de la punta: veces en que su aceleración pasa de SECO. Pasar de 5 a 2,5
   d/s en un cuadro son 150 d/s², mientras que la mano de T17 llega a su velocidad en 0,3 s, a
-  unos 17 d/s².
+  unos 17 d/s². Esa aceleración también cuenta las curvas: a 10 d/s, una vuelta de 2 d de radio
+  ya son 50 d/s². Por eso están también las **frenadas en seco** (T21): veces en que lo que
+  cambia es la rapidez de la punta, más de SECO.
 - **Las paradas:** veces en que todo deja de moverse, y la parte de los cuadros en que nada se
   mueve. En la cuerda son las pausas; en la cámara, cuando se congela.
 
@@ -79,13 +81,15 @@ def medir(cuadros, fps: float, fases=None, punta: int = -1) -> dict:
         vel.append(rapidez.max())
         v_punta.append(rapidez[punta])
         movido.append(rapidez.max() >= QUIETO)
-    acel, a_punta = [], []
+    acel, a_punta, frena = [], [], []
     for k in range(1, n - 1):
         if not (igual[k - 1] and igual[k]):
             continue
         a = np.linalg.norm(X[k + 1] - 2 * X[k] + X[k - 1], axis=1) * fps * fps
         acel.append(a.max())
         a_punta.append(a[punta])
+        rapidez = [float(np.linalg.norm(X[j + 1][punta] - X[j][punta])) * fps for j in (k - 1, k)]
+        frena.append(abs(rapidez[1] - rapidez[0]) * fps > SECO)
     tiron, pico, temblor = [], [], []
     for k in range(1, n - 2):
         if not (igual[k - 1] and igual[k] and igual[k + 1]):
@@ -118,7 +122,8 @@ def medir(cuadros, fps: float, fases=None, punta: int = -1) -> dict:
         "brincos": episodios(acel > BRINCO),
         "picos": episodios(pico),
         "temblores": episodios(temblor),
-        "punta": {"velocidad": _resumen(v_punta), "paradas_en_seco": episodios(a_punta > SECO)},
+        "punta": {"velocidad": _resumen(v_punta), "paradas_en_seco": episodios(a_punta > SECO),
+                  "frenadas_en_seco": episodios(frena)},
         "paradas": episodios(~movido),
         "quietos": round(float(np.mean(~movido)), 3) if movido.size else 0.0,
     }

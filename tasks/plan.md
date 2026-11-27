@@ -984,7 +984,16 @@ La cámara (las paradas y la aceleración) es de T22.
   - El resaltado va en σ y la trenza también (`malla_trenza(s=)`), así que no se achican ni caminan.
   - La cámara encuadra solo el tramo de la ficha.
   - El foco va a la punta del paso y pasa a la mano cuando esta se acerca (`Cuadro.foco`).
-- **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9988 y 1,0038 del nominal; 3,4 min de motor los seis a la vez.
+- **Lo suelto se reacomoda en unos cuadros, no en uno.**
+  - Sin roce con el aire y con tan poca masa, la cuerda suelta que se zafaba de otro tramo cambiaba de lugar en un solo cuadro, con hasta 10 875 d/s².
+  - Ahora la frena una amortiguación proporcional a su rigidez (de Rayleigh: `atar.RAYLEIGH`, 0,03 s, con `Sistema.paso(rayleigh=)`), que no frena la caída por su peso.
+  - Solo va en los cuadros con cuerda suelta: con la cuerda toda guiada, estiraba el firme un 1,5 %.
+- **La guía, sin escalones** (los picos que quedaban venían de la guía, no del motor):
+  - La mano levantaba el camino solo hasta la punta, y la punta caía entre un nodo levantado y otro no. Su altura iba y venía 1 d cada vez que pasaba un nodo, con hasta 4800 d/s² en la guía, y los tramos que se levantaban sobre ella la seguían. Ahora lo que viene por delante también va levantado.
+  - El aire llegaba a la entrada sin las alturas de los cruces del camino. Ahora los últimos 2 d del aire se juntan con el camino en cada cuadro (`MEZCLA`).
+  - Los cambios de velocidad de la mano se reparten en 2,5 d, porque con 1 d la punta frenaba en seco al pasar de 10 a 2,5 d/s.
+  - Se probó una punta más rígida (20 N/d de la mano al extremo) y empeoró: chocaba más con lo que roza.
+- **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9987 y 1,0037 del nominal y sin ningún pico ni temblor; 3,5 min de motor los seis a la vez.
 
 #### T22: El video completo
 

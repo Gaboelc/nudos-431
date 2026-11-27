@@ -76,11 +76,22 @@ def test_un_cambio_de_velocidad_en_seco_se_ve():
     # De 5 a 2,5 d/s de un cuadro al siguiente: una parada en seco de la punta.
     v = np.where(np.arange(120) < 60, 5.0, 2.5)
     m = medir(desplazada(np.concatenate([[0.0], np.cumsum(v) / FPS])), FPS)
-    assert m["punta"]["paradas_en_seco"] == 1
+    assert m["punta"]["paradas_en_seco"] == 1 and m["punta"]["frenadas_en_seco"] == 1
     # La misma frenada repartida en 0,3 s (unos 8 d/s²) no lo es.
     w = 5.0 - 2.5 * np.clip((np.arange(120) - 60) / (0.3 * FPS), 0, 1)
     m = medir(desplazada(np.concatenate([[0.0], np.cumsum(w) / FPS])), FPS)
     assert m["punta"]["paradas_en_seco"] == 0 and m["aceleracion"]["max"] < SECO
+
+
+def test_una_curva_cerrada_a_velocidad_constante_no_es_una_frenada():
+    # La punta da una vuelta de 2 d de radio a 10 d/s: 50 d/s² de aceleración, sin frenar.
+    t = np.arange(2 * FPS) / FPS
+    ang = 10.0 * t / 2.0
+    base = cuerda()
+    cuadros = [base + [2 * np.cos(a), 2 * np.sin(a), 0.0] for a in ang]
+    m = medir(cuadros, FPS)
+    assert m["punta"]["frenadas_en_seco"] == 0
+    assert 45 < m["aceleracion"]["max"] < 55
 
 
 def test_cuando_cambia_la_cantidad_de_nodos_no_se_mide_entre_esos_cuadros():

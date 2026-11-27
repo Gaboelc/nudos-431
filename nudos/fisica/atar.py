@@ -44,6 +44,8 @@ HOLGURA_MANO = 0.8    # una mano que no puede avanzar sin acercar dos tramos a m
                       # avanza esta parte de lo que puede, y espera
 ENDEREZAR = 0.5       # s: lo que tarda la cuerda suelta (T21) en olvidar la forma que tenía al
                       # soltarse
+RAYLEIGH = 0.03       # s: con largo fijo (T21), la cuerda tarda esto en cambiar de forma: lo suelto
+                      # que se zafa de otro tramo se reacomoda en unos cuadros, no en uno
 
 
 @dataclass
@@ -171,6 +173,10 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
             suelto_antes = np.zeros(len(x))
         var = _varilla(largos, material, curvatura)
         visc = VISCOSIDAD if g.viscosidad is None else np.asarray(g.viscosidad, float)
+        # Solo donde hay cuerda suelta: con la cuerda toda guiada (la gaza pequeña del as de guía,
+        # con el firme corriendo), frenaba el estiramiento detrás de la mano y la cuerda se
+        # alargaba un 1,5 %.
+        rayleigh = RAYLEIGH if g.largo_fijo and np.any(suelto_antes > 0) else 0.0
         # La mano del firme (el nodo 0) sostiene; las demás tiran de su nodo con un resorte
         # fuerte: así el contacto puede apartarlas un poco y ninguna se traba contra la cuerda
         # que ya está, que es lo que hace una mano de verdad.
@@ -207,7 +213,7 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
                     y[manos] = x[manos] + HOLGURA_MANO * a * (m1[manos] - x[manos])
             try:
                 x, v = _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo=j == subpasos,
-                                visc=visc)
+                                visc=visc, rayleigh=rayleigh)
             except RuntimeError as e:   # ipctk, con un par dentro de la barrera
                 from ..libre import TrazadoError
                 corto = float(np.min(np.linalg.norm(np.diff(y, axis=0), axis=1)))
@@ -299,7 +305,7 @@ def saltos(X: list, partido=None, quitado=None) -> list[float]:
     return out
 
 
-def _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo, nivel=0, visc=VISCOSIDAD):
+def _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo, nivel=0, visc=VISCOSIDAD, rayleigh=0.0):
     """Un subpaso de x a y (con la mano del firme ya movida) y lo que da el motor, con las
     manos que tiran yendo de sus metas m0 a m1. Si ir en línea recta de y a lo que da el motor
     acercaría dos tramos a menos de DMIN_MOVIMIENTO·dmin (el motor no los acerca: cada iteración
@@ -308,20 +314,22 @@ def _subpaso(armar, m0, m1, malla, x, y, v, dt, out, i, ultimo, nivel=0, visc=VI
     línea recta y libre al siguiente, y `comprobar` lo puede ver. Los estados intermedios van a
     out.medio."""
     sis = armar(m1)
-    r = sis.paso(y, v, dt=dt, viscosidad=visc)
+    r = sis.paso(y, v, dt=dt, viscosidad=visc, rayleigh=rayleigh)
     out.newton += r.iteraciones
     if nivel < SUBDIVIDIR and malla.paso_libre(y, r.x, malla.dmin * DMIN_MOVIMIENTO) < 1.0:
         manos = sis.fijos
         mm = (m0 + m1) / 2
         mitad = x.copy()
         mitad[manos] = x[manos] + 0.5 * (y[manos] - x[manos])
-        x1, v1 = _subpaso(armar, m0, mm, malla, x, mitad, v, dt / 2, out, i, False, nivel + 1, visc)
+        x1, v1 = _subpaso(armar, m0, mm, malla, x, mitad, v, dt / 2, out, i, False, nivel + 1, visc,
+                          rayleigh)
         y2 = x1.copy()
         y2[manos] = y[manos]
         a = malla.paso_libre(x1, y2)
         if a < 1.0:
             y2[manos] = x1[manos] + HOLGURA_MANO * a * (y[manos] - x1[manos])
-        return _subpaso(armar, mm, m1, malla, x1, y2, v1, dt / 2, out, i, ultimo, nivel + 1, visc)
+        return _subpaso(armar, mm, m1, malla, x1, y2, v1, dt / 2, out, i, ultimo, nivel + 1, visc,
+                        rayleigh)
     out.medio.setdefault(i, []).append(np.array(y, float))
     if not ultimo:
         out.medio.setdefault(i, []).append(r.x.copy())
