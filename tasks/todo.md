@@ -90,20 +90,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] T21a Medir el movimiento de hoy: `python -m nudos calidad` (`nudos/fisica/calidad.py`), con la medida de los dos pilotos en el plan (26 nov)
     - [x] Punto de control: Gabriel aprobó el diseño de T21, con la medida y la meta (27 nov)
     - [x] T21b Las poses de video y el largo fijo (`animar.poses_video`, 27 nov)
-    - [ ] T21c La guía nueva, el tiempo y la gravedad, con el as de guía; prueba de 10 s y punto de control
-      - [x] La guía con la mano que agarra, lo suelto con su peso y el tiempo de quinto grado; los seis tramos del as de guía sin fallas (27 nov)
-      - [x] La medida de `calidad`: 550 nodos fijos, el largo a 0,44 %, sin picos ni temblores y el resaltado siempre entero (27 nov)
-      - [x] La previa entera (`build/videos/as-de-guia/as-de-guia-previa.mp4`, 51 s, 27 nov)
-      - [x] La prueba de 10 s en 4K (`build/videos/as-de-guia/as-de-guia-prueba-4k.mp4`, el paso 4; 62 min de render, 27 nov)
-      - [x] Gabriel vio que en el paso 3 la cuerda de más subía en diagonal: ahora espera en una bolsa (la gaza grande en los pasos 1 a 3, la vuelta del collar en el 6) que se achica mientras la mano tira, sin aire (`_bolsas`, `_Cinta`; 27 nov)
-      - [x] La previa otra vez, con la bolsa (`build/videos/as-de-guia/as-de-guia-previa.mp4`, 42 s, 27 nov): el chicote que se acerca lo lleva la mano, sin gancho, y el resaltado llega hasta la punta de la cuerda
-      - [x] Gabriel aprobó el paso 4 (la cámara que se aleja y la gaza que se recoge) y pidió que la cola no se enrolle en el paso 5: el barrido en el 5 y el lazo en el 6 (27 nov)
-      - [x] La previa otra vez, con el barrido y el lazo (40 s, 27 nov): sin picos ni temblores, 2 brincos y 12 paradas en seco de la punta
-      - [x] Punto de control: Gabriel aprobó la previa con el barrido y el lazo (27 nov)
-      - [x] La prueba de 10 s en 4K otra vez, con el movimiento aprobado (`as-de-guia-prueba-4k.mp4`, el paso 4; 59 min de render, 27 nov)
-      - [x] La gaza pequeña (el paso 2) ya no se infla en línea recta: sale una bolsa junto al cruce, se voltea con el tramo del chicote por arriba y crece hasta su tamaño (`_tramo_largo_gaza`, 27 nov)
-      - [x] La previa otra vez, con la gaza pequeña nueva (40,5 s, 27 nov): sin brincos (antes 2), la aceleración más alta en 328 d/s² (antes 970) y el morph solo en la mano que acerca el chicote (1,2 s)
-      - [ ] Punto de control: Gabriel revisa la gaza pequeña nueva del paso 2 y la prueba de 10 s en 4K
+    - [x] T21c La guía nueva con el as de guía (27 nov): la mano que agarra, lo suelto con su peso, el tiempo de quinto grado y una manera de atar por paso: la gaza pequeña volteando una bolsa (2), la mano que acerca el chicote (3), la cinta (4 y 7), el barrido (5) y el lazo (6); la cuerda de más espera en una bolsa dentro del nudo. La previa dura 40,5 s, sin brincos, picos ni temblores, con 12 paradas en seco de la punta, y la prueba de 10 s en 4K es del paso 4. El detalle está en «Cómo se hizo T21b y T21c» del plan
+      - [x] Punto de control: Gabriel aprobó la previa y la prueba en 4K (27 nov). Antes pidió que la cuerda de más no subiera en diagonal en el paso 3 y que la cola no se enrollara en el paso 5, y le encantó el paso 4, con la cámara que se aleja y la gaza que se recoge
     - [ ] T21d La madeja, con el amarre cuadrado; prueba de 10 s y punto de control
     - [ ] T21e El error y la aplicación
   - [ ] T22 El video completo: capítulos, guion, cámara, tarjetas, errores, aplicación y reel (L)
