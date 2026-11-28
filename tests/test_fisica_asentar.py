@@ -279,3 +279,67 @@ def test_si_separar_no_puede_el_motor_parte_de_la_cuerda_relajada(monkeypatch):
     Xr, limites = libre.asentar_o_relajar(X, 0.2)
     assert relajadas == [1] and limites == libre.LIMITES_MOTOR
     assert np.array_equal(Xr, asentar_mod.asentar_paso(relajar(X, 0.2), 0.2, separada=True).X)
+
+
+# --- Tallar el terminado de un amarre (prototipo del 28 nov) ---
+def test_remuestrear_material_deja_cada_punto_a_h_y_dice_de_donde_viene():
+    from nudos.fisica.asentar import remuestrear_material
+    X = cuerda_recta((0, 0, 0.5), (3, 0, 0.5), h=0.15)        # 21 puntos, cada 0,15
+    Y, m = remuestrear_material(X, 0.2)
+    assert len(Y) == 16                                       # 3 / 0,2 + 1
+    assert np.allclose(np.linalg.norm(np.diff(Y, axis=0), axis=1), 0.2)
+    assert np.allclose(m, np.arange(16) * 0.2 / 0.15)
+    assert np.allclose(Y, X[0] + m[:, None] * (X[1] - X[0]))
+
+
+def test_las_partes_de_un_amarre():
+    from nudos.fisica.asentar import partes_de_amarre
+    hitos = {"inicio": 2.0, "vuelta-1": 4.0, "vuelta-3": 8.0, "ahorcado-1": 9.0, "ahorcado-3": 12.0}
+    p = partes_de_amarre(100, hitos, 0.2)
+    s = (np.arange(99) + 0.5) * 0.2
+    assert np.all(p[s < 8.0] == 0)
+    assert np.all(p[(s >= 8.0) & (s < 12.0)] == 1)
+    assert np.all(p[s >= 12.0] == 2)
+    assert np.all(partes_de_amarre(100, {"inicio": 2.0}, 0.2) == 0)
+
+
+def _cuerda_en_ondas(h=0.2):
+    """Una cuerda floja sobre la mesa, en ondas de 0,8 d entre x = -6 y x = 6, cada h."""
+    u = np.linspace(-6, 6, 4001)
+    D = np.column_stack([u, 0.8 * np.sin(u * math.pi / 3), np.full_like(u, 0.5)])
+    S = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(D, axis=0), axis=1))])
+    s = np.arange(0.0, S[-1] - 1e-9, h)
+    return np.column_stack([np.interp(s, S, D[:, k]) for k in range(3)])
+
+
+def test_tallar_quita_la_holgura():
+    """Con las dos puntas sostenidas, la holgura sale por la punta: la cuerda tallada queda más
+    corta y casi recta, con cada punto a h del siguiente y su coordenada material."""
+    from nudos.fisica.asentar import tallar
+    X = _cuerda_en_ondas()
+    a = tallar(X, 0.2, np.zeros(len(X) - 1, int), tensiones=(20.0,))
+    assert a.aceptada == a.rondas
+    # Entre las puntas hay 11,9 d: la cuerda de 13,8 d queda de menos de 12,2.
+    assert (len(a.X) - 1) * 0.2 < 1.02 * np.linalg.norm(X[-1] - X[0]) < (len(X) - 1) * 0.2
+    assert np.abs(a.X[:, 1]).max() < 0.1 * np.abs(X[:, 1]).max()
+    assert np.allclose(np.linalg.norm(np.diff(a.X, axis=0), axis=1), 0.2, atol=0.004)
+    assert a.material[0] == 0.0 and np.all(np.diff(a.material) > 0)
+
+
+def test_tallar_deja_la_ultima_ronda_que_cumple():
+    """Como al apretar un nudo libre: queda la última ronda que cumple, y después de ella se
+    prueban `paciencia` rondas más. La ronda 0 es la cuerda asentada antes de acortar nada; si
+    no cumple, no se sigue."""
+    from nudos.fisica.asentar import tallar
+    X = _cuerda_en_ondas()
+    vistas = []
+
+    def hasta_la_segunda(Y, m):
+        vistas.append(len(Y))
+        return len(vistas) <= 2
+
+    a = tallar(X, 0.2, np.zeros(len(X) - 1, int), tensiones=(20.0,), aceptar=hasta_la_segunda,
+               paciencia=1)
+    assert a.aceptada == 1 and a.rondas == 3 and len(a.X) == vistas[1]
+    b = tallar(X, 0.2, np.zeros(len(X) - 1, int), tensiones=(20.0,), aceptar=lambda Y, m: False)
+    assert b.aceptada is None and b.rondas == 0

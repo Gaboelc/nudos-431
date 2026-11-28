@@ -12,6 +12,9 @@
   Pieranski y otros. En un nudo de plantilla, el terminado apretado es el último paso asentado
   con la tensión «apretada» por tramo (`tensiones_de_amarre`): sus vueltas y sus ahorcados ya
   se tiran al darlos, y el roce guarda esa tensión.
+- **Tallar el terminado de un amarre** (`tallar`, prototipo del 28 nov, a prueba): como al
+  atarlo de verdad, cada parte se acorta hasta su tensión y la holgura sale por la punta (ver
+  abajo). La cuerda tallada se vuelve a muestrear, así que tiene menos nodos que el último paso.
 
 Los dos dan pasos cuasiestáticos (`Sistema.paso`) hasta que ningún nodo se mueve más de
 QUIETO en un paso. La comprobación es la de siempre (`libre._resultado`): la secuencia
@@ -341,6 +344,21 @@ def apretar(X, reparto=None, solido=None, cruces_xy=(), fuerza: float = FUERZA_A
     return asentar(X, cortes, grosores, manos, solido, memoria=False, roce=False, aceptar=aceptar, **kw)
 
 
+def partes_de_amarre(N: int, s_hitos: dict[str, float], h: float) -> np.ndarray:
+    """La parte de cada tramo (N − 1) de la cuerda de un amarre, como en `tensiones_de_amarre`:
+    0, las vueltas (con el ballestrinque de inicio); 1, los ahorcados (entre el último hito de
+    las vueltas y el último ahorcado, con las segundas vueltas del amarre diagonal), y 2, el
+    cierre. Sin vueltas o sin ahorcados, todo es la parte 0."""
+    s = (np.arange(N - 1) + 0.5) * h
+    vueltas = [v for k, v in s_hitos.items() if k.startswith("vuelta")]
+    ahorcados = [v for k, v in s_hitos.items() if k.startswith("ahorcado")]
+    out = np.zeros(N - 1, int)
+    if vueltas and ahorcados:
+        out[(s >= max(vueltas)) & (s < max(ahorcados))] = 1
+        out[s >= max(ahorcados)] = 2
+    return out
+
+
 def tensiones_de_amarre(N: int, s_hitos: dict[str, float], h: float, hasta: float,
                         tension: str) -> np.ndarray:
     """La tensión de atado (N,) de un paso de un amarre: la de `tension` en lo que ya está atado
@@ -356,3 +374,165 @@ def tensiones_de_amarre(N: int, s_hitos: dict[str, float], h: float, hasta: floa
         en = (s >= max(vueltas)) & (s < max(ahorcados)) & (s < hasta)
         out[en] = T * FACTOR_AHORCADO
     return out
+
+
+# --------------------------------------------------------------------------
+# Tallar el terminado de un amarre (prototipo del 28 nov, a prueba)
+# --------------------------------------------------------------------------
+# Gabriel ató el amarre cuadrado con paracord (28 nov, entradas/t15e/amarre-cuadrado-*.jpg): las
+# vueltas abrazan los palos en bandas y los ahorcados las aprietan contra el cruce. Asentar el
+# último paso con la tensión «apretada» casi no lo cambia: con las dos puntas sostenidas, la
+# cuerda solo puede acortarse lo que la estira la tensión (T/EA, 0,3 % con 60 N), y la holgura que
+# la plantilla deja en las vueltas (un 5 %) y en los ahorcados (más del 20 %) no tiene por dónde
+# salir. Al atar de verdad sale por la punta: se tira de cada vuelta y de cada ahorcado hasta que
+# queda tenso.
+#
+# `tallar` hace eso por partes (`partes_de_amarre`). En cada ronda, la cuerda se asienta unos pasos
+# y cada parte que todavía no llega a su tensión se acorta (su largo de reposo), más cuanto más
+# floja está. La cuerda acortada se vuelve a muestrear cada h desde el firme
+# (`remuestrear_material`): lo que falta al final es lo que salió por la punta, y la coordenada
+# material de cada punto dice de qué punto de la cuerda de partida viene (en una plantilla, su
+# zona). La memoria sigue a la cuerda: la forma que deja una ronda es la de reposo de la
+# siguiente, así que manda la tensión y nada vuelve a la forma de la plantilla. Como al apretar
+# un nudo libre, queda la ronda más apretada que todavía cumple (`aceptar`).
+#
+# Las vueltas van ajustadas y no apretadas: con 60 N, en el amarre cuadrado de hoy, la esquina
+# de delante a la derecha de la segunda vuelta se endereza y pasa por fuera del firme más abajo
+# de donde la plantilla lo cuenta en el palo de arriba (0,4 d más abajo), y aparece un cruce. Con
+# 20 N, los ahorcados se acortan un 15 % antes de que algo cambie: después, el segundo y el
+# tercero se montan uno sobre otro bajo el palo de arriba.
+TALLAR_TENSIONES = (20.0, 150.0, 60.0)   # N: las vueltas, los ahorcados y el cierre
+TALLAR_ACORTA = 0.03     # lo más que se acorta una parte floja en una ronda
+TALLAR_MIN = 0.6         # ninguna parte se acorta a menos de este tanto de su largo
+TALLAR_RONDAS = 30
+TALLAR_PASOS = 8         # pasos del motor por ronda
+TALLAR_ASIENTA = 60      # pasos, como mucho, para asentar la cuerda antes de la primera ronda
+TALLAR_PACIENCIA = 1     # cuántas rondas seguidas que no cumplen se prueban antes de parar
+
+
+@dataclass
+class Tallado:
+    X: np.ndarray            # (M, 3) la cuerda tallada, cada h desde el firme
+    material: np.ndarray     # (M,) de qué nodo de la cuerda de partida viene cada punto (fraccionario)
+    rondas: int
+    aceptada: int | None     # la ronda que quedó; None si ninguna cumple
+    tensiones: list          # ronda por ronda, la tensión media de cada parte
+
+
+def remuestrear_material(Y, h: float) -> tuple[np.ndarray, np.ndarray]:
+    """La cuerda Y (N, 3) cada h a lo largo de ella, desde su primer punto y hasta donde alcanza
+    (lo que sobra al final, menos que h, se deja). Da también la coordenada material de cada punto
+    nuevo: el índice fraccionario del punto de Y donde cae."""
+    Y = np.asarray(Y, float)
+    seg = np.linalg.norm(np.diff(Y, axis=0), axis=1)
+    S = np.concatenate([[0.0], np.cumsum(seg)])
+    M = int(np.floor(S[-1] / h + 1e-9)) + 1
+    u = np.arange(M) * h
+    k = np.clip(np.searchsorted(S, u, side="right") - 1, 0, len(Y) - 2)
+    f = np.clip((u - S[k]) / seg[k], 0.0, 1.0)
+    return Y[k] + f[:, None] * (Y[k + 1] - Y[k]), k + f
+
+
+def tallar(X, h: float, partes, solido=None, tensiones=TALLAR_TENSIONES, tension_inicial=None,
+           quietos=None, aceptar=None, rondas: int = TALLAR_RONDAS, pasos: int = TALLAR_PASOS,
+           paciencia: int = TALLAR_PACIENCIA, registro=None, separada: bool = False) -> Tallado:
+    """El terminado de un amarre, tallado (ver arriba). X es la cuerda del último paso (la curva
+    de la plantilla), que se separa como al asentar un paso (con `separada`, ya viene separada,
+    como la relajada de `libre.asentar_o_relajar`); `partes` (N − 1) da la parte de cada tramo, y
+    `tensiones`, la que busca cada parte. `tension_inicial` (N,) es la tensión de atado con que
+    parte (por omisión, ninguna). Las dos puntas se sostienen de un nodo, como al asentar un paso
+    de un amarre, y la cuerda roza.
+
+    Primero la cuerda se asienta con la tensión de partida, como el apretado de antes (la ronda
+    0). Con `aceptar(Y, material) -> bool`, esa cuerda y la de cada ronda se remuestrean y se
+    comprueban, y el resultado es la última que cumple; si la ronda 0 no cumple, no se sigue (y
+    `aceptada` es None), y después de `paciencia` rondas seguidas que no cumplen, se para. Sin
+    `aceptar`, es la última ronda. `registro(fila)`, si se da, recibe lo de cada ronda."""
+    X0 = np.array(X, float) if separada else separar(X, h, None, solido, quietos=quietos)
+    N = len(X0)
+    partes = np.asarray(partes, int)
+    objetivo = np.asarray(tensiones, float)
+    mat = CUERDA_8MM
+    T0 = np.zeros(N) if tension_inicial is None else np.asarray(tension_inicial, float)
+    var = Varilla(np.full(N - 1, float(h)) / (1 + T0[:-1] / mat.EA), mat,
+                  curvatura=Varilla.curvatura_de(X0))
+    cortes = np.array([0, N])
+    manos = sostener(cortes, N, chicotes=True, nodos=1)
+    malla = contacto(X0, cortes, [1.0], solido)
+    if malla.margen(X0) <= 0:   # como en `asentar`: la IPC no puede partir de ahí
+        from ..libre import TrazadoError
+        raise TrazadoError("el motor no puede tallar desde esta cuerda: un par queda dentro de "
+                           "la barrera del contacto")
+    sis = Sistema([var], malla, fijos=manos.fijos, fuerzas=manos.fuerzas,
+                  kappa=rigidez_barrera(max(1.0, float(objetivo.max()) * h)), roce=True)
+    # Primero se asienta como el apretado de antes, con la tensión de partida, hasta que deja de
+    # moverse: en el trípode, la cuerda de unos pocos pasos todavía tiene un codo que después se
+    # va, y las rondas parten de una cuerda quieta.
+    x = X0.copy()
+    sin_converger = 0
+    for _ in range(TALLAR_ASIENTA):
+        r = sis.paso(x)
+        mov = float(np.max(np.linalg.norm(r.x - x, axis=1)))
+        x = r.x
+        sin_converger = 0 if r.convergio else sin_converger + 1
+        if mov < QUIETO or sin_converger >= MAX_SIN_CONVERGER:
+            break
+    # Lo que la plantilla traza quieto (`quietos`, como la vuelta de braza del amarre diagonal)
+    # no se acorta.
+    acortable = np.ones(N - 1, bool)
+    if quietos is not None:
+        q = np.asarray(quietos, bool)
+        acortable &= ~(q[:-1] | q[1:])
+    mejor, aceptada, sin, historia, ronda = None, None, 0, [], 0
+    if aceptar is not None:
+        Y, m = remuestrear_material(x, h)
+        if sin_converger >= MAX_SIN_CONVERGER or not aceptar(Y, m):
+            return Tallado(np.zeros((0, 3)), np.zeros(0), 0, None, historia)
+        mejor, aceptada = (Y, m), 0
+    for ronda in range(1, rondas + 1):
+        mov = np.inf
+        for _ in range(pasos):
+            r = sis.paso(x)
+            mov = float(np.max(np.linalg.norm(r.x - x, axis=1)))
+            x = r.x
+            sin_converger = 0 if r.convergio else sin_converger + 1
+            if mov < QUIETO or sin_converger >= MAX_SIN_CONVERGER:
+                break
+        if sin_converger >= MAX_SIN_CONVERGER:
+            break    # como al apretar: queda la última ronda que cumplía
+        # La tensión media de cada parte; las flojas se acortan, más cuanto más flojas.
+        T = mat.EA * (np.linalg.norm(np.diff(x, axis=0), axis=1) / var.l - 1)
+        medias = [float(T[partes == k].mean()) if np.any(partes == k) else np.inf
+                  for k in range(len(objetivo))]
+        acorta = False
+        for k, (Tk, Ok) in enumerate(zip(medias, objetivo)):
+            en = (partes == k) & acortable
+            if not en.any() or Tk >= Ok:
+                continue
+            d = float(np.clip(TALLAR_ACORTA * (1 - Tk / Ok), TALLAR_ACORTA / 12, TALLAR_ACORTA))
+            nuevo = np.maximum(var.l[en] * (1 - d), TALLAR_MIN * h)
+            acorta |= bool(np.any(nuevo < var.l[en]))
+            var.l[en] = nuevo
+        var.k_estirar = mat.EA / var.l
+        var.k_doblar = mat.EI / (var.l[:-1] + var.l[1:])
+        var.curvatura = Varilla.curvatura_de(x)     # la memoria sigue a la cuerda
+        historia.append([round(t, 1) for t in medias])
+        cumple = None
+        if aceptar is not None:
+            Y, m = remuestrear_material(x, h)
+            cumple = bool(aceptar(Y, m))
+            if cumple:
+                mejor, aceptada, sin = (Y, m), ronda, 0
+            else:
+                sin += 1
+        if registro is not None:
+            registro({"ronda": ronda, "movimiento": mov, "tensiones": medias, "cumple": cumple})
+        if sin > paciencia:
+            break    # también si ninguna cumple desde el principio: queda el apretado de antes
+        if not acorta and mov < QUIETO:
+            break
+    if aceptar is None:
+        mejor, aceptada = remuestrear_material(x, h), ronda
+    if mejor is None:
+        return Tallado(np.zeros((0, 3)), np.zeros(0), ronda, None, historia)
+    return Tallado(mejor[0], mejor[1], ronda, aceptada, historia)

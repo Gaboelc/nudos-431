@@ -253,37 +253,9 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None, tension: str = "
     con la tensión de atado `tension` (en un amarre, más en los ahorcados), y lo que sigue suelto
     sobre la mesa. Una plantilla puede fijar la suya (`TENSION`), como el adujado, que va
     suelto."""
-    t = c.trazo(hito, previo)
-    P, Z = t.puntos, t.zonas
-    D, ctrl = catmull_rom(P)
-    X, h, s_ctrl = remuestrear(D, ctrl)
-    s = np.arange(len(X)) * h
-    tramo = np.clip(np.searchsorted(s_ctrl, s, side="right") - 1, 0, len(P) - 1)
-    siguiente = np.minimum(tramo + 1, len(P) - 1)
-    # La zona de cada punto: la del tramo de control donde cae, si sus dos extremos la
-    # comparten; si no, ninguna (-1), y ese pedacito no entra en ningún mapa.
-    zonas = np.where(Z[tramo] == Z[siguiente], Z[tramo], -1)
-    secuencia = c.secuencias[c.alias.get(hito, hito)]
-    cruces, _ = g.buscar(X, h, zonas, t)
-    declarados = len(secuencia) // 2
-    if len(cruces) != declarados:
-        raise TrazadoError(f"Paso {n}: la cuerda tiene {len(cruces)} cruces y el método "
-                           f"declara {declarados}.")
-    if cruces and emparejar(cruces, secuencia) is None:
-        raise TrazadoError(f"Paso {n}: los cruces de la cuerda aparecen en otro orden que en "
-                           "la secuencia del método.")
+    t, X, h, s_ctrl, zonas, secuencia, quietos, solido, penetracion = _trazado(n, g, c, hito, previo)
     s_fin = float(s_ctrl[t.fin])
     s_ini = 0.0 if t.inicio is None else float(s_ctrl[t.inicio])
-    # La cuerda va tensa, como cuando se ata, y lo que cae ya está trazado sobre la mesa: no
-    # cae nada. Si cayera, tiraría del nudo y lo estiraría.
-    # Lo que la plantilla ya traza tenso y la relajación deshace no se mueve: los puntos que
-    # caen entre dos puntos de control quietos.
-    quietos = None if t.quietos is None else t.quietos[tramo] & t.quietos[siguiente]
-    # El sólido es el de la plantilla; en el puño de mono, los dedos del paso, si los tiene.
-    # Sin anfitrión, como el adujado, no hay sólido en el que entrar.
-    solido, penetracion = g.solido, g.penetracion
-    if t.marco is not None and t.marco.get("solido") is not None:
-        solido, penetracion = t.marco["solido"], ("penetracion_dedos", "en un dedo")
     limites = None
     from ..fisica import usar_motor
     if usar_motor():
@@ -312,28 +284,76 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None, tension: str = "
     else:
         Xr = relajar(X, h, anfitrion=solido, gravedad=np.zeros(len(X), bool),
                      pasadas_largo=PASADAS_LARGO, quietos=quietos)
-    medir = None
-    if penetracion is not None:
-        clave, donde = penetracion
-
-        def medir(Y):
-            pen = solido.penetracion(Y)
-            f = [] if pen <= PENETRACION_MAX else [
-                f"Paso {n}: la cuerda entra {pen:.2f} diámetros {donde}; el máximo es "
-                f"{PENETRACION_MAX}."]
-            return {clave: pen}, f
-
     r = _resultado(n, Xr, h, secuencia, (s_ini, s_fin),
-                   buscar=lambda Y: g.buscar(Y, h, zonas, t), medir=medir, limites=limites)
+                   buscar=lambda Y: g.buscar(Y, h, zonas, t), medir=_medir(n, solido, penetracion),
+                   limites=limites)
     r.giro = t.giro
     return r
+
+
+def _trazado(n: int, g, c, hito: str, previo: str | None):
+    """Lo que construir_paso prepara antes de relajar el paso n: el trazo, la cuerda muestreada
+    cada h (X), la posición de cada punto de control, la zona de cada punto, la secuencia del
+    método, los puntos quietos y el sólido, con la clave de su penetración. Si los cruces de la
+    cuerda no son los del método, TrazadoError."""
+    t = c.trazo(hito, previo)
+    P, Z = t.puntos, t.zonas
+    D, ctrl = catmull_rom(P)
+    X, h, s_ctrl = remuestrear(D, ctrl)
+    s = np.arange(len(X)) * h
+    tramo = np.clip(np.searchsorted(s_ctrl, s, side="right") - 1, 0, len(P) - 1)
+    siguiente = np.minimum(tramo + 1, len(P) - 1)
+    # La zona de cada punto: la del tramo de control donde cae, si sus dos extremos la
+    # comparten; si no, ninguna (-1), y ese pedacito no entra en ningún mapa.
+    zonas = np.where(Z[tramo] == Z[siguiente], Z[tramo], -1)
+    secuencia = c.secuencias[c.alias.get(hito, hito)]
+    cruces, _ = g.buscar(X, h, zonas, t)
+    declarados = len(secuencia) // 2
+    if len(cruces) != declarados:
+        raise TrazadoError(f"Paso {n}: la cuerda tiene {len(cruces)} cruces y el método "
+                           f"declara {declarados}.")
+    if cruces and emparejar(cruces, secuencia) is None:
+        raise TrazadoError(f"Paso {n}: los cruces de la cuerda aparecen en otro orden que en "
+                           "la secuencia del método.")
+    # La cuerda va tensa, como cuando se ata, y lo que cae ya está trazado sobre la mesa: no
+    # cae nada. Si cayera, tiraría del nudo y lo estiraría.
+    # Lo que la plantilla ya traza tenso y la relajación deshace no se mueve: los puntos que
+    # caen entre dos puntos de control quietos.
+    quietos = None if t.quietos is None else t.quietos[tramo] & t.quietos[siguiente]
+    # El sólido es el de la plantilla; en el puño de mono, los dedos del paso, si los tiene.
+    # Sin anfitrión, como el adujado, no hay sólido en el que entrar.
+    solido, penetracion = g.solido, g.penetracion
+    if t.marco is not None and t.marco.get("solido") is not None:
+        solido, penetracion = t.marco["solido"], ("penetracion_dedos", "en un dedo")
+    return t, X, h, s_ctrl, zonas, secuencia, quietos, solido, penetracion
+
+
+def _medir(n: int, solido, penetracion):
+    """La medida de cuánto entra la cuerda en el sólido, con su falla si pasa del máximo (None
+    sin sólido)."""
+    if penetracion is None:
+        return None
+    clave, donde = penetracion
+
+    def medir(Y):
+        pen = solido.penetracion(Y)
+        f = [] if pen <= PENETRACION_MAX else [
+            f"Paso {n}: la cuerda entra {pen:.2f} diámetros {donde}; el máximo es "
+            f"{PENETRACION_MAX}."]
+        return {clave: pen}, f
+    return medir
 
 
 def apretado_con_motor(spec: Spec) -> Resultado | None:
     """Con la opción del motor (T15d), el terminado apretado de un nudo de plantilla: el último
     paso asentado con la tensión «apretada» (T15f: en cualquier plantilla, no solo en los
     amarres). Una plantilla que se deja suelta, como el adujado (`APRETAR = False`), no se
-    aprieta. Sin la opción, None, como siempre."""
+    aprieta. Sin la opción, None, como siempre.
+
+    Un amarre (con vueltas y ahorcados) se talla (`tallado`, prototipo del 28 nov): sus partes se
+    acortan hasta su tensión, como al atarlo de verdad. Si ninguna ronda del tallado cumple, queda
+    el apretado de siempre. Con NUDOS_TALLAR=0, el amarre se aprieta como antes del prototipo,
+    para comparar."""
     from ..fisica import usar_motor
     if not usar_motor() or not spec.pasos or not getattr(spec.plantilla, "APRETAR", True):
         return None
@@ -343,10 +363,76 @@ def apretado_con_motor(spec: Spec) -> Resultado | None:
         return None
     c = g.cuerda()
     previo = spec.pasos[-2].hasta if len(spec.pasos) > 1 else None
+    n, hito = spec.pasos[-1].n, spec.pasos[-1].hasta
+    if _se_talla(c):
+        try:
+            r = tallado(n, g, c, hito, previo)
+        except TrazadoError:
+            r = None
+        if r is not None:
+            return r
     try:
-        return construir_paso(spec.pasos[-1].n, g, c, spec.pasos[-1].hasta, previo, tension="apretada")
+        return construir_paso(n, g, c, hito, previo, tension="apretada")
     except TrazadoError:
         return None
+
+
+def _se_talla(c) -> bool:
+    """Si el terminado de la cuerda se talla: la de un amarre, con vueltas y ahorcados, salvo con
+    NUDOS_TALLAR=0. Se lee en cada llamada, así que los procesos de nudos/procesos.py la heredan."""
+    import os
+    if os.environ.get("NUDOS_TALLAR", "") == "0" or not isinstance(c, _CuerdaDeAmarre):
+        return False
+    hitos = c.c.hitos
+    return any(k.startswith("vuelta") for k in hitos) and any(k.startswith("ahorcado") for k in hitos)
+
+
+def tallado(n: int, g, c, hito: str, previo: str | None) -> Resultado | None:
+    """El paso n de un amarre, tallado con el motor (`nudos/fisica/asentar.py`, `tallar`): las
+    vueltas, los ahorcados y el cierre se acortan hasta su tensión y la cuerda se vuelve a
+    muestrear cada h, así que tiene menos puntos que el paso. Cada punto lleva la zona del punto
+    de la cuerda de partida de donde viene (su coordenada material), y cada ronda se comprueba
+    como un paso: queda la más apretada que tiene la secuencia del método y cumple los límites.
+
+    Como al asentar un paso (`libre.asentar_o_relajar`), si la cuerda asentada antes de acortar
+    nada no cumple (en el trípode, separar deja un codo), se talla desde la cuerda relajada. Si
+    no se pudo acortar nada que cumpla, None: queda el apretado de antes."""
+    from ..fisica.asentar import partes_de_amarre, tallar, tensiones_de_amarre
+    from ..libre import LIMITES_MOTOR
+    t, X, h, s_ctrl, zonas, secuencia, quietos, solido, penetracion = _trazado(n, g, c, hito, previo)
+    s_hitos = {k: float(s_ctrl[i]) for k, i in c.c.hitos.items() if i <= t.fin}
+    medir = _medir(n, solido, penetracion)
+
+    def comprobar(Y, material):
+        zn = zonas_materiales(material, zonas)
+        return _resultado(n, Y, h, secuencia, None, buscar=lambda Z: g.buscar(Z, h, zn, t),
+                          medir=medir, limites=LIMITES_MOTOR)
+
+    def talla(Xp, separada=False):
+        return tallar(Xp, h, partes_de_amarre(len(X), s_hitos, h), solido,
+                      tension_inicial=tensiones_de_amarre(len(X), s_hitos, h, float(s_ctrl[t.fin]),
+                                                          "apretada"),
+                      quietos=quietos, aceptar=lambda Y, m: not comprobar(Y, m).fallas,
+                      separada=separada)
+
+    a = talla(X)
+    if a.aceptada is None:
+        a = talla(relajar(X, h, anfitrion=solido, gravedad=np.zeros(len(X), bool),
+                          pasadas_largo=PASADAS_LARGO, quietos=quietos), separada=True)
+    if not a.aceptada:     # None, o la ronda 0: nada se acortó
+        return None
+    r = comprobar(a.X, a.material)
+    r.giro = t.giro
+    return r
+
+
+def zonas_materiales(material, zonas) -> np.ndarray:
+    """La zona de cada punto de una cuerda remuestreada, por su coordenada material (el índice
+    fraccionario del punto de la cuerda de partida donde cae): la de los dos puntos entre los que
+    cae, si la comparten; si no, ninguna (-1), como en construir_paso."""
+    a = np.clip(np.floor(np.asarray(material, float)).astype(int), 0, len(zonas) - 1)
+    b = np.minimum(a + 1, len(zonas) - 1)
+    return np.where(zonas[a] == zonas[b], zonas[a], -1)
 
 
 def voltear_sin_relajar(r: Resultado, secuencia) -> Resultado:
