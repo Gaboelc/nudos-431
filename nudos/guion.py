@@ -72,7 +72,7 @@ CAMBIO_CAPITULO = 0.6      # s: la tarjeta de capítulo, entre uno y otro
 PANTALLA_FINAL = 10.0      # s al final para la pantalla final de YouTube (de 5 a 20 s)
 MIN_YOUTUBE = 10.0         # s: YouTube no acepta capítulos más cortos
 # El video no tiene una duración meta: dura lo que haga falta para explicar bien (Gabriel, 27 nov).
-CUADRO_4K = 6.0            # s por cuadro en 4K con Cycles a 16 muestras (T20b)
+CUADRO_4K = 3.3            # s por cuadro de 4K con EEVEE a 32 muestras (aspecto.MOTOR_VIDEO; Gabriel, 27 nov)
 FPS = 60
 
 # El reel vertical: el gancho, el título de cada paso dicho con su movimiento a unas dos veces la
@@ -494,13 +494,15 @@ def _html(spec, lista: list[Parte], total: float, rl: list[Parte], malos: list[s
     largo_reel = sum(p.dura for p in rl)
     voz = sum(p.segundos for p in lista)
     medidas = sum(p.medida for p in lista)
+    horas = f"{total * FPS * CUADRO_4K / 3600:.1f}".replace(".", ",")
+    por_cuadro = f"{CUADRO_4K:.1f}".replace(".", ",")
     cuerpo = ['<div class="cifras">',
               f'<div class="cifra"><b>{reloj(total)}</b><span>el video, estimado</span></div>',
               f'<div class="cifra"><b>{reloj(voz)}</b><span>de voz ({medidas} de {len(lista)} medidas)</span></div>',
               f'<div class="cifra"><b>{reloj(largo_reel)}</b><span>el reel (de {REEL[0]:.0f} a {REEL[1]:.0f} s)</span></div>',
-              f'<div class="cifra"><b>{total * FPS * CUADRO_4K / 3600:.0f} h</b><span>de render en 4K, a '
-              f'{CUADRO_4K:.0f} s por cuadro</span></div>', '</div>']
-    barra ="".join(f'<div style="flex: {b - a:.2f}; background: {COLOR[c]}" title="{e(NOMBRES[c])}: '
+              f'<div class="cifra"><b>{horas} h</b><span>de render en 4K, a {por_cuadro} s por cuadro '
+              f'(EEVEE)</span></div>', '</div>']
+    barra = "".join(f'<div style="flex: {b - a:.2f}; background: {COLOR[c]}" title="{e(NOMBRES[c])}: '
                     f'{b - a:.0f} s">{e(NOMBRES[c])}</div>' for c, a, b in caps)
     cuerpo.append(f'<div class="barra">{barra}</div>')
     if malos:

@@ -1197,14 +1197,14 @@ La cámara (las paradas y la aceleración) es de T22.
   - `<slug>-visor.mp4`: solo el capítulo del paso a paso, en 1080p y de 20 MB o menos. Como el paso a paso dura más que el video de T18 (63 s el as de guía, 83 el amarre), va a 30 cuadros por segundo y en dos pasadas, para que quepa sin perder detalle.
   - El nombre del grupo («Grupo Guía y Scout 431») va en el cierre si Gabriel quiere; la maqueta lo muestra con una casilla.
 - **La duración no limita** (Gabriel, 27 nov): el video dura lo que haga falta para explicar bien y que quede claro, y no se recorta ninguna escena ni ninguna explicación para que dure menos. Ya no hay una meta de 2 min. Con el guion completo, los pilotos duran de 2:45 a 3:30, y cada escena puede alargarse si lo necesita. El reel sigue en 45 a 60 s.
-- **Lo que cuesta.** El render crece con la duración: en 4K, a 6 s por cuadro, el as de guía son unas 17 h, y los 36 con sus reels, unos 29 días si duran como los pilotos (no los 20 a 25 estimados). Falta que Gabriel decida el costo del render.
-  - **Lo que lo bajaría sin quitar nada:** los capítulos donde nada se mueve, sobre un cuadro quieto del render con un acercamiento lento hecho en la composición, sin Blender: lo que necesitas, los demás errores, la seguridad y la pantalla final. Son unos 40 s por nudo: unos 6 días menos.
+- **Lo que cuesta.** Los videos van con EEVEE a 32 muestras (Gabriel, 27 nov; `aspecto.MOTOR_VIDEO`), a unos 3,3 s por cuadro de 4K. El render crece con la duración: el as de guía son unas 9,5 h, y los 36 con sus reels, unos 16 días si duran como los pilotos (3 min en promedio, y 52 s el reel). Los 11 días de la elección de EEVEE suponían videos de 2 min.
+  - **Lo que lo bajaría sin quitar nada:** los capítulos donde nada se mueve, sobre un cuadro quieto del render con un acercamiento lento hecho en la composición, sin Blender: lo que necesitas, los demás errores, la seguridad y la pantalla final. Son unos 40 s por nudo: unos 3 días menos.
 - **Lo que decide Gabriel en el punto de control:**
   1. El diseño, con el guion en la especificación (v1.14).
   2. El guion del as de guía (`guion as-de-guia`; con `--oir`, dicho por su voz).
   3. Las tarjetas de la maqueta, y si entre pasos la tarjeta sale y vuelve a entrar o se queda.
   4. Las tres aplicaciones: decididas el 27 nov (el toldo, la mesa y la repisa, con el nudo que se tensa y aguanta).
-  5. La duración: decidida el 27 nov (no limita). Falta el costo del render, si los capítulos quietos van sobre un cuadro quieto y si el nombre del grupo va en el cierre.
+  5. La duración y el motor: decididos el 27 nov (la duración no limita, y EEVEE a 32 muestras): unos 16 días de render para los 36. Falta si los capítulos quietos van sobre un cuadro quieto (unos 3 días menos) y si el nombre del grupo va en el cierre.
   6. «En la práctica» de los 36 nudos (abajo).
 
 **Cómo se hizo T22a (27 nov):**
