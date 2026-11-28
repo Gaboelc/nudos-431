@@ -1,6 +1,6 @@
 # Libro de nudos del Grupo 431
 
-Son fichas de nudos para la Wak y la Tropa del Grupo Guía y Scout 431, con modelos 3D propios de cada paso. Cada nudo se describe en una especificación en `specs/`, y de ella salen sus modelos, sus imágenes, su ficha y su visor 3D en `https://gaboelc.github.io/nudos-431/<slug>/`.
+Son fichas de nudos para la Wak y la Tropa del Grupo Guías y Scouts Huetares 431, con modelos 3D propios de cada paso. Cada nudo se describe en una especificación en `specs/`, y de ella salen sus modelos, sus imágenes, su ficha y su visor 3D en `https://gaboelc.github.io/nudos-431/<slug>/`.
 
 ## Instalar
 

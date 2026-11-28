@@ -1120,7 +1120,7 @@ La cámara (las paradas y la aceleración) es de T22.
 - **Pruebas:** `tests/test_guion.py` y `tests/test_tarjetas.py`.
 - **El grupo en la ficha** (Gabriel, 28 nov): el logo (`libro/logo-431.svg`) a la izquierda de «Libro de nudos · Grupo Guías y Scouts Huetares 431», arriba de la primera página, y con el nombre del grupo en el pie de las dos (`libro/ficha.html` y `ficha.css`; `html_ficha` lo pone en la página). Antes decía «Grupo Guía y Scout 431».
   - **Sin ocupar alto:** con el logo dentro del flujo (11 mm arriba y 7 mm en el pie), 30 de las 36 fichas dejaban de caber: están justas. Por eso los dos logos van fuera del flujo. El de arriba (8,6 mm) se apoya en la línea y sube hacia el margen, hasta unos 6 mm del borde del papel, y el del pie (6,8 mm) va centrado en su línea, en el hueco que ya había. Las páginas no crecen nada. Los 6 mm del borde se revisan con las especificaciones de la imprenta (D8).
-  - El sitio todavía dice el nombre corto.
+  - El sitio y el README dicen también el nombre completo desde el 28 nov (las cejas, los títulos, los pies y la descripción del índice); el título del proyecto sigue siendo «Libro de nudos del Grupo 431».
 
 **Punto de control:** Gabriel aprueba el diseño, el guion de un piloto y la maqueta de las tarjetas. Cumplido el 28 nov: Gabriel aprobó el diseño completo.
 

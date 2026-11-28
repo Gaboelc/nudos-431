@@ -1,6 +1,6 @@
 # Libro de nudos del Grupo 431
 
-Es un libro de nudos impreso por ediciones para la Wak y la Tropa del Grupo Guía y Scout 431. Cada paso de cada nudo tiene un render 3D propio, y cada nudo tiene un visor 3D enlazado con QR desde su ficha. Reemplaza al manual de nudos v1.2.
+Es un libro de nudos impreso por ediciones para la Wak y la Tropa del Grupo Guías y Scouts Huetares 431. Cada paso de cada nudo tiene un render 3D propio, y cada nudo tiene un visor 3D enlazado con QR desde su ficha. Reemplaza al manual de nudos v1.2.
 
 **Criterio de éxito:** alguien que nunca ha hecho un nudo lo ata bien solo con la ficha impresa, sin que un dirigente le explique.
 
