@@ -101,15 +101,16 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Gabriel no quiere comparaciones («como un ojo», el conejo): tercera versión, sin ellas (27 nov)
     - [x] Gabriel aprobó el estilo del guion hablado con la tercera versión de los dos pilotos (27 nov): las reglas están en el plan, en el guion de T22a, y valen para los guiones de los 36 nudos
     - [x] T22a El diseño en el plan, el guion de los tres pilotos en su especificación (formato v1.14), la hoja `guion <slug>` y la maqueta de las tarjetas (`prueba-tarjetas`) (27 nov)
-    - [ ] Punto de control de T22a: Gabriel aprueba el diseño, el guion del as de guía y la maqueta, elige si la tarjeta del paso sale o se queda, revisa «En la práctica» de los 36 nudos (en el plan) y decide si los capítulos quietos van sobre un cuadro quieto (con EEVEE a 32 y la duración libre, los 36 son unos 16 días de render, y unos 13 con los cuadros quietos)
+    - [ ] Punto de control de T22a: Gabriel aprueba el diseño, el guion del as de guía y la maqueta, elige si la tarjeta del paso sale o se queda y decide si los capítulos quietos van sobre un cuadro quieto (con EEVEE a 32 y la duración libre, los 36 son unos 16 días de render, y unos 13 con los cuadros quietos)
       - [x] Gabriel eligió las tres aplicaciones (el cabo de un toldo en un poste, la mesa del campamento y la repisa en la cocina) y que en ellas el nudo se tense y aguante (27 nov)
       - [x] Gabriel decidió que la duración no limita: el video dura lo que haga falta para explicar bien, sin recortar escenas (27 nov)
+      - [x] Gabriel aprobó «En la práctica» de los 36 nudos, con siete cambios suyos y «tienda de campaña» en vez de «carpa», también en las fichas de la margarita, la media llave y dos cotes y el tensor ajustable (27 nov)
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
     - [ ] Los tres pilotos en 4K y en vertical; punto de control
   - [x] T23 El sonido (26 y 27 nov): la voz de Gabriel clonada como de estudio (Qwen3-TTS desde su muestra del DJI, con Sidon; la muestra, fuera de git en `entradas/_voz/`), cinco canciones compuestas en código con el motivo en celesta, el foley del motor y la mezcla a −14 LUFS (`nudos/voz.py`, `musica.py`, `foley.py`, `mezcla.py`; `prueba-voz`, `prueba-musica`, `prueba-mezcla` y `prueba-voz-propia`). El detalle, en el historial
   - [x] T24 El visor (26 y 27 nov): material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`), publicado en el sitio. Gabriel lo abrió en la computadora y en un celular de gama baja, y todo anduvo bien (27 nov). El detalle, en el historial
   - [x] Borrar los cuadros del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel, 27 nov): los 1080 viejos del 25 nov (35,9 GB) y los 585 de la prueba de 10 s (14,6 GB). Quedan los `atado` de los dos pilotos
-- [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36
+- [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, los guiones, las voces y la música de los 36 (la tabla de aplicaciones ya está aprobada, en T22a)
 - [ ] Punto de control de la fase 5
 
 ## Fase 6: libro y primera edición
