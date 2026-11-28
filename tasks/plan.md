@@ -1003,6 +1003,7 @@ La cámara (las paradas y la aceleración) es de T22.
   - **Las fases del amarre:** 34,1 s tendiendo la cuerda, 13,5 de pausas, 1,5 apretando y 0,9 acercando a cada pose.
   - **El motor:** de 75 a 811 s por paso, con la máquina ocupada; los seis pasos, en 17 min con tres procesos (`NUDOS_PROCESOS=3`). Con seis a la vez, la máquina se quedó sin memoria mientras otra sesión corría `referencia` con Blender (92 de 94 GB comprometidos).
 - **La previa** (`build/videos/amarre-cuadrado/amarre-cuadrado-previa.mp4`): 50,0 s y 7,3 MB. Tardó 46 min en dibujarse (1434 cuadros distintos), con la máquina ocupada.
+- **La prueba de 10 s en 4K** (`build/videos/amarre-cuadrado/amarre-cuadrado-prueba-4k.mp4`): el paso 4, el primer ahorcado, con 600 cuadros a 60 fps y 90 MB. Tardó 67 min en dibujarse, a unos 6 s por cuadro sin la suite corriendo al lado. Sus cuadros quedaron en `NUDOS_CUADROS` (`cuadros-t21d`, unos 20 GB).
 - **Las fichas no cambian.** Construir e imprimir no usan nada de lo que cambió (`animar.py`, `fisica/atar.py`, `fisica/calidad.py`, `video.py` y `prueba_atar.py`). Para comprobarlo, `referencia` con three.js desde un worktree de `main` (f1c6fef) y con el código nuevo, el mismo día, y `comparar`:
   - Los 36 `modelo.json`, iguales byte a byte.
   - Las imágenes, iguales. Tres nudos salieron con unos píxeles en 1 nivel (de 3 a 16) por imprimir mientras se dibujaba la previa, e iguales al imprimirlos otra vez con los dos códigos.

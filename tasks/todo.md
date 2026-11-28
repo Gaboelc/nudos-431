@@ -92,7 +92,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
       - [x] La medida de `calidad`: 2314 nodos fijos, el largo a 0,36 %, sin recoger ni morph, sin brincos, picos ni temblores, 2 frenadas casi quietas y el resaltado siempre entero (27 nov); en el plan, junto a la del as de guía
       - [x] La previa entera (`build/videos/amarre-cuadrado/amarre-cuadrado-previa.mp4`, 50 s, 27 nov)
       - [x] Las fichas no cambian: `referencia` y `comparar` con three.js, los 36 `modelo.json` iguales byte a byte y las imágenes también (27 nov)
-      - [ ] La prueba de 10 s en 4K (el paso 4, el primer ahorcado)
+      - [x] La prueba de 10 s en 4K (`build/videos/amarre-cuadrado/amarre-cuadrado-prueba-4k.mp4`, el paso 4, el primer ahorcado; 67 min de render, 28 nov)
       - [ ] Punto de control: Gabriel revisa la previa y la prueba en 4K del amarre
     - [ ] T21e El error y la aplicación
   - [ ] T22 El video completo: capítulos, guion, cámara, tarjetas, errores, aplicación y reel (L)
