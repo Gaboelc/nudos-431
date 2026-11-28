@@ -101,12 +101,13 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Gabriel no quiere comparaciones («como un ojo», el conejo): tercera versión, sin ellas (27 nov)
     - [x] Gabriel aprobó el estilo del guion hablado con la tercera versión de los dos pilotos (27 nov): las reglas están en el plan, en el guion de T22a, y valen para los guiones de los 36 nudos
     - [x] T22a El diseño en el plan, el guion de los tres pilotos en su especificación (formato v1.14), la hoja `guion <slug>` y la maqueta de las tarjetas (`prueba-tarjetas`) (27 nov)
-    - [ ] Punto de control de T22a: Gabriel aprueba el diseño, el guion del as de guía y la maqueta, y decide si los capítulos quietos van sobre un cuadro quieto (con EEVEE a 32 y la duración libre, los 36 son unos 16 días de render, y unos 13 con los cuadros quietos)
+    - [ ] Punto de control de T22a: Gabriel aprueba el diseño y decide si los capítulos quietos van sobre un cuadro quieto (con EEVEE a 32 y la duración libre, los 36 son unos 16 días de render, y unos 13 con los cuadros quietos)
       - [x] Gabriel eligió las tres aplicaciones (el cabo de un toldo en un poste, la mesa del campamento y la repisa en la cocina) y que en ellas el nudo se tense y aguante (27 nov)
       - [x] Gabriel decidió que la duración no limita: el video dura lo que haga falta para explicar bien, sin recortar escenas (27 nov)
       - [x] Gabriel aprobó «En la práctica» de los 36 nudos, con siete cambios suyos y «tienda de campaña» en vez de «carpa», también en las fichas de la margarita, la media llave y dos cotes y el tensor ajustable (27 nov)
       - [x] La tarjeta del paso sale y vuelve a entrar en cada paso, y el nombre «Grupo Guías y Scouts Huetares 431» con el logo del grupo van en la apertura, en el cierre y en la ficha (Gabriel, 28 nov)
       - [x] Gabriel eligió la paleta «Huetares», la del logo del grupo, y no quiso el logo en la esquina (28 nov)
+      - [x] Gabriel aprobó el guion del as de guía (28 nov)
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
     - [ ] Los tres pilotos en 4K y en vertical; punto de control
   - [x] T23 El sonido (26 y 27 nov): la voz de Gabriel clonada como de estudio (Qwen3-TTS desde su muestra del DJI, con Sidon; la muestra, fuera de git en `entradas/_voz/`), cinco canciones compuestas en código con el motivo en celesta, el foley del motor y la mezcla a −14 LUFS (`nudos/voz.py`, `musica.py`, `foley.py`, `mezcla.py`; `prueba-voz`, `prueba-musica`, `prueba-mezcla` y `prueba-voz-propia`). El detalle, en el historial

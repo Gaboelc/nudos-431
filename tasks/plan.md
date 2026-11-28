@@ -1202,7 +1202,7 @@ La cámara (las paradas y la aceleración) es de T22.
   - **Lo que lo bajaría sin quitar nada:** los capítulos donde nada se mueve, sobre un cuadro quieto del render con un acercamiento lento hecho en la composición, sin Blender: lo que necesitas, los demás errores, la seguridad y la pantalla final. Son unos 40 s por nudo: unos 3 días menos.
 - **Lo que decide Gabriel en el punto de control:**
   1. El diseño, con el guion en la especificación (v1.14).
-  2. El guion del as de guía (`guion as-de-guia`; con `--oir`, dicho por su voz).
+  2. El guion del as de guía (`guion as-de-guia`): aprobado el 28 nov.
   3. Las tarjetas de la maqueta: decididas el 28 nov (la del paso sale y vuelve a entrar, la paleta es «Huetares» y el logo no va en la esquina).
   4. Las tres aplicaciones: decididas el 27 nov (el toldo, la mesa y la repisa, con el nudo que se tensa y aguanta).
   5. La duración y el motor: decididos el 27 nov (la duración no limita, y EEVEE a 32 muestras): unos 16 días de render para los 36. Falta si los capítulos quietos van sobre un cuadro quieto (unos 3 días menos). El nombre y el logo del grupo van en la apertura y el cierre (decidido el 28 nov).
