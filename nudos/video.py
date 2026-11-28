@@ -13,8 +13,8 @@ Los tres llevan el audio de nudos/audio.py (el clic de cada título, el golpe de
 roce de la cuerda), que se pega aparte: cambiarlo no obliga a volver a dibujar.
 
 El aspecto es el de T20b (nudos/aspecto.py): la cuerda real con la trenza en la geometría, en el
-estudio de madera, con Cycles a 16 muestras, profundidad de campo con el foco en la punta,
-desenfoque de movimiento, y viñeta y grano al armar.
+estudio de madera, con EEVEE a 32 muestras (aspecto.MOTOR_VIDEO; Gabriel, 27 nov), profundidad
+de campo con el foco en la punta, desenfoque de movimiento, y viñeta y grano al armar.
 
 Con `--previa`, el nudo entero en 960 × 540, 30 fps y 16 muestras, para revisar los tiempos, la
 cámara, los títulos y el audio antes del render largo. Con `--prueba`, 10 s del paso 4 en 4K.
