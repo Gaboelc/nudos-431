@@ -1870,15 +1870,215 @@ def _tramo_largo_punta(A: PoseVideo, B: PoseVideo, solido=None, cinta=None) -> T
 
 VEL_DESLIZAR = 8.0     # d/s: el firme que corre a lo largo de sí mismo
 
+GAZA_BOCA = 1.3        # d: la bolsa sale entre esto antes y esto después del cruce que se forma
+GAZA_BOLSA = 8.0       # d: lo que mide la bolsa cuando se voltea
+GAZA_CUELLO = 1.5      # d: desde la boca, en esto la bolsa pasa de no girar a girar entera
+GAZA_ARRIBA = 6.0      # d: lo que se rehace empieza esto antes del cruce, en el firme,
+GAZA_ABAJO = 3.0       # y termina esto después; lo de más allá va de A a B nodo a nodo
+GAZA_QUIETO = 1.0      # d: lo más que puede moverse de A a B lo de más allá
+GAZA_FASES = {"bolsa": (0.0, 0.40), "voltear": (0.30, 0.62), "crecer": (0.55, 1.0)}
+GAZA_TIEMPO = 1.75     # el paso dura esto por lo que tarda el firme en correr a VEL_DESLIZAR
+GAZA_TRAMOS = (0.6, 1.4)   # lo más corto y lo más largo que puede quedar un tramo de la guía, en h
+GAZA_HOLGURA = 0.3     # d: el volteo ya separa los dos tramos del cruce; con HOLGURA, el que va
+                       # encima subía más sobre el que ya se levantaba, y se estiraba
+
+
+def _desde_punta(P, n: int, h: float) -> np.ndarray | None:
+    """n nodos cada h a lo largo de la polilínea P, desde su último punto hacia el primero."""
+    Q = np.asarray(P, float)[::-1]
+    c = _largos_acum(Q)
+    x = np.arange(n) * h
+    if x[-1] > c[-1] + 1e-9:
+        return None
+    return np.column_stack([np.interp(x, c, Q[:, i]) for i in range(3)])[::-1]
+
+
+def _voltear(Y, alfa: float, zt: float, primera_encima: bool) -> np.ndarray:
+    """La bolsa Y (de la boca del lado del firme a la del chicote, acostada) girada `alfa` sobre su
+    eje, que va de la mitad de la boca a su centro. El tramo que en B queda encima sube y pasa por
+    arriba del otro, que se corre por la mesa: cada tajada sube lo que bajaría ese otro tramo. Desde
+    la boca, en GAZA_CUELLO, el giro va de nada a entero: ahí se forma el cruce."""
+    if alfa <= 0:
+        return Y.copy()
+    Mm = (Y[0, :2] + Y[-1, :2]) / 2
+    eje = np.mean(Y[:, :2], axis=0) - Mm
+    eje /= np.linalg.norm(eje)
+    nrm = np.array([-eje[1], eje[0]])
+    arriba = Y[0] if primera_encima else Y[-1]
+    lado = 1.0 if float((arriba[:2] - Mm) @ nrm) > 0 else -1.0
+    x = (Y[:, :2] - Mm) @ eje
+    y = ((Y[:, :2] - Mm) @ nrm) * lado
+    giro = alfa * _suave5(np.clip(x / GAZA_CUELLO, 0.0, 1.0))
+    sube = y * np.sin(giro)
+    L = np.zeros(len(Y))
+    abajo = y < 0
+    if abajo.any():
+        o = np.argsort(x[abajo])
+        L = np.interp(x, x[abajo][o], np.maximum(0.0, -sube[abajo][o]))
+    out = Y.copy()
+    out[:, :2] = Mm + x[:, None] * eje + (y * np.cos(giro) * lado)[:, None] * nrm
+    out[:, 2] = zt + sube + L
+    return out
+
+
+def _area(P) -> float:
+    """El área con signo de la polilínea P cerrada, vista desde arriba (positiva si gira a la
+    izquierda)."""
+    x, y = P[:, 0], P[:, 1]
+    return 0.5 * float(np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y))
+
+
+def _tramo_largo_gaza(A: PoseVideo, B: PoseVideo) -> Tramo | None:
+    """La guía del paso A al B cuando la cuerda que entra por el firme forma una gaza con un cruce
+    nuevo, como la gaza pequeña del as de guía (T21c). Un lazo no sale de una cuerda acostada sin
+    levantarla: en línea recta, nodo a nodo, el firme se ondulaba y la gaza nacía de un gancho.
+    1. La cuerda que entra sale en una bolsa acostada (`_inflar`) junto al cruce, sin cruzarse.
+    2. La bolsa se voltea (`_voltear`): el tramo que en B va encima pasa por arriba del otro, como se
+       forma un ojo con la mano, y en su cuello queda el cruce.
+    3. La bolsa volteada va hasta el lazo de B mientras el firme sigue corriendo y lo agranda.
+    Los nodos van cada h a lo largo de esa curva desde un punto fijo del otro lado del cruce, así
+    que el firme corre a lo largo de sí mismo; de ahí en adelante cada nodo va de A a B, y un
+    ajuste suave deja el primer cuadro en A y el último en B. None si B no suma una sola gaza con
+    la cuerda que entra por el firme, si la bolsa no se infla o no queda del lado del lazo, o si la
+    guía estira o encoge algún tramo más de GAZA_TRAMOS."""
+    h, N = B.h, len(B.X)
+    entra = A.o - B.o
+    if entra < BOLSA_MIN:
+        return None
+    refs_A, refs_B = _referencia(A.X, h), _referencia(B.X, h)
+    nuevos = [r for r in refs_B if _buscar(refs_A, r[0], r[1]) is None]
+    if len(nuevos) != 1 or len(refs_B) != len(refs_A) + 1:
+        return None
+    sa, sb, primera_encima = nuevos[0]
+    s_lo, s_hi = min(sa, sb), max(sa, sb)
+    if s_lo == sb:
+        primera_encima = not primera_encima
+    ell = s_hi - s_lo
+    j_bot = int(math.ceil((s_hi + GAZA_ABAJO) / h - 1e-9))
+    s_top, s_m1, s_m2, s_bot = s_lo - GAZA_ARRIBA, s_lo - GAZA_BOCA, s_hi + GAZA_BOCA, j_bot * h
+    if abs(ell - entra) > 3.0 or s_top < h or j_bot >= N - 1:
+        return None
+    if float(np.max(np.linalg.norm(A.X[j_bot:] - B.X[j_bot:], axis=1))) > GAZA_QUIETO:
+        return None
+    zt = float(np.median(B.X[:, 2]))
+
+    def tramo_B(a, b, paso=0.05):
+        return np.array([_en(B.X, h, s) for s in np.append(np.arange(a, b, paso), b)])
+
+    def tangente(s):
+        d = _en(B.X, h, s + 0.3)[:2] - _en(B.X, h, s - 0.3)[:2]
+        return np.append(d / np.linalg.norm(d), 0.0)
+
+    firme, chicote, lazo_B = tramo_B(s_top, s_m1), tramo_B(s_m2, s_bot), tramo_B(s_m1, s_m2)
+    encima_B = tramo_B(0.0, s_top)[:-1]
+    z_firme, z_chicote, z_encima = firme[:, 2].copy(), chicote[:, 2].copy(), encima_B[:, 2].copy()
+    M1, M2 = firme[-1].copy(), chicote[0].copy()
+    boca = float(np.linalg.norm(M2[:2] - M1[:2]))
+    base = _hermite(M1, M2, tangente(s_m1) * boca, tangente(s_m2) * boca, 60)
+    base[:, 2] = zt
+    base = _uniforme(base, 60)
+    sobra = GAZA_BOLSA - float(_largos_acum(base)[-1])
+    lejos = (B.X[0] - B.X[3]) / np.linalg.norm(B.X[0] - B.X[3])
+    bolsas = {}
+
+    def bolsa(u):
+        k = round(u, 3)
+        if k not in bolsas:
+            Y = _inflar(base, u * sobra) if u > 0 else base.copy()
+            bolsas[k] = None if Y is None else _uniforme(Y, 240)
+        return bolsas[k]
+
+    def fase(t, nombre):
+        a, b = GAZA_FASES[nombre]
+        return float(_suave5(min(1.0, max(0.0, (t - a) / (b - a)))))
+
+    def curva(t):
+        u3 = fase(t, "crecer")
+        Y = bolsa(fase(t, "bolsa"))
+        if Y is None:
+            return None
+        Y = _voltear(Y, math.pi * fase(t, "voltear"), zt, primera_encima)
+        if u3 > 0:
+            Y = (1 - u3) * _uniforme(Y, 400) + u3 * _uniforme(lazo_B, 400)
+        fi, ch, en = firme.copy(), chicote.copy(), encima_B.copy()
+        fi[:, 2] = (1 - u3) * zt + u3 * z_firme
+        ch[:, 2] = (1 - u3) * zt + u3 * z_chicote
+        en[:, 2] = (1 - u3) * zt + u3 * z_encima
+        Y[0, 2], Y[-1, 2] = fi[-1, 2], ch[0, 2]
+        w = float(_suave5(t))
+        G = (1 - w) * A.X + w * B.X
+        R = np.vstack([en, fi[:-1], Y, ch[1:]])
+        R = R + (G[j_bot] - R[-1]) * np.array([1.0, 1.0, 0.0])
+        # Su altura llega a la del nodo de más allá a lo largo del tramo del chicote.
+        k = len(ch) - 1
+        R[-k:, 2] += (G[j_bot, 2] - R[-1, 2]) * np.linspace(0.0, 1.0, k)
+        nodos = _desde_punta(np.vstack([R[0] + lejos * (N * h), R]), j_bot + 1, h)
+        if nodos is None:
+            return None
+        G[:j_bot + 1] = nodos
+        return G
+
+    seg = max(ACOMODAR_MIN, GAZA_TIEMPO * entra / VEL_DESLIZAR)
+    nf = max(int(round(seg * FPS)), 2)
+    G0, G1 = curva(0.0), curva(1.0)
+    if G0 is None or G1 is None:
+        return None
+    # La bolsa queda del lado del lazo y, volteada, gira hacia donde gira el lazo.
+    Mm = (M1[:2] + M2[:2]) / 2
+    if float((np.mean(bolsa(1.0)[:, :2], axis=0) - Mm) @ (np.mean(lazo_B[:, :2], axis=0) - Mm)) <= 0:
+        return None
+    if _area(np.vstack([bolsa(1.0), [M1]])) * _area(lazo_B) >= 0:
+        return None
+    D0, D1 = A.X - G0, B.X - G1
+    mov = np.linalg.norm(B.X - A.X, axis=1)
+    manos = [0, N - 1]
+    borr = []
+    for f in range(nf + 1):
+        t = f / nf
+        G = curva(t)
+        if G is None:
+            return None
+        w = float(_suave5(t))
+        env = math.sin(math.pi * w)
+        borr.append(_Borrador(G=G + (1 - w) * D0 + w * D1, n=N, manos=manos, hasta=(N - 1) * h, mov=mov,
+                              holgura=lambda a, b, env=env: (GAZA_HOLGURA * env, 1.0),
+                              exacto=B.X if f == nf else (A.X if f == 0 else None)))
+    cruces = _seguir_cruces(borr, h, refs_A, refs_B, True)
+    s = np.arange(N) * h
+    guia = []
+    for f, (b, cr) in enumerate(zip(borr, cruces)):
+        G = b.G.copy()
+        # La bolsa levantada se cruza con la cuerda vista desde arriba, ya separada: solo suben los
+        # cruces que lo piden, con el encima de la altura que tienen, y si están a la misma altura,
+        # el del seguimiento (el de B para la gaza, cuyo cruce corre por la cuerda mientras crece).
+        subir = []
+        for ca, cb, seno, enc, w in cr:
+            za, zb = np.interp(ca, s, G[:, 2]), np.interp(cb, s, G[:, 2])
+            if abs(za - zb) >= 1.0 + b.holgura(ca, cb)[0]:
+                continue
+            subir.append((ca, cb, seno, enc if abs(za - zb) < 0.3 else bool(za > zb), w))
+        G[:, 2] = np.maximum(G[:, 2], alturas(G, h, subir, b.holgura))
+        if b.exacto is not None:
+            G = b.exacto.copy()
+        tramos = np.linalg.norm(np.diff(G, axis=0), axis=1) / h
+        if tramos.min() < GAZA_TRAMOS[0] or tramos.max() > GAZA_TRAMOS[1]:
+            return None
+        guia.append(_cuadro_largo(G, h, np.full(N, RESORTE), manos, suelto=False,
+                                  largos=_largos_de(A, B, float(_suave5(f / nf)))))
+    a2, a3 = (int(round(GAZA_FASES[k][0] * nf)) for k in ("voltear", "crecer"))
+    fases = {"bolsa": (0, a2 - 1), "voltear": (a2, a3 - 1), "crecer": (a3, nf)}
+    guia += _asentado(A, B)
+    fases["asentar"] = (nf + 1, len(guia) - 1)
+    return Tramo(B.n, "gaza", A.X.copy(), B.X.copy(), guia, fases)
+
 
 def _tramo_largo_firme(A: PoseVideo, B: PoseVideo, mano: bool = False, asentar: bool = True,
                        vel: float = VEL) -> Tramo:
     """La guía del paso A al B con largo fijo cuando B sigue igual hacia la punta y la cuerda que
-    gana entra por el firme (la gaza pequeña del as de guía, que se forma en el medio): cada nodo
-    va en línea recta de su lugar en A al de B, con las alturas de los cruces y arranque y frenado
-    de quinto grado. El firme, que es recto, corre así a lo largo de sí mismo desde el depósito;
-    la gaza todavía se infla en vez de formarse (un rizo de su ángulo deja su extremo a 14-17 d de
-    donde llega el firme, T21c).
+    gana entra por el firme: cada nodo va en línea recta de su lugar en A al de B, con las alturas
+    de los cruces y arranque y frenado de quinto grado. Si esa cuerda forma una gaza, como la gaza
+    pequeña del as de guía, va antes por `_tramo_largo_gaza`: aquí la gaza se inflaba, el firme se
+    ondulaba al correr y la gaza nacía de un gancho (T21c).
 
     Con `mano`, es un paso «punta» en el que la punta no pasa por ningún cruce nuevo (acercar el
     chicote a la gaza pequeña del as de guía): la mano toma la cuerda a PINZA de la punta y la
@@ -1940,10 +2140,13 @@ def animar_largo(A: PoseVideo, B: PoseVideo, solido=None) -> Animado:
     t0 = time.time()
     # Si la punta no pasa por ningún cruce nuevo, la mano la lleva y todo va guiado nodo a nodo;
     # con un anfitrión no, que la recta lo atravesaría.
+    # Si el firme forma una gaza, se forma volteando una bolsa (sin un anfitrión, que la bolsa no
+    # conoce); si no, lo que cambia va guiado nodo a nodo.
     if B.modo == "punta" and (B.enhebra or solido is not None):
         tr = _tramo_largo_enhebrar(A, B, solido)
     else:
-        tr = _tramo_largo_firme(A, B, mano=B.modo == "punta")
+        tr = ((_tramo_largo_gaza(A, B) if B.modo == "firme" and solido is None else None)
+              or _tramo_largo_firme(A, B, mano=B.modo == "punta"))
     c = seguir(tr.x0, tr.guia, solido)
     fallas = []
     medidas = {"cuadros_guia": len(tr.guia), "esperas": c.esperas, "newton": c.newton,

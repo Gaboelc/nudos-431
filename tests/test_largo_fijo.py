@@ -12,10 +12,10 @@ import types
 import numpy as np
 import pytest
 
-from nudos.animar import (ALTO_MANO, BOLSA_RAMPA, RADIO_GUIA, _cola, _inflar, _por_largo,
-                          _recorrido_largo, _tramo_largo_enhebrar, _tramo_largo_firme,
-                          _tramo_largo_punta, animar_largo, comprobar_poses, poses_video,
-                          radio_minimo)
+from nudos.animar import (ALTO_MANO, BOLSA_RAMPA, GAZA_ARRIBA, RADIO_GUIA, _cola, _inflar,
+                          _por_largo, _recorrido_largo, _tramo_largo_enhebrar, _tramo_largo_firme,
+                          _tramo_largo_gaza, _tramo_largo_punta, animar_largo, comprobar_poses,
+                          poses_video, radio_minimo)
 from nudos.cruces import encontrar_cruces, secuencia_obtenida
 from nudos.fisica.asentar import separar
 from nudos.fisica.atar import FPS
@@ -175,6 +175,35 @@ def _sin_saltos(tr, A, B, fin: str):
     largo = np.array([np.sum(np.linalg.norm(np.diff(g, axis=0), axis=1)) for g in G]) / ((len(B.X) - 1) * B.h)
     assert largo.min() > 0.98 and largo.max() < 1.05
     return G
+
+
+def test_la_gaza_pequena_se_forma_volteando_una_bolsa(modelo_as_de_guia):
+    # Paso 2: la cuerda que entra por el firme forma la gaza pequeña. Un lazo no sale de una
+    # cuerda acostada sin levantarla (nodo a nodo, el firme se ondulaba y la gaza nacía de un
+    # gancho): sale una bolsa junto al cruce, se voltea con el tramo del chicote por arriba del
+    # firme y crece hasta su tamaño, y el firme corre derecho.
+    PV = poses_video(modelo_as_de_guia)
+    A, B = PV[0], PV[1]
+    tr = _tramo_largo_gaza(A, B)
+    assert tr is not None and tr.modo == "gaza"
+    assert {"bolsa", "voltear", "crecer", "asentar"} <= set(tr.fases)
+    G = _sin_saltos(tr, A, B, "crecer")
+    h = B.h
+    s = np.arange(len(B.X)) * h
+    for g in G[:tr.fases["bolsa"][1] + 1]:
+        assert not encontrar_cruces(g, h)                     # la bolsa no se cruza
+    for g in G[tr.fases["voltear"][1]:tr.fases["crecer"][1] + 1]:
+        (c,) = encontrar_cruces(g, h)
+        a, b = sorted((c.sa, c.sb))
+        assert np.interp(b, s, g[:, 2]) > np.interp(a, s, g[:, 2])   # el del chicote, encima
+    # El firme, por encima de la gaza, a menos de 0,3 d de su recta en todo el paso.
+    (c,) = encontrar_cruces(B.X, h)
+    j = int(min(c.sa, c.sb) / h)
+    alto = B.X[j, 1] + GAZA_ARRIBA
+    yf, xf = B.X[j::-1, 1], B.X[j::-1, 0]
+    for g in G:
+        arriba = (g[:, 1] > alto) & (g[:, 1] < yf[-1])
+        assert np.all(np.abs(g[arriba, 0] - np.interp(g[arriba, 1], yf, xf)) < 0.3)
 
 
 def test_cada_paso_del_as_de_guia_se_ata_a_su_manera(modelo_as_de_guia):
