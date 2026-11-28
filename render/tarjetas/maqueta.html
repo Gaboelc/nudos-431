@@ -59,10 +59,11 @@ cada una dura lo que su voz. El mismo código las dibujará cuadro por cuadro en
   <select id="vel" aria-label="Velocidad"><option value="1">1×</option><option value="0.5">0,5×</option><option value="0.25">0,25×</option></select>
 </div>
 <h2>La paleta</h2>
+<p class="descripcion">La de los videos es «Huetares», la del logo del grupo (Gabriel la eligió el 28 nov). Las demás
+quedan para comparar.</p>
 <div class="paletas" id="paletas"></div>
 <p class="descripcion" id="descripcion"></p>
 <div class="opciones">
-  <label><input type="checkbox" id="esquina" checked> El logo del grupo en la esquina, durante todo el video</label>
   <label><input type="checkbox" id="finales" checked> Mostrar dónde va la pantalla final de YouTube</label>
 </div>
 <div class="saltos" id="saltos"></div>
@@ -86,8 +87,6 @@ cada una dura lo que su voz. El mismo código las dibujará cuadro por cuadro en
   <li><b>El cierre</b>: el logo grande del grupo y el nombre del nudo entran de golpe con el acorde final de la música;
     después, «Grupo Guías y Scouts Huetares 431» y la dirección del visor. La derecha queda libre unos 10 s para la
     pantalla final de YouTube.</li>
-  <li><b>El logo en la esquina</b> (opcional): chico, arriba a la derecha, desde que se va el nombre de la apertura hasta
-    el cierre. En el reel no va, porque ahí Instagram pone el nombre de la cuenta.</li>
   <li><b>El reel</b>: las tarjetas van arriba y los subtítulos palabra por palabra, quemados, abajo del nudo, por encima de
     donde Instagram pone la descripción.</li>
 </ul>
@@ -159,7 +158,6 @@ function cuadro(ahora) {
 barra.addEventListener("input", () => { t = duracion() * barra.value / 10000; });
 play.onclick = () => { corre = !corre; play.textContent = corre ? "Pausa" : "Reproducir"; };
 document.getElementById("vel").onchange = (e) => { vel = +e.target.value; };
-document.getElementById("esquina").onchange = (e) => { for (const f in montados) montados[f].opciones.esquina = e.target.checked; };
 document.getElementById("finales").onchange = (e) => { for (const f in montados) montados[f].opciones.finales = e.target.checked; };
 // Las paletas: un botón por cada una, con sus colores.
 function elegirPaleta(clave) {
@@ -176,7 +174,7 @@ for (const [clave, pal] of Object.entries(window.PALETAS)) {
   b.onclick = () => elegirPaleta(clave);
   document.getElementById("paletas").appendChild(b);
 }
-elegirPaleta("sitio");
+elegirPaleta(Tarjetas.PALETA);
 document.querySelectorAll(".pestanas button").forEach((b) => b.onclick = () => {
   formato = b.dataset.formato; t = 0;
   document.querySelectorAll(".pestanas button").forEach((x) => x.classList.toggle("activa", x === b));

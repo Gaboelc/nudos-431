@@ -21,7 +21,8 @@ CARPETA = RAIZ / "render" / "tarjetas"
 SALIDA = RAIZ / "build" / "tarjetas"
 FUENTES = RAIZ / "sitio" / "vendor" / "fuentes"
 LYGIA = RAIZ / "sitio" / "vendor" / "lygia" / "lygia.js"
-PALETAS = CARPETA / "paletas.json"     # las paletas de colores del video, para elegir una
+PALETAS = CARPETA / "paletas.json"     # las paletas de colores del video
+PALETA = "huetares"                     # la de los videos: la del logo del grupo (Gabriel, 28 nov)
 LOGO = RAIZ / "libro" / "logo-431.svg"  # el logo del grupo, el mismo de la ficha
 GRUPO = "Grupo Guías y Scouts Huetares 431"
 

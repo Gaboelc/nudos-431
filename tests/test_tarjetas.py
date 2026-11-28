@@ -141,7 +141,17 @@ def test_cada_paleta_se_dibuja_y_pone_sus_colores(maqueta_en_edge):
     visto = pagina.evaluate("""() => { const c = document.querySelector('#horizontal .t-cierre');
         return [c.querySelector('.escudo-grupo').getBoundingClientRect().height > 50, c.querySelector('.grupo').textContent]; }""")
     assert visto == [True, T.GRUPO]
-    pagina.evaluate("window.maqueta.paleta('sitio')")
+    pagina.evaluate(f"window.maqueta.paleta('{T.PALETA}')")
+    assert errores == []
+
+
+def test_la_paleta_de_los_videos_es_huetares(maqueta_en_edge):
+    pagina, errores = maqueta_en_edge
+    assert T.PALETA == "huetares" and pagina.evaluate("Tarjetas.PALETA") == T.PALETA
+    tinta = pagina.evaluate("getComputedStyle(document.getElementById('horizontal')).getPropertyValue('--tinta').trim()")
+    assert tinta == T.paletas()[T.PALETA]["css"]["--tinta"]
+    # Sin el logo en la esquina (Gabriel, 28 nov): el logo solo va en el nombre y en el cierre.
+    assert pagina.evaluate("document.querySelectorAll('#horizontal .capa > img').length") == 0
     assert errores == []
 
 

@@ -106,7 +106,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
       - [x] Gabriel decidió que la duración no limita: el video dura lo que haga falta para explicar bien, sin recortar escenas (27 nov)
       - [x] Gabriel aprobó «En la práctica» de los 36 nudos, con siete cambios suyos y «tienda de campaña» en vez de «carpa», también en las fichas de la margarita, la media llave y dos cotes y el tensor ajustable (27 nov)
       - [x] La tarjeta del paso sale y vuelve a entrar en cada paso, y el nombre «Grupo Guías y Scouts Huetares 431» con el logo del grupo van en la apertura, en el cierre y en la ficha (Gabriel, 28 nov)
-      - [ ] Gabriel elige una de las seis paletas del video (en la maqueta y en `build/tarjetas/paletas.png`) y si el logo va en la esquina
+      - [x] Gabriel eligió la paleta «Huetares», la del logo del grupo, y no quiso el logo en la esquina (28 nov)
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
     - [ ] Los tres pilotos en 4K y en vertical; punto de control
   - [x] T23 El sonido (26 y 27 nov): la voz de Gabriel clonada como de estudio (Qwen3-TTS desde su muestra del DJI, con Sidon; la muestra, fuera de git en `entradas/_voz/`), cinco canciones compuestas en código con el motivo en celesta, el foley del motor y la mezcla a −14 LUFS (`nudos/voz.py`, `musica.py`, `foley.py`, `mezcla.py`; `prueba-voz`, `prueba-musica`, `prueba-mezcla` y `prueba-voz-propia`). El detalle, en el historial

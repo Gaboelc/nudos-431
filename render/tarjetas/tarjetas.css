@@ -2,20 +2,17 @@
    1080 × 1920 el vertical (.vertical). Las mueve tarjetas.js, siempre en función del tiempo, así
    que el mismo código sirve para la maqueta y para dibujar cada cuadro en Edge (T22b). Las fuentes
    son las del sitio (sitio/vendor/fuentes).
-   Los colores son variables: tarjetas.js pone las de la paleta elegida (Tarjetas.PALETAS); las de
-   aquí son las de la paleta «sitio». */
+   Los colores son variables: tarjetas.js pone las de la paleta (Tarjetas.PALETAS); las de aquí son
+   las de «huetares», la del logo del grupo, que Gabriel eligió para los videos el 28 nov. */
 
 .escenario {
-  --tinta: #16202f; --suave: #586273; --vidrio: rgba(247, 249, 250, 0.66); --borde: rgba(255, 255, 255, 0.6);
-  --sombra: rgba(22, 32, 47, 0.18);
-  --insignia-1: #d08016; --insignia-2: #a9590b; --insignia-tinta: #fff; --avance: #d1801a; --avance-vacio: #9aa6b2;
-  --raya-1: #eb9a31; --raya-2: #c06a0d; --acento: #d1801a; --acento-tinta: #fff;
-  --si: #1a6b3e; --si-1: #3cb878; --si-2: #22804c;
-  --no: #b52f2c; --no-1: #e8574f; --no-2: #b52f2c;
-  --mat: #1d6470; --mat-1: #3fa5b3; --mat-2: #23727e;
-  --seg-1: #ffcf33; --seg-2: #e2a100; --seg-icono: #3b2a00; --seg-etiqueta: #704c00;
-  --tinte-no: rgba(214, 69, 65, 0.42); --tinte-si: rgba(47, 158, 98, 0.36);
-  --cierre-tinta: #fff; --cierre-sombra: rgba(10, 16, 24, 0.45);
+  --tinta: #0b2a52; --suave: #4a5f7c; --vidrio: rgba(246, 248, 252, 0.70); --borde: rgba(255, 255, 255, 0.65);
+  --sombra: rgba(6, 55, 109, 0.20); --insignia-1: #ffc83b; --insignia-2: #e9a516; --insignia-tinta: #06376d;
+  --avance: #e9a516; --avance-vacio: #9fb0c6; --raya-1: #025486; --raya-2: #f9bd24; --acento: #f9bd24;
+  --acento-tinta: #06376d; --si: #0f6b35; --si-1: #1f8a4c; --si-2: #0f4b25; --no: #a10d25; --no-1: #e0364f;
+  --no-2: #a10d25; --mat: #025486; --mat-1: #2a7fc0; --mat-2: #06376d; --seg-1: #ffd540; --seg-2: #f9bd24;
+  --seg-icono: #06376d; --seg-etiqueta: #7a5600; --tinte-no: rgba(200, 16, 46, 0.40);
+  --tinte-si: rgba(15, 107, 53, 0.36); --cierre-tinta: #ffffff; --cierre-sombra: rgba(6, 30, 60, 0.5);
   position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #cfd5d8;
   font-family: Literata, Georgia, serif; color: var(--tinta);
 }
@@ -138,9 +135,6 @@
 .final { position: absolute; border: 3px dashed rgba(255, 255, 255, 0.85); border-radius: 18px; color: #fff; display: grid; place-items: center;
          text-align: center; font-family: "IBM Plex Mono", monospace; font-size: 22px; padding: 16px; background: rgba(22, 32, 47, 0.28); opacity: 0; }
 
-/* El logo en la esquina, durante todo el video menos el cierre (que lo trae grande). */
-.esquina { position: absolute; right: 44px; top: 34px; height: 112px; opacity: 0; }
-
 /* Los subtítulos del reel, palabra por palabra. */
 .t-subtitulos { left: 70px; right: 70px; top: 1250px; text-align: center; opacity: 1; }
 .t-subtitulos .linea { display: block; }
@@ -164,4 +158,3 @@
 .vertical .t-cierre .grande { font-size: 150px; }
 .vertical .t-cierre .grupo { font-size: 44px; }
 .vertical .t-cierre .url { font-size: 27px; }
-.vertical .esquina { display: none; }

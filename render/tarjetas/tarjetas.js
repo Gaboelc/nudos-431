@@ -13,7 +13,7 @@
 
    Los colores salen de una paleta (window.PALETAS, de render/tarjetas/paletas.json): sus variables
    de CSS van en el .escenario y sus colores de capítulo, al fondo de lygia. datos.logo (el logo del
-   grupo) va en el nombre, en el cierre y, con opciones.esquina, en una esquina de todo el video. */
+   grupo) va en el nombre de la apertura y en el cierre. */
 (function () {
   "use strict";
 
@@ -361,8 +361,10 @@ void main() {
   };
 
   // ---------------------------------------------------------------- montar
-  // Las paletas: las de render/tarjetas/paletas.json, que la página pone en window.PALETAS.
+  // Las paletas: las de render/tarjetas/paletas.json, que la página pone en window.PALETAS. La de los
+  // videos es «huetares», la del logo del grupo (Gabriel, 28 nov); las demás quedan para comparar.
   const PALETAS = () => window.PALETAS || {};
+  const PALETA = "huetares";
 
   function ponerPaleta(escenario, opciones, nombre) {
     const pal = PALETAS()[nombre];
@@ -373,7 +375,7 @@ void main() {
   }
 
   function montar(escenario, datos, opciones = {}) {
-    opciones = Object.assign({ finales: true, esquina: true, paleta: "sitio" }, opciones);
+    opciones = Object.assign({ finales: true, paleta: PALETA }, opciones);
     escenario.classList.add("escenario");
     escenario.classList.toggle("vertical", datos.formato === "vertical");
     escenario.innerHTML = '<div class="fondo"></div><div class="tinte"></div><div class="capa"></div>';
@@ -402,14 +404,6 @@ void main() {
       }
     }
     ponerPaleta(escenario, opciones, opciones.paleta);
-    // El logo en la esquina: desde que se va el nombre de la apertura hasta el golpe del cierre.
-    let esquina = null;
-    const nombre = datos.tarjetas.find((d) => d.tipo === "nombre");
-    const cierre = datos.tarjetas.find((d) => d.tipo === "cierre");
-    if (datos.logo) {
-      esquina = nodo(`<img class="logo esquina" src="${datos.logo}" alt="">`);
-      capa.appendChild(esquina);
-    }
     const errores = datos.tarjetas.filter((d) => d.tipo === "error" && !d.mono);
     const duracion = Math.max(0, ...datos.tarjetas.map((d) => d.hasta));
     return {
@@ -418,11 +412,6 @@ void main() {
       paleta(nombre) { ponerPaleta(escenario, opciones, nombre); },
       pintar(t) {
         for (const p of piezas) p.tipo.pintar(p.el, p.d, t, opciones, escenario);
-        if (esquina) {
-          const desde = nombre ? nombre.hasta : 0, hasta = cierre ? cierre.golpe - 0.2 : duracion;
-          const o = opciones.esquina ? fuera((t - desde) / 0.5) * (t > hasta ? limitar(1 - (t - hasta) / 0.25) : 1) : 0;
-          esquina.style.opacity = (0.92 * limitar(o)).toFixed(3);
-        }
         // El tinte del cuadro: rojo con el error, verde con el correcto.
         const e = errores.find((d) => t >= d.desde && t <= d.hasta);
         if (e) {
@@ -434,5 +423,5 @@ void main() {
     };
   }
 
-  window.Tarjetas = { montar, resorte, PALETAS };
+  window.Tarjetas = { montar, resorte, PALETAS, PALETA };
 })();
