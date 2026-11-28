@@ -247,35 +247,61 @@ POR_FUERA = "ahorcados-por-fuera"
 @pytest.mark.parametrize("vueltas, ahorcados", [(2, 2), (3, 3), (4, 3), (3, 4), (6, 6)])
 def test_la_secuencia_del_metodo(vueltas, ahorcados):
     """Cada ahorcado pasa por encima de cada vuelta en las cuatro esquinas, las vueltas no se
-    cruzan entre sí y cada ballestrinque tiene sus dos cruces: 40 con 3 y 3."""
+    cruzan entre sí y cada ballestrinque tiene sus dos cruces: 40 con 3 y 3. El firme va del
+    ballestrinque de inicio, separado del cruce, al palo de arriba, así que pasa por encima de
+    los ahorcados donde cruzan el palo de abajo, delante (el amarre tallado de T15e)."""
     c = la_cuerda(vueltas=vueltas, ahorcados=ahorcados)
     sec = c.secuencias["cierre"]
-    assert len(sec) // 2 == 4 * vueltas * ahorcados + 4
+    n, m = vueltas, ahorcados
+    assert len(sec) // 2 == 4 * n * m + 4
     assert sec[:4] == ("1U", "1O", "2O", "2U")
-    esquinas = [t for t in sec[4:-4] if t.endswith("U")]
-    assert len(esquinas) == 4 * vueltas * ahorcados   # todas las esquinas, por debajo
-    assert all(t.endswith("O") for t in sec[4 + len(esquinas):-4])
+    firme, resto = sec[4:4 + m], sec[4 + m:-4]
+    assert all(t.endswith("O") for t in firme)      # el firme, por encima de cada ahorcado
+    esquinas, pasadas = resto[:(4 * n - 1) * m], resto[(4 * n - 1) * m:]
+    assert all(t.endswith("U") for t in esquinas)   # las esquinas, por debajo de cada ahorcado
+    assert len(pasadas) == 4 * n * m
+    # Al dar la vuelta, cada ahorcado pasa por encima de las esquinas y por debajo del firme.
+    assert sorted(t for t in pasadas if t.endswith("U")) == sorted(t[:-1] + "U" for t in firme)
     assert len(c.secuencias["inicio"]) == 4 and len(c.secuencias["vueltas"]) == 4
     assert len(c.secuencias["ahorcado-1"]) // 2 == 4 * vueltas + 2
 
 
-@pytest.mark.parametrize("ahorcados, apilados", [(2, True), (3, True), (6, True), (8, False)])
-def test_los_ahorcados_van_apilados_si_caben(ahorcados, apilados):
-    """Cada ahorcado va montado sobre el anterior, en una sola banda: APILA más alto sobre el
-    palo de abajo y APILA_ARRIBA bajo el de arriba, donde además van escalonados. Si bajo el
-    palo de arriba no caben (el primero tocaría la mesa), van como antes; también si no caben
-    junto al firme, pero eso lo decide cuerda(). El error y el amarre diagonal no los apilan."""
-    from nudos.plantillas.amarre import APILA, APILA_ARRIBA, alturas_de_ahorcados
+@pytest.mark.parametrize("ahorcados", [2, 3, 6])
+def test_los_ahorcados_van_en_banda(ahorcados):
+    """En el amarre bien hecho, tallado, los ahorcados van uno junto al otro, en una banda
+    pegada a las esquinas: cada uno DZ_BANDA más alto que el anterior en todos los ángulos, así
+    que en la cintura no se cruzan, y el último pasa pegado al palo de arriba. Por dónde pasa
+    cada uno junto a los palos lo decide cuerda(). El error y el amarre diagonal no van en banda."""
+    from nudos.plantillas.amarre import BAJO_BANDA, DZ_BANDA, alturas_de_ahorcados
     c = Cruz(CRUZ)
-    alto = alturas_de_ahorcados(ahorcados, False, c, apilados=True)
-    assert alto.apilados == apilados
-    if apilados:
-        assert alto(2, np.pi / 2) - alto(1, np.pi / 2) == pytest.approx(APILA)
-        assert alto(2, 0.0) - alto(1, 0.0) == pytest.approx(APILA_ARRIBA)
-        for a in np.linspace(-np.pi, np.pi, 13):
-            assert alto(2, a) - alto(1, a) >= APILA_ARRIBA - 1e-9   # no se cruzan en la cintura
-    assert not alturas_de_ahorcados(ahorcados, True, c, apilados=True).apilados
-    assert not alturas_de_ahorcados(ahorcados, False, c).apilados
+    alto = alturas_de_ahorcados(ahorcados, False, c, banda=True)
+    assert alto.banda
+    for a in np.linspace(-np.pi, np.pi, 13):
+        assert alto(2, a) - alto(1, a) == pytest.approx(DZ_BANDA)   # no se cruzan en la cintura
+    assert alto(ahorcados, 0.0) == pytest.approx(c.zt - c.rb - BAJO_BANDA)
+    assert alto(1, 0.0) >= 1.0   # el primero no toca la mesa
+    assert not alturas_de_ahorcados(ahorcados, True, c, banda=True).banda
+    assert not alturas_de_ahorcados(ahorcados, False, c).banda
+
+
+def test_el_amarre_va_tallado():
+    """Tallado, como la foto de Gabriel (T15e): delante, las vueltas pasan bajo el palo de abajo
+    tan pegadas al cruce como detrás; el ballestrinque de inicio queda separado del palo de
+    arriba, más allá de donde los ahorcados cruzan el palo de abajo, y los ahorcados pasan por
+    los palos uno junto al otro, cada uno a menos de un diámetro y medio del anterior."""
+    from nudos.plantillas.amarre import CARRIL, SEPARA_INICIO, cuerda_y_medidas
+    spec = desde_datos(datos())
+    cruz = Cruz(spec.anfitrion)
+    c, c1, pasos = cuerda_y_medidas(spec.plantilla, cruz)
+    X = c.puntos[c.hitos["inicio"]:c.hitos["vuelta-3"]]
+    bajo = (np.abs(X[:, 0]) < 0.3) & (X[:, 2] < cruz.zb)   # las vueltas, bajo el palo de abajo
+    delante, detras = -X[bajo & (X[:, 1] < 0), 1], X[bajo & (X[:, 1] > 0), 1]
+    assert delante.max() == pytest.approx(detras.max(), abs=0.1)
+    assert delante.min() == pytest.approx(detras.min(), abs=0.1)
+    assert c1 - cruz.radio - 0.5 >= SEPARA_INICIO
+    assert c1 >= max(p["del"] for p in pasos) + CARRIL
+    for lado in ("der", "det", "izq", "del"):
+        assert all(0.9 < b[lado] - a[lado] < 1.5 for a, b in zip(pasos, pasos[1:])), lado
 
 
 def test_los_hitos_avanzan_por_la_misma_cuerda():

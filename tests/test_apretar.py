@@ -181,9 +181,10 @@ HUELLAS = {
     "modelo_as_de_guia": "9b81be60982f4a5dee00f701a02b21ef4e024c54479c957ef58ba84fb1db4f36",
     "modelo_ballestrinque": "d062f96093e0247a4ef140bb9eb9438330700a8756dc6fc75c1f310e72664fc3",
     "modelo_vuelta_de_escota": "218211b0debab83824a633bb9e5fec051685247b493126bd7c96d854ea1731c3",
-    # El amarre cuadrado cambió a propósito el 24 de noviembre de 2026: los ahorcados apilados.
-    # Pide el filtro 1 de los pasos 4 a 7 otra vez.
-    "modelo_amarre_cuadrado": "e41b8f9779c18fbe98c7b069778684d8e71ac7398e71132133841ce9983458db",
+    # El amarre cuadrado cambió a propósito el 24 de noviembre de 2026 (los ahorcados apilados)
+    # y otra vez el 28 (el prototipo tallado de T15e, a prueba de Gabriel). Si lo aprueba, pide
+    # el filtro 1 de todos los pasos.
+    "modelo_amarre_cuadrado": "7de1141435b7928fca309dbf153065fcf774a903072a2e172d0de1e5555c5044",
 }
 
 
