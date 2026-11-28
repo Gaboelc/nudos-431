@@ -1055,7 +1055,7 @@ La cámara (las paradas y la aceleración) es de T22.
 
 #### T22: El video completo
 
-**T22a, el diseño (M), que Gabriel aprueba antes de programar.** Escrito el 27 nov, con el guion de los tres pilotos, su hoja de revisión (`python -m nudos guion <slug>`) y la maqueta de las tarjetas (`python -m nudos prueba-tarjetas`). Lo de abajo cumple lo que pidió Gabriel el 26 nov (los capítulos, el reel, la voz que manda el tiempo, las tarjetas, la cámara y las aplicaciones) y agrega las decisiones que faltaban.
+**T22a, el diseño (M), que Gabriel aprueba antes de programar.** Gabriel lo aprobó entero el 28 nov. Escrito el 27 nov, con el guion de los tres pilotos, su hoja de revisión (`python -m nudos guion <slug>`) y la maqueta de las tarjetas (`python -m nudos prueba-tarjetas`). Lo de abajo cumple lo que pidió Gabriel el 26 nov (los capítulos, el reel, la voz que manda el tiempo, las tarjetas, la cámara y las aplicaciones) y agrega las decisiones que faltaban.
 
 - **Los capítulos.** Las duraciones son las estimadas del as de guía (`guion as-de-guia`): 2:53 en total.
 
@@ -1206,7 +1206,7 @@ La cámara (las paradas y la aceleración) es de T22.
 - **Lo que cuesta.** Los videos van con EEVEE a 32 muestras (Gabriel, 27 nov; `aspecto.MOTOR_VIDEO`), a unos 3,3 s por cuadro de 4K. El render crece con la duración: el as de guía son unas 9,5 h, y los 36 con sus reels, unos 16 días si duran como los pilotos (3 min en promedio, y 52 s el reel). Los 11 días de la elección de EEVEE suponían videos de 2 min.
   - **El cuadro quieto** (Gabriel, 28 nov): lo que necesitas, la seguridad y la pantalla final van sobre un cuadro quieto del render, con un acercamiento lento hecho en la composición, sin Blender. Los errores no, porque llevan su falla animada. Con eso y las fallas, los 36 con sus reels son unos 14 días de render.
 - **Lo que decide Gabriel en el punto de control:**
-  1. El diseño, con el guion en la especificación (v1.14).
+  1. El diseño, con el guion en la especificación (v1.14): aprobado entero el 28 nov.
   2. El guion del as de guía (`guion as-de-guia`): aprobado el 28 nov.
   3. Las tarjetas de la maqueta: decididas el 28 nov (la del paso sale y vuelve a entrar, la paleta es «Huetares» y el logo no va en la esquina).
   4. Las tres aplicaciones: decididas el 27 nov (el toldo, la mesa y la repisa, con el nudo que se tensa y aguanta).
@@ -1223,7 +1223,7 @@ La cámara (las paradas y la aceleración) es de T22.
   - **Sin ocupar alto:** con el logo dentro del flujo (11 mm arriba y 7 mm en el pie), 30 de las 36 fichas dejaban de caber: están justas. Por eso los dos logos van fuera del flujo. El de arriba (8,6 mm) se apoya en la línea y sube hacia el margen, hasta unos 6 mm del borde del papel, y el del pie (6,8 mm) va centrado en su línea, en el hueco que ya había. Las páginas no crecen nada. Los 6 mm del borde se revisan con las especificaciones de la imprenta (D8).
   - El sitio todavía dice el nombre corto.
 
-**Punto de control:** Gabriel aprueba el diseño, el guion de un piloto y la maqueta de las tarjetas.
+**Punto de control:** Gabriel aprueba el diseño, el guion de un piloto y la maqueta de las tarjetas. Cumplido el 28 nov: Gabriel aprobó el diseño completo.
 
 **T22b, la implementación (L).**
 - `nudos/video.py` gana los capítulos, el guion (`guion.revisado`), la cámara nueva, las tarjetas (`render/tarjetas/` en Edge, cuadro por cuadro, con el vidrio desenfocado en Pillow), los errores, la aplicación (las escenas de `guion.ESCENAS`) y el reel. Si crece demasiado, se parte en un paquete `nudos/video/`.

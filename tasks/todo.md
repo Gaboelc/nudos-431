@@ -101,7 +101,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Gabriel no quiere comparaciones («como un ojo», el conejo): tercera versión, sin ellas (27 nov)
     - [x] Gabriel aprobó el estilo del guion hablado con la tercera versión de los dos pilotos (27 nov): las reglas están en el plan, en el guion de T22a, y valen para los guiones de los 36 nudos
     - [x] T22a El diseño en el plan, el guion de los tres pilotos en su especificación (formato v1.14), la hoja `guion <slug>` y la maqueta de las tarjetas (`prueba-tarjetas`) (27 nov)
-    - [ ] Punto de control de T22a: Gabriel aprueba el diseño completo
+    - [x] Punto de control de T22a: Gabriel aprobó el diseño completo (28 nov)
       - [x] Gabriel eligió las tres aplicaciones (el cabo de un toldo en un poste, la mesa del campamento y la repisa en la cocina) y que en ellas el nudo se tense y aguante (27 nov)
       - [x] Gabriel decidió que la duración no limita: el video dura lo que haga falta para explicar bien, sin recortar escenas (27 nov)
       - [x] Gabriel aprobó «En la práctica» de los 36 nudos, con siete cambios suyos y «tienda de campaña» en vez de «carpa», también en las fichas de la margarita, la media llave y dos cotes y el tensor ajustable (27 nov)
