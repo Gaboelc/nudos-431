@@ -841,6 +841,14 @@ Los pilotos son tres: el as de guía (libre), el amarre cuadrado (plantilla) y l
 - **Un atasco, arreglado:** la primera prueba se trabó al 41 % mientras otro Blender (un `referencia`) llenaba la memoria de la tarjeta y la máquina estaba muy cargada: Python dejó de guardar los cuadros que Blender terminaba, y Blender se quedó esperando mallas. Ahora el renombre de cada cuadro reintenta (el antivirus puede tener abierto un PNG recién escrito) y, si igual falla, la orden lo dice al momento.
 - **Armar sin la tubería:** al armar la prueba, Windows falló con «recursos insuficientes»: cada proceso devolvía 8 cuadros de 4K juntos (unos 200 MB) por la tubería. Ahora cada proceso escribe su cuadro compuesto a un archivo crudo y Python se lo pasa a ffmpeg en orden, con a lo más 2 cuadros por proceso esperando (`EN_VUELO`), así que el disco no se llena aunque ffmpeg vaya más lento.
 - **El costo en el video, medido con la prueba:** 585 cuadros de 4K en unos 75 min, 7,7 s por cuadro en promedio, y unos 6 s en los tramos sin otras cosas corriendo en la máquina; T20a medía 4,6 s con la cámara quieta y sin desenfoque. Con 6 s, los 36 nudos (7200 cuadros de 4K y 3000 del reel cada uno) son unos 20 días; con 7,7 s, unos 25. Lo decide Gabriel antes de T19.
+- **El motor del video, otra vez (27 nov):** Gabriel quiere los videos a 60 fps y pidió volver a mirar EEVEE.
+  - Se dibujaron los mismos 30 cuadros del video (el medio del paso 4 del as de guía, en 4K, con el desenfoque y el foco) con los tres motores. Fue con otra sesión usando todo el procesador:
+    - Cycles 16, 11,6 s por cuadro (6 s con la máquina libre);
+    - EEVEE 16, 1,9 s;
+    - EEVEE 32, 3,3 s.
+  - EEVEE casi no se frena con el procesador ocupado: dibuja en la tarjeta, mientras que a Cycles se le suma lo que hace en el procesador en cada cuadro.
+  - Se ven distintos en la luz. EEVEE tiene más contraste, la mesa más oscura, sombras más marcadas bajo la cuerda, los surcos de la trenza más nítidos y no tiene el brillo de las fibras. Cycles se ve más suave, con la luz que rebota en la mesa. EEVEE 16 y 32 se ven casi iguales.
+  - **Gabriel eligió EEVEE con 32 muestras a 60 fps** (`aspecto.MOTOR_VIDEO`): unos 11 días para los 36 nudos, contra 19 a 25 con Cycles 16. Las fichas siguen en Cycles, y las previas, con EEVEE a 16.
 - **Las fichas no cambian:** `referencia` desde `main` (d358b3a) y con el código nuevo, y `comparar`. Los 36 `modelo.json`, iguales byte a byte; las imágenes de los 36 nudos con three.js, iguales (dos nudos salieron con unos píxeles en 1 o 2 niveles al imprimir dos corridas a la vez, e iguales al reimprimirlos); y las de Blender de los cuatro pilotos, iguales. El código de Blender que dibuja las fichas es el mismo para todos los nudos.
 
 **Punto de control de T20b:** Gabriel aprobó la prueba de 10 s en 4K del as de guía (26 nov). Preguntó si la cuerda puede tener un largo fijo y solo cruzarse y moverse, en vez de encogerse o estirarse en cada paso: es el diseño de T21 (abajo), que Gabriel aprobó el 27 nov.
@@ -1214,26 +1222,6 @@ La cámara (las paradas y la aceleración) es de T22.
 - **El disco:** un video de 3 min en 4K son unos 350 GB de cuadros. Por eso se arma por tramos: cada unos 10 s se codifican en un intermedio sin pérdida y los PNG se borran. `NUDOS_CUADROS` pasa a D:, que tiene 625 GB libres; C: tiene 164.
 - **La previa entera** (960 × 540) de los tres pilotos, con voz, música y tarjetas. Punto de control.
 - **Los tres pilotos en 4K y en vertical,** de noche. Punto de control.
-
-#### T24: El visor
-
-- **La trenza:** material físico con anisotropía y *sheen* (ya están en three.js 0.160) y un relieve más fino, con ruido de lygia.
-- **La luz:** un entorno para los reflejos (RoomEnvironment) y el tonemap AgX, que también trae la 0.160.
-- **El postprocesado:** oclusión ambiental (GTAOPass) y SMAA, solo si el equipo aguanta y con la vista quieta.
-- **Lo que se copia:** esos complementos de three@0.160.0 y los archivos de lygia que se usen, con sus licencias, van a `sitio/vendor/`, y `sitio/vendor/LEEME.txt` los anota.
-- **Opcional, después de T21:** la animación en 3D entre pasos dentro del visor, con los cuadros del motor comprimidos (unos MB por nudo), para girar el nudo mientras se ata. Cambia la lista de tipos del sitio (decisión 7), así que lo decide Gabriel.
-- **`exportar()`,** que arma la escena de las fichas, no cambia, y `comparar` lo comprueba.
-- **Punto de control:** Gabriel abre el visor en la computadora y en un celular de gama baja (el pendiente de T7b).
-
-**Cómo se hizo T24 (26 nov):**
-- **`sitio/fisico.js`,** un módulo nuevo que solo importa el visor (`visor.js`). `render/escena.js` gana unos ganchos (`fisico`) que, sin él, dejan todo como antes: la impresión sigue igual y `exportar()` no cambia. Con `?simple` en la dirección, el visor de antes, para comparar.
-- **La trenza:** `MeshPhysicalMaterial` con pelusa (*sheen*, del tono medio de la cuerda), anisotropía con un mapa de la dirección de cada hilo y un relieve fino de fibras con el ruido simplex de lygia; el tramado de lygia, al dibujar directo.
-- **La luz:** `RoomEnvironment` para los reflejos y AgX. Solo, el AgX de three.js aplanaba el azul (se veía gris): se le agregó un *look* de contraste y saturación (potencia 1,22 y saturación 1,3), como el «AgX - Base Contrast» de T20a, cambiando el código del tonemap al cargar `fisico.js`.
-- **El postprocesado, solo con la cámara quieta:** `GTAOPass` con MSAA ×4. Se mide un cuadro (después del primero, que compila); si tarda más de 90 ms, o no hay WebGL 2, el visor sigue sin postprocesado. En la RTX 4070, unos 2 ms.
-- **Sin SMAA:** dejaba un filo claro en el borde de la cuerda y de los palos, porque el fondo del visor es transparente. Por lo mismo, el `OutputPass` divide por el alfa antes del tonemap y vuelve a multiplicar después.
-- **Lo copiado** a `sitio/vendor/` (con permiso de Gabriel; anotado en `LEEME.txt`): 13 complementos de three@0.160.0 (el paquete, comprobado contra el hash de npm; el `three.module.min.js` del sitio es idéntico al del paquete) y 7 archivos de lygia del commit aa7580b, como texto dentro de `lygia/lygia.js` (el sitio no publica `.glsl`), con `LICENCIA.txt`.
-- **Pruebas:** `tests/test_visor.py`: cada módulo encuentra lo que importa, la impresión no carga el visor físico, lygia va con su licencia y el visor carga sin errores con y sin `?simple`.
-- **Publicado** (27 nov, a pedido de Gabriel): el sitio, construido desde 23a88ae (`gh-pages` ac05c20). Como la carpeta de A: era de otra sesión, `scripts/publicar.sh` corrió desde un clon nuevo de GitHub en `main`, con el venv de A:. En línea, los visores del as de guía, el amarre cuadrado y la cabeza de turco cargan sin errores en la consola, con el postprocesado (de 2 a 8 ms por cuadro en la RTX 4070), y con `?simple`, sin él. Falta el punto de control en un celular de gama baja.
 
 #### Los repositorios sugeridos: qué se usa y por qué
 

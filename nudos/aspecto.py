@@ -888,7 +888,7 @@ figcaption span {{ color: #5a6878; margin-left: 1mm; }}
 # --------------------------------------------------------------------------
 # Lo que eligió Gabriel con la prueba de T20a (26 nov): la cuerda real en las dos escenas, el
 # estudio para el paso a paso y los errores y el campamento J&E Gray 02 para la apertura, la
-# aplicación y el cierre (T22), y Cycles con 16 muestras.
+# aplicación y el cierre (T22), y Cycles con 16 muestras, que el 27 nov pasó a EEVEE con 32.
 VIDEO = {
     "estudio": Aspecto("estudio", 2, "estudio con la cuerda real", "trenza", "estudio", estilo="real",
                        resaltado="real-ambar"),
@@ -896,7 +896,10 @@ VIDEO = {
                           estilo="real", resaltado="real-ambar", hdri="hdri/je_gray_02_4k.hdr"),
 }
 ESCENA_VIDEO = "estudio"        # la del paso a paso; hasta que T22 arme los capítulos, la de todo el video
-MOTOR_VIDEO = "CYCLES:16"
+# EEVEE con 32 muestras (Gabriel, 27 nov), para los videos a 60 fps: en el mismo cuadro del video,
+# unos 3,3 s por cuadro de 4K contra 6 de Cycles con 16, así que los 36 nudos caben en unos 11 días
+# y no en 19 a 25. Se ve con más contraste y sin el brillo de las fibras. Las fichas siguen en Cycles.
+MOTOR_VIDEO = "BLENDER_EEVEE:32"
 ESTILO_VIDEO = {"azul": "real", "crema": "real-claro"}   # el color de la ficha → la cuerda del video
 FOCO_SUAVE = 0.5                # s: el foco sigue la punta con este promedio, para que no salte
 GRANO_VIDEO = 0.0075            # el grano de cada cuadro, de un píxel (el de T20a, ya suavizado)
