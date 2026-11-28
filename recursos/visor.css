@@ -53,6 +53,9 @@ a { color: var(--accent-ink); }
 .eyebrow { margin: 0; font-size: 0.74rem; color: var(--muted); }
 .eyebrow a { color: inherit; text-decoration: none; }
 .eyebrow a:hover { text-decoration: underline; }
+.eyebrow a:hover .junto { text-decoration: underline; }
+/* Lo que no se parte entre líneas si cabe entero, como el nombre del grupo; si no cabe, se parte igual. */
+.junto { display: inline-block; }
 h1 {
   margin: 0; font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
   font-size: clamp(3.2rem, 9vw, 5.8rem); line-height: 0.86; letter-spacing: 0.005em; text-wrap: balance;
