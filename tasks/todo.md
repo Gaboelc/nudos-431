@@ -56,7 +56,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [ ] T15e Calibrar con cuerda real: Gabriel mide la cuerda y fotografía cuatro nudos apretados (S)
     - [x] Gabriel midió la cuerda y fotografió tres nudos (25 nov); `config/cuerdas.yaml` con la cuerda medida y los pilotos con ella, sin fallas
     - [x] Punto de control: Gabriel aprobó la cuerda medida con `revision/t15e/t15e-color.pdf` (25 nov)
-    - [ ] La foto del amarre cuadrado apretado
+    - [x] La foto del amarre cuadrado apretado: Gabriel lo ató con paracord y mandó cuatro fotos (28 nov, `entradas/t15e/amarre-cuadrado-1.jpg` a `-4.jpg`)
+    - [ ] Los amarres tallados, como la foto (Gabriel, 28 nov): las vueltas en bandas pegadas a los palos, los ahorcados apretándolas contra el cruce y los ballestrinques separados del cruce. Primero, una página de prueba con la foto, el amarre de hoy y el tallado; con ella aprobada, las fichas de los cuatro amarres y su filtro 1. Con subagentes en paralelo (a pedido de Gabriel)
   - [x] T15f `construir` usa el motor en cualquier nudo y anfitrión, comprobado con los pilotos (M) (24 nov)
     - [x] Las mallas de todos los anfitriones, las plantillas por el motor, `referencia` y `comparar` con él, y los cuatro pilotos sin fallas (24 nov)
     - [x] Punto de control: Gabriel revisó «Cómo se hizo T15f» en el plan (24 nov)
@@ -86,14 +87,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] T21b Las poses de video y el largo fijo (`animar.poses_video`, 27 nov)
     - [x] T21c La guía nueva con el as de guía (27 nov): la mano que agarra, lo suelto con su peso, el tiempo de quinto grado y una manera de atar por paso: la gaza pequeña volteando una bolsa (2), la mano que acerca el chicote (3), la cinta (4 y 7), el barrido (5) y el lazo (6); la cuerda de más espera en una bolsa dentro del nudo. La previa dura 40,5 s, sin brincos, picos ni temblores, con 12 paradas en seco de la punta, y la prueba de 10 s en 4K es del paso 4. El detalle está en «Cómo se hizo T21b y T21c» del plan
       - [x] Punto de control: Gabriel aprobó la previa y la prueba en 4K (27 nov). Antes pidió que la cuerda de más no subiera en diagonal en el paso 3 y que la cola no se enrollara en el paso 5, y le encantó el paso 4, con la cámara que se aleja y la gaza que se recoge
-    - [ ] T21d La madeja, con el amarre cuadrado; prueba de 10 s y punto de control
-      - [x] La madeja no pasa por debajo del palo de abajo, que descansa sobre la cuerda en la mesa (en las vueltas, seis veces, con 2,8 a 3,3 m por atar), y el plan B tampoco. Gabriel eligió que la cuerda salga de la mano (27 nov)
-      - [x] La cuerda sale de la mano: las poses de la plantilla con la cola en la mano por el camino del paso siguiente, lo que falta esperando sin verse donde va a quedar, la mano a 5, 20 y 30 d/s, más despacio en las curvas, y el motor que agrega los nodos que salen (`poses_plantilla`, `_tramo_plantilla`, `animar_plantilla`; 27 nov)
-      - [x] La medida de `calidad`: 2314 nodos fijos, el largo a 0,36 %, sin recoger ni morph, sin brincos, picos ni temblores, 2 frenadas casi quietas y el resaltado siempre entero (27 nov); en el plan, junto a la del as de guía
-      - [x] La previa entera (`build/videos/amarre-cuadrado/amarre-cuadrado-previa.mp4`, 50 s, 27 nov)
-      - [x] Las fichas no cambian: `referencia` y `comparar` con three.js, los 36 `modelo.json` iguales byte a byte y las imágenes también (27 nov)
-      - [x] La prueba de 10 s en 4K (`build/videos/amarre-cuadrado/amarre-cuadrado-prueba-4k.mp4`, el paso 4, el primer ahorcado; 67 min de render, 28 nov)
-      - [ ] Punto de control: Gabriel revisa la previa y la prueba en 4K del amarre
+    - [x] T21d El amarre cuadrado con largo fijo (27 y 28 nov): la madeja no pasa por debajo del palo de abajo, que descansa sobre la cuerda en la mesa, así que la cuerda sale de la mano (Gabriel, 27 nov). La mano la tiende quieta donde la dibuja el paso, lo que falta espera sin verse donde va a quedar, y la cuerda tiene siempre 2314 nodos. La previa dura 50 s, sin brincos, picos ni temblores y con el largo a 0,36 %, y la prueba de 10 s en 4K es del paso 4, las dos con EEVEE. Las fichas no cambian. El detalle está en «Cómo se hizo T21d» del plan
+      - [x] Punto de control: Gabriel aprobó T21d (28 nov) y pidió los amarres tallados, como su foto (en T15e)
     - [ ] T21e El error y la aplicación
   - [ ] T22 El video completo: capítulos, guion, cámara, tarjetas, errores, aplicación y reel (L)
     - [x] Borrador del guion hablado de los dos pilotos (`config/guion/`) y su prueba (`prueba-guion`), a pedido de Gabriel, para que la voz suene natural (27 nov)
