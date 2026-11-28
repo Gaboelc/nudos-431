@@ -71,7 +71,7 @@ MINIMO = {"apertura": 6.0, "materiales": 3.0}   # s: lo menos que dura el capít
 CAMBIO_CAPITULO = 0.6      # s: la tarjeta de capítulo, entre uno y otro
 PANTALLA_FINAL = 10.0      # s al final para la pantalla final de YouTube (de 5 a 20 s)
 MIN_YOUTUBE = 10.0         # s: YouTube no acepta capítulos más cortos
-META = 150.0               # s: lo más que debería durar el video completo
+# El video no tiene una duración meta: dura lo que haga falta para explicar bien (Gabriel, 27 nov).
 CUADRO_4K = 6.0            # s por cuadro en 4K con Cycles a 16 muestras (T20b)
 FPS = 60
 
@@ -500,10 +500,7 @@ def _html(spec, lista: list[Parte], total: float, rl: list[Parte], malos: list[s
               f'<div class="cifra"><b>{reloj(largo_reel)}</b><span>el reel (de {REEL[0]:.0f} a {REEL[1]:.0f} s)</span></div>',
               f'<div class="cifra"><b>{total * FPS * CUADRO_4K / 3600:.0f} h</b><span>de render en 4K, a '
               f'{CUADRO_4K:.0f} s por cuadro</span></div>', '</div>']
-    if total > META:
-        cuerpo.append(f'<p class="bajada">Pasa de los {reloj(META)} de la meta: cada segundo de más son unos '
-                      f'{FPS * CUADRO_4K / 60:.0f} min de render.</p>')
-    barra = "".join(f'<div style="flex: {b - a:.2f}; background: {COLOR[c]}" title="{e(NOMBRES[c])}: '
+    barra ="".join(f'<div style="flex: {b - a:.2f}; background: {COLOR[c]}" title="{e(NOMBRES[c])}: '
                     f'{b - a:.0f} s">{e(NOMBRES[c])}</div>' for c, a, b in caps)
     cuerpo.append(f'<div class="barra">{barra}</div>')
     if malos:
