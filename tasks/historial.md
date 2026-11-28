@@ -1878,6 +1878,30 @@ Un cruce guarda su encima y su debajo todo el tiempo que existe: si la secuencia
 - **Punto de control:** Gabriel abrió el visor en la computadora y en un celular de gama baja, y todo anduvo bien (27 nov). Cierra también el pendiente de T7b.
 - **Ramas y commits:** la sesión «el aspecto», con T20b, a `main`: f88f5fb.
 
+#### Antes de T19: los nudos que fallaban con el motor
+
+Antes de la corrida de T19, todos los nudos tienen que construir sin fallas con el motor (`python -m nudos --motor construir <slug>`), sin cambiar la secuencia declarada ni el texto de las fichas.
+
+**Cómo se hizo (27 y 28 nov):**
+- **Cuáles fallaban:** `--motor referencia` de los 36 desde `main` (f1c6fef) dio fallas en 15, no en 5. A los que se conocían desde T15f (el amarre diagonal, el trípode, la cornamusa, el refuerzo de cabo y el adujado) se sumaron el simple, el tensor, la vuelta de braza, el ballestrinque doble, el fugitivo, la margarita (su error), el nudo de liberación rápida, el pescador doble, la presilla de alondra y la cabeza de turco (su reverso). Hasta entonces, con el motor solo se habían construido los pilotos y algunos nudos de plantilla y de anfitrión.
+- **Por qué:** casi todo venía de `separar`, que arma la cuerda de partida del motor. Donde la cuerda va apretada no llegaba nunca a una cuerda sin choques: sus 16 pasadas de largo por vuelta, sin nada que alise, la arrugaban en zigzag (en la cornamusa, hasta 118° entre dos tramos seguidos y nodos a siete tramos uno de otro a 0,77, aun partiendo de la cuerda relajada, que estaba bien). Entonces la IPC no podía partir (un par dentro de la barrera), separar se rendía (dos tramos a 0,91 a 0,96) o dejaba dobleces de radio 0,79 a 0,89, que la memoria del motor guardaba. En el diagonal y el adujado, además, separar movía lo que la plantilla traza quieto, y doblaba la vuelta de braza del diagonal con radio 0,47. Y en la cornamusa, bajo cada cuerno cabe justo una cuerda: con la holgura de la malla, la tensión de atado la subía 0,056 dentro del cuerno, y el máximo es 0,05.
+- **El arreglo, en el motor y sin tocar lo que ya construía:**
+  1. `separar` no mueve los puntos `quietos` de la plantilla, igual que `relajar()`. Solo los tienen el amarre diagonal y el adujado.
+  2. `libre.asentar_o_relajar`: si el primer intento falla (separar no llega, la IPC no puede partir o Newton no converge) o deja el paso fuera de los límites (`cumple_limites`: separación, curvatura y estiramiento), el paso se asienta otra vez desde la cuerda relajada, la de las fichas sin el motor (`relajar()`, con lo mismo que le pasa cada constructor), sin separarla: `relajar()` ya la deja sin choques ni dobleces. Si tampoco así se puede, queda el primer intento. Vale para los pasos, el error, el reverso y el apretado de las plantillas.
+  3. La malla de la cornamusa va sin holgura (`asentar.HOLGURA_CORNAMUSA`): la barrera no deja que la cuerda entre en la madera más de 1 − dmin = 0,05, lo que acepta la comprobación.
+- **Resultado:**
+  - **Los 36 construyen sin fallas con el motor** (`--motor referencia` de la rama: 36 nudos en 44 min con 10 procesos, todos impresos). Cada uno de los 15 arreglados tarda de 30 s a 5 min con `--motor construir`, con 6 a 12 procesos y la computadora cargada.
+  - **Los 21 que ya construían dan el mismo `modelo.json` byte a byte**, y las mismas imágenes. Cuatro imágenes difirieron en 1 a 7 píxeles de un nivel; impresos otra vez desde `main`, esos nudos salen iguales a los de la rama: era el navegador.
+  - **Sin la opción no cambia nada:** los 36 `modelo.json` iguales y las imágenes también (dos con 5 y 7 píxeles de un nivel, que impresas otra vez desde `main` salen iguales a las de la rama).
+  - **Construir dos veces da lo mismo:** las dos corridas de `main` con el motor (con 28 y con 10 procesos) dan los 36 `modelo.json` iguales byte a byte, y los 15 arreglados salen iguales en `build/` y en la referencia.
+  - **Cómo se ven:** casi iguales a las fichas sin el motor, porque la memoria guarda la forma de partida y el motor solo la asienta. `revision/antes-de-t19/quince-con-el-motor.pdf`, en el worktree `epic-stonebraker-96724f` (fuera de git), pone cada imagen de los 15 sin el motor y con él.
+  - **Las referencias** se imprimieron con three.js (`NUDOS_RENDER=threejs`), las dos de cada par igual. Con Blender, los 8 impresores no terminaron ni una imagen en 30 minutos, con la tarjeta compartida con el render de video de otra sesión. Las carpetas quedan en `%LOCALAPPDATA%\nudos\ref\` (desde la app, `…\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\nudos\ref\`): `antes` y `despues` sin el motor, `antes-motor-tj` y `despues-motor-tj` con él.
+  - **Pruebas:** `test_fisica_asentar.py` gana tres (separar no mueve los quietos, el paso 2 del diagonal sin fallas y el respaldo con la cuerda relajada) y `test_fisica_solidos.py`, la cornamusa sin holgura. La suite pasa: 932 pruebas, en 11 min con `-n 4` y la computadora cargada.
+- **Lo que vi de la IPC:** sus pares no son los de `separar`. ipctk deja chocar dos tramos si alguno de los cuatro pares de sus nodos está a más de ⌈1,5/h⌉ = 8 nodos a lo largo de la cuerda, así que ve nodos a siete tramos (1,4 d), y `separar` y la comprobación miran desde nueve. Con la cuerda sin dobleces no importa (con radio 0,9, dos nodos a siete tramos quedan a 1,26), pero un zigzag de `separar` los dejaba a 0,77 y la IPC no podía partir. Es lo que T15f había dejado para T19 (los filtros de vecinos): con el arreglo no hizo falta igualarlos.
+- **Cuidado con la memoria:** dos `referencia` a la vez imprimen con 16 Blender (unos 40 GB comprometidos) y agotaron la memoria de la computadora, también la de otras sesiones. Una referencia a la vez.
+- **Punto de control:** Gabriel aprobó el arreglo y pidió integrarlo (28 nov). Queda su decisión sobre `relajar()` en el paso 5 de T19 (en el plan).
+- **Ramas y commits:** la sesión `epic-stonebraker-96724f`, en `claude/epic-stonebraker-96724f`, a `main` por avance directo: 18f72c0 y el cierre.
+
 ## La lista de tareas hasta el 22 de noviembre de 2026
 
 ## Tareas: Libro de nudos del Grupo 431
