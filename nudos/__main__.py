@@ -84,6 +84,12 @@ def main(argv=None) -> int:
     ordenes.add_parser("prueba-motor", help="página de prueba del motor de física (T15d): los "
                                            "pilotos como salen hoy y con el motor, en color y "
                                            "en gris")
+    pta = ordenes.add_parser("prueba-tallado", help="página de prueba del amarre tallado: las fotos del "
+                                                    "amarre real y, en dos columnas, hoy y el "
+                                                    "prototipo, en color y en gris")
+    pta.add_argument("--hoy", type=Path, help="carpeta con las imágenes de «Hoy» (por omisión, "
+                                              "build/amarre-cuadrado/impresion)")
+    pta.add_argument("--tallado", type=Path, help="carpeta con las del prototipo (por omisión, la de «Hoy»)")
     ordenes.add_parser("prueba-blender", help="página de prueba de las fichas en Blender (T16 y "
                                              "T15g): los pilotos con el motor, dibujados con "
                                              "three.js y con Blender, en color y en gris")
@@ -169,6 +175,8 @@ def main(argv=None) -> int:
             return _prueba_motor()
         if args.orden == "prueba-blender":
             return _prueba_blender()
+        if args.orden == "prueba-tallado":
+            return _prueba_tallado(args.hoy, args.tallado)
         if args.orden == "prueba-atar":
             return _prueba_atar(args.slugs, not args.sin_video, args.solo_video)
         if args.orden == "video":
@@ -276,6 +284,18 @@ def _prueba_motor() -> int:
         for f in motor.fallas:
             print(f"  - {f}")
     print(f"Página de prueba del motor en {destino.relative_to(RAIZ)}")
+    return 0
+
+
+def _prueba_tallado(hoy, tallado) -> int:
+    from .prueba_tallado import HOY, pagina
+    try:
+        salidas = pagina(hoy.resolve() if hoy else HOY, tallado.resolve() if tallado else None)
+    except (FileNotFoundError, ImpresionError) as e:
+        print(e, file=sys.stderr)
+        return 1
+    for s in salidas:
+        print(f"Página de prueba del amarre tallado en {s}")
     return 0
 
 
