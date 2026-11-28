@@ -16,7 +16,7 @@ Lo pendiente. El detalle de cada tarea está en `tasks/plan.md`; lo cerrado, con
 ## Pendientes de Gabriel
 
 - [ ] Revisar el texto de las fichas de T5 (ballestrinque), T6 (vuelta de escota) y T6b (los tres nudos de T6b)
-- [ ] Abrir el visor en un celular de gama baja y revisar que cargue y gire con fluidez (T7b; en la computadora, armar el paso más largo del amarre tarda 37 ms en vez de 20 y girar cuesta lo mismo)
+- [ ] Decidir si el visor anima en 3D los pasos con los cuadros del motor, para girar el nudo mientras se ata (lo opcional de T24, después de T21; cambia la lista de tipos del sitio, decisión 7)
 - [ ] Confirmar los números ABOK: el simple (46), el arnés de hombre (153), la silla de bombero (1100), el rizo (1402), el pescador (1414), el pescador doble (294), el constrictor (la sesión puso 1249 y la fuente dice 1188), el adujado (3089) y los amarres redondo y trípode, que quedaron sin número
 - [ ] El paso de preparar del ocho (abierto desde el punto de control de la tanda 1)
 - [ ] Filtro 2 de todos los nudos: alguien que nunca lo ha hecho lo ata solo con la ficha impresa (en pausa desde el 9 nov); se registra en cada especificación
@@ -103,9 +103,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
     - [ ] Los tres pilotos en 4K y en vertical; punto de control
   - [x] T23 El sonido (26 y 27 nov): la voz de Gabriel clonada como de estudio (Qwen3-TTS desde su muestra del DJI, con Sidon; la muestra, fuera de git en `entradas/_voz/`), cinco canciones compuestas en código con el motivo en celesta, el foley del motor y la mezcla a −14 LUFS (`nudos/voz.py`, `musica.py`, `foley.py`, `mezcla.py`; `prueba-voz`, `prueba-musica`, `prueba-mezcla` y `prueba-voz-propia`). El detalle, en el historial
-  - [x] T24 El visor: material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`) (26 nov)
-  - [x] Publicar el sitio con el visor nuevo (27 nov, a pedido de Gabriel: construido desde 23a88ae, `gh-pages` ac05c20; los visores del as de guía, el amarre cuadrado y la cabeza de turco cargan en línea sin errores, con el postprocesado en 2 a 8 ms)
-  - [ ] Punto de control de T24: Gabriel abre el visor en la computadora y en un celular de gama baja (ya está en línea; con `?simple` en la dirección, el visor de antes)
+  - [x] T24 El visor (26 y 27 nov): material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`), publicado en el sitio. Gabriel lo abrió en la computadora y en un celular de gama baja, y todo anduvo bien (27 nov). El detalle, en el historial
   - [x] Borrar los cuadros del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel, 27 nov): los 1080 viejos del 25 nov (35,9 GB) y los 585 de la prueba de 10 s (14,6 GB). Quedan los `atado` de los dos pilotos
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36
 - [ ] Punto de control de la fase 5

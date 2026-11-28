@@ -1856,6 +1856,28 @@ Un cruce guarda su encima y su debajo todo el tiempo que existe: si la secuencia
   - **Eligió a ciegas la voz de hoy** frente a la misma subida 1,4 semitonos (ffmpeg y Sidon) y a otra clonada desde un tramo de su lectura del ballestrinque, las dos a su altura. La voz de los videos no cambia.
 - **Ramas y commits:** la sesión «el sonido», en `claude/charming-engelbart-a77e97`, a `main` por rebase: b4583a0, 35fd171 y 3d5c02a (T23a y T23b), 6c1352a (T23c), e977b1c y bea1503 (sin tics y la voz de Gabriel), 07d4aed (Sidon), 8e7249e (la muestra del DJI), 9e6d893 (su voz en los videos) y el cierre.
 
+#### T24: El visor
+
+- **La trenza:** material físico con anisotropía y *sheen* (ya están en three.js 0.160) y un relieve más fino, con ruido de lygia.
+- **La luz:** un entorno para los reflejos (RoomEnvironment) y el tonemap AgX, que también trae la 0.160.
+- **El postprocesado:** oclusión ambiental (GTAOPass) y SMAA, solo si el equipo aguanta y con la vista quieta.
+- **Lo que se copia:** esos complementos de three@0.160.0 y los archivos de lygia que se usen, con sus licencias, van a `sitio/vendor/`, y `sitio/vendor/LEEME.txt` los anota.
+- **Opcional, después de T21:** la animación en 3D entre pasos dentro del visor, con los cuadros del motor comprimidos (unos MB por nudo), para girar el nudo mientras se ata. Cambia la lista de tipos del sitio (decisión 7), así que lo decide Gabriel; quedó en sus pendientes de `tasks/todo.md`.
+- **`exportar()`,** que arma la escena de las fichas, no cambia, y `comparar` lo comprueba.
+- **Punto de control:** Gabriel abre el visor en la computadora y en un celular de gama baja (el pendiente de T7b).
+
+**Cómo se hizo T24 (26 nov):**
+- **`sitio/fisico.js`,** un módulo nuevo que solo importa el visor (`visor.js`). `render/escena.js` gana unos ganchos (`fisico`) que, sin él, dejan todo como antes: la impresión sigue igual y `exportar()` no cambia. Con `?simple` en la dirección, el visor de antes, para comparar.
+- **La trenza:** `MeshPhysicalMaterial` con pelusa (*sheen*, del tono medio de la cuerda), anisotropía con un mapa de la dirección de cada hilo y un relieve fino de fibras con el ruido simplex de lygia; el tramado de lygia, al dibujar directo.
+- **La luz:** `RoomEnvironment` para los reflejos y AgX. Solo, el AgX de three.js aplanaba el azul (se veía gris): se le agregó un *look* de contraste y saturación (potencia 1,22 y saturación 1,3), como el «AgX - Base Contrast» de T20a, cambiando el código del tonemap al cargar `fisico.js`.
+- **El postprocesado, solo con la cámara quieta:** `GTAOPass` con MSAA ×4. Se mide un cuadro (después del primero, que compila); si tarda más de 90 ms, o no hay WebGL 2, el visor sigue sin postprocesado. En la RTX 4070, unos 2 ms.
+- **Sin SMAA:** dejaba un filo claro en el borde de la cuerda y de los palos, porque el fondo del visor es transparente. Por lo mismo, el `OutputPass` divide por el alfa antes del tonemap y vuelve a multiplicar después.
+- **Lo copiado** a `sitio/vendor/` (con permiso de Gabriel; anotado en `LEEME.txt`): 13 complementos de three@0.160.0 (el paquete, comprobado contra el hash de npm; el `three.module.min.js` del sitio es idéntico al del paquete) y 7 archivos de lygia del commit aa7580b, como texto dentro de `lygia/lygia.js` (el sitio no publica `.glsl`), con `LICENCIA.txt`.
+- **Pruebas:** `tests/test_visor.py`: cada módulo encuentra lo que importa, la impresión no carga el visor físico, lygia va con su licencia y el visor carga sin errores con y sin `?simple`.
+- **Publicado** (27 nov, a pedido de Gabriel): el sitio, construido desde 23a88ae (`gh-pages` ac05c20). Como la carpeta de A: era de otra sesión, `scripts/publicar.sh` corrió desde un clon nuevo de GitHub en `main`, con el venv de A:. En línea, los visores del as de guía, el amarre cuadrado y la cabeza de turco cargan sin errores en la consola, con el postprocesado (de 2 a 8 ms por cuadro en la RTX 4070), y con `?simple`, sin él.
+- **Punto de control:** Gabriel abrió el visor en la computadora y en un celular de gama baja, y todo anduvo bien (27 nov). Cierra también el pendiente de T7b.
+- **Ramas y commits:** la sesión «el aspecto», con T20b, a `main`: f88f5fb.
+
 ## La lista de tareas hasta el 22 de noviembre de 2026
 
 ## Tareas: Libro de nudos del Grupo 431
