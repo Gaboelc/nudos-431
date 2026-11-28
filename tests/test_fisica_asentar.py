@@ -212,3 +212,70 @@ def test_la_vuelta_de_escota_con_el_motor_no_dobla_de_mas(monkeypatch):
     r = construir_paso(spec.pasos[3], spec.anfitrion, spec.cuerdas)
     assert r.fallas == []
     assert r.medidas["curvatura_min"] >= LIMITES_MOTOR["curvatura_min"] + 0.1
+
+
+# --- Antes de T19: los nudos cuya cuerda de partida va apretada ---
+
+def _con_vuelta(radio=1.0, h=0.2):
+    """Una cuerda sobre la mesa que va, vuelve por una media vuelta de `radio` y sigue al revés,
+    a 2·radio de sí misma, cada h. Devuelve la cuerda y qué nodos son de la media vuelta."""
+    ida = cuerda_recta((-6, -radio, 0.5), (0, -radio, 0.5), h)
+    t = np.linspace(-math.pi / 2, math.pi / 2, int(round(math.pi * radio / h)) + 1)[1:-1]
+    vuelta = np.column_stack([radio * np.cos(t), radio * np.sin(t), np.full(len(t), 0.5)])
+    vuelve = cuerda_recta((0, radio, 0.5), (-6, radio, 0.5), h)
+    X = np.vstack([ida, vuelta, vuelve])
+    quietos = np.zeros(len(X), bool)
+    quietos[len(ida):len(ida) + len(vuelta)] = True
+    return X, quietos
+
+
+def test_separar_no_mueve_los_puntos_quietos():
+    """Lo que la plantilla traza quieto (el amarre diagonal, el adujado) no se mueve al separar,
+    aunque se doble más que RADIO_PARTIDA: la plantilla ya lo traza sin choques. Sin quietos,
+    separar abre la vuelta de radio 1."""
+    X, quietos = _con_vuelta()
+    Y = separar(X, 0.2, quietos=quietos)
+    assert np.array_equal(Y[quietos], X[quietos])
+    Z = separar(X, 0.2)
+    assert np.abs(Z[quietos] - X[quietos]).max() > 0.01
+
+
+def test_el_amarre_diagonal_con_el_motor_no_dobla_su_vuelta_de_braza(monkeypatch):
+    """Separar doblaba con radio 0,47 la vuelta de braza del amarre diagonal, que la plantilla
+    traza quieta, y la IPC no podía partir de ahí. Sin moverla, el paso 2 sale sin fallas."""
+    from nudos.plantillas.pasos import construir_paso, geometria
+    from nudos.spec import cargar
+    monkeypatch.setenv("NUDOS_MOTOR", "1")
+    spec = cargar("amarre-diagonal")
+    g = geometria(spec)
+    r = construir_paso(2, g, g.cuerda(), spec.pasos[1].hasta, spec.pasos[0].hasta)
+    assert r.fallas == []
+
+
+def test_si_separar_no_puede_el_motor_parte_de_la_cuerda_relajada(monkeypatch):
+    """Si separar no logra una cuerda de partida sin choques, el paso se asienta desde la cuerda
+    relajada (relajar()), sin separarla. Si separar puede, no se relaja nada: los pasos que
+    salían bien con el motor salen igual."""
+    import nudos.fisica.asentar as asentar_mod
+    import nudos.libre as libre
+    monkeypatch.setenv("NUDOS_MOTOR", "1")
+    X, _ = _con_vuelta(radio=1.5)
+    relajadas = []
+    relajar = libre.relajar
+
+    def contar(*a, **kw):
+        relajadas.append(1)
+        return relajar(*a, **kw)
+
+    monkeypatch.setattr(libre, "relajar", contar)
+    primero, limites = libre.asentar_o_relajar(X, 0.2)
+    assert relajadas == [] and limites == libre.LIMITES_MOTOR
+    assert np.array_equal(primero, asentar_mod.asentar_paso(X, 0.2).X)
+
+    def no_puede(*a, **kw):
+        raise libre.TrazadoError("no")
+
+    monkeypatch.setattr(asentar_mod, "separar", no_puede)
+    Xr, limites = libre.asentar_o_relajar(X, 0.2)
+    assert relajadas == [1] and limites == libre.LIMITES_MOTOR
+    assert np.array_equal(Xr, asentar_mod.asentar_paso(relajar(X, 0.2), 0.2, separada=True).X)

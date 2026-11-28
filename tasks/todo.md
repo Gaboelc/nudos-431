@@ -107,6 +107,8 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [x] T24 El visor (26 y 27 nov): material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`), publicado en el sitio. Gabriel lo abrió en la computadora y en un celular de gama baja, y todo anduvo bien (27 nov). El detalle, en el historial
   - [x] Borrar los cuadros del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel, 27 nov): los 1080 viejos del 25 nov (35,9 GB) y los 585 de la prueba de 10 s (14,6 GB). Quedan los `atado` de los dos pilotos
 - [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36
+  - [x] Antes de T19: los 36 nudos construyen sin fallas con el motor (27 nov; fallaban 15, no 5). `separar` no mueve los puntos quietos de la plantilla, el motor parte de la cuerda relajada cuando `separar` no puede y la malla de la cornamusa va sin holgura. El detalle, en «Antes de T19» del plan
+  - [ ] Punto de control: Gabriel revisa el arreglo y decide si `relajar()` se queda como la partida de respaldo del motor (en T19 ya no se puede borrar tal cual)
 - [ ] Punto de control de la fase 5
 
 ## Fase 6: libro y primera edición

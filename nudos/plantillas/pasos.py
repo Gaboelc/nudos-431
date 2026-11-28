@@ -293,14 +293,17 @@ def construir_paso(n: int, g, c, hito: str, previo: str | None, tension: str = "
         # cuerda dobla ahí hacia la mesa, y sostenerla donde la deja la plantilla comprimía un
         # tramo un 4 % (T15d). El roce y la memoria de lo que sigue suelto bastan para que lo
         # atado no se afloje. Los puntos `quietos` no se sostienen: la memoria ya guarda la
-        # forma con que la plantilla los traza.
+        # forma con que la plantilla los traza; separar no los mueve. Si separar no puede, el
+        # paso se asienta desde la cuerda relajada como sin el motor (asentar_o_relajar).
         from ..fisica.asentar import tensiones_de_amarre
         tension = getattr(g.plantilla, "TENSION", tension)
         hitos = c.c.hitos if isinstance(c, _CuerdaDeAmarre) else {}
         s_hitos = {k: float(s_ctrl[i]) for k, i in hitos.items() if i <= t.fin}
         motor = {"tension": tensiones_de_amarre(len(X), s_hitos, h, s_fin, tension),
-                 "chicote": True, "nodos_mano": 1}
-        Xr, limites = asentar_o_relajar(X, h, anfitrion=solido, motor=motor)
+                 "chicote": True, "nodos_mano": 1, "quietos": quietos}
+        Xr, limites = asentar_o_relajar(X, h, anfitrion=solido, motor=motor,
+                                        gravedad=np.zeros(len(X), bool),
+                                        pasadas_largo=PASADAS_LARGO, quietos=quietos)
     elif quietos is not None and quietos.all():
         # Nada se relaja, como en el adujado; solo se apoya en la mesa lo que la curva suave
         # dejó apenas por debajo.

@@ -68,6 +68,11 @@ RADIO_PARTIDA = 1.1
 # apretada de entrada. Sin esto, los ahorcados del amarre, metidos entre los dos palos, quedaban
 # acuñados y se estiraban un 4 %. Es lo de T14a (la malla a radio − 0,56).
 HOLGURA_SOLIDO = 0.06
+# La cornamusa va sin holgura (antes de T19). Bajo cada cuerno cabe justo una cuerda
+# (HUECO_CORNAMUSA mide un diámetro), y con la holgura la tensión de atado subía la cuerda contra
+# el cuerno hasta 0,06 dentro de la madera, más de lo que acepta la comprobación
+# (anfitrion.PENETRACION_MAX, 0,05). Sin holgura, la barrera no la deja entrar más que 1 − DMIN.
+HOLGURA_CORNAMUSA = 0.0
 
 
 def material_de(grosor: float, base: Material = CUERDA_8MM) -> Material:
@@ -85,12 +90,15 @@ def material_de(grosor: float, base: Material = CUERDA_8MM) -> Material:
 # --------------------------------------------------------------------------
 def solidos(solido, grosor: float = 1.0) -> list:
     """El anfitrión como mallas para el contacto de una cuerda de `grosor`. La malla va un radio
-    de cuerda (y HOLGURA_SOLIDO) por dentro de la madera: la barrera deja el eje a dmin + dhat/2
-    = un diámetro de ella, donde la cuerda toca la madera. Sin anfitrión, ninguno."""
+    de cuerda (y HOLGURA_SOLIDO; en la cornamusa, HOLGURA_CORNAMUSA) por dentro de la madera: la
+    barrera deja el eje a dmin + dhat/2 = un diámetro de ella, donde la cuerda toca la madera.
+    Sin anfitrión, ninguno."""
+    from ..anfitrion import Cornamusa
     from .solidos import mallas
     if solido is None:
         return []
-    return mallas(solido, grosor / 2 + HOLGURA_SOLIDO * grosor)
+    holgura = HOLGURA_CORNAMUSA if isinstance(solido, Cornamusa) else HOLGURA_SOLIDO
+    return mallas(solido, grosor / 2 + holgura * grosor)
 
 
 def contacto(X, cortes, grosores, solido=None):
@@ -131,7 +139,7 @@ def contacto(X, cortes, grosores, solido=None):
 # --------------------------------------------------------------------------
 # Separar el punto de partida
 # --------------------------------------------------------------------------
-def separar(X, h, reparto=None, solido=None, iteraciones: int = 2000):
+def separar(X, h, reparto=None, solido=None, iteraciones: int = 2000, quietos=None):
     """X con ningún par de tramos a menos de SEPARAR_A veces la suma de sus radios, apoyada
     sobre la mesa, fuera del anfitrión, sin doblarse más que RADIO_PARTIDA y con cada tramo de
     largo h (a 0,5 %). Solo choques, largo y curva, sin gravedad: la forma cambia lo justo. Los
@@ -141,7 +149,11 @@ def separar(X, h, reparto=None, solido=None, iteraciones: int = 2000):
     no cabe (el comienzo del amarre, entre la mesa y el palo de abajo, quedaba con radio 0,21), y
     la memoria guardaría ese doblez. Si al final quedan tramos a menos de SEPARAR_A − 0,015 (la
     IPC parte de más de 0,95 entre tramos, hasta 0,01 menos que entre nodos), es un
-    TrazadoError: la IPC no puede partir de una cuerda que se atraviesa."""
+    TrazadoError: la IPC no puede partir de una cuerda que se atraviesa.
+
+    `quietos` son los nodos que la plantilla ya traza sin choques ni dobleces, y que relajar()
+    tampoco mueve (el amarre diagonal y el adujado): aquí tampoco se mueven. Moverlos doblaba la
+    vuelta de braza del diagonal con radio 0,47."""
     from ..libre import Reparto, TrazadoError, _colisiones, _largos, _limitar_curva, _separacion
     X = np.array(X, float)
     rep = reparto or Reparto.una(len(X))
@@ -149,6 +161,8 @@ def separar(X, h, reparto=None, solido=None, iteraciones: int = 2000):
     libre = np.ones(len(X), bool)
     for i in rep.inicios:
         libre[i:i + SOSTENIDOS] = False
+    if quietos is not None:
+        libre &= ~np.asarray(quietos, bool)
     mejor, mejor_largo = None, np.inf
     for _ in range(iteraciones):
         antes = X.copy()
@@ -290,7 +304,7 @@ def tension_por_tramo(N: int, valor: float | np.ndarray) -> np.ndarray:
 
 def asentar_paso(X, h, reparto=None, solido=None, tension: str | np.ndarray = "ajustada",
                  sostenidos=(), chicote: bool = False, memoria: bool = True,
-                 nodos_mano: int = SOSTENIDOS) -> Asentado:
+                 nodos_mano: int = SOSTENIDOS, quietos=None, separada: bool = False) -> Asentado:
     """El modo 1: la cuerda de un paso (el trazado elevado o la curva de la plantilla),
     separada y asentada con el firme sostenido, la tensión de atado `tension` (un nombre de
     TENSIONES o una por nodo) y la memoria de su forma (`memoria`). `sostenidos` son otros nodos
@@ -301,11 +315,15 @@ def asentar_paso(X, h, reparto=None, solido=None, tension: str | np.ndarray = "a
     un nudo libre no hace falta: la tensión «ajustada» de un paso no cambia un lazo suelto, y
     sostener el chicote dejaba tramos estirados en el reverso de la vuelta de escota. En un
     amarre sí: sus vueltas y sus ahorcados se tiran contra las dos puntas. `nodos_mano` es
-    cuántos nodos sostiene cada mano (ver `manos.sostener`)."""
+    cuántos nodos sostiene cada mano (ver `manos.sostener`).
+
+    `quietos` son los nodos que `separar` no mueve. Con `separada`, X ya es una cuerda de
+    partida sin choques ni dobleces y no se separa: la relajada con que se vuelve a asentar un
+    paso cuando separar no puede (`libre.asentar_o_relajar`)."""
     # Cada tramo mide h en reposo: el trazado se muestrea cada h sobre la mesa y después se
     # eleva en los cruces, así que ahí sus tramos quedan más largos (relajar() los vuelve a h).
     largos = np.full(len(X), float(h))
-    X0 = separar(X, h, reparto, solido)
+    X0 = np.array(X, float) if separada else separar(X, h, reparto, solido, quietos=quietos)
     cortes, grosores = _cortes_y_grosores(len(X0), reparto)
     T = TENSIONES[tension] if isinstance(tension, str) else tension
     manos = sostener(cortes, len(X0), chicotes=chicote, extra=sostenidos, nodos=nodos_mano)

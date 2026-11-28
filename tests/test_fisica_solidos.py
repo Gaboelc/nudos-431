@@ -5,13 +5,15 @@ import numpy as np
 import pytest
 
 from nudos.anfitrion import solido
-from nudos.fisica.asentar import HOLGURA_SOLIDO, solidos
+from nudos.fisica.asentar import HOLGURA_CORNAMUSA, HOLGURA_SOLIDO, solidos
 from nudos.fisica.contacto import DHAT, DMIN
 from nudos.plantillas.puno import _dedos
 from nudos.spec import Anfitrion, cargar
 
-# La cuerda que toca la madera queda a dmin + dhat/2 + la holgura de la malla (T15d).
+# La cuerda que toca la madera queda a dmin + dhat/2 + la holgura de la malla (T15d); en la
+# cornamusa, sin holgura (antes de T19).
 TOCA = DMIN + DHAT / 2 + HOLGURA_SOLIDO
+TOCA_CORNAMUSA = DMIN + DHAT / 2 + HOLGURA_CORNAMUSA
 
 
 def _distancia(P, mallas) -> np.ndarray:
@@ -92,14 +94,24 @@ def test_la_cuerda_que_toca_la_madera_queda_al_borde_de_la_barrera(slug):
     """Donde la geometría de siempre apoya la cuerda en la madera, la malla queda a dmin +
     dhat/2 + HOLGURA_SOLIDO del eje: la cuerda toca sin apretar. En los cantos vivos de la
     malla del tablón queda algo más lejos (hasta 0,11·√2), y las caras de un prisma de 64 lados
-    quedan algo más cerca que la madera redonda."""
+    quedan algo más cerca que la madera redonda. La cornamusa va sin holgura: ahí la cuerda
+    que toca la madera queda en medio de la franja, y la barrera no la deja entrar más de
+    1 − dmin, lo que acepta la comprobación."""
     a = _anfitrion(slug)
     P = _tocando(a, CASOS[slug])
     assert len(P) >= 50
     d = _distancia(P, solidos(a))
-    assert d.min() > TOCA - 0.02
-    assert d.max() < TOCA + 0.1
-    assert np.median(d) == pytest.approx(TOCA, abs=0.02)
+    toca = TOCA_CORNAMUSA if slug == "vuelta-de-cornamusa" else TOCA
+    assert d.min() > toca - 0.02
+    assert d.max() < toca + 0.1
+    assert np.median(d) == pytest.approx(toca, abs=0.02)
+
+
+def test_en_la_cornamusa_la_barrera_no_deja_entrar_mas_de_lo_que_se_acepta():
+    """Bajo un cuerno de la cornamusa cabe justo una cuerda. Con la cuerda en dmin de la malla,
+    entra en la madera lo que acepta la comprobación (anfitrion.PENETRACION_MAX), no más."""
+    from nudos.anfitrion import PENETRACION_MAX
+    assert HOLGURA_CORNAMUSA + 0.5 - DMIN <= PENETRACION_MAX + 1e-12
 
 
 def test_los_dedos_del_puno_de_mono():

@@ -165,13 +165,51 @@ def asentar_o_relajar(X, h, reparto: Reparto | None = None, anfitrion=None, moto
                       **relajar_kw) -> tuple[np.ndarray, dict]:
     """La cuerda de un paso relajada (relajar()), o, con la opción del motor (T15d,
     nudos/fisica/asentar.py), asentada; y los límites con que se comprueba. `motor` son los
-    argumentos de más para asentar_paso(), como la tensión de cada tramo de un amarre. El motor
-    sabe de todos los anfitriones (nudos/fisica/solidos.py, T15f); uno nuevo sin malla falla."""
+    argumentos de más para asentar_paso(), como la tensión de cada tramo de un amarre, y
+    `relajar_kw`, los de relajar(). El motor sabe de todos los anfitriones
+    (nudos/fisica/solidos.py, T15f); uno nuevo sin malla falla.
+
+    Con el motor, la cuerda de partida es la que deja `separar`. Si separar no logra una sin
+    choques, o si el paso asentado queda fuera de los límites, el paso se asienta otra vez desde
+    la cuerda relajada, la de las fichas sin el motor, y sin separarla: relajar() ya la deja sin
+    choques ni dobleces. Antes de T19 pasaba en 15 de los 36 nudos, donde la cuerda va apretada:
+    las correcciones de largo de separar la arrugaban en zigzag, o separar dejaba dobleces que
+    la memoria guardaba (ver «Antes de T19» en tasks/plan.md). Si tampoco así se puede, queda
+    lo del primer intento. Los pasos que salían bien con el motor salen igual."""
     from .fisica import usar_motor
-    if usar_motor():
-        from .fisica.asentar import asentar_paso
-        return asentar_paso(X, h, reparto, anfitrion, **(motor or {})).X, LIMITES_MOTOR
-    return relajar(X, h, reparto=reparto, anfitrion=anfitrion, **relajar_kw), LIMITES
+    if not usar_motor():
+        return relajar(X, h, reparto=reparto, anfitrion=anfitrion, **relajar_kw), LIMITES
+    from .fisica.asentar import asentar_paso
+    motor = motor or {}
+    primero = None
+    try:
+        primero = asentar_paso(X, h, reparto, anfitrion, **motor).X
+        if cumple_limites(primero, h, reparto, LIMITES_MOTOR):
+            return primero, LIMITES_MOTOR
+    except TrazadoError:
+        pass
+    relajada = relajar(X, h, reparto=reparto, anfitrion=anfitrion, **relajar_kw)
+    try:
+        return asentar_paso(relajada, h, reparto, anfitrion, separada=True, **motor).X, LIMITES_MOTOR
+    except TrazadoError:
+        if primero is None:
+            raise
+        return primero, LIMITES_MOTOR
+
+
+def cumple_limites(Xr, h, reparto: Reparto | None, limites: dict) -> bool:
+    """Si la cuerda cumple la separación, la curvatura y el estiramiento de `limites`, medidos
+    como en _resultado (la secuencia y el anfitrión los mide quien la construye)."""
+    rep = reparto or Reparto.una(len(Xr))
+    radio = math.inf
+    for k in range(len(rep.inicios)):
+        en_k = rep.cuerda == k
+        rk = curvatura_min(Xr[en_k], h, ventana=1)[0] / float(rep.grosor[en_k][0])
+        radio = min(radio, rk)
+    largos = np.linalg.norm(np.diff(Xr, axis=0), axis=1)[rep.seguido]
+    return (_separacion(Xr, h, rep)[0] >= limites["separacion_min"]
+            and radio >= limites["curvatura_min"]
+            and float(np.abs(largos / h - 1).max()) <= limites["estiramiento_max"])
 
 
 def _en_la_mesa(anfitrion: Anfitrion | None, n: int) -> dict:
