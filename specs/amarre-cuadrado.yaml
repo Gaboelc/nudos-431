@@ -116,25 +116,27 @@ encuadre:
   x: [-11.0, 14.0]
   y: [-14.0, 10.0]
 
+# El 28 nov de 2026, con el amarre tallado (T15e), el ballestrinque de inicio se apartó unos
+# 5 cm del palo de arriba y las vueltas pasan entre él y el cruce: cambiaron los pasos 1 y 2.
 pasos:
   - titulo: Haz un ballestrinque en el palo de abajo
     texto: >-
-      Cruza un palo sobre el otro. En el de abajo, de tu lado y pegado al de arriba, ata un
-      ballestrinque como en su ficha. Deja el chicote corto.
+      Cruza un palo sobre el otro. En el de abajo, de tu lado y a unos cinco centímetros del
+      de arriba, ata un ballestrinque como en su ficha. Deja el chicote corto.
     voz: >-
-      Cruza un palo sobre el otro. En el de abajo, de tu lado y pegado al de arriba, ata
-      un ballestrinque, como en su ficha. Deja el chicote corto.
+      Cruza un palo sobre el otro. En el de abajo, de tu lado y a unos cinco centímetros
+      del de arriba, ata un ballestrinque, como en su ficha. Deja el chicote corto.
     hasta: inicio
 
   - titulo: Da la primera vuelta
     texto: >-
       Ahora mueves la parte larga. Rodea el cruce: por encima del palo de arriba, por debajo
-      del de abajo, por encima del de arriba y por debajo del de abajo, delante del
-      ballestrinque.
+      del de abajo, por encima del de arriba y por debajo del de abajo, entre el
+      ballestrinque y el palo de arriba.
     voz: >-
       Paso 2 de 7: la primera vuelta. Ahora trabajas con la parte larga. Rodea el cruce
       por encima del palo de arriba y por debajo del de abajo, dos veces, hasta cerrar la
-      vuelta. Todo por delante del ballestrinque.
+      vuelta. Todo entre el ballestrinque y el cruce.
     hasta: vuelta-1
 
   - titulo: Completa las {vueltas} vueltas
