@@ -85,7 +85,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] T20b El aspecto elegido en los videos (`nudos/aspecto.py`, `render/blender/video.py`), sin el modo video viejo de `escena.py`, y la prueba de 10 s en 4K (`video <slug> --prueba`) (26 nov)
     - [x] Punto de control: Gabriel aprobó la prueba de 10 s en 4K del as de guía (26 nov)
     - [x] Gabriel decidió el costo del render (27 nov): los videos a 60 fps con EEVEE a 32 muestras. Lo eligió con el mismo cuadro del video en Cycles 16, EEVEE 16 y EEVEE 32: unos 3,3 s por cuadro de 4K y unos 11 días para los 36, contra 19 a 25 con Cycles 16. Las fichas siguen en Cycles
-    - [ ] La prueba de 10 s en 4K con EEVEE 32
+    - [x] La prueba de 10 s en 4K con EEVEE 32 (`as-de-guia-prueba-4k.mp4`, 28 nov): 3,4 s por cuadro con las otras sesiones corriendo. Al armarla con 8 procesos, la computadora se quedó sin memoria; se armó con 2, y el video ahora respeta `NUDOS_PROCESOS`
     - [x] T20c Las fichas: Gabriel decidió que no hace falta (26 nov); las fichas quedan como están
   - [ ] T21 El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga (XL; la sesión del plan)
     - [x] T21a Medir el movimiento de hoy: `python -m nudos calidad` (`nudos/fisica/calidad.py`), con la medida de los dos pilotos en el plan (26 nov)

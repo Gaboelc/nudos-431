@@ -19,6 +19,21 @@ def test_nudos_procesos_dice_cuantos(monkeypatch):
         procesos.cuantos()
 
 
+def test_el_video_usa_menos_procesos_si_se_le_pide(monkeypatch):
+    # Las mallas y el armado del video usan hasta 8 procesos; con otras sesiones corriendo, el 4K
+    # se quedaba sin memoria al armarse, y NUDOS_PROCESOS lo baja.
+    import os
+
+    from nudos import video
+    monkeypatch.delenv("NUDOS_PROCESOS", raising=False)
+    todos = video._procesos()
+    assert todos == max(1, min(8, (os.cpu_count() or 4) - 2))
+    monkeypatch.setenv("NUDOS_PROCESOS", "2")
+    assert video._procesos() == min(2, todos)
+    monkeypatch.setenv("NUDOS_PROCESOS", "64")
+    assert video._procesos() == todos
+
+
 def test_con_un_proceso_todo_va_en_linea(monkeypatch):
     monkeypatch.setenv("NUDOS_PROCESOS", "1")
     assert procesos.ejecutor(10) is procesos.EN_LINEA

@@ -697,8 +697,14 @@ CYCLES = {"teselas": False, "umbral_adaptativo": 0.03}
 
 
 def _procesos() -> int:
-    """Los procesos para las mallas y para armar: los núcleos que quedan, hasta 8."""
-    return max(1, min(8, (os.cpu_count() or 4) - 2))
+    """Los procesos para las mallas y para armar: los núcleos que quedan, hasta 8, o menos si
+    NUDOS_PROCESOS lo pide. Con otras sesiones corriendo, armar el 4K con 8 procesos dejaba la
+    computadora sin memoria (28 nov), y con 2 se armó."""
+    n = max(1, min(8, (os.cpu_count() or 4) - 2))
+    if os.environ.get("NUDOS_PROCESOS", "").strip():
+        from .procesos import cuantos
+        n = min(n, cuantos())
+    return n
 
 
 # Lo que cada proceso de las mallas carga una vez: las mallas del anfitrión y sus muestras.
