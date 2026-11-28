@@ -32,7 +32,14 @@ button:hover { border-color: #46515e; }
 .notas li { margin: 6px 0; }
 .notas b { color: var(--tinta); font-weight: 600; }
 kbd { font: 500 12px/1 "IBM Plex Mono", monospace; border: 1px solid var(--linea); border-radius: 5px; padding: 2px 5px; }
-.sin-grupo .grupo { display: none; }
+.paletas { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+.paletas button { display: flex; align-items: center; gap: 10px; padding: 9px 12px; }
+.paletas button.activa { border-color: var(--ambar); box-shadow: 0 0 0 2px var(--ambar) inset; }
+.muestras { display: flex; }
+.muestras i { display: block; width: 14px; height: 22px; }
+.muestras i:first-child { border-radius: 5px 0 0 5px; }
+.muestras i:last-child { border-radius: 0 5px 5px 0; }
+.descripcion { color: var(--suave); margin: 4px 0 10px; min-height: 1.5em; }
 /*TARJETAS_CSS*/
 </style></head>
 <body><main>
@@ -51,30 +58,36 @@ cada una dura lo que su voz. El mismo código las dibujará cuadro por cuadro en
   <input type="range" id="barra" min="0" max="10000" value="0" aria-label="Tiempo">
   <select id="vel" aria-label="Velocidad"><option value="1">1×</option><option value="0.5">0,5×</option><option value="0.25">0,25×</option></select>
 </div>
+<h2>La paleta</h2>
+<div class="paletas" id="paletas"></div>
+<p class="descripcion" id="descripcion"></p>
 <div class="opciones">
-  <label><input type="checkbox" id="queda"> Entre pasos, la tarjeta se queda y solo cambia el número y el título</label>
+  <label><input type="checkbox" id="esquina" checked> El logo del grupo en la esquina, durante todo el video</label>
   <label><input type="checkbox" id="finales" checked> Mostrar dónde va la pantalla final de YouTube</label>
-  <label><input type="checkbox" id="grupo" checked> El nombre del grupo en el cierre</label>
 </div>
 <div class="saltos" id="saltos"></div>
 
 <h2>Qué es cada una</h2>
 <ul class="notas">
-  <li><b>El nombre</b>, en la apertura: el nudo terminado gira despacio en el campamento y la voz dice para qué sirve.</li>
+  <li><b>El nombre</b>, en la apertura, con el logo del grupo y su nombre: el nudo terminado gira despacio en el
+    campamento y la voz dice para qué sirve.</li>
   <li><b>Lo que necesitas</b>: el texto de materiales de la ficha, con la cuerda estirada y lo demás sobre la mesa.</li>
   <li><b>El paso</b>: el número grande en el distintivo ámbar (el mismo ámbar del tramo resaltado que se mueve), «Paso N de
     M», el título y el avance con un punto por paso. Entra con un rebote suave cuando empieza su voz y sale rápido al
-    terminar el paso. Con la casilla de arriba se ve la otra manera: la tarjeta se queda y solo rueda el número.</li>
-  <li><b>El capítulo</b>: verificación en verde, errores en rojo, la práctica en verde bosque, lo que necesitas en turquesa y
-    la seguridad en amarillo. El fondo se mueve con el ruido simplex de lygia, en WebGL, con unas formas que crecen al
-    entrar. Se abre desde la izquierda con rebote mientras, detrás, el video cambia de escena.</li>
+    terminar el paso, y vuelve a entrar con el siguiente (lo eligió Gabriel el 28 nov).</li>
+  <li><b>El capítulo</b>: cada uno con sus colores de la paleta. El fondo se mueve con el ruido simplex de lygia, en
+    WebGL, con unas formas que crecen al entrar. Se abre desde la izquierda con rebote mientras, detrás, el video cambia
+    de escena.</li>
   <li><b>La ✓ de la revisión</b> va sobre lo que se revisa, con su etiqueta corta: en el video, la cámara se acerca y la
     marca sigue al punto del nudo.</li>
   <li><b>La ✗ y la ✓</b>: el error atado con el motor se marca con la ✗ y el cuadro se tiñe de rojo en los bordes; después
     de volver atrás, el paso correcto se marca con la ✓ en verde. Los demás errores van con la ✗ y su título.</li>
   <li><b>La seguridad</b> lleva lo que dice la voz, frase por frase, para que se entienda también sin sonido.</li>
-  <li><b>El cierre</b>: el nombre entra de golpe con el acorde final de la música, después la dirección del visor y, si
-    quieres, el nombre del grupo. La derecha queda libre unos 10 s para la pantalla final de YouTube.</li>
+  <li><b>El cierre</b>: el logo grande del grupo y el nombre del nudo entran de golpe con el acorde final de la música;
+    después, «Grupo Guías y Scouts Huetares 431» y la dirección del visor. La derecha queda libre unos 10 s para la
+    pantalla final de YouTube.</li>
+  <li><b>El logo en la esquina</b> (opcional): chico, arriba a la derecha, desde que se va el nombre de la apertura hasta
+    el cierre. En el reel no va, porque ahí Instagram pone el nombre de la cuenta.</li>
   <li><b>El reel</b>: las tarjetas van arriba y los subtítulos palabra por palabra, quemados, abajo del nudo, por encima de
     donde Instagram pone la descripción.</li>
 </ul>
@@ -88,6 +101,7 @@ cada una dura lo que su voz. El mismo código las dibujará cuadro por cuadro en
 </ul>
 </main>
 <script>/*LYGIA*/</script>
+<script>/*PALETAS*/</script>
 <script>/*TARJETAS_JS*/</script>
 <script>
 "use strict";
@@ -145,9 +159,24 @@ function cuadro(ahora) {
 barra.addEventListener("input", () => { t = duracion() * barra.value / 10000; });
 play.onclick = () => { corre = !corre; play.textContent = corre ? "Pausa" : "Reproducir"; };
 document.getElementById("vel").onchange = (e) => { vel = +e.target.value; };
-document.getElementById("queda").onchange = (e) => { for (const f in montados) montados[f].opciones.pasos = e.target.checked ? "queda" : "sale"; };
+document.getElementById("esquina").onchange = (e) => { for (const f in montados) montados[f].opciones.esquina = e.target.checked; };
 document.getElementById("finales").onchange = (e) => { for (const f in montados) montados[f].opciones.finales = e.target.checked; };
-document.getElementById("grupo").onchange = (e) => { for (const f in escenarios) escenarios[f].classList.toggle("sin-grupo", !e.target.checked); };
+// Las paletas: un botón por cada una, con sus colores.
+function elegirPaleta(clave) {
+  for (const f in montados) montados[f].paleta(clave);
+  document.querySelectorAll("#paletas button").forEach((b) => b.classList.toggle("activa", b.dataset.paleta === clave));
+  document.getElementById("descripcion").textContent = window.PALETAS[clave].descripcion;
+}
+for (const [clave, pal] of Object.entries(window.PALETAS)) {
+  const b = document.createElement("button");
+  b.dataset.paleta = clave;
+  const colores = [pal.css["--tinta"], pal.css["--insignia-1"], pal.css["--raya-1"],
+                   ...["materiales", "verificacion", "errores", "aplicacion", "seguridad"].map((c) => pal.capitulos[c][1])];
+  b.innerHTML = `<span class="muestras">${colores.map((c) => `<i style="background:${c}"></i>`).join("")}</span>${pal.nombre}`;
+  b.onclick = () => elegirPaleta(clave);
+  document.getElementById("paletas").appendChild(b);
+}
+elegirPaleta("sitio");
 document.querySelectorAll(".pestanas button").forEach((b) => b.onclick = () => {
   formato = b.dataset.formato; t = 0;
   document.querySelectorAll(".pestanas button").forEach((x) => x.classList.toggle("activa", x === b));
@@ -163,6 +192,7 @@ document.addEventListener("keydown", (e) => {
 });
 window.addEventListener("resize", ajustar);
 document.fonts.ready.then(() => { ajustar(); saltos(); requestAnimationFrame(cuadro); });
-window.maqueta = { ir(x, f = formato) { if (f !== formato) document.querySelector(`[data-formato=${f}]`).click(); corre = false; t = x; montados[formato].pintar(t); }, montados };
+window.maqueta = { ir(x, f = formato) { if (f !== formato) document.querySelector(`[data-formato=${f}]`).click(); corre = false; t = x; montados[formato].pintar(t); },
+                  paleta: elegirPaleta, montados };
 </script>
 </body></html>

@@ -5,7 +5,8 @@ render/tarjetas/ (tarjetas.css y tarjetas.js, las mismas que dibujará Edge en T
 de un nudo, sobre un cuadro del video, en una secuencia de muestra de cada tipo: el nombre, lo que
 necesitas, los pasos, las de capítulo con su fondo de lygia, la ✓ de la revisión, la ✗ del error y
 la ✓ del correcto, otro error, la seguridad, el cierre con la pantalla final y el reel vertical con
-sus subtítulos palabra por palabra. Las fuentes, lygia y los fondos van dentro de la página.
+sus subtítulos palabra por palabra. Las fuentes, lygia, las paletas, el logo del grupo y los fondos
+van dentro de la página.
 """
 from __future__ import annotations
 
@@ -20,18 +21,84 @@ CARPETA = RAIZ / "render" / "tarjetas"
 SALIDA = RAIZ / "build" / "tarjetas"
 FUENTES = RAIZ / "sitio" / "vendor" / "fuentes"
 LYGIA = RAIZ / "sitio" / "vendor" / "lygia" / "lygia.js"
-GRUPO = "Grupo Guía y Scout 431"
+PALETAS = CARPETA / "paletas.json"     # las paletas de colores del video, para elegir una
+LOGO = RAIZ / "libro" / "logo-431.svg"  # el logo del grupo, el mismo de la ficha
+GRUPO = "Grupo Guías y Scouts Huetares 431"
 
-# Los colores de cada capítulo (el de arriba a la izquierda y el de abajo a la derecha del fondo).
-COLORES = {"materiales": ("#1f6f7b", "#3fa5b3"), "pasos": ("#b8640c", "#eb9a31"),
-           "verificacion": ("#1d7a47", "#3cb878"), "errores": ("#a82a27", "#e8574f"),
-           "aplicacion": ("#3a6b2c", "#7fb05a"), "seguridad": ("#d99a00", "#ffd34d")}
 ICONOS = {"materiales": "cuerda", "pasos": "pasos", "verificacion": "si", "errores": "no", "aplicacion": "tienda",
           "seguridad": "escudo"}
 
 # Dónde va la ✓ de cada revisión sobre el cuadro de muestra (el paso 4 del as de guía en 4K, a
 # 1920 × 1080): la gaza grande y el chicote junto a la gaza pequeña. Con otro fondo, no calzan.
 PUNTOS_MUESTRA = ((1196, 636), (858, 470))
+
+
+# --------------------------------------------------------------------------
+# Las paletas
+# --------------------------------------------------------------------------
+CAPITULOS_CON_COLOR = ("materiales", "verificacion", "errores", "aplicacion", "seguridad")
+# Sobre qué puede quedar el vidrio de una tarjeta: el estudio claro, la madera y algo oscuro.
+FONDOS = {"claro": (200, 200, 200), "madera": (176, 140, 100), "oscuro": (60, 60, 60)}
+
+
+def paletas() -> dict:
+    return json.loads(PALETAS.read_text(encoding="utf-8"))
+
+
+def _rgba(c: str) -> tuple[float, float, float, float]:
+    c = c.strip()
+    if c.startswith("#"):
+        return tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) + (1.0,)
+    n = [float(x) for x in re.findall(r"[\d.]+", c)]
+    return (n[0], n[1], n[2], n[3] if len(n) > 3 else 1.0)
+
+
+def _sobre(c, fondo) -> tuple[float, float, float]:
+    r, g, b, a = c
+    return tuple(a * x + (1 - a) * y for x, y in zip((r, g, b), fondo))
+
+
+def contraste(a, b) -> float:
+    """El contraste de WCAG 2 entre dos colores RGB."""
+    def lum(rgb):
+        def canal(v):
+            v /= 255
+            return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+        r, g, b_ = (canal(v) for v in rgb)
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b_
+    la, lb = sorted((lum(a), lum(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+
+def problemas_de_paleta(p: dict) -> list[str]:
+    """Lo que no se lee bien en una paleta: la letra sobre el vidrio (puesto sobre FONDOS) con 4,5
+    y las etiquetas de color con 3; el número de la insignia, el resaltado de los subtítulos y el
+    ícono de la seguridad con 3; la letra de cada tarjeta de capítulo con 3, y la marca blanca de
+    la ✓ y la ✗ con 2,5."""
+    css, out = p["css"], []
+    for nombre, fondo in FONDOS.items():
+        vidrio = _sobre(_rgba(css["--vidrio"]), fondo)
+        for var, minimo in (("--tinta", 4.5), ("--suave", 3.0), ("--si", 3.0), ("--no", 3.0), ("--mat", 3.0),
+                            ("--seg-etiqueta", 3.0)):
+            c = contraste(_rgba(css[var])[:3], vidrio)
+            if c < minimo:
+                out.append(f"{var} sobre el vidrio ({nombre}): {c:.2f} < {minimo}")
+    for a, b in (("--insignia-tinta", "--insignia-1"), ("--insignia-tinta", "--insignia-2"),
+                 ("--acento-tinta", "--acento"), ("--seg-icono", "--seg-1"), ("--seg-icono", "--seg-2")):
+        c = contraste(_rgba(css[a])[:3], _rgba(css[b])[:3])
+        if c < 3.0:
+            out.append(f"{a} sobre {b}: {c:.2f} < 3")
+    for cap, colores in p["capitulos"].items():
+        letra = (22, 32, 47) if cap in p["oscuros"] else (255, 255, 255)
+        for c in colores:
+            k = contraste(letra, _rgba(c)[:3])
+            if k < 3.0:
+                out.append(f"la letra del capítulo {cap} sobre {c}: {k:.2f} < 3")
+    for var in ("--si-1", "--si-2", "--no-1", "--no-2"):
+        k = contraste((255, 255, 255), _rgba(css[var])[:3])
+        if k < 2.5:
+            out.append(f"la marca blanca sobre {var}: {k:.2f} < 2,5")
+    return out
 
 
 def _datos(ruta: Path, tipo: str) -> str:
@@ -95,8 +162,9 @@ def frases(texto: str, desde: float) -> list[dict]:
 
 
 def _capitulo(cap: str, desde: float, titulo: str, sub: str = "", dura: float = 1.9) -> dict:
+    """Una tarjeta de capítulo; sus colores salen de la paleta (paletas.json)."""
     return {"tipo": "capitulo", "desde": desde, "hasta": desde + dura, "titulo": titulo, "sub": sub,
-            "icono": ICONOS[cap], "colores": list(COLORES[cap]), "oscuro": cap == "seguridad"}
+            "icono": ICONOS[cap], "cap": cap}
 
 
 def _siguiente(spec) -> str:
@@ -118,8 +186,7 @@ def horizontal(spec, otro=None) -> tuple[list[dict], list[tuple[str, float]]]:
     def marca(nombre, t):
         saltos.append((nombre, round(max(0.0, t - 0.3), 2)))
     marca("Nombre", 0.0)
-    sub = spec.familia + (f" · ABOK {spec.abok}" if spec.abok else "")
-    tarjetas.append({"tipo": "nombre", "desde": 0.5, "hasta": 4.6, "nombre": spec.nombre, "sub": sub})
+    tarjetas.append({"tipo": "nombre", "desde": 0.5, "hasta": 4.6, "nombre": spec.nombre, "sub": GRUPO})
     t = 5.2
     if spec.materiales:
         marca("Lo que necesitas", t)
@@ -181,7 +248,7 @@ def vertical(spec) -> tuple[list[dict], list[tuple[str, float]]]:
     total = len(spec.pasos)
     tarjetas, saltos, dichas = [], [("Gancho", 0.0)], []
     gancho = partes["gancho"].voz
-    tarjetas.append({"tipo": "nombre", "desde": 0.3, "hasta": 4.4, "nombre": spec.nombre, "sub": spec.familia})
+    tarjetas.append({"tipo": "nombre", "desde": 0.3, "hasta": 4.4, "nombre": spec.nombre, "sub": GRUPO})
     dichas.append(palabras(gancho, 0.4))
     t = 4.8
     saltos.append(("Pasos", round(t - 0.3, 2)))
@@ -202,7 +269,8 @@ def vertical(spec) -> tuple[list[dict], list[tuple[str, float]]]:
     if "cierre" in partes:
         dichas.append(palabras(partes["cierre"].voz, t + 0.5))
     tarjetas.append({"tipo": "cierre", "desde": round(t, 2), "golpe": round(t + 0.4, 2), "final": round(t + 2.0, 2),
-                     "hasta": round(t + 5.6, 2), "nombre": spec.nombre, "url": url(spec.slug).removeprefix("https://")})
+                     "hasta": round(t + 5.6, 2), "nombre": spec.nombre, "url": url(spec.slug).removeprefix("https://"),
+                     "grupo": GRUPO})
     tarjetas.append({"tipo": "subtitulos", "desde": 0.0, "hasta": round(t + 5.6, 2),
                      "palabras": trozos([w for ws in dichas for w in ws])})
     return tarjetas, saltos
@@ -220,16 +288,19 @@ def maqueta(slug: str = "as-de-guia", fondo=None, fondo_vertical=None) -> Path:
     malos = terminos_encontrados(textos)
     if malos:
         raise ValueError(f"{slug}: las tarjetas usan términos de sección: {', '.join(malos)}")
+    logo = _datos(LOGO, "image/svg+xml")
     datos = {"nombre": spec.nombre,
-             "horizontal": {"formato": "horizontal", "tarjetas": th, "saltos": sh,
+             "horizontal": {"formato": "horizontal", "tarjetas": th, "saltos": sh, "logo": logo,
                             "fondo": _datos(Path(fondo), "image/jpeg" if str(fondo).lower().endswith((".jpg", ".jpeg"))
                                             else "image/png") if fondo else None},
-             "vertical": {"formato": "vertical", "tarjetas": tv, "saltos": sv,
+             "vertical": {"formato": "vertical", "tarjetas": tv, "saltos": sv, "logo": logo,
                           "fondo": _datos(Path(fondo_vertical), "image/jpeg" if str(fondo_vertical).lower().endswith(
                               (".jpg", ".jpeg")) else "image/png") if fondo_vertical else None}}
     pagina = (CARPETA / "maqueta.html").read_text(encoding="utf-8")
     for marca, valor in (("/*FUENTES*/", _fuentes()), ("/*TARJETAS_CSS*/", (CARPETA / "tarjetas.css").read_text(encoding="utf-8")),
-                         ("/*LYGIA*/", _lygia()), ("/*TARJETAS_JS*/", (CARPETA / "tarjetas.js").read_text(encoding="utf-8")),
+                         ("/*LYGIA*/", _lygia()), ("/*PALETAS*/", "window.PALETAS = " + PALETAS.read_text(encoding="utf-8")
+                                                    .strip() + ";"),
+                         ("/*TARJETAS_JS*/", (CARPETA / "tarjetas.js").read_text(encoding="utf-8")),
                          ("/*DATOS*/", json.dumps(datos, ensure_ascii=False)), ("__NOMBRE__", spec.nombre)):
         if marca not in pagina:
             raise ValueError(f"maqueta.html no tiene {marca}")

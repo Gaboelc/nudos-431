@@ -48,6 +48,34 @@ def test_las_frases_de_la_seguridad():
     assert fs[0]["desde"] == 1.0 and all(a["hasta"] == b["desde"] for a, b in zip(fs, fs[1:]))
 
 
+def test_cada_paleta_tiene_todos_sus_colores_y_se_lee_bien():
+    paletas = T.paletas()
+    assert "sitio" in paletas and len(paletas) >= 5
+    variables = set(paletas["sitio"]["css"])
+    for clave, p in paletas.items():
+        assert set(p["css"]) == variables, clave
+        assert set(p["capitulos"]) == set(T.CAPITULOS_CON_COLOR), clave
+        assert set(p["oscuros"]) <= set(T.CAPITULOS_CON_COLOR) and p["nombre"] and p["descripcion"]
+        assert T.problemas_de_paleta(p) == [], clave
+
+
+def test_una_paleta_que_no_se_lee_tiene_problemas():
+    import copy
+    p = copy.deepcopy(T.paletas()["sitio"])
+    p["css"]["--tinta"] = "#c8c8c8"
+    p["capitulos"]["errores"] = ["#ffd0d0", "#ffe0e0"]
+    problemas = " ".join(T.problemas_de_paleta(p))
+    assert "--tinta sobre el vidrio" in problemas and "capítulo errores" in problemas
+
+
+def test_el_nombre_y_el_logo_del_grupo_van_en_el_nombre_y_en_el_cierre():
+    assert T.GRUPO == "Grupo Guías y Scouts Huetares 431"
+    for tarjetas in (T.horizontal(cargar("as-de-guia"), cargar("amarre-cuadrado"))[0], T.vertical(cargar("as-de-guia"))[0]):
+        assert next(d for d in tarjetas if d["tipo"] == "nombre")["sub"] == T.GRUPO
+        assert next(d for d in tarjetas if d["tipo"] == "cierre")["grupo"] == T.GRUPO
+    assert T.LOGO.read_text(encoding="utf-8").lstrip().startswith("<?xml") and "<image" not in T.LOGO.read_text(encoding="utf-8")
+
+
 def _maqueta(tmp_path, monkeypatch, slug="as-de-guia"):
     monkeypatch.setattr(T, "SALIDA", tmp_path)
     return T.maqueta(slug)
@@ -55,12 +83,15 @@ def _maqueta(tmp_path, monkeypatch, slug="as-de-guia"):
 
 def test_la_maqueta_lleva_todo_adentro(tmp_path, monkeypatch):
     pagina = _maqueta(tmp_path, monkeypatch).read_text(encoding="utf-8")
-    for marca in ("/*FUENTES*/", "/*TARJETAS_CSS*/", "/*LYGIA*/", "/*TARJETAS_JS*/", "/*DATOS*/", "__NOMBRE__"):
+    for marca in ("/*FUENTES*/", "/*TARJETAS_CSS*/", "/*LYGIA*/", "/*PALETAS*/", "/*TARJETAS_JS*/", "/*DATOS*/",
+                  "__NOMBRE__"):
         assert marca not in pagina
     # Nada de afuera: ni guiones, ni hojas de estilo, ni fuentes por la red.
     assert not re.search(r"""(src|href)=["']https?:""", pagina) and "url(http" not in pagina
     assert "data:font/woff2;base64," in pagina and "window.lygia = { glsl }" in pagina
     assert "generative/snoise.glsl" in pagina
+    # Las paletas y el logo del grupo, también adentro.
+    assert "window.PALETAS = {" in pagina and "data:image/svg+xml;base64," in pagina
 
 
 @pytest.fixture(scope="module")
@@ -92,6 +123,26 @@ def test_la_maqueta_se_dibuja_sin_errores(maqueta_en_edge):
     con_webgl = pagina.evaluate("!!document.querySelector('#horizontal .t-capitulo canvas').getContext('webgl')")
     assert errores == []
     assert con_webgl
+
+
+def test_cada_paleta_se_dibuja_y_pone_sus_colores(maqueta_en_edge):
+    pagina, errores = maqueta_en_edge
+    paletas = T.paletas()
+    datos = pagina.evaluate("DATOS")
+    capitulo = datos["horizontal"]["saltos"][3][1] + 1.0
+    cierre = datos["horizontal"]["saltos"][-1][1] + 2.0
+    for clave, p in paletas.items():
+        pagina.evaluate(f"window.maqueta.paleta('{clave}')")
+        for t in (capitulo, cierre):
+            pagina.evaluate(f"window.maqueta.ir({t}, 'horizontal')")
+        tinta = pagina.evaluate("getComputedStyle(document.getElementById('horizontal')).getPropertyValue('--tinta').trim()")
+        assert tinta == p["css"]["--tinta"], clave
+    # En el cierre se ven el logo grande y el nombre del grupo.
+    visto = pagina.evaluate("""() => { const c = document.querySelector('#horizontal .t-cierre');
+        return [c.querySelector('.escudo-grupo').getBoundingClientRect().height > 50, c.querySelector('.grupo').textContent]; }""")
+    assert visto == [True, T.GRUPO]
+    pagina.evaluate("window.maqueta.paleta('sitio')")
+    assert errores == []
 
 
 def test_cada_titulo_de_paso_cabe_en_dos_lineas(maqueta_en_edge):

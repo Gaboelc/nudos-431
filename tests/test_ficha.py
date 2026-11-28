@@ -51,6 +51,14 @@ def test_la_ficha_tiene_todas_sus_secciones(modelo_as_de_guia, documento):
         assert f'src="impresion/{img.nombre}.png"' in documento
 
 
+def test_la_ficha_lleva_el_logo_y_el_nombre_del_grupo(documento):
+    # En el título del documento, arriba junto al nombre del libro y en el pie de las dos páginas
+    # (Gabriel, 28 nov).
+    texto = " ".join(texto_visible(documento).split())
+    assert texto.count("Grupo Guías y Scouts Huetares 431") == 4 and "Grupo Guía y Scout 431" not in texto
+    assert documento.count('src="data:image/svg+xml;base64,') == 3
+
+
 def test_el_qr_lleva_a_la_direccion_permanente_del_visor(documento):
     url = url_visor("as-de-guia")
     assert url == f"{URL_BASE}as-de-guia/"

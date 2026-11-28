@@ -9,7 +9,11 @@
    «revisa» (la ✓ junto a lo que se revisa), «error» (la ✗ o, con si: true, la ✓ del correcto),
    «seguridad», «cierre» y «subtitulos» (el reel, palabra por palabra). Entran con un rebote suave
    (un resorte con un 5 % de sobrepaso) y salen rápido. El fondo de las tarjetas de capítulo es
-   ruido simplex de lygia (generative/snoise.glsl, MIT), en WebGL. */
+   ruido simplex de lygia (generative/snoise.glsl, MIT), en WebGL.
+
+   Los colores salen de una paleta (window.PALETAS, de render/tarjetas/paletas.json): sus variables
+   de CSS van en el .escenario y sus colores de capítulo, al fondo de lygia. datos.logo (el logo del
+   grupo) va en el nombre, en el cierre y, con opciones.esquina, en una esquina de todo el video. */
 (function () {
   "use strict";
 
@@ -157,26 +161,28 @@ void main() {
   const TIPOS = {};
 
   TIPOS.nombre = {
-    crear: (d) => nodo(`<div class="t t-nombre vidrio"><div class="grande">${esc(d.nombre)}</div><div class="raya"></div>
-      <div class="mono">${esc(d.sub || "")}</div></div>`),
+    crear: (d) => nodo(`<div class="t t-nombre vidrio">${d.logo ? `<img class="logo escudo-grupo" src="${d.logo}" alt="">` : ""}
+      <div><div class="grande">${esc(d.nombre)}</div><div class="raya"></div><div class="mono">${esc(d.sub || "")}</div></div></div>`),
     pintar(el, d, t) {
       const m = momento(t, d.desde, d.hasta, 0.3);
       poner(el, m);
-      if (m) el.querySelector(".raya").style.transform = `scaleX(${fuera((m.a - 0.25) / 0.6).toFixed(4)})`;
+      if (!m) return;
+      el.querySelector(".raya").style.transform = `scaleX(${fuera((m.a - 0.25) / 0.6).toFixed(4)})`;
+      const logo = el.querySelector(".escudo-grupo");
+      if (logo) logo.style.transform = `scale(${(0.6 + 0.4 * resorte(m.a - 0.1, 2.4, 0.55)).toFixed(4)})`;
     },
   };
 
   TIPOS.materiales = {
-    crear: (d) => nodo(`<div class="t t-materiales vidrio"><div class="icono" style="color:#fff">${icono("cuerda", 58)}</div>
+    crear: (d) => nodo(`<div class="t t-materiales vidrio"><div class="icono">${icono("cuerda", 58)}</div>
       <div><div class="mono">Lo que necesitas</div><div class="texto">${esc(d.texto)}</div></div></div>`),
     pintar: (el, d, t) => poner(el, momento(t, d.desde, d.hasta)),
   };
 
-  // Los pasos seguidos comparten una tarjeta: con «sale», sale y vuelve a entrar en cada paso; con
-  // «queda», entra con el primero y en cada cambio solo rueda el número y cambia el título.
+  // Los pasos comparten una tarjeta, que sale y vuelve a entrar en cada paso (Gabriel, 28 nov).
   TIPOS.pasos = {
     crear(d) {
-      const el = nodo(`<div class="t t-paso vidrio"><div class="insignia"><span class="n0"></span><span class="n1"></span></div>
+      const el = nodo(`<div class="t t-paso vidrio"><div class="insignia"><span></span></div>
         <div><div class="mono de"></div><div class="titulo"></div><div class="avance"></div></div></div>`);
       const avance = el.querySelector(".avance");
       for (let i = 1; i <= d.total; i++) {
@@ -185,40 +191,27 @@ void main() {
       }
       return el;
     },
-    pintar(el, d, t, opciones) {
+    pintar(el, d, t) {
       const lista = d.pasos;
-      let k = lista.findIndex((p) => t >= p.desde && t <= p.hasta);
-      const queda = opciones.pasos === "queda";
+      const k = lista.findIndex((p) => t >= p.desde && t <= p.hasta);
       if (k < 0) { poner(el, null); return; }
       const p = lista[k];
-      // El sobre de la tarjeta: de cada paso, o del primero al último si se queda.
-      const m = queda ? momento(t, lista[0].desde, lista[lista.length - 1].hasta) : momento(t, p.desde, p.hasta);
+      const m = momento(t, p.desde, p.hasta);
       poner(el, m);
       if (!m) return;
-      const previo = k > 0 ? lista[k - 1] : null;
-      const cambio = queda && previo ? limitar((t - p.desde) / 0.45) : 1;
       el.querySelector(".de").textContent = `Paso ${p.n} de ${d.total}`;
       const titulo = el.querySelector(".titulo");
       if (titulo.textContent !== p.titulo) titulo.textContent = p.titulo;
-      titulo.style.opacity = queda && previo ? fuera((t - p.desde - 0.08) / 0.3).toFixed(3) : 1;
-      // El número rueda hacia arriba.
-      const [n0, n1] = el.querySelectorAll(".insignia span");
-      n1.textContent = p.n;
-      n0.textContent = previo ? previo.n : "";
-      const r = queda && previo ? resorte(t - p.desde, 2.4, 0.72) : 1;
-      n0.style.transform = `translateY(${(-130 * r).toFixed(2)}px)`;
-      n0.style.opacity = (1 - limitar(r)).toFixed(3);
-      n1.style.transform = `translateY(${(130 * (1 - r)).toFixed(2)}px)`;
+      el.querySelector(".insignia span").textContent = p.n;
       // El avance: los pasos hechos, la raya que se llena hasta el de ahora y su pulso.
       const puntos = el.querySelectorAll(".avance i"), rayas = el.querySelectorAll(".avance b");
-      const a = queda && previo ? t - p.desde : m.a;
+      const a = m.a;
       puntos.forEach((q, i) => { q.className = i + 1 < p.n ? "hecho" : i + 1 === p.n ? "ahora" : ""; });
       rayas.forEach((q, i) => q.style.setProperty("--lleno", i + 2 < p.n ? 1 : i + 2 === p.n ? fuera((a - 0.15) / 0.45).toFixed(3) : 0));
       const pul = puntos[p.n - 1];
       const u = ((a - 0.5) % 1.6) / 1.6;
       pul.style.setProperty("--pulso", a > 0.5 ? (0.7 * (1 - u)).toFixed(3) : 0);
       pul.style.setProperty("--pulso-escala", (0.6 + 0.8 * fuera(u)).toFixed(3));
-      void cambio;
     },
   };
 
@@ -228,12 +221,14 @@ void main() {
         <div class="icono"></div><div class="grande"></div><div class="sub"></div></div></div></div>`);
       return el;
     },
-    pintar(el, d, t) {
+    pintar(el, d, t, opciones) {
       const c = d.lista.find((x) => t >= x.desde && t <= x.hasta);
       if (!c) { el.style.opacity = 0; el.style.visibility = "hidden"; return; }
       el.style.visibility = "visible";
       el.style.opacity = 1;
-      el.classList.toggle("oscuro", !!c.oscuro);
+      const pal = opciones.paletaActual;
+      const colores = (pal && pal.capitulos[c.cap]) || c.colores || ["#16202f", "#586273"];
+      el.classList.toggle("oscuro", pal ? pal.oscuros.includes(c.cap) : !!c.oscuro);
       const a = t - c.desde, b = c.hasta - t;
       const panel = el.querySelector(".panel");
       const s = b < SALIDA ? dentro(1 - b / SALIDA) : 0;
@@ -255,7 +250,7 @@ void main() {
       const w = Math.round(panel.offsetWidth * k), h = Math.round(panel.offsetHeight * k);
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
       if (!el._fondo) el._fondo = Fondo(canvas);
-      el._fondo.pintar(t, fuera(a / 0.9), c.colores[0], c.colores[1]);
+      el._fondo.pintar(t, fuera(a / 0.9), colores[0], colores[1]);
     },
   };
 
@@ -286,7 +281,7 @@ void main() {
   };
 
   TIPOS.seguridad = {
-    crear: (d) => nodo(`<div class="t t-seguridad vidrio"><div class="escudo" style="color:#3b2a00">${icono("escudo", 60, 2.3)}</div>
+    crear: (d) => nodo(`<div class="t t-seguridad vidrio"><div class="escudo">${icono("escudo", 60, 2.3)}</div>
       <div><div class="mono">Seguridad</div><div class="frase"></div></div></div>`),
     pintar(el, d, t) {
       const m = momento(t, d.desde, d.hasta);
@@ -301,8 +296,9 @@ void main() {
 
   TIPOS.cierre = {
     crear(d) {
-      const el = nodo(`<div class="t t-cierre"><div class="grande">${esc(d.nombre)}</div>
-        <div class="url vidrio">${esc(d.url)}</div>${d.grupo ? `<div class="grupo mono">${esc(d.grupo)}</div>` : ""}</div>`);
+      const el = nodo(`<div class="t t-cierre">${d.logo ? `<img class="logo escudo-grupo" src="${d.logo}" alt="">` : ""}
+        <div class="texto"><div class="grande">${esc(d.nombre)}</div>${d.grupo ? `<div class="grupo">${esc(d.grupo)}</div>` : ""}
+        <div class="url vidrio">${esc(d.url)}</div></div></div>`);
       return el;
     },
     pintar(el, d, t, opciones, escenario) {
@@ -315,11 +311,13 @@ void main() {
         const k = 1 + 0.32 * (1 - resorte(m.a, 3.2, 0.48));
         const y = escenario.classList.contains("vertical") ? 0 : -el.offsetHeight / 2;
         el.style.transform = `translateY(${y.toFixed(1)}px) scale(${k.toFixed(4)})`;
-        const [url, grupo] = el.querySelectorAll(".url, .grupo");
-        [url, grupo].forEach((x, i) => {
+        // El logo cae con el golpe, un poco antes que el nombre; después, el grupo y la dirección.
+        const logo = el.querySelector(".escudo-grupo");
+        if (logo) logo.style.transform = `scale(${(0.55 + 0.45 * resorte(m.a, 2.6, 0.5)).toFixed(4)}) rotate(${(-8 * (1 - resorte(m.a, 2.0, 0.6))).toFixed(2)}deg)`;
+        [el.querySelector(".grupo"), el.querySelector(".url")].forEach((x, i) => {
           if (!x) return;
-          const e = resorte(m.a - 0.45 - 0.12 * i, 2.0, 0.7);
-          x.style.opacity = fuera((m.a - 0.45 - 0.12 * i) / 0.2).toFixed(3);
+          const e = resorte(m.a - 0.4 - 0.14 * i, 2.0, 0.7);
+          x.style.opacity = fuera((m.a - 0.4 - 0.14 * i) / 0.2).toFixed(3);
           x.style.transform = `translateY(${(24 * (1 - e)).toFixed(2)}px)`;
         });
       }
@@ -363,8 +361,19 @@ void main() {
   };
 
   // ---------------------------------------------------------------- montar
+  // Las paletas: las de render/tarjetas/paletas.json, que la página pone en window.PALETAS.
+  const PALETAS = () => window.PALETAS || {};
+
+  function ponerPaleta(escenario, opciones, nombre) {
+    const pal = PALETAS()[nombre];
+    if (!pal) return;
+    for (const [k, v] of Object.entries(pal.css)) escenario.style.setProperty(k, v);
+    opciones.paleta = nombre;
+    opciones.paletaActual = pal;
+  }
+
   function montar(escenario, datos, opciones = {}) {
-    opciones = Object.assign({ pasos: "sale", finales: true }, opciones);
+    opciones = Object.assign({ finales: true, esquina: true, paleta: "sitio" }, opciones);
     escenario.classList.add("escenario");
     escenario.classList.toggle("vertical", datos.formato === "vertical");
     escenario.innerHTML = '<div class="fondo"></div><div class="tinte"></div><div class="capa"></div>';
@@ -378,6 +387,7 @@ void main() {
     if (capitulos.length) piezas.push({ d: { lista: capitulos }, tipo: TIPOS.capitulo });
     for (const d of datos.tarjetas) {
       if (d.tipo === "paso" || d.tipo === "capitulo") continue;
+      if ((d.tipo === "nombre" || d.tipo === "cierre") && d.logo === undefined) d.logo = datos.logo;
       piezas.push({ d, tipo: TIPOS[d.tipo] });
     }
     for (const p of piezas) {
@@ -391,13 +401,28 @@ void main() {
         });
       }
     }
+    ponerPaleta(escenario, opciones, opciones.paleta);
+    // El logo en la esquina: desde que se va el nombre de la apertura hasta el golpe del cierre.
+    let esquina = null;
+    const nombre = datos.tarjetas.find((d) => d.tipo === "nombre");
+    const cierre = datos.tarjetas.find((d) => d.tipo === "cierre");
+    if (datos.logo) {
+      esquina = nodo(`<img class="logo esquina" src="${datos.logo}" alt="">`);
+      capa.appendChild(esquina);
+    }
     const errores = datos.tarjetas.filter((d) => d.tipo === "error" && !d.mono);
     const duracion = Math.max(0, ...datos.tarjetas.map((d) => d.hasta));
     return {
       duracion,
       opciones,
+      paleta(nombre) { ponerPaleta(escenario, opciones, nombre); },
       pintar(t) {
         for (const p of piezas) p.tipo.pintar(p.el, p.d, t, opciones, escenario);
+        if (esquina) {
+          const desde = nombre ? nombre.hasta : 0, hasta = cierre ? cierre.golpe - 0.2 : duracion;
+          const o = opciones.esquina ? fuera((t - desde) / 0.5) * (t > hasta ? limitar(1 - (t - hasta) / 0.25) : 1) : 0;
+          esquina.style.opacity = (0.92 * limitar(o)).toFixed(3);
+        }
         // El tinte del cuadro: rojo con el error, verde con el correcto.
         const e = errores.find((d) => t >= d.desde && t <= d.hasta);
         if (e) {
@@ -409,5 +434,5 @@ void main() {
     };
   }
 
-  window.Tarjetas = { montar, resorte };
+  window.Tarjetas = { montar, resorte, PALETAS };
 })();

@@ -1,0 +1,374 @@
+{
+  "sitio": {
+    "nombre": "Sitio",
+    "descripcion": "La de hoy, la del sitio y las fichas: tinta azul oscura sobre vidrio claro y el ámbar del tramo que se mueve.",
+    "css": {
+      "--tinta": "#16202f",
+      "--suave": "#586273",
+      "--vidrio": "rgba(247, 249, 250, 0.66)",
+      "--borde": "rgba(255, 255, 255, 0.6)",
+      "--sombra": "rgba(22, 32, 47, 0.18)",
+      "--insignia-1": "#d08016",
+      "--insignia-2": "#a9590b",
+      "--insignia-tinta": "#ffffff",
+      "--avance": "#d1801a",
+      "--avance-vacio": "#9aa6b2",
+      "--raya-1": "#eb9a31",
+      "--raya-2": "#c06a0d",
+      "--acento": "#d1801a",
+      "--acento-tinta": "#ffffff",
+      "--si": "#1a6b3e",
+      "--si-1": "#3cb878",
+      "--si-2": "#22804c",
+      "--no": "#b52f2c",
+      "--no-1": "#e8574f",
+      "--no-2": "#b52f2c",
+      "--mat": "#1d6470",
+      "--mat-1": "#3fa5b3",
+      "--mat-2": "#23727e",
+      "--seg-1": "#ffcf33",
+      "--seg-2": "#e2a100",
+      "--seg-icono": "#3b2a00",
+      "--seg-etiqueta": "#704c00",
+      "--tinte-no": "rgba(214, 69, 65, 0.42)",
+      "--tinte-si": "rgba(47, 158, 98, 0.36)",
+      "--cierre-tinta": "#ffffff",
+      "--cierre-sombra": "rgba(10, 16, 24, 0.45)"
+    },
+    "capitulos": {
+      "materiales": [
+        "#1f6f7b",
+        "#2f8e9b"
+      ],
+      "verificacion": [
+        "#1d7a47",
+        "#2c8f58"
+      ],
+      "errores": [
+        "#a82a27",
+        "#d2433e"
+      ],
+      "aplicacion": [
+        "#3a6b2c",
+        "#4f8a3c"
+      ],
+      "seguridad": [
+        "#e2a100",
+        "#ffd34d"
+      ]
+    },
+    "oscuros": [
+      "seguridad"
+    ]
+  },
+  "huetares": {
+    "nombre": "Huetares",
+    "descripcion": "La del logo del grupo: el azul de la flor de lis, el amarillo del borde y el verde de las cintas.",
+    "css": {
+      "--tinta": "#0b2a52",
+      "--suave": "#4a5f7c",
+      "--vidrio": "rgba(246, 248, 252, 0.70)",
+      "--borde": "rgba(255, 255, 255, 0.65)",
+      "--sombra": "rgba(6, 55, 109, 0.20)",
+      "--insignia-1": "#ffc83b",
+      "--insignia-2": "#e9a516",
+      "--insignia-tinta": "#06376d",
+      "--avance": "#e9a516",
+      "--avance-vacio": "#9fb0c6",
+      "--raya-1": "#025486",
+      "--raya-2": "#f9bd24",
+      "--acento": "#f9bd24",
+      "--acento-tinta": "#06376d",
+      "--si": "#0f6b35",
+      "--si-1": "#1f8a4c",
+      "--si-2": "#0f4b25",
+      "--no": "#a10d25",
+      "--no-1": "#e0364f",
+      "--no-2": "#a10d25",
+      "--mat": "#025486",
+      "--mat-1": "#2a7fc0",
+      "--mat-2": "#06376d",
+      "--seg-1": "#ffd540",
+      "--seg-2": "#f9bd24",
+      "--seg-icono": "#06376d",
+      "--seg-etiqueta": "#7a5600",
+      "--tinte-no": "rgba(200, 16, 46, 0.40)",
+      "--tinte-si": "rgba(15, 107, 53, 0.36)",
+      "--cierre-tinta": "#ffffff",
+      "--cierre-sombra": "rgba(6, 30, 60, 0.5)"
+    },
+    "capitulos": {
+      "materiales": [
+        "#06376d",
+        "#1f6fae"
+      ],
+      "verificacion": [
+        "#0f4b25",
+        "#22783f"
+      ],
+      "errores": [
+        "#a10d25",
+        "#d22c45"
+      ],
+      "aplicacion": [
+        "#025486",
+        "#2a7fc0"
+      ],
+      "seguridad": [
+        "#f9bd24",
+        "#ffd540"
+      ]
+    },
+    "oscuros": [
+      "seguridad"
+    ]
+  },
+  "guias-y-scouts": {
+    "nombre": "Guías y Scouts CR",
+    "descripcion": "La de la marca nacional de Guías y Scouts de Costa Rica: índigo y rojo, con el azul marino y el naranja de sus colores secundarios.",
+    "css": {
+      "--tinta": "#2c1261",
+      "--suave": "#5b4f7a",
+      "--vidrio": "rgba(248, 247, 252, 0.70)",
+      "--borde": "rgba(255, 255, 255, 0.65)",
+      "--sombra": "rgba(44, 18, 97, 0.20)",
+      "--insignia-1": "#ffb733",
+      "--insignia-2": "#f08c00",
+      "--insignia-tinta": "#2c1261",
+      "--avance": "#f08c00",
+      "--avance-vacio": "#a9a2c2",
+      "--raya-1": "#2c1261",
+      "--raya-2": "#ed1a39",
+      "--acento": "#ffa400",
+      "--acento-tinta": "#2c1261",
+      "--si": "#03664f",
+      "--si-1": "#03a07f",
+      "--si-2": "#03866c",
+      "--no": "#c3102c",
+      "--no-1": "#ff3b57",
+      "--no-2": "#c3102c",
+      "--mat": "#00365f",
+      "--mat-1": "#1a5f99",
+      "--mat-2": "#00365f",
+      "--seg-1": "#ffc44d",
+      "--seg-2": "#ffa400",
+      "--seg-icono": "#2c1261",
+      "--seg-etiqueta": "#8a5300",
+      "--tinte-no": "rgba(237, 26, 57, 0.40)",
+      "--tinte-si": "rgba(4, 152, 111, 0.34)",
+      "--cierre-tinta": "#ffffff",
+      "--cierre-sombra": "rgba(28, 10, 60, 0.5)"
+    },
+    "capitulos": {
+      "materiales": [
+        "#00365f",
+        "#1a5f99"
+      ],
+      "verificacion": [
+        "#03664f",
+        "#03866c"
+      ],
+      "errores": [
+        "#a30d25",
+        "#e0213f"
+      ],
+      "aplicacion": [
+        "#2c1261",
+        "#5a32a3"
+      ],
+      "seguridad": [
+        "#ffa400",
+        "#ffc44d"
+      ]
+    },
+    "oscuros": [
+      "seguridad"
+    ]
+  },
+  "wak-y-tropa": {
+    "nombre": "Wak y Tropa",
+    "descripcion": "Los colores de las dos secciones del libro: el turquesa de la Wak y el verde de la Tropa, con el ámbar del tramo que se mueve.",
+    "css": {
+      "--tinta": "#08323a",
+      "--suave": "#4d6b70",
+      "--vidrio": "rgba(245, 251, 251, 0.70)",
+      "--borde": "rgba(255, 255, 255, 0.65)",
+      "--sombra": "rgba(0, 70, 80, 0.20)",
+      "--insignia-1": "#d08016",
+      "--insignia-2": "#a9590b",
+      "--insignia-tinta": "#ffffff",
+      "--avance": "#d1801a",
+      "--avance-vacio": "#95b3b6",
+      "--raya-1": "#00b0c6",
+      "--raya-2": "#04bc99",
+      "--acento": "#00b0c6",
+      "--acento-tinta": "#08323a",
+      "--si": "#036b52",
+      "--si-1": "#03a07f",
+      "--si-2": "#037a5c",
+      "--no": "#b8343a",
+      "--no-1": "#f06a6c",
+      "--no-2": "#b8343a",
+      "--mat": "#066a78",
+      "--mat-1": "#00b0c6",
+      "--mat-2": "#077a8a",
+      "--seg-1": "#ffd84d",
+      "--seg-2": "#f2b600",
+      "--seg-icono": "#08323a",
+      "--seg-etiqueta": "#7a5e00",
+      "--tinte-no": "rgba(224, 72, 75, 0.40)",
+      "--tinte-si": "rgba(4, 188, 153, 0.34)",
+      "--cierre-tinta": "#ffffff",
+      "--cierre-sombra": "rgba(0, 40, 48, 0.5)"
+    },
+    "capitulos": {
+      "materiales": [
+        "#066a78",
+        "#00899b"
+      ],
+      "verificacion": [
+        "#036b52",
+        "#038a6a"
+      ],
+      "errores": [
+        "#9e2c31",
+        "#cf4448"
+      ],
+      "aplicacion": [
+        "#0b4f6c",
+        "#0a7895"
+      ],
+      "seguridad": [
+        "#f2b600",
+        "#ffd84d"
+      ]
+    },
+    "oscuros": [
+      "seguridad"
+    ]
+  },
+  "fogata": {
+    "nombre": "Fogata",
+    "descripcion": "Oscura, de noche: vidrio oscuro con letra crema y el naranja del fuego; resalta mucho sobre el estudio claro.",
+    "css": {
+      "--tinta": "#f6efe2",
+      "--suave": "#c9bca6",
+      "--vidrio": "rgba(18, 20, 26, 0.64)",
+      "--borde": "rgba(255, 255, 255, 0.14)",
+      "--sombra": "rgba(0, 0, 0, 0.35)",
+      "--insignia-1": "#ffa24a",
+      "--insignia-2": "#e86a1c",
+      "--insignia-tinta": "#1a1206",
+      "--avance": "#ff8a3d",
+      "--avance-vacio": "#6f6a63",
+      "--raya-1": "#ffb347",
+      "--raya-2": "#e8541c",
+      "--acento": "#ff8a3d",
+      "--acento-tinta": "#1a1206",
+      "--si": "#6fd08c",
+      "--si-1": "#3f9e5f",
+      "--si-2": "#2a7445",
+      "--no": "#ff9488",
+      "--no-1": "#ff7a6b",
+      "--no-2": "#c73b2e",
+      "--mat": "#7cc6cf",
+      "--mat-1": "#3f8f99",
+      "--mat-2": "#23585f",
+      "--seg-1": "#ffd15c",
+      "--seg-2": "#e7a600",
+      "--seg-icono": "#2a1d00",
+      "--seg-etiqueta": "#ffd15c",
+      "--tinte-no": "rgba(255, 107, 94, 0.40)",
+      "--tinte-si": "rgba(111, 208, 140, 0.32)",
+      "--cierre-tinta": "#fff3e0",
+      "--cierre-sombra": "rgba(0, 0, 0, 0.6)"
+    },
+    "capitulos": {
+      "materiales": [
+        "#1d3f45",
+        "#2f7480"
+      ],
+      "verificacion": [
+        "#163f2a",
+        "#2a7a48"
+      ],
+      "errores": [
+        "#5a1712",
+        "#b5382b"
+      ],
+      "aplicacion": [
+        "#2b3b1a",
+        "#55702a"
+      ],
+      "seguridad": [
+        "#e7a600",
+        "#ffd15c"
+      ]
+    },
+    "oscuros": [
+      "seguridad"
+    ]
+  },
+  "campamento": {
+    "nombre": "Campamento",
+    "descripcion": "De tierra y madera: café, verde bosque y mostaza sobre vidrio crema, del arena y el café de la marca nacional.",
+    "css": {
+      "--tinta": "#3b2412",
+      "--suave": "#7a6450",
+      "--vidrio": "rgba(250, 244, 232, 0.74)",
+      "--borde": "rgba(255, 250, 240, 0.7)",
+      "--sombra": "rgba(59, 36, 18, 0.20)",
+      "--insignia-1": "#d08016",
+      "--insignia-2": "#a9590b",
+      "--insignia-tinta": "#ffffff",
+      "--avance": "#c06a0d",
+      "--avance-vacio": "#b9a58c",
+      "--raya-1": "#a8743c",
+      "--raya-2": "#633510",
+      "--acento": "#a35a0f",
+      "--acento-tinta": "#ffffff",
+      "--si": "#2f5d2a",
+      "--si-1": "#4f8a4a",
+      "--si-2": "#2f5d2a",
+      "--no": "#8f3220",
+      "--no-1": "#cf5a3a",
+      "--no-2": "#8f3220",
+      "--mat": "#7a4a1e",
+      "--mat-1": "#b5854f",
+      "--mat-2": "#7a4a1e",
+      "--seg-1": "#f2c14e",
+      "--seg-2": "#d49a1a",
+      "--seg-icono": "#3b2412",
+      "--seg-etiqueta": "#7a5000",
+      "--tinte-no": "rgba(181, 70, 43, 0.40)",
+      "--tinte-si": "rgba(63, 122, 58, 0.34)",
+      "--cierre-tinta": "#fff8ec",
+      "--cierre-sombra": "rgba(40, 24, 10, 0.55)"
+    },
+    "capitulos": {
+      "materiales": [
+        "#6a3f18",
+        "#94633a"
+      ],
+      "verificacion": [
+        "#2f5d2a",
+        "#477e40"
+      ],
+      "errores": [
+        "#8f3220",
+        "#b84a2e"
+      ],
+      "aplicacion": [
+        "#4a5a22",
+        "#667a2e"
+      ],
+      "seguridad": [
+        "#d49a1a",
+        "#f2c14e"
+      ]
+    },
+    "oscuros": [
+      "seguridad"
+    ]
+  }
+}
