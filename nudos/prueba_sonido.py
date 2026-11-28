@@ -22,6 +22,7 @@ from pathlib import Path
 import numpy as np
 
 from . import RAIZ
+from .guion import PALABRAS_EVITAR, estilo_del_guion  # noqa: F401  (vivían aquí)
 
 REVISION = RAIZ / "revision"
 NIVEL_VOZ = -20.0          # LUFS de cada locución en la prueba: todas igual de fuertes
@@ -614,8 +615,8 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
     def fuente(slug):
         if not slug:
             return None
-        textos = [RAIZ / "specs" / f"{slug}.yaml", GUIONES / f"{slug}.yaml"]
-        return "\n".join(r.read_text(encoding="utf-8") for r in textos if r.exists())
+        ruta = RAIZ / "specs" / f"{slug}.yaml"
+        return ruta.read_text(encoding="utf-8") if ruta.exists() else None
     fuentes = [fuente(s) for s in slugs]
 
     def limpios(**kw):
@@ -740,62 +741,13 @@ def prueba_voz_propia(carpeta, slug: str = "as-de-guia", aviso=print) -> Path:
 
 
 # --------------------------------------------------------------------------
-# El guion hablado (borrador para T22a)
+# El guion hablado (T22a): sale de la especificación (nudos/guion.py)
 # --------------------------------------------------------------------------
-GUIONES = RAIZ / "config" / "guion"
 HUECO_PASO = 1.8           # s entre el fin de un paso dicho y el siguiente: lo que tardaría el movimiento
-HUECO = 1.0                # s entre la apertura y el primer paso, y antes del cierre
-
-# Lo que Gabriel no diría (27 nov): diminutivos y «así», que no van con su manera de hablar. Los
-# puntos suspensivos tampoco: la voz clonada los dice estirando la palabra de antes («deeel»).
-PALABRAS_EVITAR = ("así", "chiquito", "chiquitito", "pequeñito", "pequeñita", "cortito", "cortita", "poquito",
-                   "poquita", "ratito", "ahorita", "despacito", "rapidito", "facilito", "tantito", "bonito")
-
-
-def guion_hablado(slug: str) -> dict:
-    """El guion hablado de un nudo (config/guion/<slug>.yaml): `apertura`, un texto por paso
-    (`pasos`), `cierre` y, si hace falta, `seguridad`. Falla si no tiene un texto por cada paso de
-    la especificación, si usa términos de sección o si no sigue el estilo (`estilo_del_guion`)."""
-    import yaml
-
-    from .ficha import terminos_encontrados
-    from .spec import cargar
-    ruta = GUIONES / f"{slug}.yaml"
-    datos = yaml.safe_load(ruta.read_text(encoding="utf-8"))
-    sobran = set(datos) - {"apertura", "pasos", "cierre", "seguridad"}
-    if sobran:
-        raise ValueError(f"{ruta.name}: campos desconocidos: {', '.join(sorted(sobran))}")
-    pasos = [" ".join(str(t).split()) for t in datos.get("pasos") or []]
-    total = len(cargar(slug).pasos)
-    if len(pasos) != total:
-        raise ValueError(f"{ruta.name}: tiene {len(pasos)} pasos y la especificación {total}")
-    guion = {"apertura": " ".join(str(datos.get("apertura") or "").split()), "pasos": pasos,
-             "cierre": " ".join(str(datos.get("cierre") or "").split()),
-             "seguridad": " ".join(str(datos.get("seguridad") or "").split())}
-    malos = terminos_encontrados(" ".join([guion["apertura"], *pasos, guion["cierre"], guion["seguridad"]]))
-    if malos:
-        raise ValueError(f"{ruta.name}: usa términos de sección: {', '.join(malos)}")
-    estilo = estilo_del_guion(" ".join([guion["apertura"], *pasos, guion["cierre"], guion["seguridad"]]))
-    if estilo:
-        raise ValueError(f"{ruta.name}: {'; '.join(estilo)}")
-    return guion
-
-
-def estilo_del_guion(texto: str) -> list[str]:
-    """Lo que el guion hablado no debe tener: puntos suspensivos, las PALABRAS_EVITAR y
-    comparaciones («como un ojo», «es como un conejo que sale de su pozo», «como si fuera un
-    tejido»), que a Gabriel no le gustan (27 nov). «Como en su ficha» sí va: no compara."""
-    out = []
-    if "…" in texto or "..." in texto:
-        out.append("tiene puntos suspensivos, que la voz dice estirando la palabra de antes")
-    palabras = set(re.findall(r"[^\W\d_]+", texto.casefold()))
-    malas = [w for w in PALABRAS_EVITAR if w in palabras]
-    if malas:
-        out.append(f"usa palabras que Gabriel no diría: {', '.join(malas)}")
-    comparaciones = re.findall(r"\bcomo (?:un|una|si)\b[^.,;:]*", texto.casefold())
-    if comparaciones:
-        out.append("tiene comparaciones, que a Gabriel no le gustan: " + "; ".join(f"«{c.strip()}»" for c in comparaciones))
-    return out
+HUECO = 1.0                # s entre las frases de los demás capítulos
+# Los capítulos que empiezan con su tarjeta (y su clic). Los pasos llevan la suya cada uno, y la
+# apertura y el cierre, el nombre del nudo.
+CON_TARJETA = ("materiales", "verificacion", "errores", "aplicacion", "seguridad")
 
 
 def lineas_de_la_ficha(slug: str) -> list[tuple[str, str]]:
@@ -814,20 +766,21 @@ def lineas_de_la_ficha(slug: str) -> list[tuple[str, str]]:
 
 
 def lineas_del_guion(slug: str) -> list[tuple[str, str]]:
-    """El guion hablado en el orden de los capítulos de T22: la apertura, los pasos, la seguridad y
-    el cierre, que termina con el nudo que sigue (para la pantalla final de YouTube)."""
-    g = guion_hablado(slug)
-    out = [("apertura", g["apertura"])] + [("pasos", t) for t in g["pasos"]]
-    out += [(cap, g[cap]) for cap in ("seguridad", "cierre") if g[cap]]
-    return out
+    """El guion hablado del video, en el orden de los capítulos de T22 (`guion.partes`): (capítulo,
+    lo que dice la voz). Sale de la especificación (`voz` y `video`) y falla si el guion tiene
+    problemas (`guion.problemas`)."""
+    from .guion import revisado
+    from .spec import cargar
+    return [(p.capitulo, p.voz) for p in revisado(cargar(slug))]
 
 
 def narracion(lineas: list[tuple[str, str]], slug: str, voz=None, aviso=print, instrumentos=None,
               alineador=None, revisar=None):
     """La pista de un video entero hecha solo de voz, como la armaría T22 («la voz manda el
     tiempo»): cada locución después de la anterior, con HUECO_PASO entre pasos para el movimiento;
-    la tarjeta de cada paso 0,25 s antes de su voz, el golpe al terminar los pasos (el nudo
-    apretado), y la canción del nudo con sus capítulos. Una locución que titubea se vuelve a decir
+    la tarjeta de cada paso 0,25 s antes de su voz y la de cada capítulo de CON_TARJETA al empezar
+    el capítulo, el golpe al empezar el cierre (o, sin cierre, el primer capítulo después de los
+    pasos), y la canción del nudo con sus capítulos. Una locución que titubea se vuelve a decir
     (`voz.locuciones_sin_titubeos`). Da (pista, locuciones)."""
     from . import foley as F
     from . import mezcla as MZ
@@ -842,14 +795,16 @@ def narracion(lineas: list[tuple[str, str]], slug: str, voz=None, aviso=print, i
             t += HUECO_PASO if (cap == previo == "pasos") else HUECO
         if cap not in inicios:
             inicios[cap] = max(0.0, t - (0.6 if cap != "apertura" else t))
+            if cap in CON_TARJETA:
+                eventos.append(F.Evento("tarjeta", inicios[cap], -0.35))
         if cap == "pasos":
             eventos.append(F.Evento("tarjeta", t - 0.25, -0.35))
         dichos.append(MZ.Dicho(t, loc))
         t += loc.segundos
         previo = cap
     dur = t + 2.5
-    despues = [c for c in inicios if c not in ("apertura", "pasos")]
-    golpe = inicios[despues[0]] if despues else None
+    despues = [c for c in inicios if c not in ("apertura", "materiales", "pasos")]
+    golpe = inicios["cierre"] if "cierre" in inicios else (inicios[despues[0]] if despues else None)
     if golpe is not None:
         eventos.append(F.Evento("golpe", golpe, 0.0))
     nombres = list(inicios)
@@ -942,8 +897,9 @@ M» en cada paso; «después», el guion nuevo.</p>
 
 def prueba_guion(slugs=PILOTOS_MEZCLA, aviso=print) -> Path:
     """Arma revision/guion/index.html: la narración entera de cada nudo con el texto de la ficha
-    y con su guion hablado (config/guion/), con la música, las tarjetas y el golpe, y revisa con el
-    reconocimiento de voz que cada locución del guion diga lo que tiene que decir. Deja
+    y con su guion hablado (la `voz` y el `video` de su especificación), con la música, las tarjetas
+    y el golpe, y revisa con el reconocimiento de voz que cada locución del guion diga lo que tiene
+    que decir. Deja
     informe.json con la duración y lo que no calzó."""
     from . import ia
     from . import mezcla as MZ

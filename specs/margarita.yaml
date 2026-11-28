@@ -43,7 +43,7 @@ alternativas:
   - nudo: Mariposa alpina
     cuando: Cuando la cuerda va a cargar o a sacudirse. También acorta la cuerda, con su gaza, y no se suelta al aflojarla.
   - nudo: Tensor ajustable
-    cuando: Cuando tienes un extremo libre y quieres ajustar el largo de una cuerda tendida, como el viento de una carpa.
+    cuando: Cuando tienes un extremo libre y quieres ajustar el largo de una cuerda tendida, como el viento de una tienda de campaña.
 
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
 estado: cuerda-ok

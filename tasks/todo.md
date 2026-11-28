@@ -93,13 +93,22 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Gabriel oyó el primer borrador: le gustó, pero la apertura sonaba a youtuber, no dice diminutivos ni «así», y los puntos suspensivos estiraban palabras. Segunda versión, con el estilo en el plan y las tomas sin titubeos (27 nov)
     - [x] Gabriel no quiere comparaciones («como un ojo», el conejo): tercera versión, sin ellas (27 nov)
     - [x] Gabriel aprobó el estilo del guion hablado con la tercera versión de los dos pilotos (27 nov): las reglas están en el plan, en el guion de T22a, y valen para los guiones de los 36 nudos
-    - [ ] T22a El diseño, el guion de un piloto (`guion <slug>`) y la maqueta de las tarjetas; punto de control
+    - [x] T22a El diseño en el plan, el guion de los tres pilotos en su especificación (formato v1.14), la hoja `guion <slug>` y la maqueta de las tarjetas (`prueba-tarjetas`) (27 nov)
+    - [x] Punto de control de T22a: Gabriel aprobó el diseño completo (28 nov)
+      - [x] Gabriel eligió las tres aplicaciones (el cabo de un toldo en un poste, la mesa del campamento y la repisa en la cocina) y que en ellas el nudo se tense y aguante (27 nov)
+      - [x] Gabriel decidió que la duración no limita: el video dura lo que haga falta para explicar bien, sin recortar escenas (27 nov)
+      - [x] Gabriel aprobó «En la práctica» de los 36 nudos, con siete cambios suyos y «tienda de campaña» en vez de «carpa», también en las fichas de la margarita, la media llave y dos cotes y el tensor ajustable (27 nov)
+      - [x] La tarjeta del paso sale y vuelve a entrar en cada paso, y el nombre «Grupo Guías y Scouts Huetares 431» con el logo del grupo van en la apertura, en el cierre y en la ficha (Gabriel, 28 nov)
+      - [x] Gabriel eligió la paleta «Huetares», la del logo del grupo, y no quiso el logo en la esquina (28 nov)
+      - [x] Gabriel aprobó el guion del as de guía (28 nov)
+      - [x] El cuadro quieto va en lo que necesitas, la seguridad y la pantalla final; los errores llevan una animación de lo que pasa cuando el nudo se hace mal (`falla`, Gabriel, 28 nov)
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
+      - [ ] Gabriel comprueba con cuerda real la falla de cada error de los tres pilotos, antes de dibujarla
     - [ ] Los tres pilotos en 4K y en vertical; punto de control
   - [x] T23 El sonido (26 y 27 nov): la voz de Gabriel clonada como de estudio (Qwen3-TTS desde su muestra del DJI, con Sidon; la muestra, fuera de git en `entradas/_voz/`), cinco canciones compuestas en código con el motivo en celesta, el foley del motor y la mezcla a −14 LUFS (`nudos/voz.py`, `musica.py`, `foley.py`, `mezcla.py`; `prueba-voz`, `prueba-musica`, `prueba-mezcla` y `prueba-voz-propia`). El detalle, en el historial
   - [x] T24 El visor (26 y 27 nov): material físico, RoomEnvironment, AgX con contraste, oclusión ambiental con la cámara quieta y lygia (`sitio/fisico.js`), publicado en el sitio. Gabriel lo abrió en la computadora y en un celular de gama baja, y todo anduvo bien (27 nov). El detalle, en el historial
   - [x] Borrar los cuadros del as de guía en `%LOCALAPPDATA%\nudos\cuadros` (con permiso de Gabriel, 27 nov): los 1080 viejos del 25 nov (35,9 GB) y los 585 de la prueba de 10 s (14,6 GB). Quedan los `atado` de los dos pilotos
-- [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, la tabla de aplicaciones, los guiones, las voces y la música de los 36
+- [ ] T19 Todos los nudos a la vez: el motor, las fichas y los videos en una sola corrida, `comparar` contra la referencia de antes, y se borran `relajar()` y `apretar()` (L). Antes, los guiones, las voces, la música y la falla de cada error de los 36, comprobada con cuerda real (la tabla de aplicaciones ya está aprobada, en T22a)
   - [x] Antes de T19: los 36 nudos construyen sin fallas con el motor (27 nov; fallaban 15, no 5). `separar` no mueve los puntos quietos de la plantilla, el motor parte de la cuerda relajada cuando `separar` no puede y la malla de la cornamusa va sin holgura. El detalle, en el historial
     - [x] Punto de control: Gabriel aprobó el arreglo y se integró a `main` (28 nov, 18f72c0)
   - [ ] Gabriel decide qué pasa con `relajar()` en el paso 5 de T19: ahora es la partida de respaldo del motor y no se puede borrar tal cual (se queda en `nudos/libre.py` o pasa a `nudos/fisica/`)

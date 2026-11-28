@@ -43,6 +43,46 @@ alternativas:
   - nudo: As de guía español
     cuando: Cuando necesitas dos gazas en vez de una.
 
+# Lo que dice la voz en el video (T22, formato v1.14). Texto propio, en tuteo y con el estilo del
+# guion hablado que Gabriel aprobó el 27 nov de 2026 (ver el plan, T22a): directo, sin comparaciones,
+# sin diminutivos ni «así» y sin puntos suspensivos. Cada instrucción dice lo mismo que la ficha: los
+# «por encima» y «por debajo» no cambian. Lo que dice en cada paso y en cada error va en su «voz».
+video:
+  apertura: >-
+    El as de guía hace una gaza fija en la punta de la cuerda: no se cierra ni se corre,
+    aunque cargue mucho peso, y después se desata fácil. Te lo enseño en siete pasos, y al
+    final, cómo revisar que quedó bien.
+  materiales: Solo necesitas una cuerda de unos dos metros, que no sea rígida.
+  verificacion:
+    - voz: Para revisarlo, tira del firme. La gaza no se cierra.
+      mira: gaza
+      etiqueta: La gaza no se cierra
+    - voz: Por delante, el chicote baja por la gaza pequeña, junto al tramo que subió.
+      mira: chicote-baja
+      etiqueta: Baja junto al tramo que subió
+    - voz: Por detrás, el chicote rodea el firme.
+      mira: rodeo-detras
+      lado: detras
+      etiqueta: Por detrás, rodea el firme
+    - voz: Y el chicote queda dentro de la gaza, y te sobra por lo menos el largo de tu mano.
+      mira: "chicote-baja[-1]"
+      etiqueta: Dentro de la gaza, con sobra
+  aplicacion:
+    escena: toldo
+    titulo: El cabo de un toldo
+    voz: >-
+      En el campamento, el as de guía sirve para tender un toldo. La gaza rodea el poste, y
+      aunque el viento tire del cabo, no se cierra ni se corre.
+  seguridad: >-
+    Un aviso importante: en rescate, este nudo se usa alrededor del pecho de una persona,
+    pero aquí es solo para que lo sepas. En el grupo no lo uses para sostener, subir ni
+    bajar a nadie; esa práctica se hace solo con instructor y equipo certificados. Y si la
+    cuerda queda sin carga, o es rígida o resbalosa, el nudo se puede aflojar: revísalo cada
+    vez antes de usarlo.
+  cierre: >-
+    Ya sabes hacer el as de guía. Y si necesitas dos gazas en vez de una, el que sigue es el
+    as de guía español.
+
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
 estado: publicado
 
@@ -99,6 +139,9 @@ pasos:
     texto: >-
       Decide el tamaño de la gaza final y deja chicote de sobra. El tramo que sube
       es el firme; el extremo libre es el chicote.
+    voz: >-
+      Primero, decide qué tan grande quieres la gaza, y deja bastante cuerda libre. Esa
+      punta suelta es el chicote; el tramo largo, el que sube, es el firme.
     trazado: [firme-sin-gaza, "gaza-grande[1:]", chicote-libre]
     secuencia: ""
 
@@ -106,6 +149,9 @@ pasos:
     texto: >-
       Forma un ojo en el firme con el tramo que va hacia el chicote por encima.
       Revisa este cruce: al revés no sale un as de guía.
+    voz: >-
+      Paso 2 de 7. Con el firme, forma una gaza pequeña, con el lado del chicote por
+      encima. Fíjate bien en este cruce: si queda al revés, no te va a salir este nudo.
     trazado: [firme, gaza-pequena, gaza-grande, chicote-libre]
     secuencia: "1U 1O"
     # Empieza después del cruce: así el firme llega azul y el tramo que va al chicote,
@@ -114,18 +160,25 @@ pasos:
 
   - titulo: Acerca el chicote
     texto: Llévalo hacia la gaza pequeña desde el lado de la gaza grande.
+    voz: >-
+      Ahora acerca el chicote a esa gaza pequeña, desde el lado de la gaza grande.
     trazado: [firme, gaza-pequena, gaza-grande, chicote-acerca]
     secuencia: "1U 1O"
     resaltar: {desde: "gaza-grande[-2]", hasta: fin}
 
   - titulo: Sube por la gaza
     texto: "Pasa el chicote por la gaza pequeña: entra por debajo y sale por encima."
+    voz: >-
+      Paso 4. Mete el chicote por la gaza pequeña: entra por debajo y sale por encima.
     trazado: [firme, gaza-pequena, gaza, chicote-sube, chicote-sale]
     secuencia: "1U 2O 3U 1O 2U 3O"
     resaltar: {desde: "chicote-sube[0]", hasta: fin}
 
   - titulo: Pasa por debajo del firme
     texto: Rodea el firme por debajo. Con la cuerda en la mano, esto es pasar por detrás.
+    voz: >-
+      Rodea el firme con el chicote, por debajo. Con la cuerda en la mano, es pasarlo por
+      detrás.
     trazado: [firme, gaza-pequena, gaza, chicote-sube, rodeo-detras, rodeo-detras-fin]
     secuencia: "4O 1U 2O 3U 1O 2U 3O 4U"
     resaltar: {desde: "rodeo-detras[0]", hasta: fin}
@@ -134,6 +187,8 @@ pasos:
     texto: >-
       Cruza el firme otra vez, ahora por encima, y lleva el chicote a la gaza
       pequeña.
+    voz: >-
+      Y vuelve cruzando el firme, esta vez por encima, hacia la gaza pequeña.
     trazado: [firme, gaza-pequena, gaza, chicote-sube, rodeo-detras, rodeo-delante,
               rodeo-delante-fin]
     secuencia: "4O 5U 1U 2O 3U 6U 1O 2U 3O 4U 5O 6O"
@@ -143,6 +198,10 @@ pasos:
     texto: >-
       Baja el chicote por la gaza pequeña, junto al tramo que subió. Sujeta chicote
       y gaza juntos y tira del firme. El chicote queda dentro de la gaza.
+    voz: >-
+      Último paso. Baja el chicote por la gaza pequeña, junto al tramo que subió. Sujeta
+      el chicote y la gaza juntos, y tira del firme. Listo: el chicote queda dentro de la
+      gaza.
     trazado: [firme, gaza-pequena, gaza, chicote-sube, rodeo-detras, rodeo-delante,
               chicote-baja]
     secuencia: "4O 5U 1U 7O 2O 3U 6U 1O 2U 3O 4U 5O 6O 7U"
@@ -156,6 +215,15 @@ error:
   texto: >-
     El tramo que va hacia el chicote quedó por debajo del firme. Si sigues así, no
     sale un as de guía. Deshaz la gaza y vuelve a formarla con ese tramo por encima.
+  voz: >-
+    El error más común está en el segundo paso: la gaza pequeña al revés, con el tramo que
+    va al chicote por debajo del firme. Con la gaza al revés, el nudo no traba, y al tirar
+    del firme se deshace. Si te pasa, deshaz la gaza y vuelve a formarla con ese tramo por
+    encima.
+  # Lo que se ve en el video (T22): el nudo terminado con el error y lo que le pasa al usarlo.
+  falla: >-
+    El nudo se termina con la gaza pequeña al revés y se tira del firme: no traba y se
+    deshace. Después, el nudo bien hecho aguanta el mismo tirón.
   encuadre:
     x: [-6.5, 3.5]
     y: [-2.5, 7.0]

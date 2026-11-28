@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarjetas del video</title>
+<!-- La maqueta de las tarjetas (T22a). `python -m nudos prueba-tarjetas` llena las marcas de abajo
+     con las fuentes, tarjetas.css, lygia, tarjetas.js y los textos del nudo. -->
+<style>
+/*FUENTES*/
+:root { color-scheme: dark; --fondo: #0f1318; --panel: #171d24; --linea: #2b333e; --tinta: #e6eaf0; --suave: #9ba5b4;
+        --ambar: #eea23e; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--tinta); font: 16px/1.55 Literata, Georgia, serif; }
+main { max-width: 1440px; margin: 0 auto; padding: 24px 16px 72px; }
+h1 { font: 800 42px/1 "Big Shoulders Display", sans-serif; text-transform: uppercase; margin: 0 0 8px; letter-spacing: .01em; }
+h2 { font: 800 24px/1.1 "Big Shoulders Display", sans-serif; text-transform: uppercase; margin: 30px 0 8px; }
+.bajada { color: var(--suave); max-width: 82ch; margin: 0 0 18px; }
+.pestanas { display: flex; gap: 8px; margin: 0 0 12px; }
+button, select { font: 500 14px/1 "IBM Plex Mono", monospace; color: var(--tinta); background: var(--panel); border: 1px solid var(--linea);
+                 border-radius: 10px; padding: 10px 14px; cursor: pointer; }
+button:hover { border-color: #46515e; }
+.pestanas button.activa, .saltos button.activa { background: var(--ambar); color: #1b1307; border-color: var(--ambar); }
+.marco { position: relative; margin: 0 auto; border-radius: 14px; overflow: hidden; background: #000;
+         box-shadow: 0 18px 60px rgba(0, 0, 0, .45); }
+.marco > div { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.controles { display: flex; align-items: center; gap: 12px; margin: 14px 0 6px; flex-wrap: wrap; }
+.controles input[type=range] { flex: 1; min-width: 180px; accent-color: var(--ambar); }
+.reloj { font: 500 15px/1 "IBM Plex Mono", monospace; min-width: 112px; color: var(--suave); }
+.opciones { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 6px 0 10px; color: var(--suave); font-size: 15px; }
+.opciones input { accent-color: var(--ambar); }
+.saltos { display: flex; flex-wrap: wrap; gap: 6px; }
+.saltos button { padding: 8px 12px; font-size: 13px; }
+.notas { color: var(--suave); max-width: 86ch; }
+.notas li { margin: 6px 0; }
+.notas b { color: var(--tinta); font-weight: 600; }
+kbd { font: 500 12px/1 "IBM Plex Mono", monospace; border: 1px solid var(--linea); border-radius: 5px; padding: 2px 5px; }
+.paletas { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+.paletas button { display: flex; align-items: center; gap: 10px; padding: 9px 12px; }
+.paletas button.activa { border-color: var(--ambar); box-shadow: 0 0 0 2px var(--ambar) inset; }
+.muestras { display: flex; }
+.muestras i { display: block; width: 14px; height: 22px; }
+.muestras i:first-child { border-radius: 5px 0 0 5px; }
+.muestras i:last-child { border-radius: 0 5px 5px 0; }
+.descripcion { color: var(--suave); margin: 4px 0 10px; min-height: 1.5em; }
+/*TARJETAS_CSS*/
+</style></head>
+<body><main>
+<h1>Las tarjetas del video</h1>
+<p class="bajada">La maqueta animada de las tarjetas nuevas, con los textos de __NOMBRE__, sobre un cuadro de la prueba en 4K
+del 27 nov (con la tarjeta de hoy borrada). Es una secuencia de muestra con cada tipo de tarjeta, no el video: en el video,
+cada una dura lo que su voz. El mismo código las dibujará cuadro por cuadro en la implementación.</p>
+<div class="pestanas" role="tablist">
+  <button data-formato="horizontal" class="activa">Video horizontal</button>
+  <button data-formato="vertical">Reel vertical</button>
+</div>
+<div class="marco" id="marco"><div id="horizontal"></div><div id="vertical"></div></div>
+<div class="controles">
+  <button id="play" title="Reproducir o pausar (espacio)">Pausa</button>
+  <span class="reloj" id="reloj">0:00,0</span>
+  <input type="range" id="barra" min="0" max="10000" value="0" aria-label="Tiempo">
+  <select id="vel" aria-label="Velocidad"><option value="1">1×</option><option value="0.5">0,5×</option><option value="0.25">0,25×</option></select>
+</div>
+<h2>La paleta</h2>
+<p class="descripcion">La de los videos es «Huetares», la del logo del grupo (Gabriel la eligió el 28 nov). Las demás
+quedan para comparar.</p>
+<div class="paletas" id="paletas"></div>
+<p class="descripcion" id="descripcion"></p>
+<div class="opciones">
+  <label><input type="checkbox" id="finales" checked> Mostrar dónde va la pantalla final de YouTube</label>
+</div>
+<div class="saltos" id="saltos"></div>
+
+<h2>Qué es cada una</h2>
+<ul class="notas">
+  <li><b>El nombre</b>, en la apertura, con el logo del grupo y su nombre: el nudo terminado gira despacio en el
+    campamento y la voz dice para qué sirve.</li>
+  <li><b>Lo que necesitas</b>: el texto de materiales de la ficha, con la cuerda estirada y lo demás sobre la mesa.</li>
+  <li><b>El paso</b>: el número grande en el distintivo ámbar (el mismo ámbar del tramo resaltado que se mueve), «Paso N de
+    M», el título y el avance con un punto por paso. Entra con un rebote suave cuando empieza su voz y sale rápido al
+    terminar el paso, y vuelve a entrar con el siguiente (lo eligió Gabriel el 28 nov).</li>
+  <li><b>El capítulo</b>: cada uno con sus colores de la paleta. El fondo se mueve con el ruido simplex de lygia, en
+    WebGL, con unas formas que crecen al entrar. Se abre desde la izquierda con rebote mientras, detrás, el video cambia
+    de escena.</li>
+  <li><b>La ✓ de la revisión</b> va sobre lo que se revisa, con su etiqueta corta: en el video, la cámara se acerca y la
+    marca sigue al punto del nudo.</li>
+  <li><b>La ✗ y la ✓</b>: el error atado con el motor se marca con la ✗ y el cuadro se tiñe de rojo en los bordes; después
+    de volver atrás, el paso correcto se marca con la ✓ en verde. Los demás errores van con la ✗ y su título.</li>
+  <li><b>La seguridad</b> lleva lo que dice la voz, frase por frase, para que se entienda también sin sonido.</li>
+  <li><b>El cierre</b>: el logo grande del grupo y el nombre del nudo entran de golpe con el acorde final de la música;
+    después, «Grupo Guías y Scouts Huetares 431» y la dirección del visor. La derecha queda libre unos 10 s para la
+    pantalla final de YouTube.</li>
+  <li><b>El reel</b>: las tarjetas van arriba y los subtítulos palabra por palabra, quemados, abajo del nudo, por encima de
+    donde Instagram pone la descripción.</li>
+</ul>
+<h2>Cómo se dibujan en el video</h2>
+<ul class="notas">
+  <li>Las fuentes son las del sitio y de la ficha: Big Shoulders Display, IBM Plex Mono y Literata.</li>
+  <li>Edge dibuja cada cuadro con <kbd>pintar(t)</kbd> sobre fondo transparente y Pillow lo pone sobre el video. El vidrio
+    esmerilado (el cuadro de atrás, desenfocado) lo hace Pillow con la forma de cada tarjeta, porque Edge no ve el video.</li>
+  <li>De lygia se usa solo el ruido simplex (licencia MIT), que ya está en <kbd>sitio/vendor/lygia</kbd>.</li>
+  <li>Teclas: <kbd>espacio</kbd> reproduce o pausa; <kbd>←</kbd> y <kbd>→</kbd> mueven un cuadro (1/30 s).</li>
+</ul>
+</main>
+<script>/*LYGIA*/</script>
+<script>/*PALETAS*/</script>
+<script>/*TARJETAS_JS*/</script>
+<script>
+"use strict";
+const DATOS = /*DATOS*/;
+const TAM = { horizontal: [1920, 1080], vertical: [1080, 1920] };
+const marco = document.getElementById("marco");
+const escenarios = {}, montados = {};
+for (const f of ["horizontal", "vertical"]) {
+  escenarios[f] = document.getElementById(f);
+  const d = DATOS[f];
+  if (!d.fondo) escenarios[f].style.background = "linear-gradient(160deg, #d9dee1, #b4bcc2)";
+  montados[f] = Tarjetas.montar(escenarios[f], d);
+}
+let formato = "horizontal", t = 0, corre = true, ultimo = null, vel = 1;
+const barra = document.getElementById("barra"), reloj = document.getElementById("reloj"), play = document.getElementById("play");
+const duracion = () => montados[formato].duracion + 1.2;
+
+function ajustar() {
+  const [w, h] = TAM[formato];
+  const ancho = marco.parentElement.clientWidth;
+  const alto = Math.max(320, window.innerHeight * (formato === "vertical" ? 0.86 : 0.74));
+  const k = Math.min(ancho / w, alto / h);
+  marco.style.width = `${Math.floor(w * k)}px`;
+  marco.style.height = `${Math.floor(h * k)}px`;
+  for (const f of ["horizontal", "vertical"]) {
+    escenarios[f].style.display = f === formato ? "" : "none";
+    escenarios[f].style.transform = `scale(${k})`;
+  }
+}
+function saltos() {
+  const caja = document.getElementById("saltos");
+  caja.innerHTML = "";
+  for (const [nombre, desde] of DATOS[formato].saltos) {
+    const b = document.createElement("button");
+    b.textContent = nombre;
+    b.dataset.desde = desde;
+    b.onclick = () => { t = desde; };
+    caja.appendChild(b);
+  }
+}
+function reloj_(x) { const m = Math.floor(x / 60), s = x - 60 * m; return `${m}:${s.toFixed(1).padStart(4, "0").replace(".", ",")}`; }
+function cuadro(ahora) {
+  if (ultimo !== null && corre) {
+    t += (ahora - ultimo) / 1000 * vel;
+    if (t > duracion()) t = 0;
+  }
+  ultimo = ahora;
+  montados[formato].pintar(t);
+  reloj.textContent = `${reloj_(t)} / ${reloj_(duracion())}`;
+  if (document.activeElement !== barra) barra.value = Math.round(10000 * t / duracion());
+  const bs = [...document.querySelectorAll("#saltos button")];
+  bs.forEach((b, i) => b.classList.toggle("activa", t >= +b.dataset.desde && (i + 1 === bs.length || t < +bs[i + 1].dataset.desde)));
+  requestAnimationFrame(cuadro);
+}
+barra.addEventListener("input", () => { t = duracion() * barra.value / 10000; });
+play.onclick = () => { corre = !corre; play.textContent = corre ? "Pausa" : "Reproducir"; };
+document.getElementById("vel").onchange = (e) => { vel = +e.target.value; };
+document.getElementById("finales").onchange = (e) => { for (const f in montados) montados[f].opciones.finales = e.target.checked; };
+// Las paletas: un botón por cada una, con sus colores.
+function elegirPaleta(clave) {
+  for (const f in montados) montados[f].paleta(clave);
+  document.querySelectorAll("#paletas button").forEach((b) => b.classList.toggle("activa", b.dataset.paleta === clave));
+  document.getElementById("descripcion").textContent = window.PALETAS[clave].descripcion;
+}
+for (const [clave, pal] of Object.entries(window.PALETAS)) {
+  const b = document.createElement("button");
+  b.dataset.paleta = clave;
+  const colores = [pal.css["--tinta"], pal.css["--insignia-1"], pal.css["--raya-1"],
+                   ...["materiales", "verificacion", "errores", "aplicacion", "seguridad"].map((c) => pal.capitulos[c][1])];
+  b.innerHTML = `<span class="muestras">${colores.map((c) => `<i style="background:${c}"></i>`).join("")}</span>${pal.nombre}`;
+  b.onclick = () => elegirPaleta(clave);
+  document.getElementById("paletas").appendChild(b);
+}
+elegirPaleta(Tarjetas.PALETA);
+document.querySelectorAll(".pestanas button").forEach((b) => b.onclick = () => {
+  formato = b.dataset.formato; t = 0;
+  document.querySelectorAll(".pestanas button").forEach((x) => x.classList.toggle("activa", x === b));
+  ajustar(); saltos();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" && e.target.type !== "checkbox") return;
+  if (e.code === "Space") { e.preventDefault(); play.click(); }
+  if (e.code === "ArrowRight" || e.code === "ArrowLeft") {
+    if (corre) play.click();
+    t = Math.max(0, t + (e.code === "ArrowRight" ? 1 : -1) / 30);
+  }
+});
+window.addEventListener("resize", ajustar);
+document.fonts.ready.then(() => { ajustar(); saltos(); requestAnimationFrame(cuadro); });
+window.maqueta = { ir(x, f = formato) { if (f !== formato) document.querySelector(`[data-formato=${f}]`).click(); corre = false; t = x; montados[formato].pintar(t); },
+                  paleta: elegirPaleta, montados };
+</script>
+</body></html>

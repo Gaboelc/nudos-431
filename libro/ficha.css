@@ -47,7 +47,13 @@ h2 {
 
 /* Cabeza */
 .cabeza { display: grid; grid-template-columns: 1fr 27mm; gap: 6mm; align-items: start; }
-.marca { font: 500 6.4pt/1 var(--mono); text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+/* El logo del grupo (libro/logo-431.svg) a la izquierda del nombre del libro y del grupo. Va
+   fuera del flujo, apoyado en la línea y subiendo hacia el margen de arriba, para que la cabeza no
+   crezca: las fichas están justas. */
+.marca { position: relative; padding-left: 9.5mm; font: 500 6.4pt/1 var(--mono); text-transform: uppercase;
+         letter-spacing: 0.12em; color: var(--muted); }
+.marca span { color: var(--ink); }
+.marca .logo { position: absolute; left: 0; bottom: -0.6mm; height: 8.6mm; width: auto; }
 h1 { margin: 2mm 0 1.2mm; font: 800 34pt/0.88 var(--display); text-transform: uppercase; letter-spacing: 0.005em; }
 .otros { margin-bottom: 1.2mm; font-style: italic; color: var(--muted); }
 .hechos { display: flex; flex-wrap: wrap; gap: 1mm 6mm; margin: 0 0 3.5mm; }
@@ -100,6 +106,9 @@ figcaption .t { display: block; margin-bottom: 0.4mm; font-weight: 600; font-siz
 .seguridad { padding: 2.2mm 3mm; border-left: 1mm solid var(--accent); }
 
 .pie {
-  margin-top: auto; display: flex; justify-content: space-between; gap: 6mm;
+  margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 6mm;
   font: 400 6pt/1 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
 }
+/* En el pie, el logo va centrado en la línea y fuera del flujo, en el hueco que ya hay arriba y abajo. */
+.pie .grupo { position: relative; padding-left: 8.4mm; }
+.pie .logo { position: absolute; left: 0; top: 50%; height: 6.8mm; width: auto; transform: translateY(-50%); }

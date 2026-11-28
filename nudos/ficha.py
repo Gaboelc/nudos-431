@@ -8,6 +8,7 @@ y Chrome la exporta a PDF. Antes de exportar se comprueba que:
 """
 from __future__ import annotations
 
+import base64
 import html
 import re
 import unicodedata
@@ -155,10 +156,12 @@ def html_ficha(modelo: Modelo, imagenes: str = "impresion") -> str:
                  "nombre junto a su firme." if s.cuerdas else
                  "Ves la cuerda sobre la mesa, como la verías desde tu silla.")
     url = url_visor(s.slug)
+    logo = "data:image/svg+xml;base64," + base64.b64encode((LIBRO / "logo-431.svg").read_bytes()).decode("ascii")
     css = (LIBRO / "ficha.css").read_text(encoding="utf-8")
     plantilla = (LIBRO / "ficha.html").read_text(encoding="utf-8").replace("{{css}}", css)
     return rellenar(plantilla, {
         "fuentes": (SITIO / "vendor" / "fuentes").as_uri(),
+        "logo": logo,
         "nombre": esc(s.nombre),
         "otros_nombres": otros,
         "hechos": "\n".join(f"        <div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in hechos),

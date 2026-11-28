@@ -28,12 +28,18 @@ ESTADOS = ("borrador", "modelado", "cuerda-ok", "novato-ok", "publicado")
 _CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materiales",
            "verificacion", "precauciones", "alternativas", "seguridad", "encuadre", "anfitrion",
            "cuerdas", "segmentos", "plantilla", "pasos", "error", "terminado", "filtros",
-           "estado", "dos_firmes"}
+           "estado", "dos_firmes", "video"}
 _CAMPOS_ALTERNATIVA = {"nudo", "cuando"}
-_CAMPOS_PASO = {"titulo", "texto", "trazado", "secuencia", "resaltar"}
-_CAMPOS_PASO_PLANTILLA = {"titulo", "texto", "hasta"}
-_CAMPOS_ERROR = {"paso", "invierte", "variante", "titulo", "texto", "encuadre", "otros"}
-_CAMPOS_OTRO_ERROR = {"titulo", "texto"}
+_CAMPOS_PASO = {"titulo", "texto", "voz", "trazado", "secuencia", "resaltar"}
+_CAMPOS_PASO_PLANTILLA = {"titulo", "texto", "voz", "hasta"}
+_CAMPOS_ERROR = {"paso", "invierte", "variante", "titulo", "texto", "voz", "falla", "encuadre", "otros"}
+_CAMPOS_OTRO_ERROR = {"titulo", "texto", "voz", "falla"}
+# El video (T22, formato v1.14): lo que dice la voz fuera de los pasos y los errores.
+_CAMPOS_VIDEO = {"apertura", "materiales", "verificacion", "aplicacion", "seguridad", "cierre", "reel"}
+_CAMPOS_REVISA = {"voz", "mira", "lado", "etiqueta"}
+_CAMPOS_APLICACION = {"escena", "titulo", "voz"}
+_CAMPOS_REEL = {"gancho", "cierre"}
+LADOS = ("delante", "detras")
 _CAMPOS_TERMINADO = {"encuadre"}
 _CAMPOS_FILTRO = {"filtro", "fecha", "resultado", "rol", "codigo", "ficha"}
 # Campos de cada tipo de anfitrión, además de «tipo»; todos son medidas en diámetros.
@@ -116,6 +122,8 @@ class Paso:
     # En un nudo de plantilla, hasta dónde llega el paso (un hito de la plantilla). Ahí no
     # hay puntos de control ni secuencia: `puntos` queda vacío y la plantilla calcula la cuerda.
     hasta: str | None = None
+    # Lo que dice la voz en el video (T22): el mismo paso, dicho como lo diría quien enseña.
+    voz: str | None = None
 
 
 @dataclass(frozen=True)
@@ -220,6 +228,8 @@ class OtroError:
     """Un error común que no se ve en una imagen, como no mantener la cuerda tensa."""
     titulo: str
     texto: str
+    voz: str | None = None             # lo que dice la voz en el video; sin ella, no entra
+    falla: str | None = None           # lo que pasa en el video si el nudo se usa con este error
 
 
 @dataclass(frozen=True)
@@ -233,6 +243,48 @@ class Error:
     encuadre: Encuadre | None          # zona que se muestra del error y del paso correcto
     variante: str | None = None        # solo en un nudo de plantilla; entonces `invierte` va vacío
     otros: tuple[OtroError, ...] = ()  # errores comunes sin imagen
+    voz: str | None = None             # lo que dice la voz en el video
+    falla: str | None = None           # lo que pasa en el video cuando el nudo con el error se usa
+
+
+@dataclass(frozen=True)
+class Revisa:
+    """Una cosa que se revisa en el capítulo «Cómo saber que quedó bien» del video: lo que dice
+    la voz, dónde mira la cámara (un segmento, un punto como `chicote-baja[-1]` o, en un nudo de
+    plantilla, un hito; sin `mira`, el nudo entero), de qué lado y el texto corto junto a la ✓."""
+    voz: str
+    mira: str | None = None
+    lado: str = "delante"              # uno de LADOS
+    etiqueta: str | None = None
+
+
+@dataclass(frozen=True)
+class Aplicacion:
+    """El nudo en uso, en el capítulo «En la práctica»: la escena (de `guion.ESCENAS`), el título
+    de su tarjeta y lo que dice la voz."""
+    escena: str
+    titulo: str
+    voz: str
+
+
+@dataclass(frozen=True)
+class Reel:
+    """Lo que dice la voz del reel vertical al empezar y al terminar, si no es lo de siempre (la
+    primera frase de la apertura y la primera del cierre)."""
+    gancho: str | None = None
+    cierre: str | None = None
+
+
+@dataclass(frozen=True)
+class Video:
+    """Lo que dice la voz en el video del nudo fuera de los pasos y los errores (T22)."""
+    apertura: str | None = None
+    materiales: str | None = None
+    verificacion: tuple[Revisa, ...] = ()
+    aplicacion: Aplicacion | None = None
+    seguridad: str | None = None
+    cierre: str | None = None
+    reel: Reel = Reel()
 
 
 @dataclass(frozen=True)
@@ -288,6 +340,9 @@ class Spec:
     # Un nudo en medio de la cuerda, como la mariposa alpina: la cuerda termina en otro firme y
     # no en un chicote, así que en las imágenes su final también lleva «Firme».
     dos_firmes: bool = False
+    # Lo que dice la voz en el video, fuera de los pasos y los errores (T22). Como el texto de
+    # la ficha, es opcional al cargar; `python -m nudos guion` dice qué falta.
+    video: Video = Video()
 
 
 def cargar(slug_o_ruta: str | Path) -> Spec:
@@ -332,6 +387,7 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
     pasos = datos.get("pasos")
     if not isinstance(pasos, list) or not pasos:
         raise falla("falta la lista de pasos")
+    segmentos = None
     if plantilla is None:
         if anfitrion is not None and anfitrion.tipo in _SOLO_CON_PLANTILLA:
             raise falla(f"el anfitrión {anfitrion.tipo} va con una plantilla, como "
@@ -367,6 +423,7 @@ def desde_datos(datos, origen: str = "especificación") -> Spec:
         filtros=_filtros(datos.get("filtros"), falla),
         estado=_estado(datos.get("estado"), falla),
         dos_firmes=_dos_firmes(datos.get("dos_firmes"), cuerdas, plantilla, falla),
+        video=_video(datos.get("video"), segmentos, plantilla, falla),
     )
     return spec if plantilla is None else _con_medidas(spec, plantilla.medidas(), falla)
 
@@ -424,7 +481,8 @@ def _pasos_plantilla(datos: list, plantilla, falla) -> tuple[Paso, ...]:
         if pasos and hitos[hasta] <= hitos[pasos[-1].hasta]:
             raise pf(f"«hasta: {hasta}» no avanza; el paso {n - 1} ya llega a {pasos[-1].hasta}")
         pasos.append(Paso(n=n, titulo=_texto(p, "titulo", pf), texto=_texto(p, "texto", pf),
-                          puntos=np.empty((0, 2)), secuencia=(), resaltar=None, hasta=hasta))
+                          puntos=np.empty((0, 2)), secuencia=(), resaltar=None, hasta=hasta,
+                          voz=_voz(p, "voz", pf)))
     final = max(hitos, key=hitos.get)
     if hitos[pasos[-1].hasta] != hitos[final]:
         raise falla(f"paso {len(pasos)}: el último paso llega a «{final}», el final de la cuerda")
@@ -446,11 +504,23 @@ def _con_medidas(spec: Spec, medidas: dict[str, str], falla) -> Spec:
 
     error = spec.error
     if error is not None:
-        error = replace(error, titulo=poner(error.titulo), texto=poner(error.texto),
-                        otros=tuple(OtroError(poner(o.titulo), poner(o.texto)) for o in error.otros))
+        error = replace(error, titulo=poner(error.titulo), texto=poner(error.texto), voz=poner(error.voz),
+                        falla=poner(error.falla),
+                        otros=tuple(OtroError(poner(o.titulo), poner(o.texto), poner(o.voz), poner(o.falla))
+                                    for o in error.otros))
+    v = spec.video
+    video = replace(
+        v, apertura=poner(v.apertura), materiales=poner(v.materiales), seguridad=poner(v.seguridad),
+        cierre=poner(v.cierre),
+        verificacion=tuple(replace(r, voz=poner(r.voz), etiqueta=poner(r.etiqueta)) for r in v.verificacion),
+        aplicacion=(None if v.aplicacion is None else
+                    replace(v.aplicacion, titulo=poner(v.aplicacion.titulo), voz=poner(v.aplicacion.voz))),
+        reel=replace(v.reel, gancho=poner(v.reel.gancho), cierre=poner(v.reel.cierre)))
     return replace(
         spec,
-        pasos=tuple(replace(p, titulo=poner(p.titulo), texto=poner(p.texto)) for p in spec.pasos),
+        pasos=tuple(replace(p, titulo=poner(p.titulo), texto=poner(p.texto), voz=poner(p.voz))
+                    for p in spec.pasos),
+        video=video,
         error=error,
         usos=poner(spec.usos),
         materiales=poner(spec.materiales),
@@ -605,6 +675,8 @@ def _error(datos, pasos: tuple[Paso, ...], plantilla, falla) -> Error | None:
         encuadre=_encuadre(datos.get("encuadre"), ef),
         variante=variante,
         otros=_otros_errores(datos.get("otros"), ef),
+        voz=_voz(datos, "voz", ef),
+        falla=_voz(datos, "falla", ef),
     )
 
 
@@ -622,8 +694,91 @@ def _otros_errores(datos, falla) -> tuple[OtroError, ...]:
         sobran = set(o) - _CAMPOS_OTRO_ERROR
         if sobran:
             raise of(f"campos desconocidos: {', '.join(sorted(sobran))}")
-        out.append(OtroError(_texto(o, "titulo", of), _texto(o, "texto", of)))
+        out.append(OtroError(_texto(o, "titulo", of), _texto(o, "texto", of), _voz(o, "voz", of),
+                             _voz(o, "falla", of)))
     return tuple(out)
+
+
+def _voz(datos: dict, clave: str, falla) -> str | None:
+    """Un texto opcional de lo que dice la voz, en una sola línea."""
+    if datos.get(clave) is None:
+        return None
+    return " ".join(_texto(datos, clave, falla).split())
+
+
+def _video(datos, segmentos: dict | None, plantilla, falla) -> Video:
+    """El bloque `video` (formato v1.14). `mira` se comprueba contra los segmentos del nudo o,
+    en un nudo de plantilla, contra sus hitos."""
+    if datos is None:
+        return Video()
+
+    def vf(msg: str) -> SpecError:
+        return falla(f"video: {msg}")
+
+    if not isinstance(datos, dict):
+        raise vf("debe ser un mapa")
+    sobran = set(datos) - _CAMPOS_VIDEO
+    if sobran:
+        raise vf(f"campos desconocidos: {', '.join(sorted(sobran))}")
+    revisa = datos.get("verificacion")
+    if revisa is not None and (not isinstance(revisa, list) or not revisa):
+        raise vf("«verificacion» es la lista de lo que se revisa, cada cosa con «voz»")
+    lista = []
+    for i, r in enumerate(revisa or [], 1):
+        def rf(msg: str, i=i) -> SpecError:
+            return vf(f"verificacion {i}: {msg}")
+        if not isinstance(r, dict):
+            raise rf("debe ser un mapa con «voz» y, si hace falta, «mira», «lado» y «etiqueta»")
+        sobran = set(r) - _CAMPOS_REVISA
+        if sobran:
+            raise rf(f"campos desconocidos: {', '.join(sorted(sobran))}")
+        lado = r.get("lado", "delante")
+        if lado not in LADOS:
+            raise rf(f"«lado» es uno de: {', '.join(LADOS)}")
+        mira = r.get("mira")
+        if mira is not None:
+            _mira(mira, segmentos, plantilla, rf)
+        lista.append(Revisa(voz=" ".join(_texto(r, "voz", rf).split()), mira=mira, lado=lado,
+                            etiqueta=_voz(r, "etiqueta", rf)))
+    aplicacion = datos.get("aplicacion")
+    if aplicacion is not None:
+        def af(msg: str) -> SpecError:
+            return vf(f"aplicacion: {msg}")
+        if not isinstance(aplicacion, dict):
+            raise af("debe ser un mapa con «escena», «titulo» y «voz»")
+        sobran = set(aplicacion) - _CAMPOS_APLICACION
+        if sobran:
+            raise af(f"campos desconocidos: {', '.join(sorted(sobran))}")
+        escena = _texto(aplicacion, "escena", af)
+        if not _NOMBRE.match(escena):
+            raise af(f"escena «{escena}»: usa minúsculas, números y guiones")
+        aplicacion = Aplicacion(escena=escena, titulo=_texto(aplicacion, "titulo", af),
+                                voz=" ".join(_texto(aplicacion, "voz", af).split()))
+    reel = datos.get("reel")
+    if reel is not None:
+        if not isinstance(reel, dict):
+            raise vf("«reel» es un mapa con «gancho» y «cierre»")
+        sobran = set(reel) - _CAMPOS_REEL
+        if sobran:
+            raise vf(f"reel: campos desconocidos: {', '.join(sorted(sobran))}")
+        reel = Reel(gancho=_voz(reel, "gancho", vf), cierre=_voz(reel, "cierre", vf))
+    return Video(apertura=_voz(datos, "apertura", vf), materiales=_voz(datos, "materiales", vf),
+                 verificacion=tuple(lista), aplicacion=aplicacion, seguridad=_voz(datos, "seguridad", vf),
+                 cierre=_voz(datos, "cierre", vf), reel=reel or Reel())
+
+
+def _mira(ref, segmentos: dict | None, plantilla, falla) -> None:
+    """Que `mira` nombre algo del nudo: un segmento o uno de sus puntos, o un hito de la plantilla."""
+    if plantilla is not None:
+        hitos = plantilla.hitos()
+        if ref not in hitos:
+            raise falla(f"«mira» es un hito de la plantilla: {', '.join(hitos)}")
+        return
+    nombre, sel = _ref(ref, falla)
+    if nombre not in (segmentos or {}):
+        raise falla(f"«mira»: el segmento «{nombre}» no existe")
+    if isinstance(sel, int) and not -len(segmentos[nombre].puntos) <= sel < len(segmentos[nombre].puntos):
+        raise falla(f"«mira»: el segmento {nombre} no tiene el punto {sel}")
 
 
 def _terminado(datos, falla) -> Terminado:
@@ -932,6 +1087,7 @@ def _paso(n: int, datos, segmentos: dict[str, Segmento], cuerdas: tuple[Cuerda, 
         tapa=tapa if tapa.any() else None,
         cuerda=cuerda if cuerdas else None,
         pasadas=tuple(len(sec) for sec in leidas.values()) if cuerdas else None,
+        voz=_voz(datos, "voz", pf),
     )
 
 

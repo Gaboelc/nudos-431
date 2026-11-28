@@ -37,6 +37,43 @@ seguridad: >-
   columpio. Practícala sin carga o con un objeto. Los andamios colgantes los arman
   personas capacitadas, con equipo certificado.
 
+# Lo que dice la voz en el video (T22, formato v1.14). Texto propio, en tuteo y con el estilo del
+# guion hablado que Gabriel aprobó el 27 nov de 2026 (ver el plan, T22a): directo, sin comparaciones,
+# sin diminutivos ni «así» y sin puntos suspensivos. Cada instrucción dice lo mismo que la ficha: los
+# «por encima» y «por debajo» no cambian. Lo que dice en cada paso y en cada error va en su «voz».
+video:
+  apertura: >-
+    La eslinga de andamio cuelga una tabla para que quede horizontal: sirve para hacer una
+    repisa o para subir materiales sobre ella. Va una en cada punta de la tabla. Te la
+    enseño en cuatro pasos, y al final, cómo revisar que quedó bien.
+  materiales: >-
+    Necesitas una tabla de unos diez centímetros de ancho y dos cuerdas de dos a tres
+    metros, una para cada punta.
+  verificacion:
+    - voz: >-
+        Para revisarla, mira la tabla por arriba: ves solo dos pasadas, juntas y paralelas, y
+        ninguna cuerda pasa por la punta.
+      mira: vuelta-3d
+      etiqueta: Solo dos pasadas arriba
+    - voz: El seno rodea la tabla junto a ellas, y las abraza por delante y por detrás.
+      mira: anillo
+      etiqueta: El seno las abraza
+    - voz: Y la prueba. Tira de los dos extremos hacia arriba. La tabla queda horizontal y no gira.
+      etiqueta: Queda horizontal
+  aplicacion:
+    escena: repisa-colgante
+    titulo: Una repisa en la cocina
+    voz: >-
+      En la cocina del campamento, dos eslingas de andamio cuelgan una tabla de un palo, y
+      queda una repisa para las ollas, lejos del suelo.
+  seguridad: >-
+    Un aviso: en las actividades del grupo, esta eslinga no sostiene personas. No la uses
+    como andamio ni como columpio; practícala sin carga o con un objeto. Los andamios
+    colgantes los arman personas capacitadas, con equipo certificado.
+  cierre: >-
+    Ya sabes hacer la eslinga de andamio. Y si lo que quieres subir es un barril o una
+    cubeta, el que sigue es la eslinga de barril.
+
 anfitrion: {tipo: tablon, ancho: 12, grueso: 3, largo: 30}
 
 # Zona que se muestra: la punta del tablón y unos 14 diámetros hacia dentro.
@@ -118,6 +155,10 @@ pasos:
       Deja el firme por delante y un chicote de un metro. Da vueltas al tablón cerca de la
       punta hasta que la cuerda pase tres veces por arriba: la 1, la 2 y la 3, hacia la
       punta. El chicote cae por detrás.
+    voz: >-
+      Primero, deja el firme por delante y un chicote de un metro. Da vueltas a la tabla,
+      cerca de la punta, hasta que la cuerda pase tres veces por arriba: la uno, la dos y
+      la tres, hacia la punta. El chicote cae por detrás.
     trazado: [firme, vuelta-1, abajo-1, sube-2, arriba-2, baja-2, abajo-2, vuelta-3, chicote]
     secuencia: ""
     resaltar: {desde: "vuelta-1[0]", hasta: "vuelta-3[-1]"}
@@ -125,6 +166,8 @@ pasos:
   - titulo: Pasa la 1 por encima de la 2
     texto: >-
       Lleva la 1 por encima de la 2 y déjala entre la 2 y la 3.
+    voz: >-
+      Paso 2 de 4. Lleva la uno por encima de la dos, y déjala entre la dos y la tres.
     trazado: [firme-b, vuelta-1b, abajo-1b, sube-2, arriba-2, baja-2, abajo-2, vuelta-3, chicote]
     secuencia: "1O 1U"
     resaltar: {desde: "vuelta-1b[0]", hasta: "vuelta-1b[-1]"}
@@ -133,6 +176,9 @@ pasos:
     texto: >-
       Tira de la 2 hacia la punta formando un seno, por encima de la 1 y la 3, y déjalo
       más allá de la punta.
+    voz: >-
+      Ahora tira de la dos hacia la punta, por encima de la uno y de la tres. Se forma un
+      seno: déjalo más allá de la punta.
     trazado: [firme-b, vuelta-1b, abajo-1b, sube-2, rama-a, seno-mesa, rama-b, baja-2, abajo-2,
               vuelta-3, chicote]
     secuencia: "2U 5U 1O 2O 3O 4O 5O 1U 3U 4U"
@@ -142,6 +188,10 @@ pasos:
     texto: >-
       Pasa el seno por la punta y deslízalo bajo el tablón hasta que abrace la 1 y la 3.
       Tira de los extremos y únelos con un as de guía (mira su ficha).
+    voz: >-
+      Último paso. Pasa el seno por la punta y deslízalo por debajo de la tabla, hasta que
+      abrace la uno y la tres. Tira de los extremos y únelos con un as de guía, como en su
+      ficha.
     trazado: [firme-b, vuelta-1b, abajo-1b, sube-2d, anillo, baja-2d, abajo-2d, vuelta-3d, chicote]
     secuencia: "6U 9U 1O 6O 7O 8O 9O 1U 7U 8U"
     resaltar: {desde: "anillo[0]", hasta: "anillo[-1]"}
@@ -154,11 +204,28 @@ error:
   texto: >-
     El seno pasó por debajo de la 1 y la 3: no las abraza y el tablón se voltea.
     Pásalo por encima de las dos.
+  voz: >-
+    El error más común es pasar el seno por debajo de la uno y la tres: no las abraza, y la
+    tabla se voltea. Pásalo por encima de las dos.
+  # Lo que se ve en el video (T22): la eslinga con el error y lo que le pasa al usarla.
+  falla: >-
+    Se tira de los dos extremos hacia arriba: el seno no abraza la 1 y la 3, y la tabla gira
+    y se voltea. Después, la eslinga bien hecha la sube horizontal.
   otros:
     - titulo: Las vueltas lejos de la punta
       texto: >-
         Si quedan separadas o lejos de la punta, el tablón se inclina. Júntalas a menos de
         un palmo de la punta.
+      voz: >-
+        Si las vueltas quedan separadas o lejos de la punta, la tabla se inclina:
+        júntalas a menos de un palmo de la punta.
+      falla: >-
+        Con las vueltas lejos de la punta, al subirla la tabla queda inclinada.
     - titulo: Una sola eslinga
       texto: >-
         El tablón se voltea. Ata una en cada punta, a la misma altura.
+      voz: >-
+        Y con una sola eslinga, la tabla se voltea. Ata una en cada punta, a la misma
+        altura.
+      falla: >-
+        Con una sola eslinga, al subirla la tabla gira y se voltea.

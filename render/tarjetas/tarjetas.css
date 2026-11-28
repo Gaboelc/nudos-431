@@ -1,0 +1,160 @@
+/* Las tarjetas del video (T22). Todo va en px del cuadro en CSS: 1920 × 1080 el horizontal y
+   1080 × 1920 el vertical (.vertical). Las mueve tarjetas.js, siempre en función del tiempo, así
+   que el mismo código sirve para la maqueta y para dibujar cada cuadro en Edge (T22b). Las fuentes
+   son las del sitio (sitio/vendor/fuentes).
+   Los colores son variables: tarjetas.js pone las de la paleta (Tarjetas.PALETAS); las de aquí son
+   las de «huetares», la del logo del grupo, que Gabriel eligió para los videos el 28 nov. */
+
+.escenario {
+  --tinta: #0b2a52; --suave: #4a5f7c; --vidrio: rgba(246, 248, 252, 0.70); --borde: rgba(255, 255, 255, 0.65);
+  --sombra: rgba(6, 55, 109, 0.20); --insignia-1: #ffc83b; --insignia-2: #e9a516; --insignia-tinta: #06376d;
+  --avance: #e9a516; --avance-vacio: #9fb0c6; --raya-1: #025486; --raya-2: #f9bd24; --acento: #f9bd24;
+  --acento-tinta: #06376d; --si: #0f6b35; --si-1: #1f8a4c; --si-2: #0f4b25; --no: #a10d25; --no-1: #e0364f;
+  --no-2: #a10d25; --mat: #025486; --mat-1: #2a7fc0; --mat-2: #06376d; --seg-1: #ffd540; --seg-2: #f9bd24;
+  --seg-icono: #06376d; --seg-etiqueta: #7a5600; --tinte-no: rgba(200, 16, 46, 0.40);
+  --tinte-si: rgba(15, 107, 53, 0.36); --cierre-tinta: #ffffff; --cierre-sombra: rgba(6, 30, 60, 0.5);
+  position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #cfd5d8;
+  font-family: Literata, Georgia, serif; color: var(--tinta);
+}
+.escenario.vertical { width: 1080px; height: 1920px; }
+.escenario .fondo { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.escenario .tinte { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.escenario .capa { position: absolute; inset: 0; pointer-events: none; }
+
+/* El vidrio esmerilado: el cuadro de atrás, desenfocado. En T22b lo hace Pillow con la forma de
+   cada tarjeta, porque Edge dibuja sobre fondo transparente. */
+.vidrio {
+  background: var(--vidrio); border: 1px solid var(--borde); border-radius: 26px;
+  -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: 0 14px 44px var(--sombra), 0 2px 6px var(--sombra);
+}
+.t { position: absolute; will-change: transform, opacity; opacity: 0; }
+.mono { font-family: "IBM Plex Mono", monospace; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; }
+.grande { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; text-transform: uppercase; line-height: 0.88; }
+.logo { display: block; height: 100%; width: auto; filter: drop-shadow(0 6px 14px rgba(10, 16, 24, 0.25)); }
+
+/* ---------------- El nombre del nudo (apertura), con el logo del grupo ---------------- */
+.t-nombre { left: 96px; bottom: 84px; padding: 28px 44px 28px 30px; display: flex; gap: 30px; align-items: center; }
+.t-nombre .escudo-grupo { flex: none; height: 178px; }
+.t-nombre .grande { font-size: 128px; letter-spacing: 0.005em; }
+.t-nombre .raya { height: 8px; border-radius: 4px; margin: 18px 0 16px; background: linear-gradient(90deg, var(--raya-1), var(--raya-2));
+                  transform-origin: left center; }
+.t-nombre .mono { font-size: 22px; color: var(--suave); }
+
+/* ---------------- Lo que necesitas ---------------- */
+.t-materiales { left: 96px; bottom: 84px; max-width: 980px; padding: 28px 40px 30px 34px; display: flex; gap: 26px; align-items: flex-start; }
+.t-materiales .icono { flex: 0 0 96px; height: 96px; border-radius: 24px; display: grid; place-items: center; color: #fff;
+                       background: linear-gradient(145deg, var(--mat-1), var(--mat-2)); }
+.t-materiales .mono { font-size: 21px; color: var(--mat); margin: 4px 0 10px; }
+.t-materiales .texto { font-size: 34px; line-height: 1.3; font-weight: 400; text-wrap: pretty; }
+
+/* ---------------- El paso ---------------- */
+.t-paso { left: 96px; bottom: 76px; padding: 26px 40px 26px 26px; display: flex; gap: 30px; align-items: center; }
+.t-paso .insignia { position: relative; flex: 0 0 124px; height: 124px; border-radius: 30px; overflow: hidden;
+                    background: linear-gradient(150deg, var(--insignia-1), var(--insignia-2));
+                    box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.12), 0 6px 16px var(--sombra); }
+.t-paso .insignia span { position: absolute; inset: 0; display: grid; place-items: center; color: var(--insignia-tinta);
+                         font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 104px; line-height: 1;
+                         padding-top: 6px; font-variant-numeric: tabular-nums; }
+.t-paso .de { font-size: 22px; color: var(--suave); }
+.t-paso .titulo { font-family: Literata, serif; font-weight: 600; font-size: 54px; line-height: 1.12; margin: 6px 0 16px;
+                  max-width: 720px; text-wrap: balance; }
+.t-paso .avance { display: flex; align-items: center; height: 18px; }
+.t-paso .avance i { display: block; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--avance-vacio); background: transparent;
+                    box-sizing: border-box; flex: none; position: relative; }
+.t-paso .avance i.hecho { border-color: var(--avance); background: var(--avance); }
+.t-paso .avance i.ahora { width: 22px; height: 22px; border-color: var(--avance); background: var(--avance); }
+.t-paso .avance i.ahora::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 3px solid var(--avance);
+                                 opacity: var(--pulso, 0); transform: scale(var(--pulso-escala, 1)); }
+.t-paso .avance b { display: block; height: 4px; width: 34px; background: var(--avance-vacio); opacity: 0.6; border-radius: 2px; flex: none;
+                    position: relative; overflow: hidden; }
+.t-paso .avance b::after { content: ""; position: absolute; inset: 0; background: var(--avance); transform-origin: left center;
+                           transform: scaleX(var(--lleno, 0)); }
+
+/* ---------------- La tarjeta de capítulo, con su fondo de lygia ---------------- */
+.t-capitulo { left: 0; top: 0; width: 1920px; height: 1080px; }
+.t-capitulo .panel { position: absolute; left: 96px; top: 50%; width: 860px; min-height: 320px; border-radius: 40px;
+                     overflow: hidden; box-shadow: 0 24px 70px var(--sombra); display: flex; }
+.t-capitulo canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.t-capitulo .contenido { position: relative; flex: 1; padding: 44px 56px 48px; display: flex; flex-direction: column; justify-content: center; color: #fff; }
+.t-capitulo .icono { width: 92px; height: 92px; border-radius: 26px; background: rgba(255, 255, 255, 0.2); display: grid; place-items: center;
+                     margin-bottom: 22px; border: 2px solid rgba(255, 255, 255, 0.35); }
+.t-capitulo .grande { font-size: 100px; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.18); text-wrap: balance; }
+.t-capitulo .sub { font-family: Literata, serif; font-weight: 600; font-size: 38px; line-height: 1.2; margin-top: 14px; }
+.t-capitulo .sub:empty { display: none; }
+.t-capitulo.oscuro .contenido { color: #16202f; }
+.t-capitulo.oscuro .grande { text-shadow: none; }
+.t-capitulo.oscuro .icono { background: rgba(22, 32, 47, 0.12); border-color: rgba(22, 32, 47, 0.25); }
+
+/* ---------------- ✓ y ✗ ---------------- */
+.marca { position: relative; width: 84px; height: 84px; flex: none; }
+.marca .circulo { position: absolute; inset: 0; border-radius: 26px; }
+.marca.si .circulo { background: linear-gradient(150deg, var(--si-1), var(--si-2)); box-shadow: 0 8px 20px var(--sombra); }
+.marca.no .circulo { background: linear-gradient(150deg, var(--no-1), var(--no-2)); box-shadow: 0 8px 20px var(--sombra); }
+.marca svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.marca svg path { fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.marca .onda { position: absolute; inset: -6px; border-radius: 32px; border: 4px solid; opacity: 0; }
+.marca.si .onda { border-color: var(--si-1); }
+.marca.no .onda { border-color: var(--no-1); }
+
+/* La revisión: la ✓ junto a lo que se revisa, con su etiqueta. */
+.t-revisa { display: flex; align-items: center; gap: 0; }
+.t-revisa .marca { width: 72px; height: 72px; }
+.t-revisa .marca .circulo { border-radius: 50%; }
+.t-revisa .marca .onda { border-radius: 50%; }
+.t-revisa .etiqueta { margin-left: 18px; padding: 14px 26px; font-weight: 600; font-size: 36px; white-space: nowrap; border-radius: 20px;
+                      transform-origin: left center; }
+
+/* El error común y el correcto. */
+.t-error { left: 96px; bottom: 76px; padding: 26px 42px 26px 26px; display: flex; gap: 28px; align-items: center; }
+.t-error .mono { font-size: 22px; }
+.t-error.no .mono { color: var(--no); }
+.t-error.si .mono { color: var(--si); }
+.t-error .titulo { font-weight: 600; font-size: 50px; line-height: 1.12; margin-top: 6px; max-width: 760px; text-wrap: balance; }
+.t-error .marca { width: 112px; height: 112px; }
+.t-error .marca .circulo { border-radius: 30px; }
+.t-error .marca .onda { border-radius: 36px; }
+.tinte.no { background: radial-gradient(ellipse at center, transparent 52%, var(--tinte-no) 100%); }
+.tinte.si { background: radial-gradient(ellipse at center, transparent 52%, var(--tinte-si) 100%); }
+
+/* Seguridad: el escudo y lo que dice la voz, frase por frase. */
+.t-seguridad { left: 96px; bottom: 76px; width: 1180px; padding: 28px 40px 30px 30px; display: flex; gap: 28px; align-items: flex-start; }
+.t-seguridad .escudo { flex: 0 0 104px; height: 104px; border-radius: 28px; display: grid; place-items: center; color: var(--seg-icono);
+                       background: linear-gradient(150deg, var(--seg-1), var(--seg-2)); box-shadow: 0 8px 20px var(--sombra); }
+.t-seguridad .mono { font-size: 22px; color: var(--seg-etiqueta); margin: 2px 0 8px; }
+.t-seguridad .frase { font-size: 40px; line-height: 1.24; font-weight: 600; min-height: 100px; text-wrap: balance; }
+
+/* El cierre: el logo grande, el nombre con el golpe, el grupo y la dirección del visor. */
+.t-cierre { left: 96px; top: 50%; transform-origin: left center; display: flex; gap: 44px; align-items: center; }
+.t-cierre .escudo-grupo { flex: none; height: 330px; }
+.t-cierre .grande { font-size: 168px; color: var(--cierre-tinta); text-shadow: 0 6px 30px var(--cierre-sombra); }
+.t-cierre .grupo { margin-top: 20px; font-family: "Big Shoulders Display", sans-serif; font-weight: 700; font-size: 50px; line-height: 1;
+                   text-transform: uppercase; letter-spacing: 0.02em; color: var(--cierre-tinta); text-shadow: 0 3px 16px var(--cierre-sombra); }
+.t-cierre .url { display: inline-block; margin-top: 26px; padding: 16px 26px; font-family: "IBM Plex Mono", monospace; font-weight: 500;
+                 font-size: 30px; border-radius: 18px; }
+.final { position: absolute; border: 3px dashed rgba(255, 255, 255, 0.85); border-radius: 18px; color: #fff; display: grid; place-items: center;
+         text-align: center; font-family: "IBM Plex Mono", monospace; font-size: 22px; padding: 16px; background: rgba(22, 32, 47, 0.28); opacity: 0; }
+
+/* Los subtítulos del reel, palabra por palabra. */
+.t-subtitulos { left: 70px; right: 70px; top: 1250px; text-align: center; opacity: 1; }
+.t-subtitulos .linea { display: block; }
+.t-subtitulos .p { display: inline-block; margin: 0 6px 10px; padding: 2px 14px 6px; border-radius: 14px; font-family: Literata, serif;
+                   font-weight: 600; font-size: 68px; line-height: 1.15; color: #fff;
+                   text-shadow: 0 3px 0 rgba(10, 16, 24, 0.55), 0 0 18px rgba(10, 16, 24, 0.5); }
+.t-subtitulos .p.ahora { background: var(--acento); color: var(--acento-tinta); text-shadow: none; }
+
+/* ---------------- El vertical (reel) ---------------- */
+.vertical .t-nombre { left: 64px; right: 64px; top: 230px; bottom: auto; }
+.vertical .t-nombre .escudo-grupo { height: 150px; }
+.vertical .t-nombre .grande { font-size: 112px; }
+.vertical .t-nombre .mono { font-size: 19px; }
+.vertical .t-paso { left: 64px; right: 64px; top: 230px; bottom: auto; padding: 22px 30px 22px 22px; }
+.vertical .t-paso .insignia { flex-basis: 112px; height: 112px; }
+.vertical .t-paso .titulo { font-size: 50px; max-width: 700px; }
+.vertical .t-error { left: 64px; right: 64px; top: 230px; bottom: auto; }
+.vertical .t-error .titulo { font-size: 46px; max-width: 640px; }
+.vertical .t-cierre { left: 64px; right: 64px; top: 230px; transform-origin: left top; flex-direction: column; align-items: flex-start; gap: 30px; }
+.vertical .t-cierre .escudo-grupo { height: 300px; }
+.vertical .t-cierre .grande { font-size: 150px; }
+.vertical .t-cierre .grupo { font-size: 44px; }
+.vertical .t-cierre .url { font-size: 27px; }
