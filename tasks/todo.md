@@ -79,14 +79,7 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
   - [ ] Los pilotos en 4K y su video en el visor pasan a T22, con el aspecto y la estructura nuevos. Quedan sin efecto el render de los pilotos con el código de hoy y la medida del umbral 0,01 contra el 0,03
   - [x] Quitar el modo video viejo de `render/blender/escena.py` (en T20b, 26 nov)
 - [ ] **El pulido a fondo** (propuesta del 26 nov, aprobada el mismo día; el diseño está en el plan)
-  - [ ] T20 El aspecto: material, escena, luz y cámara (L; sesión «el aspecto»)
-    - [x] T20a El cuadro final en cuatro aspectos, con Cycles y EEVEE y su costo (`prueba-aspecto`, `build/aspecto/prueba.pdf`) (26 nov)
-    - [x] Punto de control: Gabriel eligió la cuerda real en el estudio (paso a paso y errores) y en el campamento J&E Gray 02 (apertura, aplicación y cierre), con Cycles a 16 muestras (26 nov)
-    - [x] T20b El aspecto elegido en los videos (`nudos/aspecto.py`, `render/blender/video.py`), sin el modo video viejo de `escena.py`, y la prueba de 10 s en 4K (`video <slug> --prueba`) (26 nov)
-    - [x] Punto de control: Gabriel aprobó la prueba de 10 s en 4K del as de guía (26 nov)
-    - [x] Gabriel decidió el costo del render (27 nov): los videos a 60 fps con EEVEE a 32 muestras. Lo eligió con el mismo cuadro del video en Cycles 16, EEVEE 16 y EEVEE 32: unos 3,3 s por cuadro de 4K y unos 11 días para los 36, contra 19 a 25 con Cycles 16. Las fichas siguen en Cycles
-    - [x] La prueba de 10 s en 4K con EEVEE 32 (`as-de-guia-prueba-4k.mp4`, 28 nov): 3,4 s por cuadro con las otras sesiones corriendo. Al armarla con 8 procesos, la computadora se quedó sin memoria; se armó con 2, y el video ahora respeta `NUDOS_PROCESOS`
-    - [x] T20c Las fichas: Gabriel decidió que no hace falta (26 nov); las fichas quedan como están
+  - [x] T20 El aspecto (26 al 28 nov): la cuerda real en el estudio (el paso a paso y los errores) y en el campamento J&E Gray 02 (la apertura, la aplicación y el cierre), con la trenza en la geometría, el foco que sigue la acción y el desenfoque de movimiento (`nudos/aspecto.py`, `render/blender/video.py`). Los videos van a 60 fps con EEVEE a 32 muestras: unos 3,4 s por cuadro de 4K y unos 11 días para los 36. Las fichas siguen en Cycles y no cambian (T20c no hizo falta). Gabriel aprobó la prueba de 10 s en 4K con EEVEE (28 nov). El detalle, en el historial
   - [ ] T21 El motor al atar: largo fijo, manos que agarran y gravedad en lo que cuelga (XL; la sesión del plan)
     - [x] T21a Medir el movimiento de hoy: `python -m nudos calidad` (`nudos/fisica/calidad.py`), con la medida de los dos pilotos en el plan (26 nov)
     - [x] Punto de control: Gabriel aprobó el diseño de T21, con la medida y la meta (27 nov)
