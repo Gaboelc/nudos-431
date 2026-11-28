@@ -808,6 +808,26 @@ def decir(pedidos: list[tuple[str, Voz]], proveedor: Proveedor | None = None, av
     return out
 
 
+def en_cache(textos: list[str], voz: Voz, proveedor: Proveedor | None = None) -> list[Locucion | None]:
+    """Las locuciones de estos textos que ya están en el caché (la primera toma, con la semilla de
+    la voz), sin generar nada: None las que faltan. Sirve para saber cuánto duran sin la tarjeta."""
+    prov = proveedor or PROVEEDORES[voz.proveedor]()
+    hv = prov.huella_voz(voz)
+    cache = carpeta_cache()
+    out = []
+    for t in textos:
+        h = _huella(VERSION, prov.huella(), hv, texto_dicho(para_decir(t)))
+        meta_ruta, wav = cache / f"{h}.json", cache / f"{h}.wav"
+        if not (meta_ruta.exists() and wav.exists()):
+            out.append(None)
+            continue
+        meta = json.loads(meta_ruta.read_text(encoding="utf-8"))
+        x, sr = _leer_wav(wav)
+        out.append(Locucion(t, _a_sr(x, sr), [Palabra(**p) for p in meta["palabras"]], meta["tiempos"], h,
+                            voz.nombre, {"sr_original": sr}))
+    return out
+
+
 def locuciones(textos: list[str], voz: Voz, proveedor: Proveedor | None = None, aviso=print,
                alineador: Alineador | None | bool = None) -> list[Locucion]:
     """Cada texto dicho por una voz (ver `decir`)."""

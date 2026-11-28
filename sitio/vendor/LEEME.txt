@@ -25,6 +25,9 @@ lygia/LICENCIA.txt es el texto de la Prosperity (LICENSE.md del repositorio).
   lygia/lygia.js              esos siete archivos .glsl sin cambios, como cadenas de JavaScript con
                               su ruta (el sitio no publica archivos .glsl), y glsl(ruta), que arma
                               un archivo con sus #include.
+  Las tarjetas del video (render/tarjetas/, T22) usan este mismo lygia.js, pero solo
+  generative/snoise.glsl y sus funciones de math/, que son MIT: el tramado Prosperity no va en
+  el video.
 
 @fontsource/big-shoulders-display@5.3.0, @fontsource/ibm-plex-mono@5.3.0 y
 @fontsource/literata@5.3.0 (SIL Open Font License 1.1, fuentes/LICENCIA-*.txt)

@@ -138,6 +138,16 @@ def main(argv=None) -> int:
     pg = ordenes.add_parser("prueba-guion", help="la narración entera de cada piloto con el texto de la "
                                                  "ficha y con su guion hablado, en revision/guion/")
     pg.add_argument("slugs", nargs="*", help="los nudos (por omisión, los dos pilotos de T17)")
+    gu = ordenes.add_parser("guion", help="la hoja de revisión del guion del video de un nudo (T22a), con la "
+                                          "duración estimada de cada parte, en build/<slug>/guion/")
+    gu.add_argument("slug")
+    gu.add_argument("--oir", action="store_true", help="con cada parte dicha por la voz de los videos y la "
+                                                       "narración entera (genera lo que falte; usa la tarjeta)")
+    pt = ordenes.add_parser("prueba-tarjetas", help="la maqueta animada de las tarjetas del video (T22a), en "
+                                                    "build/tarjetas/maqueta.html")
+    pt.add_argument("--slug", default="as-de-guia", help="el nudo de los textos (por omisión, el as de guía)")
+    pt.add_argument("--fondo", help="un cuadro del video horizontal para el fondo (jpg o png)")
+    pt.add_argument("--fondo-vertical", help="un cuadro del vertical para el fondo")
     ordenes.add_parser("mejoras", help="páginas de prueba de las mejoras del render (hoy y con "
                                       "cada mejora) y del nudo terminado apretado, en color y "
                                       "en gris")
@@ -193,6 +203,20 @@ def main(argv=None) -> int:
             from .prueba_sonido import PILOTOS_MEZCLA, prueba_guion
             sys.stdout.reconfigure(line_buffering=True)
             print(f"Prueba del guion en {prueba_guion(args.slugs or PILOTOS_MEZCLA)}")
+            return 0
+        if args.orden == "guion":
+            from .guion import hoja, problemas
+            from .spec import cargar
+            sys.stdout.reconfigure(line_buffering=True)
+            ruta = hoja(args.slug, oir=args.oir)
+            print(f"Guion en {ruta}")
+            malos = problemas(cargar(args.slug))
+            for m in malos:
+                print(f"  falta: {m}")
+            return 1 if malos else 0
+        if args.orden == "prueba-tarjetas":
+            from .tarjetas import maqueta
+            print(f"Maqueta de las tarjetas en {maqueta(args.slug, args.fondo, args.fondo_vertical)}")
             return 0
         if args.orden == "estado":
             return _estado()

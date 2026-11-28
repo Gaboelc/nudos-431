@@ -1047,61 +1047,116 @@ La cámara (las paradas y la aceleración) es de T22.
 
 #### T22: El video completo
 
-**T22a, el diseño (M), que Gabriel aprueba antes de programar.**
-- **Los capítulos:**
-  - **Apertura** (unos 6 s): el nudo terminado gira despacio, con el nombre y para qué sirve.
-  - **Lo que necesitas** (3 s): los materiales, solo si la ficha los dice.
-  - **Paso a paso:** el grueso del video. Cada paso lleva su tarjeta, su voz y su movimiento, y el paso 1 también se anima, desde la cuerda estirada.
-  - **Cómo saber que quedó bien:** la verificación, con primeros planos y una marca en cada cosa que se revisa.
-  - **Errores comunes:** el error con imagen, atado con el motor (T21e) y marcado con ✗, y después el correcto con ✓. Los demás errores van en tarjetas con voz.
-  - **En la práctica:** la aplicación.
-  - **Seguridad,** si la ficha la tiene.
-  - **Cierre:** el nudo apretado con su golpe, el nombre y la dirección del visor.
+**T22a, el diseño (M), que Gabriel aprueba antes de programar.** Escrito el 27 nov, con el guion de los tres pilotos, su hoja de revisión (`python -m nudos guion <slug>`) y la maqueta de las tarjetas (`python -m nudos prueba-tarjetas`). Lo de abajo cumple lo que pidió Gabriel el 26 nov (los capítulos, el reel, la voz que manda el tiempo, las tarjetas, la cámara y las aplicaciones) y agrega las decisiones que faltaban.
+
+- **Los capítulos.** Las duraciones son las estimadas del as de guía (`guion as-de-guia`): 2:53 en total.
+
+  | Capítulo | Escena | Lo que se ve | La voz | La tarjeta | Dura |
+  |---|---|---|---|---|---|
+  | Apertura | campamento | El nudo terminado y apretado gira despacio sobre la mesa. | `video.apertura` | El nombre, la familia y el ABOK | 14 s |
+  | Lo que necesitas | estudio | La cuerda estirada (y los palos o la tabla, si van), que es de donde parte el paso 1. | `video.materiales` | El `materiales` de la ficha | 6 s |
+  | Paso a paso | estudio | Cada paso con su movimiento, desde la cuerda estirada. | `voz` de cada paso | La del paso | 63 s |
+  | Cómo saber que quedó bien | estudio | El nudo apretado de cerca: la cámara va a cada cosa (`mira`) y, por detrás, el nudo se voltea. | `video.verificacion` | Una ✓ con su etiqueta sobre cada cosa | 23 s |
+  | Errores comunes | estudio | El error atado con el motor (T21e), la ✗, vuelve atrás y el paso correcto, la ✓. Después, los demás errores. | `voz` del error y de `otros` | ✗ y ✓, con el cuadro teñido | 15 s |
+  | En la práctica | campamento | La aplicación (abajo). | `video.aplicacion.voz` | De capítulo, con el título | 12 s |
+  | Seguridad | campamento | La aplicación, de lejos. | `video.seguridad` | El escudo y la voz frase por frase | 22 s |
+  | Cierre | campamento | La cámara se aleja; en el golpe entra el nombre. | `video.cierre` | El nombre, la dirección del visor y el grupo | 8 s + 10 s |
+
+  - Cada capítulo empieza con su tarjeta de capítulo, salvo la apertura y el cierre (el nombre) y el paso a paso (la tarjeta del paso 1). El cambio de escena va detrás de esa tarjeta.
+  - **La promesa de la apertura** («y al final, cómo revisar que quedó bien») se cumple al terminar los pasos, que es el final de lo que se aprende; en el amarre, «la prueba para saber si aguanta» es la última cosa que se revisa («empuja un palo»). El orden de los capítulos es el del 26 nov.
+  - **El golpe** va en el cierre: el acorde final de la música, el golpe del foley y el nombre que entra de golpe caen juntos. El crujido del apretado sigue al final del último paso, con el foley del motor.
+  - **La pantalla final:** los últimos 10 s quedan libres a la derecha para los elementos de YouTube (el video que sigue, que nombra el cierre, y suscribirse).
+- **La voz manda el tiempo.**
+  - Cada parte dura su voz más lo que la imagen necesita: en un paso, el movimiento empieza 0,3 s después de la voz y se estira o se acorta entre 0,75 y 1,35 veces su tiempo del motor para terminar unos 0,8 s después de la voz. Si aun así no cabe, el paso dura más y la música llena; si sobra, la pose final se queda con la cámara deslizándose despacio.
+  - La tarjeta de cada paso aparece 0,25 s antes de su voz, con el clic.
+  - Los cortes de capítulo caen en el pulso de la música (`musica.al_pulso`): el comienzo de cada capítulo se corre hasta medio pulso (unos 0,3 s), nunca la voz.
+  - Cada locución se genera como en `prueba-guion`: sin titubeos y con el reconocimiento de voz revisando que diga su texto (`voz.locuciones_sin_titubeos`). La pista sale de `mezcla.pista()` con todas las voces, las tarjetas, el golpe, el foley del motor y la canción del nudo.
+- **El guion pasa a la especificación (formato v1.14).** Era la decisión que faltaba. Cada paso lleva su `voz`, el error y cada uno de `otros` también, y un bloque `video` lleva lo demás: `apertura`, `materiales`, `verificacion` (cada cosa con `voz`, `mira`, `lado` y `etiqueta`), `aplicacion` (`escena`, `titulo` y `voz`), `seguridad`, `cierre` y, si hace falta, `reel`. El detalle está en `docs/formato-spec.md`, en «Video».
+  - **Por qué ahí:** la especificación es la fuente de verdad, y la voz de cada paso queda junto a su texto y su secuencia, así que un cambio en uno se ve al lado del otro. Hace falta en todos los pasos de los 36 nudos, no solo «cuando el texto escrito no suena bien dicho», porque el texto de la ficha dicho tal cual suena a lista.
+  - Es un cambio compatible: `voz` y `video` no entran al `modelo.json` ni a la ficha, y todos los nudos dan lo mismo. El guion de los dos pilotos dejó `config/guion/`, y `prueba-guion` lo lee de la especificación.
+  - `nudos/guion.py` arma el video parte por parte (`partes`, `reel`), revisa lo que falta y el estilo (`problemas`: términos de sección, comparaciones, diminutivos, «así», puntos suspensivos, etiquetas largas y la escena), estima los tiempos y arma la hoja `guion <slug>`. El video no se arma con problemas.
+  - **La hoja de revisión** (`build/<slug>/guion/index.html`) muestra cada capítulo con lo que dice la voz, lo que muestra su tarjeta y lo que dura: la voz medida si la locución ya está en el caché, o estimada con lo que T23 midió en la voz de Gabriel (1,44 s más 0,134 s por sílaba, 0,086 por coma y 0,246 por punto; medio segundo de error). Muestra también los capítulos para YouTube, el reel y el costo del render. Con `--oir` genera lo que falte con la voz de los videos y pone cada parte y la narración entera con la música.
+- **El guion de los pilotos.** El del as de guía es el que Gabriel revisa en el punto de control; el del amarre cuadrado y el de la eslinga de andamio siguen el mismo estilo.
+  - Los pasos, la apertura y la seguridad del as de guía y del amarre son los que Gabriel aprobó el 27 nov. El cierre de los dos cambió: la revisión pasó a su capítulo, y el cierre dice «Ya sabes hacer el…» y el nudo que sigue.
+  - Lo nuevo de cada uno: lo que necesitas, cada cosa que se revisa, el error y los otros errores, la aplicación y, en el amarre, la seguridad sacada de sus precauciones (no tiene `seguridad`). La eslinga de andamio tiene todo su guion nuevo.
+  - Estimado: el as de guía 2:53, el amarre 3:26 y la eslinga 2:43.
+- **Cómo se escribe para la voz** (sin cambios). Gabriel aprobó este estilo el 27 nov, con la tercera versión de los guiones de los pilotos, y vale para los 36:
+  - El anuncio del paso varía: «Primero», «Paso número dos de siete», «Ahora», «Paso cuatro», nada, «Último paso».
+  - Frases cortas y largas mezcladas, en segunda persona y con conectores de quien enseña al lado: «ahora», «fíjate», «listo».
+  - **Sin comparaciones** (Gabriel, 27 nov): «forma una gaza, como un ojo» o «es como un conejo que sale de su pozo» no le gustan. Las instrucciones van dichas tal cual; lo que evita que suenen a lista es el ritmo (frases cortas y largas, un anuncio de paso distinto cada vez), no las imágenes. `estilo_del_guion` marca «como un…», «como una…» y «como si…».
+  - **La apertura va directa, sin tono de youtuber** (Gabriel, 27 nov: «¿Necesitas una gaza que no se cierre…?» le sonó a video de Yuya): el nombre del nudo y para qué sirve en la primera frase, y lo que vas a aprender «en siete pasos, y al final, cómo revisar que quedó bien».
+  - **Pensado para YouTube,** para que lo vean completo: el nombre del nudo al empezar, una promesa que se cumple al final (la revisión o la prueba, como «empuja un palo»), y el cierre termina con el nudo que sigue, sacado de sus alternativas, para la pantalla final. La seguridad va antes del cierre.
+  - **Sin diminutivos ni «así»** («cortito», «pequeñito»): no van con la manera de hablar de Gabriel. **Sin puntos suspensivos:** la voz los dice estirando la palabra de antes («deeel»). `estilo_del_guion` revisa las dos cosas, con la lista `PALABRAS_EVITAR`.
+  - Nada de muletillas de video de IA («en el video de hoy», «¡increíble!», «sin más preámbulos»).
+  - Cada instrucción dice lo mismo que la ficha: los «por encima» y «por debajo» no cambian, y la seguridad conserva todo lo que dice la especificación.
+  - El reconocimiento de voz revisa que cada locución diga su texto, sin contar las letras que suenan igual ni la vocal que se pierde al juntar dos palabras («rodea el» y «rodeal»). Si no lo entiende («forma» que se oye «formo»), esa locución se vuelve a decir con otra semilla, como la que titubea (`revisar` en `voz.locuciones_sin_titubeos`).
+  - **Sin titubeos:** `voz.titubeos` marca la palabra estirada (más de 0,35 s por sílaba; 0,60 al final de una frase) o la pausa de duda (más de 0,45 s donde el texto no tiene puntuación), y `voz.locuciones_sin_titubeos` vuelve a decir esa locución con la semilla siguiente, hasta tres tomas. Con la voz de Gabriel, el «del» de «el trabajo del as de guía» duró 0,40 s, y las palabras dichas bien, de 0,08 a 0,32 s por sílaba.
+- **Las tarjetas** (la maqueta: `build/tarjetas/maqueta.html`, con los textos del as de guía sobre un cuadro de la prueba en 4K). El código es `render/tarjetas/` (`tarjetas.css` y `tarjetas.js`): cada tarjeta es función del tiempo (`pintar(t)`), así que el mismo código sirve para la maqueta y para dibujar cada cuadro en Edge.
+  - **El paso:** el número grande en un distintivo ámbar (el mismo ámbar del tramo resaltado que se mueve), «Paso 4 de 7», el título y una barra de avance con un punto por paso: los hechos llenos, el de ahora con un pulso. Entra con un rebote suave (un resorte con un 5 % de sobrepaso, que se asienta en 0,6 s) y sale en 0,22 s. La maqueta muestra también la otra manera: la tarjeta se queda entre pasos y solo rueda el número.
+  - **El capítulo:** un panel que se abre desde la izquierda con rebote, con un ícono, el nombre en Big Shoulders y un fondo que se mueve: ruido simplex de lygia en WebGL, con unas formas que crecen al entrar. Verde la revisión, rojo los errores, verde bosque la práctica, turquesa lo que necesitas y amarillo la seguridad.
+  - **La ✓ y la ✗:** un cuadro verde o rojo que rebota, la marca que se dibuja de un trazo y una onda que se abre. En la revisión, la ✓ va sobre lo que se revisa (el punto de `mira`, proyectado con la cámara de cada cuadro) con su etiqueta. En el error, la tarjeta va abajo con el título y el cuadro se tiñe de rojo en los bordes; el correcto, de verde.
+  - **La seguridad** lleva lo que dice la voz, frase por frase, para que se entienda también sin sonido.
+  - **El nombre y el cierre:** el nombre del nudo con una raya ámbar que se dibuja; en el cierre entra de golpe, y después la dirección del visor y el nombre del grupo.
+  - **Sobre vidrio esmerilado:** blanco al 66 % sobre el cuadro de atrás desenfocado. Edge dibuja sobre fondo transparente, así que el desenfoque lo hace Pillow con la forma de cada tarjeta (Edge dibuja aparte, en blanco, la forma del vidrio).
+  - **Las fuentes** son las del sitio y de la ficha: Big Shoulders Display, IBM Plex Mono y Literata.
+  - **De lygia** se usa solo `generative/snoise.glsl` y sus funciones de math/, que tienen licencia MIT y ya están en `sitio/vendor/lygia` (T24). El tramado de lygia (Prosperity, uso no comercial) no va en el video: si el canal de YouTube se monetiza algún día, el video no queda atado a esa licencia.
+- **La cámara.**
+  - Una sola ruta por capítulo, calculada sobre todos los cuadros antes de dibujar. El blanco, la distancia, el acimut y la altura siguen cada uno a su meta con un resorte críticamente amortiguado (como 0,25 s de retraso), y al final pasan por un filtro suave en los dos sentidos. Así no hay tramos en línea recta ni paradas en seco.
+  - **Las metas:** el blanco es la mano (la punta que se mueve) mientras se ata, el cruce nuevo mientras se forma y el centro del nudo en la pausa. La distancia encierra el nudo y la mano; cuando se forma un cruce nuevo, se acerca un 15 % durante 1,5 s y vuelve.
+  - **Nunca se congela:** en las pausas, el acimut sigue a 0,6° por segundo. La cámara que se aleja del paso 4 del as de guía, que le encantó a Gabriel, queda como el movimiento de cada final de paso con pausa larga.
+  - **La medida:** `calidad` cuenta las paradas de la cámara y el tiempo quieta: hoy 14 paradas y el 16 % quieta en el as de guía; la meta es cero y cero.
+  - Las tomas salen del catálogo de video-shotcraft: el giro lento (apertura), el acercamiento al detalle (cruce nuevo), el alejamiento que revela (fin de paso, aplicación y cierre) y el plano cenital (revisión).
+- **Los errores.** El error con imagen va del paso anterior a la pose del error (el motor lo ata, T21e), se queda con la ✗, vuelve atrás (los mismos cuadros al revés) y ata el paso correcto, que se queda con la ✓. La cámara se acerca al `encuadre` del error. Los demás errores van con la ✗ y su título sobre el nudo apretado, y solo entran los que tienen `voz`.
+- **Las aplicaciones de los pilotos** (Gabriel las eligió el 27 nov; dentro de D1: solo los amarres sostienen personas). Las escenas van en `guion.ESCENAS`; la utilería es propia, hecha en Blender, sobre el campamento J&E Gray 02, que ya trae los árboles de fondo, así que Sapling Tree Gen no hace falta para los pilotos.
+  - **El nudo trabaja** (Gabriel, 27 nov): en las tres, la cuerda empieza floja, se tensa cuando entra la carga y el nudo aguanta; después la cámara se aleja hasta mostrar el uso. El nudo apretado se coloca con un giro rígido, y la carga es el motor llevando sus puntas hasta sus anclas y asentándolas (T21e), con el crujido del foley. Ahí se comprueba que nada se atraviese y que el lazo abrace la utilería, no la secuencia vista desde arriba.
+  - **El as de guía, el cabo de un toldo (`toldo`, unos 11 s):**
+    - De 0 a 3 s, el nudo de cerca: la gaza rodea un poste de madera clavado en la tierra, cerca del suelo, y el cabo está flojo.
+    - De 3 a 6 s, el toldo jala el cabo: se tensa y la gaza no se cierra.
+    - De 6 a 11 s, la cámara se aleja y sube hasta mostrar el toldo armado, movido por el viento.
+    - Dice: «En el campamento, el as de guía sirve para tender un toldo. La gaza rodea el poste, y aunque el viento tire del cabo, no se cierra ni se corre.»
+  - **El amarre cuadrado, la mesa del campamento (`mesa-de-campamento`, unos 12 s):**
+    - De 0 a 3 s, el amarre de una esquina de cerca, en una mesa de palos de 4 cm (cada cruce lleva una copia del mismo nudo).
+    - De 3 a 6 s, una olla se apoya en la mesa y nada se mueve.
+    - De 6 a 12 s, la cámara se aleja hasta mostrar la mesa entera, con un amarre en cada cruce y ollas encima.
+    - Dice: «Con amarres cuadrados se arma la mesa del campamento, uno en cada cruce. Con los mismos amarres se hacen torres y puentes, donde sí se sube la gente: por eso cada amarre tiene que quedar firme.»
+  - **La eslinga de andamio, una repisa en la cocina (`repisa-colgante`, unos 11 s):**
+    - De 0 a 3 s, una eslinga de cerca, en la punta de la tabla. La tabla cuelga de un palo atravesado entre dos postes, a la altura del pecho, con una eslinga en cada punta (el nudo y su espejo).
+    - De 3 a 6 s, se ponen las ollas encima: las eslingas se tensan y la tabla sigue horizontal.
+    - De 6 a 11 s, la cámara se aleja hasta mostrar la repisa colgada entre los dos postes, con ollas y tazas.
+    - Dice: «En la cocina del campamento, dos eslingas de andamio cuelgan una tabla de un palo, y queda una repisa para las ollas, lejos del suelo.» Su seguridad dice que no sostiene personas.
+- **El reel vertical** (45 a 60 s; estimados: el as de guía 54 s, el amarre 58 y la eslinga 46).
+  - El gancho (la primera frase de la apertura, hasta los dos puntos: «El as de guía hace una gaza fija en la punta de la cuerda.») sobre el nudo terminado en el campamento, de cerca y girando; el título de cada paso dicho mientras se ata a unas dos veces la velocidad; «El error más común: la gaza pequeña al revés.», con la ✗ y la ✓; la primera frase de la aplicación, y la primera del cierre («Ya sabes hacer el as de guía.»). `video.reel` cambia el gancho o el cierre si hace falta.
+  - Su propia cámara, más cerca. El nudo va entre el 22 % y el 62 % del alto (no entre el 29 % y el 76 % de T18), las tarjetas arriba, desde el 12 %, y los subtítulos palabra por palabra, quemados, entre el 65 % y el 75 %: por encima de donde Instagram pone la descripción y los botones.
+  - Los subtítulos: de a cuatro palabras, en Literata blanca con sombra, y la palabra que se dice sobre un fondo ámbar. Los tiempos de cada palabra son los del alineador.
 - **Lo que sale de cada video:**
-  - Capítulos para YouTube y subtítulos (`.srt`) de la voz.
-  - El reel vertical (de 45 a 60 s), con su propia cámara y un guion corto: el nudo terminado como gancho, el título de cada paso dicho, un error, la aplicación y el cierre, con subtítulos quemados palabra por palabra.
-  - En el visor, el capítulo del paso a paso, en 1080p y de 20 MB o menos.
-  - Si Gabriel quiere, el nombre o el logo del grupo en el cierre.
-- **La voz manda el tiempo.** Cada sección dura lo que su frase, y el movimiento se estira o se acorta un poco para cuadrar. Los cortes de capítulo caen en el pulso de la música.
-- **El guion:**
-  - Sale de la especificación: `usos`, el texto de cada paso, `verificacion`, `error`, `seguridad` y `precauciones`.
-  - Un campo opcional `voz:` por paso, para cuando el texto escrito no suena bien dicho, y `aplicacion:` con la escena y su texto. Es la versión siguiente del formato.
-  - Pasa por la misma comprobación de términos de sección que la ficha, y va en tuteo.
-  - `python -m nudos guion <slug>` arma una hoja de revisión del guion, en HTML, con la duración estimada de cada parte.
-  - **Lo que pidió Gabriel al oír su voz (27 nov):** que la narración suene natural, enganche y no «suene a hecha por IA». El texto de la ficha dicho tal cual suena a lista (en el amarre, «por encima del palo de arriba, por debajo del de abajo…»), y «Paso N de M» en todos los pasos suena monótono. Hay un borrador del guion hablado de los dos pilotos en `config/guion/<slug>.yaml` (`apertura`, un texto por paso, `cierre` y `seguridad`), con su prueba `python -m nudos prueba-guion`, que arma la narración entera con el texto de la ficha y con el guion. T22a decide si esos textos pasan a la especificación como su campo `voz:`.
-  - **Cómo se escribe para la voz.** Gabriel aprobó este estilo el 27 nov, con la tercera versión de los guiones de los pilotos, y vale para los 36:
-    - El anuncio del paso varía: «Primero», «Paso número dos de siete», «Ahora», «Paso cuatro», nada, «Último paso».
-    - Frases cortas y largas mezcladas, en segunda persona y con conectores de quien enseña al lado: «ahora», «fíjate», «listo».
-    - **Sin comparaciones** (Gabriel, 27 nov): «forma una gaza, como un ojo» o «es como un conejo que sale de su pozo» no le gustan. Las instrucciones van dichas tal cual; lo que evita que suenen a lista es el ritmo (frases cortas y largas, un anuncio de paso distinto cada vez), no las imágenes. `estilo_del_guion` marca «como un…», «como una…» y «como si…».
-    - **La apertura va directa, sin tono de youtuber** (Gabriel, 27 nov: «¿Necesitas una gaza que no se cierre…?» le sonó a video de Yuya): el nombre del nudo y para qué sirve en la primera frase, y lo que vas a aprender «en siete pasos, y al final, cómo revisar que quedó bien».
-    - **Pensado para YouTube,** para que lo vean completo: el nombre del nudo al empezar, una promesa que se cumple al final (la revisión o la prueba, como «empuja un palo»), y el cierre termina con el nudo que sigue, sacado de sus alternativas, para la pantalla final. La seguridad va antes del cierre.
-    - **Sin diminutivos ni «así»** («cortito», «pequeñito»): no van con la manera de hablar de Gabriel. **Sin puntos suspensivos:** la voz los dice estirando la palabra de antes («deeel»). `estilo_del_guion` revisa las dos cosas, con la lista `PALABRAS_EVITAR`.
-    - Nada de muletillas de video de IA («en el video de hoy», «¡increíble!», «sin más preámbulos»).
-    - Cada instrucción dice lo mismo que la ficha: los «por encima» y «por debajo» no cambian, y la seguridad conserva todo lo que dice la especificación.
-    - El reconocimiento de voz revisa que cada locución diga su texto, sin contar las letras que suenan igual ni la vocal que se pierde al juntar dos palabras («rodea el» y «rodeal»). Si no lo entiende («forma» que se oye «formo»), esa locución se vuelve a decir con otra semilla, como la que titubea (`revisar` en `voz.locuciones_sin_titubeos`).
-    - **Sin titubeos:** `voz.titubeos` marca la palabra estirada (más de 0,35 s por sílaba; 0,60 al final de una frase) o la pausa de duda (más de 0,45 s donde el texto no tiene puntuación), y `voz.locuciones_sin_titubeos` vuelve a decir esa locución con la semilla siguiente, hasta tres tomas. Con la voz de Gabriel, el «del» de «el trabajo del as de guía» duró 0,40 s, y las palabras dichas bien, de 0,08 a 0,32 s por sílaba.
-- **Las tarjetas nuevas,** primero como maqueta animada en HTML que Gabriel abre en el navegador:
-  - El número grande en un distintivo de color, «Paso 4 de 7», el título y una barra de avance con un punto por paso.
-  - Entran con un rebote suave y salen rápido, sobre un fondo esmerilado (el cuadro de atrás, desenfocado).
-  - Tarjetas de capítulo, con ✓ y ✗ en verde y rojo, y formas y fondos animados de lygia.
-  - Las dibuja Edge, cuadro por cuadro y con fondo transparente, y Pillow las pone sobre el video, como hoy.
-- **La cámara:**
-  - Una ruta continua con velocidad suave, sin tramos en línea recta ni paradas en seco.
-  - Sigue el punto de acción con un poco de retraso, se acerca en cada cruce nuevo y enfoca donde está la mano.
-  - Nunca se congela: en las pausas se desliza muy despacio.
-  - Las ideas salen del catálogo de video-shotcraft (tomas, ritmo y entradas de tarjetas).
-- **Las aplicaciones de los pilotos,** con texto propio y dentro de D1:
-  - **El as de guía:** por ejemplo, una gaza alrededor de un árbol para tender el cabo de un toldo, o un balde izado.
-  - **El amarre cuadrado:** una mesa de campamento o un portón. Aquí sí se suben personas.
-  - **La eslinga de andamio:** una repisa colgante con ollas, como dicen sus `usos`.
-  - **La utilería:** propia o CC0 (Poly Haven), con árboles de la extensión gratuita Sapling Tree Gen y el cielo de Blender.
-  - **El nudo,** como en T21e: se coloca con un giro rígido (los anfitriones ya tienen la medida), y sus puntas se asientan hasta sus anclas con el motor.
+  - `<slug>-4k.mp4`, el video completo, y `<slug>-vertical.mp4`, el reel, con su audio, como en T18.
+  - `<slug>.srt`, los subtítulos de la voz para YouTube, de las palabras alineadas: hasta dos líneas de 42 letras, cortadas en la puntuación, de 1 a 6 s cada uno.
+  - `<slug>-youtube.txt`: los capítulos para la descripción (el primero en 0:00 y cada uno de 10 s o más, como pide YouTube: la apertura va junta con lo que necesitas), la dirección del visor y el nudo que sigue.
+  - `<slug>-visor.mp4`: solo el capítulo del paso a paso, en 1080p y de 20 MB o menos. Como el paso a paso dura más que el video de T18 (63 s el as de guía, 83 el amarre), va a 30 cuadros por segundo y en dos pasadas, para que quepa sin perder detalle.
+  - El nombre del grupo («Grupo Guía y Scout 431») va en el cierre si Gabriel quiere; la maqueta lo muestra con una casilla.
+- **Lo que cuesta.** Con el guion completo, un video dura de 2:45 a 3:30, no 2 min, porque la voz manda el tiempo y el estilo que aprobó Gabriel habla más que la ficha. En 4K, a 6 s por cuadro, el as de guía son unas 17 h, y los 36 con sus reels, unos 29 días, no los 20 a 25 estimados.
+  - **Lo que lo baja sin quitar contenido:** los capítulos donde nada se mueve van sobre un cuadro quieto del render con un acercamiento lento hecho en la composición, sin Blender: lo que necesitas, los demás errores, la seguridad y la pantalla final. Son unos 40 s por nudo: unos 6 días menos.
+  - **Lo que lo baja quitando:** menos cosas en la revisión (tres como mucho) y un solo «otro error» en el video.
+- **Lo que decide Gabriel en el punto de control:**
+  1. El diseño, con el guion en la especificación (v1.14).
+  2. El guion del as de guía (`guion as-de-guia`; con `--oir`, dicho por su voz).
+  3. Las tarjetas de la maqueta, y si entre pasos la tarjeta sale y vuelve a entrar o se queda.
+  4. Las tres aplicaciones: decididas el 27 nov (el toldo, la mesa y la repisa, con el nudo que se tensa y aguanta).
+  5. La duración y el costo: si acepta de 2:45 a 3:30 por nudo, si los capítulos quietos van sobre un cuadro quieto, y si el nombre del grupo va en el cierre.
+
+**Cómo se hizo T22a (27 nov):**
+- **El formato v1.14** (`nudos/spec.py`, `docs/formato-spec.md`): `voz` en los pasos (de segmentos y de plantilla), en el error y en `otros`, y el bloque `video` con sus clases (`Video`, `Revisa`, `Aplicacion` y `Reel`). `mira` se comprueba al cargar contra los segmentos o los hitos de la plantilla, y las medidas de la plantilla (`{vueltas}`) se reemplazan también en lo que dice la voz. Las 36 especificaciones cargan igual.
+- **El guion de los tres pilotos** está en sus especificaciones. El de los dos de T23 salió de `config/guion/`, que se borró.
+- **`nudos/guion.py`** y la orden `guion <slug> [--oir]`. `PALABRAS_EVITAR` y `estilo_del_guion` pasaron de `prueba_sonido.py` a `guion.py`; `prueba_sonido.lineas_del_guion` lee el guion de la especificación, y `narracion` pone la tarjeta de cada capítulo y el golpe en el cierre. `voz.en_cache()` da las locuciones ya generadas sin generar nada, para medir sin la tarjeta.
+- **La maqueta:** `render/tarjetas/` (`tarjetas.css`, `tarjetas.js` y `maqueta.html`) y `nudos/tarjetas.py`, con la orden `prueba-tarjetas [--fondo …] [--fondo-vertical …]`. La página lleva dentro las fuentes, lygia y los dos fondos: un cuadro de la prueba en 4K del as de guía, con la tarjeta de hoy borrada, y un recorte vertical del mismo.
+- **Pruebas:** `tests/test_guion.py` y `tests/test_tarjetas.py`.
 
 **Punto de control:** Gabriel aprueba el diseño, el guion de un piloto y la maqueta de las tarjetas.
 
 **T22b, la implementación (L).**
-- `nudos/video.py` gana los capítulos, el guion, la cámara nueva, las tarjetas, los errores, la aplicación y el reel. Si crece demasiado, se parte en un paquete `nudos/video/`.
-- **El disco:** un video de 2 min en 4K son unos 240 GB de cuadros. Por eso se arma por tramos: cada unos 10 s se codifican en un intermedio sin pérdida y los PNG se borran. `NUDOS_CUADROS` pasa a D:, que tiene 625 GB libres; C: tiene 164.
+- `nudos/video.py` gana los capítulos, el guion (`guion.revisado`), la cámara nueva, las tarjetas (`render/tarjetas/` en Edge, cuadro por cuadro, con el vidrio desenfocado en Pillow), los errores, la aplicación (las escenas de `guion.ESCENAS`) y el reel. Si crece demasiado, se parte en un paquete `nudos/video/`.
+- Los subtítulos (`.srt`), la descripción con los capítulos (`-youtube.txt`) y la copia del visor del paso a paso, a 30 fps.
+- **El disco:** un video de 3 min en 4K son unos 350 GB de cuadros. Por eso se arma por tramos: cada unos 10 s se codifican en un intermedio sin pérdida y los PNG se borran. `NUDOS_CUADROS` pasa a D:, que tiene 625 GB libres; C: tiene 164.
 - **La previa entera** (960 × 540) de los tres pilotos, con voz, música y tarjetas. Punto de control.
 - **Los tres pilotos en 4K y en vertical,** de noche. Punto de control.
 

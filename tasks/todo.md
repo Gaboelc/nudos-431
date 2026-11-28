@@ -99,7 +99,9 @@ El orden lo eligió Gabriel el 23 nov: primero las dos pruebas de concepto, en r
     - [x] Gabriel oyó el primer borrador: le gustó, pero la apertura sonaba a youtuber, no dice diminutivos ni «así», y los puntos suspensivos estiraban palabras. Segunda versión, con el estilo en el plan y las tomas sin titubeos (27 nov)
     - [x] Gabriel no quiere comparaciones («como un ojo», el conejo): tercera versión, sin ellas (27 nov)
     - [x] Gabriel aprobó el estilo del guion hablado con la tercera versión de los dos pilotos (27 nov): las reglas están en el plan, en el guion de T22a, y valen para los guiones de los 36 nudos
-    - [ ] T22a El diseño, el guion de un piloto (`guion <slug>`) y la maqueta de las tarjetas; punto de control
+    - [x] T22a El diseño en el plan, el guion de los tres pilotos en su especificación (formato v1.14), la hoja `guion <slug>` y la maqueta de las tarjetas (`prueba-tarjetas`) (27 nov)
+    - [ ] Punto de control de T22a: Gabriel aprueba el diseño, el guion del as de guía y la maqueta, elige si la tarjeta del paso sale o se queda, y decide la duración (de 2:45 a 3:30 por nudo) y el costo del render (unos 29 días los 36, o unos 23 con los capítulos quietos sobre un cuadro quieto)
+      - [x] Gabriel eligió las tres aplicaciones (el cabo de un toldo en un poste, la mesa del campamento y la repisa en la cocina) y que en ellas el nudo se tense y aguante (27 nov)
     - [ ] T22b La implementación y la previa entera de los tres pilotos; punto de control
     - [ ] Los tres pilotos en 4K y en vertical; punto de control
   - [x] T23 El sonido (26 y 27 nov): la voz de Gabriel clonada como de estudio (Qwen3-TTS desde su muestra del DJI, con Sidon; la muestra, fuera de git en `entradas/_voz/`), cinco canciones compuestas en código con el motivo en celesta, el foley del motor y la mezcla a −14 LUFS (`nudos/voz.py`, `musica.py`, `foley.py`, `mezcla.py`; `prueba-voz`, `prueba-musica`, `prueba-mezcla` y `prueba-voz-propia`). El detalle, en el historial

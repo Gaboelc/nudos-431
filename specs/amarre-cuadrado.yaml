@@ -42,6 +42,47 @@ alternativas:
   - nudo: Amarre trípode
     cuando: Para unir tres palos por una punta y abrirlos como un trípode.
 
+# Lo que dice la voz en el video (T22, formato v1.14). Texto propio, en tuteo y con el estilo del
+# guion hablado que Gabriel aprobó el 27 nov de 2026 (ver el plan, T22a): directo, sin comparaciones,
+# sin diminutivos ni «así» y sin puntos suspensivos. Cada instrucción dice lo mismo que la ficha: los
+# «por encima» y «por debajo» no cambian. Lo que dice en cada paso y en cada error va en su «voz».
+video:
+  apertura: >-
+    El amarre cuadrado une dos palos cruzados para que no se corran ni giren. Con él se
+    arman mesas, torres, puentes y portones. Te lo enseño en siete pasos, y al final, la
+    prueba para saber si aguanta.
+  materiales: >-
+    Necesitas dos palos redondos de unos cuatro centímetros de grosor y una cuerda de unos
+    cuatro metros, que no sea rígida.
+  verificacion:
+    - voz: >-
+        Para revisarlo, mira las vueltas: van una junto a otra, sin montarse, por encima del palo de
+        arriba y por debajo del de abajo.
+      mira: vueltas
+      etiqueta: Vueltas sin montarse
+    - voz: Los ahorcados van entre los palos, por debajo del de arriba, y aprietan las vueltas.
+      mira: ahorcados
+      etiqueta: Ahorcados entre los palos
+    - voz: Los dos ballestrinques quedan apretados contra su palo.
+      mira: cierre
+      etiqueta: Ballestrinques apretados
+    - voz: Y ahora, la prueba. Empuja un palo. Si no se corre ni gira, tu amarre está bien hecho.
+      etiqueta: No se corre ni gira
+  aplicacion:
+    escena: mesa-de-campamento
+    titulo: La mesa del campamento
+    voz: >-
+      Con amarres cuadrados se arma la mesa del campamento, uno en cada cruce. Con los mismos
+      amarres se hacen torres y puentes, donde sí se sube la gente: por eso cada amarre tiene
+      que quedar firme.
+  seguridad: >-
+    Antes de subirte a una construcción, revisa cada amarre: si alguno se mueve, gira o
+    tiene la cuerda floja, vuelve a hacerlo. Y revisa también los palos: que no estén
+    podridos ni rajados.
+  cierre: >-
+    Ya sabes hacer el amarre cuadrado. Y si los palos no se cruzan en ángulo recto, el que
+    necesitas es el amarre diagonal.
+
 # Estado de producción (ver «Estado» en docs/formato-spec.md).
 estado: cuerda-ok
 
@@ -80,6 +121,9 @@ pasos:
     texto: >-
       Cruza un palo sobre el otro. En el de abajo, de tu lado y pegado al de arriba, ata un
       ballestrinque como en su ficha. Deja el chicote corto.
+    voz: >-
+      Cruza un palo sobre el otro. En el de abajo, de tu lado y pegado al de arriba, ata
+      un ballestrinque, como en su ficha. Deja el chicote corto.
     hasta: inicio
 
   - titulo: Da la primera vuelta
@@ -87,6 +131,10 @@ pasos:
       Ahora mueves la parte larga. Rodea el cruce: por encima del palo de arriba, por debajo
       del de abajo, por encima del de arriba y por debajo del de abajo, delante del
       ballestrinque.
+    voz: >-
+      Paso 2 de 7: la primera vuelta. Ahora trabajas con la parte larga. Rodea el cruce
+      por encima del palo de arriba y por debajo del de abajo, dos veces, hasta cerrar la
+      vuelta. Todo por delante del ballestrinque.
     hasta: vuelta-1
 
   - titulo: Completa las {vueltas} vueltas
@@ -94,30 +142,49 @@ pasos:
       Da más vueltas por el mismo camino hasta tener {vueltas}. Sobre el palo de arriba, cada
       una va más lejos del cruce que la anterior; por debajo del de abajo, más cerca. Tira
       fuerte en cada una.
+    voz: >-
+      Dale dos vueltas más por el mismo camino, hasta tener tres. Arriba, cada vuelta
+      queda un poco más lejos del cruce que la anterior; abajo, un poco más cerca. Y en
+      cada una, tira fuerte.
     hasta: vueltas
 
   - titulo: Da el primer ahorcado
     texto: >-
       Pasa la cuerda entre los palos, por debajo del de arriba y por encima del de abajo,
       rodeando las vueltas. Es un ahorcado: tira fuerte.
+    voz: >-
+      Paso 4. Ahora viene lo que aprieta todo: el ahorcado. Pasa la cuerda entre los
+      palos, por debajo del de arriba y por encima del de abajo, rodeando las vueltas.
+      Tira fuerte.
     hasta: ahorcado-1
 
   - titulo: Completa los {ahorcados} ahorcados
     texto: >-
       Da más ahorcados por el mismo camino, cada uno por fuera del anterior, hasta tener
       {ahorcados}. Tira fuerte en cada uno.
+    voz: >-
+      Dos ahorcados más, por el mismo camino, cada uno por fuera del anterior. Con tres
+      bien apretados, el cruce ya no se mueve.
     hasta: ahorcados
 
   - titulo: Empieza el ballestrinque de cierre
     texto: >-
       En el palo de arriba, junto a los ahorcados, pasa la cuerda por debajo, dale la vuelta
       y crúzala en diagonal sobre sí misma, hacia afuera.
+    voz: >-
+      Para cerrar, un ballestrinque en el palo de arriba. Junto a los ahorcados, pasa la
+      cuerda por debajo, dale la vuelta y crúzala en diagonal sobre sí misma, hacia
+      afuera.
     hasta: cierre-1
 
   - titulo: Termina el ballestrinque
     texto: >-
       Da otra vuelta al palo, por fuera de la primera, y mete el chicote por debajo de la
       diagonal, entre las dos vueltas. Tira del chicote para apretar.
+    voz: >-
+      Último paso. Otra vuelta al palo, por fuera de la primera, y mete el chicote por
+      debajo de la diagonal, entre las dos vueltas. Tira del chicote para apretar, y
+      listo.
     hasta: cierre
 
 # El error con imagen lo construye la plantilla: los ahorcados por encima del palo de
@@ -130,8 +197,16 @@ error:
     Pasaste los ahorcados por encima del palo de arriba, así que no aprietan las vueltas y
     el amarre queda flojo. Pásalos entre los dos palos: por debajo del de arriba y por
     encima del de abajo.
+  voz: >-
+    El error más común está en los ahorcados: pasarlos por encima del palo de arriba. Si los
+    pasas por ahí, no aprietan las vueltas y el amarre queda flojo. Pásalos entre los dos
+    palos: por debajo del de arriba y por encima del de abajo.
   otros:
     - titulo: La cuerda floja mientras atas
       texto: >-
         Si sueltas la cuerda entre una vuelta y otra, el amarre queda flojo y los palos se
         mueven, aunque esté bien hecho. Mantenla tensa de principio a fin.
+      voz: >-
+        Otro error es soltar la cuerda entre una vuelta y otra: aunque el amarre esté
+        bien hecho, queda flojo y los palos se mueven. Mantenla tensa de principio a
+        fin.

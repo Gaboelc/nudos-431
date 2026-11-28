@@ -1,6 +1,6 @@
-# Formato de especificación de nudo (v1.13)
+# Formato de especificación de nudo (v1.14)
 
-Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.5 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
+Cada nudo es un archivo `specs/<slug>.yaml`. Es la fuente de verdad: los modelos 3D, las imágenes y la ficha se generan desde aquí. Esta es la versión 1.14 del formato. Cómo puede cambiar desde aquí, y qué parte es todavía provisional, está al final, en «Versiones».
 
 Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo, con una cuerda sobre la mesa; `specs/ballestrinque.yaml`, sobre un poste; `specs/vuelta-de-escota.yaml`, con dos cuerdas, y `specs/amarre-cuadrado.yaml`, con una plantilla.
 
@@ -36,6 +36,7 @@ Los ejemplos son los nudos publicados: `specs/as-de-guia.yaml`, el más completo
 | `terminado` | no | Cómo se muestra el nudo terminado (ver abajo). |
 | `filtros` | no | Registro de los dos filtros humanos (ver abajo). |
 | `estado` | no | Estado de producción: `borrador`, `modelado`, `cuerda-ok`, `novato-ok` o `publicado` (ver abajo). Sin él, `borrador`. |
+| `video` | para el video | Lo que dice la voz en el video del nudo fuera de los pasos y los errores (ver «Video», abajo). |
 
 Los campos desconocidos producen un error, así que un error de tipeo se detecta al cargar.
 
@@ -516,10 +517,13 @@ Lo que hace la plantilla (`nudos/plantillas/puno.py`; ver «El puño de mono» e
 |---|---|
 | `titulo` | Título corto, en imperativo y tuteo. |
 | `texto` | Instrucción del paso, en tuteo y con texto propio. |
+| `voz` | Para el video. Lo que dice la voz en este paso: lo mismo que `texto`, dicho como lo diría quien enseña al lado (ver «Video»). |
 | `trazado` | Segmentos o tramos en el orden de la cuerda. Cada segmento aparece una sola vez. Con varias cuerdas, un mapa por cuerda (ver arriba). |
 | `secuencia` | La secuencia de cruces (ver abajo). Si el paso no tiene cruces, se escribe `""`. Con varias cuerdas, un mapa por cuerda. |
 | `resaltar` | Opcional. Con `desde` y `hasta` marca el tramo que se mueve en este paso. |
 | `hasta` | Solo en un nudo de plantilla, en lugar de `trazado`, `secuencia` y `resaltar`: hasta dónde llega el paso (ver arriba). El tramo que se mueve es lo que agrega el paso. |
+
+En un nudo de plantilla, el paso lleva `titulo`, `texto`, `voz` y `hasta`.
 
 ## Secuencia de cruces
 
@@ -546,9 +550,10 @@ En un nudo de plantilla, el error no son cruces al revés sino una variante del 
 | `invierte` | Etiquetas de los cruces que quedan al revés, por ejemplo `[1]`. Tienen que estar en ese paso. |
 | `titulo` | Nombre corto del error. |
 | `texto` | Cómo reconocerlo y qué hacer, en tuteo y con texto propio. |
+| `voz` | Para el video. Lo que dice la voz mientras se ve el error y, después, el paso correcto. |
 | `variante` | Solo en un nudo de plantilla, en lugar de `invierte`: el error del método que la plantilla sabe construir. El amarre cuadrado y el diagonal tienen `ahorcados-por-fuera` (por encima del palo de arriba, en lugar de entre los palos), que se ve desde `ahorcado-1`. Sus ahorcados cruzan las mismas esquinas que los bien hechos, porque por donde pasan el palo de arriba no cruzan nada; lo que cambia es por qué lado del palo pasan. La cabeza de turco de 3 cabos tiene `empieza-por-encima`: en la tercera vuelta, la cuerda empieza a tejer por encima en vez de por debajo y sigue alternando, así que todos los cruces de esa vuelta quedan al revés. Se ve desde `vuelta-3-mitad`. Con otro número de cabos no hay variante. El amarre redondo y el trípode tienen `sin-ahorcados`: después de las vueltas, la cuerda va directo al ballestrinque de cierre. Se ve desde `cierre-1`; hasta las vueltas es la misma cuerda, y en el error los hitos de los ahorcados son lo mismo que la última vuelta. El refuerzo de cabo tiene `por-fuera-del-seno`: el chicote pasa por encima de la curva del seno en vez de por dentro, así que el seno sale sin arrastrarlo. Se ve desde `por-el-seno` y solo en ese paso. El adujado tiene `sin-alternar`: todos los senos se cierran por encima del extremo, así que el cruce del segundo queda al revés. Se ve desde `seno-2` y solo en los pasos de los senos. El puño de mono tiene `tercero-por-fuera`: el tercer juego pasa por fuera del primero, alrededor de todo el puño, en vez de por dentro, así que sus 2n² cruces con el primero quedan al revés. Se ve desde `vuelta-3-1` y solo en el tercer juego, sin los dedos. |
 | `encuadre` | Opcional. Zona que se muestra del error y del paso correcto, como el `encuadre` del nudo. Conviene acercarse al cruce. |
-| `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo` y `texto`. En la ficha van debajo del error con imagen, como «Otro error común». |
+| `otros` | Opcional. Errores comunes que no se ven en una imagen, como no mantener la cuerda tensa. Es una lista; cada uno lleva `titulo`, `texto` y, para el video, `voz`. En la ficha van debajo del error con imagen, como «Otro error común»; en el video, solo los que tienen `voz`, con su tarjeta. |
 
 Las dos imágenes usan el `resaltar` de ese paso. Para que el error se vea, el resaltado debe empezar o terminar fuera del cruce invertido: así un tramo llega azul y el otro resaltado, y se ve cuál va encima.
 
@@ -585,6 +590,50 @@ Cada tramo del último paso conserva el largo que le dio el trazado, así que el
 - **Un nudo de plantilla no se aprieta,** porque su plantilla ya traza la cuerda tensa. El amarre terminado sigue siendo el último paso y su volteo rígido.
 
 `modelo.json` lleva los dos aparte, en `apretado` y `reverso_apretado` (`null` donde no hay). Las dos vistas del terminado en la ficha salen del apretado (`TERMINADO_APRETADO` en `nudos/imprimir.py`): Gabriel lo eligió el 11 de noviembre de 2026 con la página de prueba, `build/mejoras/apretado.pdf` de `python -m nudos mejoras`, que compara el terminado sin apretar, a medias y apretado. Si un nudo futuro no debiera apretarse, el campo se agrega con ese nudo.
+
+## Video
+
+Lo que dice la voz en el video del nudo (T22). El video tiene ocho capítulos: la apertura, lo que necesitas, el paso a paso, cómo saber que quedó bien, los errores comunes, la práctica, la seguridad y el cierre. Lo que dice en cada paso va en su `voz`, y lo del error en la `voz` del error y de cada uno de `otros`. Lo demás va en el bloque `video`:
+
+```yaml
+video:
+  apertura: >-
+    El as de guía hace una gaza fija en la punta de la cuerda: no se cierra ni se corre, aunque
+    cargue mucho peso, y después se desata fácil. Te lo enseño en siete pasos, y al final, cómo
+    revisar que quedó bien.
+  materiales: Solo necesitas una cuerda de unos dos metros, que no sea rígida.
+  verificacion:
+    - voz: Para revisarlo, tira del firme. La gaza no se cierra.
+      mira: gaza
+      etiqueta: La gaza no se cierra
+    - voz: Por detrás, el chicote rodea el firme.
+      mira: rodeo-detras
+      lado: detras
+      etiqueta: Por detrás, rodea el firme
+  aplicacion:
+    escena: toldo
+    titulo: El cabo de un toldo
+    voz: >-
+      En el campamento, el as de guía sirve para tender un toldo. La gaza rodea el poste, y
+      aunque el viento tire del cabo, no se cierra ni se corre.
+  seguridad: >-
+    Un aviso importante: …
+  cierre: >-
+    Ya sabes hacer el as de guía. Y si necesitas dos gazas en vez de una, el que sigue es el as de
+    guía español.
+```
+
+| Campo | Qué es |
+|---|---|
+| `apertura` | Lo primero que dice: el nombre del nudo y para qué sirve, y lo que vas a aprender («en siete pasos, y al final, cómo revisar que quedó bien»). |
+| `materiales` | Opcional. Lo que dice sobre los materiales; la tarjeta muestra el `materiales` de la ficha. Sin él, el capítulo no va. |
+| `verificacion` | Lo que se revisa al final, en orden. Cada cosa lleva `voz`; `mira`, dónde mira la cámara (un segmento, un punto como `chicote-baja[-1]` o, en un nudo de plantilla, un hito como `vueltas`; sin él, el nudo entero); `lado`, `delante` (sin él) o `detras` (el nudo se voltea o, con anfitrión, la cámara da la vuelta), y `etiqueta`, el texto corto que va junto a la ✓, de 32 letras o menos. |
+| `aplicacion` | El nudo en uso: `escena`, una de las que arma el video (`guion.ESCENAS`: `toldo`, `mesa-de-campamento`, `repisa-colgante`…), `titulo`, el de su tarjeta, y `voz`. Sigue la postura de seguridad (D1): solo los amarres sostienen personas. |
+| `seguridad` | Lo que dice sobre seguridad. Si la ficha tiene `seguridad`, va y dice todo lo que dice ella. Un nudo sin `seguridad` lo puede llevar igual, sacado de sus precauciones, como el amarre cuadrado. |
+| `cierre` | Lo último que dice. Termina con el nudo que sigue, sacado de las alternativas, para la pantalla final de YouTube. |
+| `reel` | Opcional. `gancho` y `cierre` del reel vertical, si no son la primera frase de la apertura (hasta los dos puntos) y la primera del cierre. |
+
+Todo lo que dice la voz va en tuteo, es propio y no usa términos de sección, como la ficha. Además sigue el estilo del guion hablado que aprobó Gabriel (el plan, T22a): sin comparaciones («como un…»), sin diminutivos ni «así» y sin puntos suspensivos. Cada instrucción dice lo mismo que la ficha: los «por encima» y «por debajo» no cambian. `python -m nudos guion <slug>` arma la hoja de revisión del guion y dice qué falta; el video no se arma si falta algo. `voz` y `video` no entran al `modelo.json` ni a la ficha.
 
 ## Filtros
 
@@ -648,7 +697,7 @@ En el puño de mono, sin anfitrión, hay tres zonas. Las vueltas se buscan en el
 
 ## Versiones
 
-Este es el formato v1.13. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
+Este es el formato v1.14. La versión 1 se congeló el 11 de noviembre de 2026, en el Punto de control B del plan, con los cuatro nudos publicados del piloto: el as de guía, el ballestrinque, la vuelta de escota y el amarre cuadrado. Desde entonces cambia solo de dos maneras:
 
 - **Un cambio compatible** agrega algo que ninguna especificación usa todavía: un tipo de anfitrión, una plantilla, una variante de error, un campo opcional o un valor nuevo de un campo. Toda especificación anterior se carga igual y da el mismo `modelo.json`, byte a byte. No lleva migración: la versión sube a 1.1, 1.2…, y el cambio se anota abajo, en el registro.
 - **Un cambio incompatible** cambia algo que ya existe: el nombre, los valores, las unidades o el significado de un campo. También lo es quitar algo o volver obligatorio un campo opcional. La versión sube a 2, y el cambio lleva un script de migración en `scripts/` que reescribe todas las especificaciones de `specs/` en el mismo commit. Después de migrar, los nudos publicados dan el mismo `modelo.json`, byte a byte.
@@ -685,6 +734,7 @@ Fuera del formato, la hoja de revisión (`python -m nudos hoja` y `revision`) di
 - **v1.8** (17 de noviembre de 2026): la plantilla `adujado`, la primera sin anfitrión, con su variante de error `sin-alternar`, para el adujado (fase 4, tanda 4). Una plantilla puede ir sin anfitrión (`ANFITRION = None`), libre sobre la mesa. Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.9** (17 de noviembre de 2026; entró a `main` después del adujado): la plantilla `puno-de-mono`, con su variante de error `tercero-por-fuera`, para el puño de mono (fase 4, tanda 4). Es un cambio compatible: ninguna especificación anterior la usa, y los nudos publicados dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.10** (23 de noviembre de 2026): `dos_firmes` en una cuerda de un nudo de varias, para el cordino del prusik, que no lleva «Chicote» en el tramo que va al pescador doble. Es un cambio compatible: sin él, todo sigue igual, y los demás nudos dan el mismo `modelo.json` y las mismas imágenes.
+- **v1.14** (27 de noviembre de 2026; propuesta en T22a, falta que Gabriel la apruebe): `voz` en cada paso, en el error y en cada uno de `otros`, y el bloque `video`, con lo que dice la voz en el video (T22). Pasó ahí el guion hablado de los pilotos, que estaba en `config/guion/`. Es un cambio compatible: son campos opcionales que no entran al `modelo.json`, así que todos los nudos dan el mismo `modelo.json` y las mismas imágenes.
 - **v1.13** (23 de noviembre de 2026): el anfitrión `barril`, una cubeta parada con los bordes redondeados, y sus segmentos `{barril: …}` por el costado y `{tapa: …}` por la tapa, para la eslinga de barril (fase 4, tanda 5). Es un cambio compatible.
 - **v1.12** (23 de noviembre de 2026): el anfitrión `cornamusa`, una barra con dos cuernos sobre un pie, y sus segmentos `{cornamusa: …}`, para la vuelta de cornamusa (fase 4, tanda 5). Es un cambio compatible.
 - **v1.11** (23 de noviembre de 2026): el anfitrión `tablon`, una tabla con los cantos redondeados, y sus segmentos `{tablon: …}`, para la eslinga de andamio (fase 4, tanda 5). Es un cambio compatible: ninguna especificación anterior lo usa, y los nudos hechos dan el mismo `modelo.json` y las mismas imágenes.

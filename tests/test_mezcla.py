@@ -234,26 +234,20 @@ def test_los_eventos_de_los_cuadros_de_hoy():
 
 
 # --------------------------------------------------------------------------
-# El guion hablado (borrador para T22a)
+# El guion hablado (T22a): sale de la especificación (nudos/guion.py; más en tests/test_guion.py)
 # --------------------------------------------------------------------------
 def test_los_guiones_de_los_pilotos_tienen_un_texto_por_paso():
-    from nudos.prueba_sonido import PILOTOS_MEZCLA, guion_hablado, lineas_del_guion
+    from nudos.prueba_sonido import PILOTOS_MEZCLA, lineas_del_guion
     from nudos.spec import cargar
     for slug in PILOTOS_MEZCLA:
-        g = guion_hablado(slug)
-        assert len(g["pasos"]) == len(cargar(slug).pasos) and g["apertura"] and g["cierre"]
-        dichos = [V.texto_dicho(V.para_decir(t)) for _, t in lineas_del_guion(slug)]
+        lineas = lineas_del_guion(slug)
+        pasos = [t for c, t in lineas if c == "pasos"]
+        assert len(pasos) == len(cargar(slug).pasos)
+        assert lineas[0][0] == "apertura" and lineas[-1][0] == "cierre"
+        dichos = [V.texto_dicho(V.para_decir(t)) for t in pasos]
         # El anuncio del paso varía: no todos dicen «Paso … de …».
         anunciados = sum("de siete" in d.split(".")[0] for d in dichos)
-        assert 0 < anunciados < len(g["pasos"])
-
-
-def test_un_guion_con_otro_numero_de_pasos_falla(tmp_path, monkeypatch):
-    from nudos import prueba_sonido as P
-    (tmp_path / "as-de-guia.yaml").write_text("apertura: Hola.\npasos: [Uno, Dos]\ncierre: Listo.\n", encoding="utf-8")
-    monkeypatch.setattr(P, "GUIONES", tmp_path)
-    with pytest.raises(ValueError, match="2 pasos"):
-        P.guion_hablado("as-de-guia")
+        assert 0 < anunciados < len(pasos)
 
 
 def test_lo_que_oye_el_reconocimiento_sin_las_letras_que_suenan_igual():
@@ -280,7 +274,7 @@ def test_la_narracion_va_una_tras_otra_con_sus_tarjetas_y_el_golpe():
 
 
 def test_el_estilo_del_guion():
-    from nudos.prueba_sonido import estilo_del_guion
+    from nudos.guion import estilo_del_guion
     assert estilo_del_guion("Deja el chicote corto. Tira fuerte y listo.") == []
     problemas = estilo_del_guion("Tira del chicote… y así queda cortito.")
     assert len(problemas) == 2 and "suspensivos" in problemas[0]
@@ -291,14 +285,29 @@ def test_el_estilo_del_guion():
     assert len(problemas) == 1 and "«como un ojo»" in problemas[0] and "«como un conejo que sale de su pozo»" in problemas[0]
 
 
-def test_un_guion_con_puntos_suspensivos_falla(tmp_path, monkeypatch):
-    from nudos import prueba_sonido as P
-    pasos = ", ".join(f"Paso {n}." for n in range(1, 8))
-    (tmp_path / "as-de-guia.yaml").write_text(f"apertura: Hola…\npasos: [{pasos}]\ncierre: Listo.\n",
-                                             encoding="utf-8")
-    monkeypatch.setattr(P, "GUIONES", tmp_path)
-    with pytest.raises(ValueError, match="suspensivos"):
-        P.guion_hablado("as-de-guia")
+def test_un_guion_con_puntos_suspensivos_falla():
+    import yaml
+
+    from nudos import SPECS
+    from nudos.guion import GuionError, revisado
+    from nudos.spec import desde_datos
+    datos = yaml.safe_load((SPECS / "as-de-guia.yaml").read_text(encoding="utf-8"))
+    datos["video"]["apertura"] = "Hola…"
+    with pytest.raises(GuionError, match="suspensivos"):
+        revisado(desde_datos(datos))
+
+
+def test_cada_capitulo_con_tarjeta_suena_y_el_golpe_va_en_el_cierre():
+    from nudos.prueba_sonido import narracion
+    lineas = [("apertura", "Este es el nudo."), ("materiales", "Necesitas una cuerda."), ("pasos", "Primero, toma la cuerda."),
+              ("verificacion", "Tira del firme."), ("seguridad", "Revísalo antes de usarlo."), ("cierre", "Listo.")]
+    p, locs = narracion(lineas, "as-de-guia", voz=V.Voz("prueba", proveedor="falso"), aviso=callar,
+                        instrumentos=M.Sintetico(), alineador=False)
+    # La de lo que necesitas, la del paso, la de la revisión y la de la seguridad.
+    assert len([s for s in p.sonidos if s.tipo == "clic"]) == 4
+    golpe = [s for s in p.sonidos if s.tipo == "golpe"]
+    cierre = next(c for c in p.musica.capitulos if c.nombre == "cierre")
+    assert len(golpe) == 1 and abs(golpe[0].t - cierre.inicio) < 0.7
 
 
 
