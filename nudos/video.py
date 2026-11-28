@@ -127,6 +127,7 @@ class Tramo:
     fases: dict
     fallas: list
     medidas: dict
+    visible: list | None = None   # en una plantilla (T21d), hasta dónde se ve la cuerda en cada cuadro
 
 
 def atar(modelo, rehacer: bool = False) -> tuple[list[Tramo], str]:
@@ -148,7 +149,8 @@ def atar(modelo, rehacer: bool = False) -> tuple[list[Tramo], str]:
             with np.load(ruta_npz) as z:
                 tramos = [Tramo(t["n"], t["modo"],
                                 [z[f"t{k}c{i}"].astype(float) for i in range(t["cuadros"])],
-                                {a: tuple(b) for a, b in t["fases"].items()}, t["fallas"], t["medidas"])
+                                {a: tuple(b) for a, b in t["fases"].items()}, t["fallas"], t["medidas"],
+                                z[f"t{k}v"].tolist() if t.get("visible") else None)
                           for k, t in enumerate(info["tramos"])]
             return tramos, huella
     animados = animar(modelo.spec, modelo)
@@ -156,13 +158,16 @@ def atar(modelo, rehacer: bool = False) -> tuple[list[Tramo], str]:
     if final is not None:
         animados.append(final)
     tramos = [Tramo(a.n, a.modo, [np.asarray(x, float) for x in a.X], dict(a.fases), list(a.fallas),
-                    dict(a.medidas)) for a in animados]
+                    dict(a.medidas), getattr(a, "visible", None)) for a in animados]
     dest.mkdir(parents=True, exist_ok=True)
     arrays = {f"t{k}c{i}": np.asarray(x, np.float32) for k, t in enumerate(tramos)
               for i, x in enumerate(t.X)}
+    arrays.update({f"t{k}v": np.asarray(t.visible, np.float64) for k, t in enumerate(tramos)
+                   if t.visible is not None})
     np.savez_compressed(ruta_npz, **arrays)
     info = {"huella": huella, "tramos": [{"n": t.n, "modo": t.modo, "cuadros": len(t.X),
-                                          "fases": t.fases, "fallas": t.fallas, "medidas": t.medidas}
+                                          "fases": t.fases, "fallas": t.fallas, "medidas": t.medidas,
+                                          "visible": t.visible is not None}
                                          for t in tramos]}
     ruta_json.write_text(json.dumps(info, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
     # Lo guardado vuelve como float32: se relee para que el video no dependa de si se ató ahora.
@@ -183,6 +188,9 @@ class Cuadro:
     camara: dict | None = None
     acercar: float = 0.0
     foco: np.ndarray | None = None   # el punto que sigue el foco (sin él, la punta de la cuerda)
+    visible: float | None = None     # en una plantilla (T21d), hasta dónde se ve la cuerda (σ): lo de
+                                     # después está en la mano, sin dibujarse
+
 
 
 def _es_serie(spec, n: int) -> bool:
@@ -207,12 +215,18 @@ def _foco_de(p) -> np.ndarray | None:
     return np.asarray(p.X[p.tramo_ficha()[1]], float)
 
 
-def _foco_mano(X, destino) -> np.ndarray | None:
-    """El foco mientras se ata: la punta del paso de llegada, y la mano (la punta de la cuerda)
-    a medida que se acerca a ella."""
+def mano(X, h: float, visible=None) -> np.ndarray:
+    """Dónde está la mano: la punta de la cuerda o, en una plantilla (T21d), donde sale la cuerda."""
+    from .animar import cuerda_visible
+    return np.asarray(cuerda_visible(X, h, visible)[0][-1], float)
+
+
+def _foco_mano(p, destino) -> np.ndarray | None:
+    """El foco mientras se ata: la punta del paso de llegada, y la mano `p` a medida que se
+    acerca a ella."""
     if destino is None:
         return None
-    p = np.asarray(X[-1], float)
+    p = np.asarray(p, float)
     d = float(np.linalg.norm((p - destino)[:2]))
     w = float(np.clip((FOCO_MANO[1] - d) / (FOCO_MANO[1] - FOCO_MANO[0]), 0.0, 1.0))
     w = w * w * (3 - 2 * w)
@@ -227,14 +241,16 @@ def simulacion(modelo, tramos: list[Tramo]) -> tuple[list[Cuadro], np.ndarray]:
     ultimo = modelo.pasos[-1].n
     out: list[Cuadro] = []
     vel: list[float] = []
+    h = modelo.pasos[-1].h
 
-    def pausa(X, n, seg, res, titulo, foco=None):
+    def pausa(X, n, seg, res, titulo, foco=None, visible=None):
         for _ in range(round(seg * FPS)):
-            out.append(Cuadro(np.asarray(X, float), n, "pausa", res, titulo, foco=foco))
+            out.append(Cuadro(np.asarray(X, float), n, "pausa", res, titulo, foco=foco, visible=visible))
             vel.append(1.0)
 
     primero = P[modelo.pasos[0].n]
-    pausa(primero.puntos, primero.n, PAUSA_INICIO, primero.resaltado, primero.n, _foco_de(primero))
+    pausa(primero.puntos, primero.n, PAUSA_INICIO, primero.resaltado, primero.n, _foco_de(primero),
+          getattr(primero, "visible", None))
     for t in tramos:
         apretar = t.modo == "apretar"
         res = None if apretar else P[t.n].resaltado
@@ -244,23 +260,26 @@ def simulacion(modelo, tramos: list[Tramo]) -> tuple[list[Cuadro], np.ndarray]:
             for f in range(f0, f1 + 1):
                 fase_de[f] = nombre
         N0 = len(t.X[0])
-        h = modelo.pasos[-1].h
+        vis = getattr(t, "visible", None)
         for i, X in enumerate(t.X[1:], start=1):
             fase = fase_de.get(i, "recta")
             v = 1.0
-            if spec.plantilla is not None and fase in ("enhebrar", "recoger") and not apretar:
+            # La cámara rápida de T18, en una plantilla que todavía da cuerda; con la cuerda que sale
+            # de la mano (T21d), el motor ya va a la velocidad del video.
+            if spec.plantilla is not None and vis is None and fase in ("enhebrar", "recoger") and not apretar:
                 if (len(X) - N0) * h >= LENTO:
                     v = MUY_RAPIDO if _es_serie(spec, t.n) else RAPIDO
+            vi = None if vis is None else float(vis[i])
             out.append(Cuadro(np.asarray(X, float), t.n, fase, res, 0 if apretar else t.n,
-                              foco=_foco_mano(X, destino)))
+                              foco=_foco_mano(mano(X, h, vi), destino), visible=vi))
             vel.append(v)
         if apretar:
             pausa(t.X[-1], t.n, PAUSA_FINAL, None, 0)
         else:
-            pausa(P[t.n].puntos, t.n, PAUSA, res, t.n, destino)
+            pausa(P[t.n].puntos, t.n, PAUSA, res, t.n, destino, getattr(P[t.n], "visible", None))
     if tramos and tramos[-1].modo != "apretar":
         pausa(P[ultimo].puntos, ultimo, PAUSA_FINAL - PAUSA, P[ultimo].resaltado, ultimo,
-              _foco_de(P[ultimo]))
+              _foco_de(P[ultimo]), getattr(P[ultimo], "visible", None))
     v = np.array(vel)
     # Los cambios de velocidad, suaves.
     k = max(1, int(RAMPA_VEL * FPS))
@@ -281,7 +300,7 @@ def retiempo(sim: list[Cuadro], vel: np.ndarray, fps: int) -> list[Cuadro]:
     while f <= tau[-1] + 1e-9:
         k = int(np.clip(np.searchsorted(tau, f, side="right") - 1, 0, len(sim) - 1))
         c = sim[k]
-        X, foco = c.X, c.foco
+        X, foco, vis = c.X, c.foco, c.visible
         if k + 1 < len(sim):
             u = (f - tau[k]) * vel[k]
             b = sim[k + 1]
@@ -289,9 +308,11 @@ def retiempo(sim: list[Cuadro], vel: np.ndarray, fps: int) -> list[Cuadro]:
                 X = X + u * (b.X - X)
                 if foco is not None and b.foco is not None:
                     foco = foco + u * (b.foco - foco)
+                if vis is not None and b.visible is not None:
+                    vis = vis + u * (b.visible - vis)
             elif u > 0.5:
-                c, X, foco = b, b.X, b.foco
-        out.append(Cuadro(X, c.paso, c.fase, c.resaltado, c.titulo, foco=foco))
+                c, X, foco, vis = b, b.X, b.foco, b.visible
+        out.append(Cuadro(X, c.paso, c.fase, c.resaltado, c.titulo, foco=foco, visible=vis))
         f += paso_sim
     return out
 
@@ -404,7 +425,7 @@ def _con_minimo(pts: np.ndarray) -> np.ndarray:
 def tomas(modelo, sim: list[Cuadro], formato: str) -> tuple[dict, float]:
     """La toma de cada paso animado (al empezar, al terminar) en el formato, y el ángulo
     alrededor de la mesa de un nudo libre."""
-    from .animar import de_plantilla, poses_atado
+    from .animar import cuerda_visible, de_plantilla, poses_atado
     from .prueba_atar import _tapado
     F = FORMATOS[formato]
     asp = F["tam"][0] / F["tam"][1]
@@ -415,11 +436,17 @@ def tomas(modelo, sim: list[Cuadro], formato: str) -> tuple[dict, float]:
     movidos: dict[int, list] = {}
     for c in sim:
         if c.fase != "pausa":
-            movidos.setdefault(c.paso, []).append(c.X)
+            # En una plantilla (T21d), solo lo que se ve: lo que está en la mano espera donde va a
+            # quedar, y abriría la toma de los primeros pasos hasta el amarre terminado.
+            movidos.setdefault(c.paso, []).append(cuerda_visible(c.X, h, c.visible)[0])
+
+    def vista(p):
+        return cuerda_visible(p.puntos, h, getattr(p, "visible", None))[0]
+
     pts_de = {}
     for n, Xs in movidos.items():
-        A = P[n - 1].puntos if n - 1 in P else P[n].puntos
-        B = P[n].puntos if n in P else Xs[-1]
+        A = vista(P[n - 1]) if n - 1 in P else vista(P[n])
+        B = vista(P[n]) if n in P else Xs[-1]
         if spec.plantilla is None:
             # Con largo fijo (T21), los mismos nodos son la misma cuerda en todos los pasos: la
             # toma va de ANTES_DEL_NUDO antes del primer cruce a la punta de la ficha, sin el
@@ -646,10 +673,46 @@ CODIGO_RENDER = ("render/blender/escena.py", "render/blender/aspecto.py", "rende
                  "nudos/blender.py", "nudos/trenza.py")
 
 
+def visto(c: Cuadro, h: float) -> tuple[np.ndarray, np.ndarray]:
+    """Lo que se dibuja de la cuerda de un cuadro y el σ de cada punto: toda, o en una plantilla
+    (T21d) hasta donde sale de la mano."""
+    from .animar import cuerda_visible
+    return cuerda_visible(c.X, h, c.visible)
+
+
+def velocidad_vista(cuadros: list[Cuadro], i: int, fps: int, h: float):
+    """La velocidad (d/s) de cada punto de lo que se dibuja en el cuadro i (`visto`), para el
+    desenfoque de movimiento: la de sus nodos y, en una plantilla (T21d), la de la punta que sale
+    de la mano, con las de los cuadros vecinos. None si la cuerda cambia de largo ahí."""
+    from .aspecto import velocidad_nodos
+    c = cuadros[i]
+    v = velocidad_nodos(cuadros, i, fps)
+    if v is None or c.visible is None:
+        return v
+    X, s = visto(c, h)
+    out = np.array(v[:len(X)], float)
+    if s[-1] - (len(X) - 1) * h > 1e-9 or len(X) < len(c.X):
+        def punta(j):
+            return visto(cuadros[j], h)[0][-1]
+        a = punta(i - 1) if i > 0 and cuadros[i - 1].visible is not None else None
+        b = punta(i + 1) if i + 1 < len(cuadros) and cuadros[i + 1].visible is not None else None
+        p = X[-1]
+        if a is not None and b is not None:
+            out[-1] = (b - a) * (fps / 2)
+        elif b is not None:
+            out[-1] = (b - p) * fps
+        elif a is not None:
+            out[-1] = (p - a) * fps
+    return out
+
+
 def _clave(c: Cuadro, h: float, dos: bool, formato: str, base: str, foco: float = 0.0, vel=None) -> str:
     from .prueba_atar import _tramos
     cam = _datos_camara(c.camara)
-    return _huella(np.round(np.asarray(c.X, float), 5), _tramos(len(c.X), h, c.resaltado, dos),
+    X, s = visto(c, h)
+    # La punta que sale de la mano (T21d) se dibuja en su σ: va en la huella con la cuerda.
+    extra = [] if c.visible is None else [round(float(s[-1]), 4)]
+    return _huella(np.round(X, 5), _tramos(len(X), h, c.resaltado, dos), *extra,
                    np.round(cam["matriz"], 6).tolist(), c.camara["centro"], round(c.camara["extension"], 4),
                    formato, base, round(foco, 3), None if vel is None else np.round(vel, 2))
 
@@ -659,7 +722,7 @@ def rutas_de(modelo, cuadros: list[Cuadro], formato: str, mallas) -> list[Path]:
     el foco y la velocidad (el desenfoque de movimiento). Cuadros iguales (las pausas) comparten
     ruta."""
     from . import blender
-    from .aspecto import focos, velocidad_nodos
+    from .aspecto import focos
     F = FORMATOS[formato]
     h = modelo.pasos[-1].h
     dos = modelo.spec.plantilla is not None
@@ -667,7 +730,7 @@ def rutas_de(modelo, cuadros: list[Cuadro], formato: str, mallas) -> list[Path]:
     base = _huella(mallas, F["muestras"], F["tam"], _codigo(*CODIGO_RENDER), blender.APLASTAR, CYCLES,
                    PUNTA, "tapas", "sigma", _aspecto_video(modelo, cuadros, mallas))
     fs = focos(cuadros, F["fps"])
-    return [dest / f"r-{_clave(c, h, dos, formato, base, fs[i], velocidad_nodos(cuadros, i, F['fps']))}.png"
+    return [dest / f"r-{_clave(c, h, dos, formato, base, fs[i], velocidad_vista(cuadros, i, F['fps'], h))}.png"
             for i, c in enumerate(cuadros)]
 
 
@@ -747,16 +810,17 @@ def punta_suave(X, h: float, largo: float = PUNTA[0], umbral: float = PUNTA[1]) 
     return out
 
 
-def _preparar_malla(X, tramos, ruta: str, h: float, velocidad=None, estilo: str = "real") -> None:
+def _preparar_malla(X, tramos, ruta: str, h: float, velocidad=None, estilo: str = "real", s=None) -> None:
     """La malla de la cuerda de un cuadro, con la trenza en la geometría (T20b) y la velocidad de
     cada vértice, en un npz que Blender espera: se escribe con otro nombre y se renombra, para
-    que Blender nunca lea uno a medias."""
+    que Blender nunca lea uno a medias. `s` es el σ de cada punto (por omisión, j·h)."""
     from . import blender
     from .trenza import ESTILOS
     X = punta_suave(np.asarray(X, float), h)
     # La trenza sale de la coordenada de material (T21): el nodo j es siempre el punto σ = j·h
-    # de la cuerda, así que la trenza va pegada a ella aunque se mueva.
-    s = np.arange(len(X)) * h
+    # de la cuerda, así que la trenza va pegada a ella aunque se mueva. En una plantilla (T21d),
+    # la punta que sale de la mano va en su σ, entre dos nodos.
+    s = np.arange(len(X)) * h if s is None else np.asarray(s, float)
     m = blender.malla_trenza(X, tramos=tramos, mosaico=ESTILOS[estilo].mosaico, otras=[(X, s, 0.5, True)],
                              solidos=_SOLIDOS, velocidad=velocidad, s=s)
     tmp = ruta + ".tmp.npz"
@@ -780,7 +844,7 @@ def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print, so
     from concurrent.futures import ProcessPoolExecutor
 
     from . import blender
-    from .aspecto import focos, velocidad_nodos
+    from .aspecto import focos
     from .prueba_atar import _tramos
     F = FORMATOS[formato]
     ancho, alto = F["tam"]
@@ -838,9 +902,11 @@ def dibujar(modelo, cuadros: list[Cuadro], formato: str, mallas, aviso=print, so
                                        or proc.poll() is not None)
                 if errores or proc.poll() is not None:
                     return
-                f = pool.submit(_preparar_malla, np.asarray(c.X, np.float32),
-                                _tramos(len(c.X), h, c.resaltado, dos), trabajos[k]["cuerdas"][0]["malla"], h,
-                                velocidad_nodos(cuadros, i, F["fps"]), aspecto["estilo"])
+                X, s = visto(c, h)
+                f = pool.submit(_preparar_malla, np.asarray(X, np.float32),
+                                _tramos(len(X), h, c.resaltado, dos), trabajos[k]["cuerdas"][0]["malla"], h,
+                                velocidad_vista(cuadros, i, F["fps"], h), aspecto["estilo"],
+                                None if c.visible is None else s)
                 f.add_done_callback(revisar)
 
         cola: list[str] = []
@@ -1039,25 +1105,34 @@ def calidad(modelo, formato: str = "horizontal") -> dict:
     """La calidad del movimiento (T21a) en los cuadros del video, sin dibujarlo: la cuerda
     (nudos/fisica/calidad.py), el resaltado del tramo que se mueve y la cámara. Usa el atado
     guardado si su huella coincide."""
-    from .fisica.calidad import medir
+    from .fisica.calidad import largo, medir
     from .prueba_atar import _tramos
     tramos, _ = atar(modelo)
     F = FORMATOS[formato]
     cuadros = cuadros_de(modelo, tramos, formato)
     h = modelo.pasos[-1].h
     dos = modelo.spec.plantilla is not None
-    informe = medir([c.X for c in cuadros], F["fps"], fases=[c.fase for c in cuadros])
+    # En una plantilla (T21d), la punta es la que se ve, donde sale la cuerda de la mano: entra a la
+    # medida como un nodo más. El largo es el de toda la cuerda, con lo que la mano todavía lleva.
+    puntas = None
+    if any(c.visible is not None for c in cuadros):
+        puntas = [visto(c, h)[0][-1] for c in cuadros]
+    informe = medir([c.X for c in cuadros], F["fps"], fases=[c.fase for c in cuadros], puntas=puntas,
+                    largos=[largo(c.X) for c in cuadros])
     # El resaltado va por índice de nodo: si la cuerda se acorta por debajo de donde empieza,
-    # o la pausa de una plantilla la corta en el hito, se achica o no se ve.
+    # o la pausa de una plantilla la corta en el hito, se achica o no se ve. Con la cuerda que sale
+    # de la mano (T21d), cuenta lo que ya salió.
     con = vacio = corto = 0
     for c in cuadros:
         if not c.resaltado:
             continue
         con += 1
-        nominal = c.resaltado[1] - c.resaltado[0]
-        visto = sum((b - a) * h for a, b, m in _tramos(len(c.X), h, c.resaltado, dos) if m == 1)
-        vacio += int(visto <= 0)
-        corto += int(0 < visto < nominal / 2)
+        X, _ = visto(c, h)
+        fin = c.resaltado[1] if c.visible is None else min(c.resaltado[1], c.visible)
+        nominal = fin - c.resaltado[0]
+        verde = sum((b - a) * h for a, b, m in _tramos(len(X), h, c.resaltado, dos) if m == 1)
+        vacio += int(verde <= 0)
+        corto += int(0 < verde < nominal / 2)
     informe["resaltado"] = {"cuadros": con, "vacio": vacio, "corto": corto}
     informe["camara"] = medir([np.asarray(c.camara["pos"], float).reshape(1, 3) for c in cuadros],
                               F["fps"])

@@ -805,7 +805,7 @@ La cámara (las paradas y la aceleración) es de T22.
      - Se acuesta en la mesa en la primera dirección, vista desde arriba, que no cruza nada.
      - Si no hay ninguna, queda en un arco levantado por fuera del nudo y fuera de la toma. *Cambió en T21c (Gabriel, 27 nov): el arco del paso 3 del as de guía subía 25 d en diagonal sobre el nudo. Ahora la cuerda de más espera en una bolsa dentro del nudo (ver «Cómo se hizo»).*
      - Un campo opcional del video (`video: {cola: …}`) la corrige donde la regla falle; las fichas lo ignoran.
-   - **En una plantilla:** la pausa es la cuerda hasta el hito, más la cola en la mano, como hoy, y el resto va en la madeja.
+   - **En una plantilla:** la pausa es la cuerda hasta el hito, más la cola en la mano, como hoy, y el resto va en la madeja. *Cambió en T21d (Gabriel, 27 nov): la madeja no pasa por debajo del palo de abajo, que descansa sobre la cuerda en la mesa, y el plan B tampoco. La cuerda sale de la mano (ver «Cómo se hizo T21d»).*
    - **La regla de la pausa se mantiene, precisada:** el tramo que dibuja la ficha es la pose de la ficha, con su secuencia, y el depósito, la cola y la madeja solo pasan por encima. Así cada transición sigue corriendo en paralelo con las demás. Si cada una partiera del final de la anterior, atar un nudo tardaría de 5 a 6 veces más.
 3. **Manos que agarran.**
    - Una pinza sostiene 2 o 3 nodos (su posición y, si hace falta, su dirección), y puede soltar y volver a agarrar.
@@ -857,7 +857,7 @@ La cámara (las paradas y la aceleración) es de T22.
 **Planes B:**
 - Si la cola de más no se puede acomodar, queda en la madeja («en la mano») o se corrige con el campo del video.
 - Si la gravedad no se estabiliza, los resortes se quedan y lo flojo cuelga como una catenaria dentro de la guía.
-- Si la madeja no convence a la vista, la cuerda sale del cuadro por la mano.
+- Si la madeja no convence a la vista, la cuerda sale del cuadro por la mano. *Tampoco sirve en un amarre: lo que sale del cuadro también tendría que pasar por debajo del palo de abajo (T21d).*
 
 **Cómo se hizo T21b y T21c (27 nov, con el as de guía):**
 - **Las poses de video** (`animar.poses_video`): el nodo j es siempre σ = j·h.
@@ -951,6 +951,68 @@ La cámara (las paradas y la aceleración) es de T22.
 
   Las fases del nudo, antes de la bolsa: 13,2 s en el aire, 8,3 enhebrando, 8,2 tirando de la cola, 3,3 la gaza pequeña, 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. Lo que más duraba era traer la punta por el aire, que no enseña nada. Con la bolsa, el barrido y el lazo ya nada va por el aire con la cola suelta. Con la gaza volteada: 3,6 s formando la gaza pequeña (1,1 la bolsa, 0,9 el volteo y 1,7 creciendo), 1,2 acercando el chicote con la mano, 3,2 doblando la cola en el lazo del paso 6, 2,9 barriendo en el 5, 8,6 enhebrando, 2,6 tirando, 2,4 asentando, 0,9 acercando, 1,5 apretando y 13,5 de pausas. La cámara (14 paradas, quieta el 16 % del tiempo) es de T22.
 - **Los seis tramos del as de guía:** sin fallas, con el largo entre 0,9984 y 1,0018 del nominal y sin ningún pico ni temblor; unos 3 min de motor los seis a la vez.
+
+**Cómo se hizo T21d (27 y 28 nov, con el amarre cuadrado):**
+- **Por qué no hay madeja:**
+  - El palo de abajo descansa sobre la cuerda en la mesa. Su eje va a radio + 1 = 3,5 d y su cara de abajo, a 1 d de la mesa, así que debajo cabe una sola cuerda.
+  - En las vueltas (pasos 2 y 3) la cuerda pasa seis veces por ahí, con 2,8 a 3,3 m por atar. Por debajo solo puede pasar la punta, con toda la cuerda que la sigue, así que una madeja en la mano no cabe.
+  - El plan B tampoco sirve. Una cuerda entre dos puntos fijos no cambia las vueltas que da alrededor de un palo, así que lo que sale del cuadro por la mano también tendría que pasar por debajo.
+  - En los ahorcados y en el cierre sí hay lugar, pero la madeja sería más grande que el amarre: 220 d por atar al empezar los ahorcados.
+  - Gabriel eligió que la cuerda salga de la mano (27 nov). La otra opción era levantar los palos solo en el video.
+- **La cuerda sale de la mano** (`poses_plantilla`, `_tramo_plantilla`, `animar_plantilla`):
+  - La mano lleva lo que falta sin que se vea, y la cuerda nueva sale de ella y queda quieta donde la dibuja el paso, como un cable que se tiende desde un carrete.
+  - La cuerda tiene siempre los mismos nodos: es la del último paso, con 462,5 d y 2314 nodos.
+  - Lo que la mano todavía lleva espera donde va a quedar, sin dibujarse ni chocar. Así nada salta al aparecer, el largo de toda la cuerda no cambia, y la trenza y el resaltado van pegados a ella.
+  - Nada se recoge ni se acomoda.
+- **Las pausas:**
+  - Se ve la ficha hasta el hito y 4 d de cola en la mano, por el camino del paso siguiente, para no moverla al arrancar.
+  - Desde 12 d antes del hito, la pose pasa en 10 d de la ficha a ese camino. Junto al hito, la ficha dobla hacia lo que cae a la mesa (hasta 1 d y 39°), y lo atado se corre a lo largo de la cuerda de un paso al siguiente, porque se aprieta (hasta 0,7 d en los 40 d antes del hito).
+  - Mezclado en 2,5 d, los tramos de la unión iban de 0,5 a 1,4·h y la trenza se apretaba y se estiraba. En 10 d y repartidos iguales, van de 0,9 a 1,1·h.
+  - Lo que no se ve de una pose es lo mismo en la siguiente (`comprobar_poses_plantilla`).
+- **La mano:**
+  - Va a 5 d/s en los primeros 6 d de cuerda nueva, para que se vean. Después va a 20 d/s, o a 30 en los pasos que repiten (las vueltas y los ahorcados), en vez de la cámara rápida.
+  - Va más despacio en las curvas, para que la punta no pase de 200 d/s² (un brinco son 360), y cambia de rapidez a 35 d/s² como mucho (una frenada en seco son 50).
+  - Las rapideces se miden a lo largo del largo de verdad del camino, y no de σ. En los bordes de la unión los tramos pasan de h a 1,06·h, y la punta cambiaba de rapidez de golpe.
+  - Arranca y frena con el quinto grado de T21c, y llega a 5 d/s. Con el frenado montado sobre la desaceleración, la rapidez cambiaba hasta 46 d/s².
+- **Lo que ya se veía** va de la pose A a la B nodo a nodo en todo el paso, porque lo atado se aprieta.
+- **El motor** (`seguir`) mueve solo lo que se ve. En cada cuadro agrega, quietos y donde esperaban, los nodos que salieron de la mano (`Cuadros.anadido`), y `comprobar` y `saltos` los conocen.
+  - Los resortes van firmes desde el principio (50 N/d, `RESORTE_FIN`). Con los de siempre, al arrancar cada paso el motor acomodaba la cuerda unos 0,04 d en un cuadro, y la punta frenaba en seco.
+  - Con los resortes firmes ya no hace falta asentar al final de cada paso.
+- **El video:**
+  - Cada cuadro sabe hasta dónde se ve la cuerda (`Cuadro.visible`), y se dibuja solo eso, con la punta entre dos nodos (`cuerda_visible`). La punta lleva su σ para la trenza y su velocidad para el desenfoque.
+  - La punta va por una curva suave (de Catmull-Rom) entre los nodos de alrededor. En línea recta doblaba de golpe en cada nodo, y en una curva rápida temblaba.
+  - La cámara encuadra solo lo que se ve y el foco sigue a la mano.
+  - Ya no hay cámara rápida: `retiempo` siempre interpola.
+  - `prueba-atar` también dibuja solo lo que se ve.
+- **La medida de los dos pilotos** (`calidad`, el video entero; la punta del amarre es la que se ve, donde sale la cuerda de la mano):
+
+| | As de guía, T21c (27 nov) | Amarre cuadrado, T21a (26 nov) | Amarre cuadrado, T21d (27 nov) |
+|---|---|---|---|
+| Duración | 40,5 s | 48,1 s | 50,0 s |
+| Nodos | 550; no cambian | de 242 a 2314; cambian 1003 veces | 2314; no cambian |
+| Largo de la cuerda | de 109,67 a 109,97 d (0,28 %) | de 48,2 a 461,8 d (crece con los pasos) | de 460,41 a 462,07 d (0,36 %) |
+| Recoger y morph | 0 y 1,2 s (la mano que acerca el chicote) | 3,7 y 3,0 s (y 3,1 de encaje) | 0 y 0 |
+| Aceleración p99 y máxima | 156 y 328 d/s² | 217 y 868 d/s² | 200 y 260 d/s² |
+| Brincos (más de 360 d/s²) | 0 | 6 | 0 |
+| Picos y temblores | 0 y 0 | sin medir | 0 y 0 |
+| Paradas en seco de la punta | 12 (11 frenadas) | 34 | 161 (2 frenadas) |
+| Resaltado vacío o a medias | ninguno | 53 % de los cuadros | ninguno |
+
+  - **Las paradas en seco del amarre son las curvas:** la mano rodea los palos a 20 o 30 d/s, con hasta 200 d/s² hacia el centro, y la medida cuenta toda aceleración de la punta de más de 50. Lo que se ve como un frenazo son las frenadas, cuando cambia la rapidez.
+  - **Las dos frenadas** son casi quietas (de 0,4 a 1,7 d/s), al arrancar el paso 5. La cola del paso 4, que va por el camino del 5, queda junto a lo atado a la distancia en que la barrera empuja, y el motor la aparta 0,04 d en un cuadro. No llega a brinco ni a pico.
+  - **Las fases del amarre:** 34,1 s tendiendo la cuerda, 13,5 de pausas, 1,5 apretando y 0,9 acercando a cada pose.
+  - **El motor:** de 75 a 811 s por paso, con la máquina ocupada; los seis pasos, en 17 min con tres procesos (`NUDOS_PROCESOS=3`). Con seis a la vez, la máquina se quedó sin memoria mientras otra sesión corría `referencia` con Blender (92 de 94 GB comprometidos).
+- **La previa** (`build/videos/amarre-cuadrado/amarre-cuadrado-previa.mp4`): 50,0 s y 7,3 MB. Tardó 46 min en dibujarse (1434 cuadros distintos), con la máquina ocupada.
+- **Las fichas no cambian.** Construir e imprimir no usan nada de lo que cambió (`animar.py`, `fisica/atar.py`, `fisica/calidad.py`, `video.py` y `prueba_atar.py`). Para comprobarlo, `referencia` con three.js desde un worktree de `main` (f1c6fef) y con el código nuevo, el mismo día, y `comparar`:
+  - Los 36 `modelo.json`, iguales byte a byte.
+  - Las imágenes, iguales. Tres nudos salieron con unos píxeles en 1 nivel (de 3 a 16) por imprimir mientras se dibujaba la previa, e iguales al imprimirlos otra vez con los dos códigos.
+- **Pruebas** (`tests/test_plantilla_largo_fijo.py`):
+  - las poses del amarre;
+  - lo que se ve de la cuerda;
+  - la guía de las vueltas, con la cuerda quieta donde la deja la mano y la punta sin frenadas en seco ni brincos;
+  - una cuerda recta atada con el motor;
+  - `comprobar` con los nodos que salen;
+  - la calidad con la punta que se ve.
 
 #### T22: El video completo
 

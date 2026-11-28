@@ -62,16 +62,21 @@ def episodios(marca) -> int:
     return int(m[0]) + int(np.sum(m[1:] & ~m[:-1]))
 
 
-def medir(cuadros, fps: float, fases=None, punta: int = -1) -> dict:
+def medir(cuadros, fps: float, fases=None, punta: int = -1, puntas=None, largos=None) -> dict:
     """Las medidas del movimiento de una lista de cuadros, cada uno con los nodos (N, 3) de la
     cuerda. `fases` es el nombre de la fase de cada cuadro, para contar cuánto dura cada una.
-    `punta` es el nodo que lleva la mano (el último)."""
+    `punta` es el nodo que lleva la mano (el último). Con `puntas` (un punto por cuadro), la punta es
+    ese punto, que entra a la medida como un nodo más: en una plantilla (T21d), donde la cuerda sale
+    de la mano, entre dos nodos. Con `largos`, el largo de la cuerda en cada cuadro es ese."""
     X = [np.asarray(x, float).reshape(-1, 3) for x in cuadros]
     n = len(X)
     if n == 0:
         raise ValueError("no hay cuadros")
     N = np.array([len(x) for x in X])
-    L = np.array([largo(x) for x in X])
+    L = np.array([largo(x) for x in X]) if largos is None else np.asarray(largos, float)
+    if puntas is not None:
+        X = [np.vstack([x, np.asarray(p, float).reshape(1, 3)]) for x, p in zip(X, puntas)]
+        punta = -1
     igual = N[1:] == N[:-1]               # pares de cuadros seguidos con los mismos nodos
     vel, v_punta, movido = [], [], []
     for k in range(n - 1):

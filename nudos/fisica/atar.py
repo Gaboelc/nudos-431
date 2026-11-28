@@ -81,6 +81,8 @@ class Cuadros:
     partido: dict = field(default_factory=dict)   # cuadro → fracciones de los tramos partidos
     quitado: dict = field(default_factory=dict)   # cuadro → cuántos nodos se quitaron
     medio: dict = field(default_factory=dict)     # cuadro → la cuerda en los subpasos de antes
+    anadido: dict = field(default_factory=dict)   # cuadro → los nodos que salieron de la mano (T21d),
+                                                   # donde esperaban
     esperas: int = 0                               # subpasos en que una mano tuvo que esperar
     newton: int = 0
 
@@ -138,6 +140,14 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
                 x = np.vstack([x[:-2], x[-1:]])
                 v = np.vstack([v[:-2], v[-1:]])
             out.quitado[i] = -g.cambio
+            malla = _mesa_y_anfitrion(x, solido)
+        if g.largo_fijo and len(g.G) > len(x):
+            # Con largo fijo, en una plantilla (T21d), la cuerda sale de la mano: los nodos que se
+            # agregan entran quietos donde los pone la guía, que es donde esperaban sin verse.
+            nuevos = np.array(g.G[len(x):], float)
+            out.anadido[i] = nuevos.copy()
+            x = np.vstack([x, nuevos])
+            v = np.vstack([v, np.zeros_like(nuevos)])
             malla = _mesa_y_anfitrion(x, solido)
         if len(x) != len(g.G):
             raise ValueError(f"cuadro {i}: la cuerda tiene {len(x)} nodos y la guía {len(g.G)}")
@@ -228,14 +238,17 @@ def seguir(x0, guia, solido=None, material=None, resorte: float = RESORTE,
     return out
 
 
-def _ajustar(a, i: int, partido: dict, quitado: dict) -> np.ndarray:
+def _ajustar(a, i: int, partido: dict, quitado: dict, anadido=None) -> np.ndarray:
     """El cuadro de antes del cuadro i con los nodos que cambiaron al seguir: el último tramo
-    partido donde la mano dio cuerda, o el nodo de al lado de la mano quitado donde la recogió."""
+    partido donde la mano dio cuerda, el nodo de al lado de la mano quitado donde la recogió, o
+    los que salieron de la mano (T21d) donde esperaban."""
     a = np.asarray(a, float)
     for frac in partido.get(i, ()):
         a, _ = _partir(a, np.zeros_like(a), frac)
     for _ in range(quitado.get(i, 0)):
         a = np.vstack([a[:-2], a[-1:]])
+    if anadido and i in anadido:
+        a = np.vstack([a, anadido[i]])
     return a
 
 
@@ -291,7 +304,7 @@ def repartir_saltos(X: list, partido: dict, quitado: dict, medio: dict, desde: i
     return out, p2, q2, m2, nuevo_de
 
 
-def saltos(X: list, partido=None, quitado=None) -> list[float]:
+def saltos(X: list, partido=None, quitado=None, anadido=None) -> list[float]:
     """Lo más que se mueve un nodo de cada cuadro al siguiente. Donde la cuerda cambia de nodos,
     el cuadro de antes se parte o se recorta igual que al seguir (como en `comprobar`): ahí, al
     dar o recoger cuerda, es donde saltaba la punta (T18). Sin decir cómo cambió, ese cuadro no
@@ -299,7 +312,7 @@ def saltos(X: list, partido=None, quitado=None) -> list[float]:
     partido, quitado = partido or {}, quitado or {}
     out = []
     for i in range(1, len(X)):
-        a, b = _ajustar(X[i - 1], i, partido, quitado), np.asarray(X[i], float)
+        a, b = _ajustar(X[i - 1], i, partido, quitado, anadido), np.asarray(X[i], float)
         if len(a) == len(b):
             out.append(float(np.max(np.linalg.norm(b - a, axis=1))))
     return out
@@ -370,13 +383,14 @@ def recta(x, B, cuadros: int):
     return [x + (j / cuadros) * (B - x) for j in range(1, cuadros)] + [B.copy()]
 
 
-def comprobar(X: list, solido=None, partido=None, quitado=None, medio=None) -> list[str]:
+def comprobar(X: list, solido=None, partido=None, quitado=None, medio=None, anadido=None) -> list[str]:
     """Las fallas de una lista de cuadros: un cuadro con un par a menos de dmin (de la cuerda
     o con la mesa y el anfitrión), o un cuadro al siguiente en que el movimiento en línea recta
     acerca dos tramos a menos de DMIN_MOVIMIENTO·dmin (la CCD). Donde la cuerda cambia de nodos, el cuadro de antes
-    se parte o se recorta igual que al seguir. Con `medio` (los subpasos de `seguir`), el
-    movimiento se comprueba de subpaso en subpaso, que es lo que el motor dio."""
-    partido, quitado, medio = partido or {}, quitado or {}, medio or {}
+    se parte o se recorta igual que al seguir, o gana los nodos que salieron de la mano
+    (`anadido`, T21d) donde esperaban. Con `medio` (los subpasos de `seguir`), el movimiento se
+    comprueba de subpaso en subpaso, que es lo que el motor dio."""
+    partido, quitado, medio, anadido = partido or {}, quitado or {}, medio or {}, anadido or {}
     fallas = []
     malla = None
     for i, x in enumerate(X):
@@ -392,6 +406,8 @@ def comprobar(X: list, solido=None, partido=None, quitado=None, medio=None) -> l
             a, _ = _partir(a, np.zeros_like(a), frac)
         for _ in range(quitado.get(i, 0)):
             a = np.vstack([a[:-2], a[-1:]])
+        if i in anadido:
+            a = np.vstack([a, anadido[i]])
         if len(a) != len(x):
             fallas.append(f"cuadro {i}: cambia de {len(X[i - 1])} a {len(x)} nodos sin decir cómo")
             continue

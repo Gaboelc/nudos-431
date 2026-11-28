@@ -67,6 +67,7 @@ class Tramo:
     B: np.ndarray
     guia: list[CuadroGuia]
     fases: dict = field(default_factory=dict)   # nombre → (primer cuadro, último)
+    visible: list | None = None   # en una plantilla (T21d), dónde sale la cuerda de la mano (σ)
 
 
 # --------------------------------------------------------------------------
@@ -530,6 +531,7 @@ class Animado:
     fases: dict                # nombre → (primer cuadro, último)
     fallas: list
     medidas: dict
+    visible: list | None = None   # en una plantilla (T21d), hasta dónde se ve la cuerda en cada cuadro (σ)
 
 
 def animar_tramo(n, A, B, h, resaltado, solido=None, plantilla=None, esperada=None) -> Animado:
@@ -651,18 +653,17 @@ def poses(modelo) -> list[Pose]:
 
 def animar(spec, modelo, pasos=None) -> list[Animado]:
     """Los tramos animados de un nudo ya construido con el motor (`modelo`): del paso 1 al 2,
-    del 2 al 3… (o solo los que terminan en los pasos de `pasos`), cada uno en un proceso. Un
-    nudo libre ata con largo fijo, entre las poses de `poses_video()` (T21); una plantilla,
-    todavía entre las de `poses()` (T18)."""
+    del 2 al 3… (o solo los que terminan en los pasos de `pasos`), cada uno en un proceso, con
+    largo fijo (T21): un nudo libre, entre las poses de `poses_video()`; una plantilla, entre las
+    de `poses_plantilla()`, con la cuerda que sale de la mano (T21d)."""
     from .procesos import mapa
     if spec.plantilla is None:
         PV = poses_video(modelo)
         args = [(spec, A, B) for A, B in zip(PV[:-1], PV[1:]) if pasos is None or B.n in pasos]
         return [f.result() for f in mapa(_animar_largo_paso, args)]
-    P = poses(modelo)
-    args = [(spec, B.n, A.puntos, B.puntos, B.h, B.resaltado, B.esperada)
-            for A, B in zip(P[:-1], P[1:]) if pasos is None or B.n in pasos]
-    return [f.result() for f in mapa(_animar_paso, args)]
+    PP = poses_plantilla(modelo)
+    args = [(spec, A, B) for A, B in zip(PP[:-1], PP[1:]) if pasos is None or B.n in pasos]
+    return [f.result() for f in mapa(_animar_plantilla_paso, args)]
 
 
 def animar_apretado(spec, modelo) -> Animado | None:
@@ -800,6 +801,8 @@ class PoseVideo:
     bolsa_ficha: tuple | None = None   # (a, b): la misma, en σ de la ficha
     enhebra: bool = True               # en «punta», si la punta pasa por algún cruce nuevo
     mapa: tuple | None = None          # (s de la ficha, σ): sin bolsa, σ = o + s
+    visible: float | None = None       # en una plantilla (T21d), hasta dónde se ve la cuerda (σ): lo
+                                       # de después está todavía en la mano
 
     @property
     def puntos(self) -> np.ndarray:
@@ -1154,7 +1157,7 @@ def poses_video(modelo) -> list[PoseVideo]:
     del chicote alrededor del firme en el paso 6 (que se aprieta al bajarlo en el 7)."""
     spec = modelo.spec
     if spec.plantilla is not None:
-        raise ValueError("las plantillas atan todavía con las poses de T18 (la madeja es T21d)")
+        raise ValueError("una plantilla ata con `poses_plantilla` (T21d)")
     P = modelo.pasos
     h = float(P[-1].h)
     L = [(len(r.puntos) - 1) * float(r.h) for r in P]
@@ -1217,9 +1220,9 @@ def poses_video(modelo) -> list[PoseVideo]:
 
 
 def poses_atado(modelo) -> list:
-    """Las poses de las pausas del video, entre las que se ata: con largo fijo en un nudo libre
-    (`poses_video`, T21) y las de T18 en una plantilla (`poses`, hasta la madeja de T21d)."""
-    return poses(modelo) if modelo.spec.plantilla is not None else poses_video(modelo)
+    """Las poses de las pausas del video, entre las que se ata, con largo fijo (T21): las de
+    `poses_video` en un nudo libre y las de `poses_plantilla` en una plantilla (T21d)."""
+    return poses_plantilla(modelo) if modelo.spec.plantilla is not None else poses_video(modelo)
 
 
 def _distancia_a(P, Q) -> float:
@@ -1294,7 +1297,15 @@ def _recorrido_largo(u0: float, u1: float, vel) -> np.ndarray:
     k = max(1, int(round(SUAVIZAR / paso)))
     for _ in range(2):
         v = np.convolve(np.pad(v, (k // 2, k - 1 - k // 2), mode="edge"), np.ones(k) / k, mode="valid")
-    tau = np.concatenate([[0.0], np.cumsum(np.diff(u) / ((v[:-1] + v[1:]) / 2))])
+    return _al_tiempo(u, v)
+
+
+def _al_tiempo(u, v, x=None) -> np.ndarray:
+    """Las posiciones de la mano en cada cuadro por los puntos u de su camino, con la velocidad v
+    en cada uno, y un arranque y un frenado de quinto grado de ARRANQUE_LARGO. Con `x`, v es la
+    velocidad a lo largo de x (el largo de verdad del camino en cada punto) y no de u."""
+    x = u if x is None else x
+    tau = np.concatenate([[0.0], np.cumsum(np.diff(x) / ((v[:-1] + v[1:]) / 2))])
     Tc = float(tau[-1])
     Ta = min(ARRANQUE_LARGO, Tc)
     T = Tc + Ta
@@ -2190,3 +2201,284 @@ def _solido_libre(spec, n: int):
 
 def _animar_largo_paso(spec, A: PoseVideo, B: PoseVideo) -> Animado:
     return animar_largo(A, B, _solido_libre(spec, B.n))
+
+
+# ==========================================================================
+# Las plantillas con largo fijo: la cuerda sale de la mano (T21d)
+# ==========================================================================
+# En un amarre, la cuerda pasa por debajo de un palo que descansa sobre ella en la mesa, y ahí solo
+# cabe la punta: una madeja en la mano no pasa, ni lo que saliera del cuadro por la mano (en las
+# vueltas del amarre cuadrado, seis veces, con 2,8 a 3,3 m por atar). Gabriel eligió, el 27 nov, que
+# la cuerda salga de la mano: la mano lleva lo que falta sin que se vea, y la cuerda nueva sale de ella
+# mientras rodea los palos y queda quieta donde la dibuja el paso, como un cable que se tiende desde
+# un carrete. La cuerda del video tiene siempre los mismos nodos, y lo que todavía está en la mano
+# espera, sin dibujarse y sin chocar, en el lugar donde va a quedar: nada salta al aparecer, el largo
+# de toda la cuerda no cambia y la trenza y el resaltado van pegados a ella. Cada pausa muestra la
+# ficha hasta el hito y COLA_MANO de cola en la mano, por el camino del paso siguiente, así que nada
+# se recoge ni se acomoda.
+UNION_HITO = 12.0      # d: en la pausa, esto antes del hito la ficha pasa al camino del paso siguiente,
+UNION_LARGO = 10.0     # en esto. Junto al hito, la ficha dobla hacia lo que cae a la mesa (hasta 1 d y
+                       # 39° de diferencia con el paso siguiente), y lo atado se corre a lo largo de la
+                       # cuerda de un paso al siguiente (en el amarre, hasta 0,7 d en los 40 d antes del
+                       # hito). Con 2,5 d, los tramos de la unión quedaban de 0,8 a 1,2·h
+VEL_PLANTILLA = 5.0    # d/s: la mano, en los primeros LENTO_PLANTILLA d de cada paso y al llegar
+LENTO_PLANTILLA = 6.0  # d
+VEL_REPETIR = 20.0     # d/s: lo demás de un paso (T21: en vez de la cámara rápida de T18)
+VEL_SERIE = 30.0       # d/s: lo demás de un paso que repite el anterior (`hasta: vueltas`, `ahorcados`)
+A_LATERAL = 200.0      # d/s²: en una curva, la mano va despacio para no pasar de esto (un brinco: 360)
+A_LARGO = 35.0         # d/s²: los cambios de rapidez de la mano (una frenada en seco: 50)
+
+
+def _en_v(X, h, s) -> np.ndarray:
+    """`_en` para varios s a la vez."""
+    X = np.asarray(X, float)
+    u = np.clip(np.asarray(s, float) / h, 0.0, len(X) - 1)
+    i = np.minimum(np.floor(u).astype(int), len(X) - 2)
+    return X[i] + (u - i)[:, None] * (X[i + 1] - X[i])
+
+
+def visibles(visible, h: float, N: int) -> int:
+    """Cuántos nodos se ven con la cuerda hasta σ = `visible` (todos sin él)."""
+    if visible is None:
+        return N
+    return min(N, int(math.floor(float(visible) / h + 1e-9)) + 1)
+
+
+def cuerda_visible(X, h: float, visible) -> tuple[np.ndarray, np.ndarray]:
+    """Lo que se ve de la cuerda X (N, 3) hasta σ = `visible`, donde sale de la mano (T21d), y el σ
+    de cada punto: los nodos hasta ahí y la punta, entre el último y el siguiente. Si la punta queda
+    a menos de 0,3·h del último nodo, lo reemplaza: un tramo tan corto doblaría la malla. Sin
+    `visible`, toda la cuerda."""
+    X = np.asarray(X, float)
+    N = len(X)
+    if visible is None:
+        return X, np.arange(N) * h
+    vis = float(visible)
+    n = visibles(vis, h, N)
+    s = np.arange(n) * h
+    if n >= N or vis - s[-1] <= 1e-6:
+        return X[:n], s
+    # La punta va por una curva suave (de Catmull-Rom) entre los nodos de alrededor: en línea
+    # recta, doblaba de golpe en cada nodo, y en una curva rápida temblaba.
+    t = (vis - s[-1]) / h
+    a, b = X[max(n - 2, 0)], X[min(n + 1, N - 1)]
+    p0, p1 = X[n - 1], X[n]
+    p = 0.5 * ((2 * p0) + (-a + p1) * t + (2 * a - 5 * p0 + 4 * p1 - b) * t * t
+               + (-a + 3 * p0 - 3 * p1 + b) * t ** 3)
+    if vis - s[-1] < 0.3 * h and n >= 2:
+        return np.vstack([X[:n - 1], p]), np.append(s[:-1], vis)
+    return np.vstack([X[:n], p]), np.append(s, vis)
+
+
+def _serie(spec, n: int) -> bool:
+    """En una plantilla, si el paso n repite el anterior (`vueltas`, `ahorcados`), como en
+    `video._es_serie`."""
+    if spec.plantilla is None or n > len(spec.pasos):
+        return False
+    hasta = spec.pasos[n - 1].hasta or ""
+    return "-" not in hasta and hasta not in ("inicio", "cierre")
+
+
+def poses_plantilla(modelo) -> list[PoseVideo]:
+    """Las poses de los pasos de una plantilla en el video con largo fijo (T21d). La cuerda es la
+    del último paso (en el amarre cuadrado, 462,5 d y 2314 nodos), en su grilla, y σ va desde el
+    nodo 0. En la pausa de cada paso se ve la ficha hasta el hito y COLA_MANO de cola en la mano por
+    el camino del paso siguiente; desde UNION_HITO d antes del hito, la ficha pasa a ese camino (la
+    cola va tensa, y la ficha dobla ahí hacia lo que cae a la mesa). El último paso se ve entero. Lo que todavía está en la mano (después de `visible`)
+    espera donde lo va a dejar el paso que lo tiende: lo que no se ve de una pose es lo mismo que en
+    la siguiente."""
+    P = modelo.pasos
+    K = len(P)
+    h = float(P[-1].h)
+    Xf = [np.asarray(r.puntos, float) for r in P]
+    hf = [float(r.h) for r in P]
+    N = len(Xf[-1])
+    L = (N - 1) * h
+    sig = np.arange(N) * h
+    hitos = [float(r.resaltado[1]) if r.resaltado and k < K - 1 else L for k, r in enumerate(P)]
+    vis = [min(L, hitos[k] + COLA_MANO) if k < K - 1 else L for k in range(K)]
+    for k in range(K - 1):
+        if not hitos[k] < vis[k] <= hitos[k + 1] - UNION_HITO:
+            raise TrazadoError(f"Paso {P[k + 1].n}: agrega {hitos[k + 1] - hitos[k]:.1f} d, menos que la "
+                               f"cola en la mano ({COLA_MANO} d) y la unión ({UNION_HITO} d)")
+    VIS = []
+    for k in range(K):
+        s = sig[:visibles(vis[k], h, N)]
+        X = _en_v(Xf[k], hf[k], s)
+        if k < K - 1:
+            a = hitos[k] - UNION_HITO
+            w = _suave5((s - a) / UNION_LARGO)
+            X = X + w[:, None] * (_en_v(Xf[k + 1], hf[k + 1], s) - X)
+            # Lo que queda de diferencia, repartido igual a lo largo de la curva mezclada: la trenza
+            # no se aprieta ni se estira en un lugar.
+            i0 = max(1, visibles(a - 0.5, h, N) - 1)
+            i1 = min(len(X) - 2, visibles(a + UNION_LARGO + 0.5, h, N))
+            X[i0:i1 + 1] = _uniforme(X[i0:i1 + 1], i1 - i0 + 1)
+        VIS.append(X)
+    out = []
+    for k, r in enumerate(P):
+        X = np.empty((N, 3))
+        X[:len(VIS[k])] = VIS[k]
+        for k2 in range(k + 1, K):
+            X[len(VIS[k2 - 1]):len(VIS[k2])] = VIS[k2][len(VIS[k2 - 1]):]
+        res = (float(r.resaltado[0]), float(r.resaltado[1])) if r.resaltado else None
+        out.append(PoseVideo(r.n, X, h, 0.0, hitos[k], vis[k] - hitos[k], Xf[k], hf[k], res, r.esperada,
+                             "mano", visible=vis[k]))
+    return out
+
+
+def comprobar_poses_plantilla(poses: list[PoseVideo], solido=None) -> list[str]:
+    """Las fallas de las poses de una plantilla (T21d): otra cantidad de nodos, la ficha (hasta
+    UNION_HITO antes del hito) a más de TOL_FICHA, tramos de la cuerda de menos de 0,9·h o de más
+    de 1,1·h (un hueco o un amontonamiento en lo que espera en la mano), lo que se ve a menos de
+    dmin o metido en la madera, y lo de la mano distinto en la pose siguiente."""
+    from .fisica.asentar import contacto
+    fallas = []
+    N = len(poses[0].X)
+    for i, p in enumerate(poses):
+        X, h = p.X, p.h
+        if len(X) != N:
+            fallas.append(f"Paso {p.n}: la cuerda tiene {len(X)} nodos y no {N}.")
+            continue
+        ultimo = i == len(poses) - 1
+        fin = p.largo - (0.0 if ultimo else UNION_HITO)
+        F = p.ficha[np.arange(len(p.ficha)) * p.h_ficha <= fin + 1e-9]
+        d = _distancia_a(F, X[:visibles(fin, h, N) + 1])
+        if d > TOL_FICHA:
+            fallas.append(f"Paso {p.n}: la ficha queda a {d:.3f} d de ella.")
+        l = np.linalg.norm(np.diff(X, axis=0), axis=1)
+        if l.min() < 0.9 * h or l.max() > 1.1 * h:
+            fallas.append(f"Paso {p.n}: la cuerda tiene tramos de {l.min() / h:.2f} a {l.max() / h:.2f} h.")
+        n = visibles(p.visible, h, N)
+        Xv = X[:n]
+        malla = contacto(Xv, np.array([0, n]), [1.0], solido)
+        m = malla.margen(Xv)
+        if m < -1e-9:
+            fallas.append(f"Paso {p.n}: dos tramos quedan a {m + malla.dmin:.3f} d, menos de dmin.")
+        if solido is not None and hasattr(solido, "penetracion"):
+            pen = float(solido.penetracion(Xv))
+            if pen > 0.1:
+                fallas.append(f"Paso {p.n}: la cuerda entra {pen:.2f} d en la madera.")
+        if not ultimo and np.max(np.abs(X[n:] - poses[i + 1].X[n:])) > 1e-9:
+            fallas.append(f"Paso {p.n}: lo que está en la mano no es lo mismo en el paso siguiente.")
+    return fallas
+
+
+def _curvaturas(P) -> np.ndarray:
+    """La curvatura de la polilínea P (M, 3) en cada punto, en el espacio (1/d)."""
+    d = np.diff(np.asarray(P, float), axis=0)
+    l = np.linalg.norm(d, axis=1)
+    t = d / np.maximum(l, 1e-12)[:, None]
+    giro = np.arccos(np.clip(np.einsum("ij,ij->i", t[:-1], t[1:]), -1.0, 1.0))
+    k = giro / np.maximum((l[:-1] + l[1:]) / 2, 1e-12)
+    return np.r_[k[0], k, k[-1]]
+
+
+def _recorrido_plantilla(V, h: float, u0: float, u1: float, rapida: float) -> np.ndarray:
+    """Dónde sale la cuerda de la mano (σ) en cada cuadro, de u0 a u1 por la cuerda V de la pose de
+    llegada: a VEL_PLANTILLA en los primeros LENTO_PLANTILLA d, a `rapida` en lo demás y otra vez a
+    VEL_PLANTILLA al llegar, más despacio en las curvas (para no pasar de A_LATERAL), con los
+    cambios de rapidez repartidos (A_LARGO) y un arranque y un frenado de quinto grado, como
+    `_recorrido_largo`."""
+    if u1 - u0 < 1e-9:
+        return np.array([u1])
+    from scipy.ndimage import maximum_filter1d, uniform_filter1d
+    paso = 0.02
+    u = np.append(np.arange(u0, u1, paso), u1)
+    s = np.arange(len(V)) * h
+    w = 2 * max(1, int(round(1.0 / h))) + 1
+    k = uniform_filter1d(maximum_filter1d(_curvaturas(V), w, mode="nearest"), w, mode="nearest")
+    ku = np.interp(u, s, k)
+    # Las rapideces van a lo largo del largo de verdad del camino, y no de σ: los tramos de la
+    # unión miden hasta 1,1·h, y en sus bordes la punta cambiaba de rapidez de golpe.
+    x = np.interp(u, s, _largos_acum(V))
+    # Al llegar, a VEL_PLANTILLA lo que dura el frenado de quinto grado: montado sobre el de
+    # A_LARGO, la rapidez cambiaba hasta 46 d/s².
+    lento = (u - u0 < LENTO_PLANTILLA) | (u1 - u < VEL_PLANTILLA * ARRANQUE_LARGO)
+    v = np.where(lento, VEL_PLANTILLA, rapida)
+    v = np.maximum(np.minimum(v, np.sqrt(A_LATERAL / np.maximum(ku, 1e-9))), VEL_CRUCE)
+    dx = np.diff(x)
+    for i in range(1, len(v)):
+        v[i] = min(v[i], math.sqrt(v[i - 1] ** 2 + 2 * A_LARGO * dx[i - 1]))
+    for i in range(len(v) - 2, -1, -1):
+        v[i] = min(v[i], math.sqrt(v[i + 1] ** 2 + 2 * A_LARGO * dx[i]))
+    return _al_tiempo(u, v, x)
+
+
+def _cuadro_plantilla(G, largos, k: float = RESORTE_FIN) -> CuadroGuia:
+    """Un cuadro de la guía de una plantilla: todo guiado, sostenido por el nodo 0, con los largos
+    de reposo de las poses y la forma de la guía de memoria. Los resortes van firmes (RESORTE_FIN):
+    la cuerda queda quieta donde la deja la mano, y con los de siempre, al arrancar cada paso el
+    motor la acomodaba unos 0,04 d y la punta frenaba en seco."""
+    G = np.asarray(G, float)
+    return CuadroGuia(G=G, k=np.full(len(G), float(k)), manos=np.array([0]),
+                      largos=np.asarray(largos, float), curvatura=_curvatura_segura(G), largo_fijo=True)
+
+
+def _tramo_plantilla(A: PoseVideo, B: PoseVideo, serie: bool = False) -> Tramo:
+    """La guía del paso A al B de una plantilla (T21d): la cuerda sale de la mano por el camino de
+    B y queda quieta donde la dibuja B (lo que todavía está en la mano ya espera ahí), y lo que ya
+    se veía va de A a B nodo a nodo, en todo el paso. Cada cuadro guía solo lo que se ve, hasta el
+    último nodo antes de la mano. Con los resortes firmes, no hace falta asentar al final."""
+    h = B.h
+    U = _recorrido_plantilla(B.X, h, A.visible, B.visible, VEL_SERIE if serie else VEL_REPETIR)
+    F = len(U) - 1
+    guia, vis = [], []
+    for f, u in enumerate(U):
+        w = float(_suave5(f / max(F, 1)))
+        n = visibles(u, h, len(B.X))
+        G = A.X[:n] + w * (B.X[:n] - A.X[:n])
+        guia.append(_cuadro_plantilla(G, _largos_de(A, B, w)[:n - 1]))
+        vis.append(float(u))
+    return Tramo(B.n, "mano", A.X[:len(guia[0].G)].copy(), B.X.copy(), guia, {"tender": (0, F)}, visible=vis)
+
+
+def animar_plantilla(A: PoseVideo, B: PoseVideo, solido=None, serie: bool = False) -> Animado:
+    """El tramo de la pose A a la B de una plantilla con largo fijo (T21d): la guía, los cuadros del
+    motor (solo lo que se ve: la cuerda crece desde la mano), el acercamiento final a la pose exacta
+    y la comprobación de todos los cuadros: nada a menos de dmin ni atravesándose y, con lo que la
+    mano todavía lleva esperando donde lo deja B, la cantidad de nodos fija y el largo de toda la
+    cuerda a ±0,5 %. Da los cuadros con toda la cuerda y hasta dónde se ve en cada uno."""
+    import time
+
+    from .fisica.atar import SALTO, comprobar, recta, saltos, seguir
+    t0 = time.time()
+    tr = _tramo_plantilla(A, B, serie)
+    c = seguir(tr.x0, tr.guia, solido)
+    medidas = {"cuadros_guia": len(tr.guia), "esperas": c.esperas, "newton": c.newton,
+               "segundos_seguir": round(time.time() - t0, 1)}
+    tr.guia = None     # unos 70 MB en un paso largo del amarre: no hacen falta más
+    fallas = []
+    x = c.X[-1]
+    n = len(x)
+    d = float(np.max(np.linalg.norm(x - B.X[:n], axis=1)))
+    medidas["distancia_final"] = round(d, 4)
+    if d > LIMITE_FIN:
+        fallas.append(f"Paso {B.n}: al final la cuerda queda a {d:.2f} d de la pose; el máximo es "
+                      f"{LIMITE_FIN}.")
+    n_motor = len(c.X)
+    Y = list(c.X) + recta(x, B.X[:n], max(1, int(round(ACERCAR_FIN * FPS))))
+    fallas += [f"Paso {B.n}: {f}" for f in comprobar(Y, solido, medio=c.medio, anadido=c.anadido)]
+    sal = saltos(Y, anadido=c.anadido)
+    medidas["salto_max"] = round(max(sal, default=0.0), 3)
+    if max(sal, default=0.0) > SALTO:
+        fallas.append(f"Paso {B.n}: un nodo salta {max(sal):.2f} d de un cuadro al siguiente; el máximo "
+                      f"es {SALTO}.")
+    # Toda la cuerda: lo que la mano todavía lleva espera donde lo deja B.
+    X = [np.vstack([y, B.X[len(y):]]) for y in Y]
+    vis = list(tr.visible) + [float(B.visible)] * (len(Y) - n_motor)
+    nominal = (len(B.X) - 1) * B.h
+    largos = np.array([float(np.sum(np.linalg.norm(np.diff(y, axis=0), axis=1))) for y in X]) / nominal
+    medidas["largo"] = (round(float(largos.min()), 4), round(float(largos.max()), 4))
+    if largos.min() < 0.995 or largos.max() > 1.005:
+        fallas.append(f"Paso {B.n}: el largo de la cuerda va de {largos.min():.4f} a {largos.max():.4f} "
+                      "del nominal; el máximo es ±0,5 %.")
+    fases = dict(tr.fases)
+    fases["acercar"] = (n_motor, len(X) - 1)
+    medidas["segundos_motor"] = round(time.time() - t0, 1)
+    return Animado(B.n, tr.modo, X, {}, {}, fases, fallas, medidas, visible=vis)
+
+
+def _animar_plantilla_paso(spec, A: PoseVideo, B: PoseVideo) -> Animado:
+    solido, _ = de_plantilla(spec, B.n)
+    return animar_plantilla(A, B, solido, _serie(spec, B.n))

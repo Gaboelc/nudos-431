@@ -57,6 +57,7 @@ class Cuadro:
     fase: str
     resaltado: tuple | None
     camara: dict | None = None
+    visible: float | None = None   # en una plantilla (T21d), hasta dónde se ve la cuerda (σ)
 
 
 # --------------------------------------------------------------------------
@@ -69,16 +70,20 @@ def linea_de_tiempo(modelo, animados) -> list[Cuadro]:
     P = {r.n: r for r in poses_atado(modelo)}   # con largo fijo (T21) o con la cola en la mano (T18)
     pausa = round(PAUSA * FPS)
     primero = P[modelo.pasos[0].n]
-    out = [Cuadro(primero.puntos, primero.n, "pausa", primero.resaltado) for _ in range(pausa)]
+    out = [Cuadro(primero.puntos, primero.n, "pausa", primero.resaltado,
+                  visible=getattr(primero, "visible", None)) for _ in range(pausa)]
     for a in animados:
         B = P[a.n]
         fase_de = {}
         for nombre, (f0, f1) in a.fases.items():
             for f in range(f0, f1 + 1):
                 fase_de[f] = nombre
+        vis = getattr(a, "visible", None)
         for i, X in enumerate(a.X[1:], start=1):
-            out.append(Cuadro(np.asarray(X), a.n, fase_de.get(i, "recta"), B.resaltado))
-        out += [Cuadro(B.puntos, a.n, "pausa", B.resaltado) for _ in range(pausa)]
+            out.append(Cuadro(np.asarray(X), a.n, fase_de.get(i, "recta"), B.resaltado,
+                              visible=None if vis is None else vis[i]))
+        out += [Cuadro(B.puntos, a.n, "pausa", B.resaltado, visible=getattr(B, "visible", None))
+                for _ in range(pausa)]
     return out
 
 
@@ -156,14 +161,14 @@ def _tapado(c: dict, puntos, solido) -> float:
 
 def tomas(spec, modelo, cuadros: list[Cuadro], aspecto) -> dict[int, tuple[dict, dict]]:
     """La toma de cada paso animado: (al empezar, al terminar), con el giro lento entre las dos."""
-    from .animar import de_plantilla
+    from .animar import cuerda_visible, de_plantilla
     P = {r.n: r for r in modelo.pasos}
     e = spec.encuadre
     out = {}
     movidos: dict[int, list] = {}
     for c in cuadros:
         if c.fase != "pausa":
-            movidos.setdefault(c.paso, []).append(c.X)
+            movidos.setdefault(c.paso, []).append(cuerda_visible(c.X, modelo.pasos[-1].h, c.visible)[0])
     for n, Xs in movidos.items():
         A, B = P[n - 1].puntos, P[n].puntos
         pts = np.vstack([A, B] + [np.asarray(x) for x in Xs[::10]])
@@ -277,8 +282,9 @@ def renderizar_cuadros(cuadros: list[Cuadro], h: float, mallas: list[dict], dos_
                                     "extension": 10}), encoding="utf-8")
         solidos = blender._muestras_solidos(mallas) if blender.APLASTAR else None
         trabajos = []
+        from .animar import cuerda_visible
         for k, c in enumerate(cuadros):
-            X = np.asarray(c.X, float)
+            X = cuerda_visible(c.X, h, getattr(c, "visible", None))[0]
             esc = {"cuerdas": [{"espina": X.ravel().tolist(), "radio": 0.5, "grosor": 1.0,
                                 "color": "azul", "tramos": _tramos(len(X), h, c.resaltado, dos_remates)}],
                    "mallas": mallas}
@@ -323,7 +329,7 @@ def guardar(slug: str, cuadros: list[Cuadro], animados, destino: Path) -> None:
     destino.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(destino / f"{slug}.npz",
                         **{f"c{k:05d}": np.asarray(c.X, np.float32) for k, c in enumerate(cuadros)})
-    info = {"fps": FPS, "cuadros": [{"paso": c.paso, "fase": c.fase} for c in cuadros],
+    info = {"fps": FPS, "cuadros": [{"paso": c.paso, "fase": c.fase, "visible": c.visible} for c in cuadros],
             "tramos": [{"paso": a.n, "modo": a.modo, "fases": a.fases, "medidas": a.medidas,
                         "fallas": a.fallas} for a in animados]}
     (destino / f"{slug}.json").write_text(json.dumps(info, indent=1, ensure_ascii=False),
@@ -335,8 +341,8 @@ def cargar_cuadros(slug: str, modelo, destino: Path = DESTINO) -> list[Cuadro]:
     info = json.loads((destino / f"{slug}.json").read_text(encoding="utf-8"))
     P = {r.n: r for r in modelo.pasos}
     with np.load(destino / f"{slug}.npz") as z:
-        return [Cuadro(z[f"c{k:05d}"].astype(float), c["paso"], c["fase"], P[c["paso"]].resaltado)
-                for k, c in enumerate(info["cuadros"])]
+        return [Cuadro(z[f"c{k:05d}"].astype(float), c["paso"], c["fase"], P[c["paso"]].resaltado,
+                       visible=c.get("visible")) for k, c in enumerate(info["cuadros"])]
 
 
 def videos(slugs=PILOTOS, destino: Path = DESTINO, previa: bool = True) -> dict:
