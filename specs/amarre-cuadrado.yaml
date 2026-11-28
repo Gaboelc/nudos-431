@@ -201,6 +201,11 @@ error:
     El error más común está en los ahorcados: pasarlos por encima del palo de arriba. Si los
     pasas por ahí, no aprietan las vueltas y el amarre queda flojo. Pásalos entre los dos
     palos: por debajo del de arriba y por encima del de abajo.
+  # Lo que se ve en el video (T22): el amarre con el error y lo que le pasa al usarlo.
+  falla: >-
+    Se empuja el palo de arriba: con los ahorcados por encima, las vueltas están flojas y el
+    palo gira sobre el de abajo. Después, el amarre bien hecho no se mueve con el mismo
+    empujón.
   otros:
     - titulo: La cuerda floja mientras atas
       texto: >-
@@ -210,3 +215,6 @@ error:
         Otro error es soltar la cuerda entre una vuelta y otra: aunque el amarre esté
         bien hecho, queda flojo y los palos se mueven. Mantenla tensa de principio a
         fin.
+      falla: >-
+        Con la cuerda floja entre las vueltas, se empuja el palo de arriba y se corre
+        sobre el de abajo.

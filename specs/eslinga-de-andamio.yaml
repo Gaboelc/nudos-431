@@ -207,6 +207,10 @@ error:
   voz: >-
     El error más común es pasar el seno por debajo de la uno y la tres: no las abraza, y la
     tabla se voltea. Pásalo por encima de las dos.
+  # Lo que se ve en el video (T22): la eslinga con el error y lo que le pasa al usarla.
+  falla: >-
+    Se tira de los dos extremos hacia arriba: el seno no abraza la 1 y la 3, y la tabla gira
+    y se voltea. Después, la eslinga bien hecha la sube horizontal.
   otros:
     - titulo: Las vueltas lejos de la punta
       texto: >-
@@ -215,9 +219,13 @@ error:
       voz: >-
         Si las vueltas quedan separadas o lejos de la punta, la tabla se inclina:
         júntalas a menos de un palmo de la punta.
+      falla: >-
+        Con las vueltas lejos de la punta, al subirla la tabla queda inclinada.
     - titulo: Una sola eslinga
       texto: >-
         El tablón se voltea. Ata una en cada punta, a la misma altura.
       voz: >-
         Y con una sola eslinga, la tabla se voltea. Ata una en cada punta, a la misma
         altura.
+      falla: >-
+        Con una sola eslinga, al subirla la tabla gira y se voltea.

@@ -125,6 +125,22 @@ def test_el_estilo_se_revisa_en_todo_lo_que_dice():
     assert "etiquetas de más de 32 letras" in texto
 
 
+def test_cada_error_lleva_su_falla():
+    # Lo que pasa cuando el nudo se usa con el error, animado en el video (Gabriel, 28 nov).
+    for slug in PILOTOS:
+        e = cargar(slug).error
+        assert e.falla and all(o.falla for o in e.otros), slug
+    datos = _datos("amarre-cuadrado")
+    del datos["error"]["falla"]
+    del datos["error"]["otros"][0]["falla"]
+    problemas = G.problemas(desde_datos(datos))
+    assert any("falta la «falla» del error" in p for p in problemas)
+    assert any("falta la «falla» de: La cuerda floja mientras atas" in p for p in problemas)
+    # La falla va en la hoja, junto al error.
+    parte = next(p for p in G.partes(cargar("as-de-guia")) if p.clave == "error")
+    assert "lo que pasa" in G._tarjeta(parte.tarjeta) and "se deshace" in parte.tarjeta["falla"]
+
+
 def test_la_seguridad_de_la_ficha_tiene_que_ir_en_el_video():
     datos = _datos("as-de-guia")
     del datos["video"]["seguridad"]

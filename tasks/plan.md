@@ -1065,7 +1065,7 @@ La cámara (las paradas y la aceleración) es de T22.
   | Lo que necesitas | estudio | La cuerda estirada (y los palos o la tabla, si van), que es de donde parte el paso 1. | `video.materiales` | El `materiales` de la ficha | 6 s |
   | Paso a paso | estudio | Cada paso con su movimiento, desde la cuerda estirada. | `voz` de cada paso | La del paso | 63 s |
   | Cómo saber que quedó bien | estudio | El nudo apretado de cerca: la cámara va a cada cosa (`mira`) y, por detrás, el nudo se voltea. | `video.verificacion` | Una ✓ con su etiqueta sobre cada cosa | 23 s |
-  | Errores comunes | estudio | El error atado con el motor (T21e), la ✗, vuelve atrás y el paso correcto, la ✓. Después, los demás errores. | `voz` del error y de `otros` | ✗ y ✓, con el cuadro teñido | 15 s |
+  | Errores comunes | estudio | El error atado con el motor (T21e) y la ✗; el nudo terminado con el error falla al usarlo; el paso correcto, la ✓, y el nudo bien hecho aguanta. Después, cada uno de los demás errores con su falla. | `voz` del error y de `otros` | ✗ y ✓, con el cuadro teñido | 24 s |
   | En la práctica | campamento | La aplicación (abajo). | `video.aplicacion.voz` | De capítulo, con el título | 12 s |
   | Seguridad | campamento | La aplicación, de lejos. | `video.seguridad` | El escudo y la voz frase por frase | 22 s |
   | Cierre | campamento | La cámara se aleja; en el golpe entra el nombre. | `video.cierre` | El nombre, la dirección del visor y el grupo | 8 s + 10 s |
@@ -1116,7 +1116,12 @@ La cámara (las paradas y la aceleración) es de T22.
   - **Nunca se congela:** en las pausas, el acimut sigue a 0,6° por segundo. La cámara que se aleja del paso 4 del as de guía, que le encantó a Gabriel, queda como el movimiento de cada final de paso con pausa larga.
   - **La medida:** `calidad` cuenta las paradas de la cámara y el tiempo quieta: hoy 14 paradas y el 16 % quieta en el as de guía; la meta es cero y cero.
   - Las tomas salen del catálogo de video-shotcraft: el giro lento (apertura), el acercamiento al detalle (cruce nuevo), el alejamiento que revela (fin de paso, aplicación y cierre) y el plano cenital (revisión).
-- **Los errores.** El error con imagen va del paso anterior a la pose del error (el motor lo ata, T21e), se queda con la ✗, vuelve atrás (los mismos cuadros al revés) y ata el paso correcto, que se queda con la ✓. La cámara se acerca al `encuadre` del error. Los demás errores van con la ✗ y su título sobre el nudo apretado, y solo entran los que tienen `voz`.
+- **Los errores, con lo que pasa cuando se hace mal** (Gabriel, 28 nov: que una animación muestre qué pasa si el nudo se hace mal).
+  - **El error con imagen:** va del paso anterior a la pose del error (el motor lo ata, T21e) y se queda con la ✗. Después se termina el nudo con el error, rápido, y se usa: se tira del firme, se empuja el palo o se sube la tabla, y falla. Vuelve al paso anterior, ata el paso correcto, que se queda con la ✓, y el nudo bien hecho aguanta el mismo uso. La cámara se acerca al `encuadre` del error y se aleja para la falla.
+  - **Los demás errores** van con la ✗ y su título, y cada uno con su falla animada: ya no van sobre el nudo quieto. Solo entran los que tienen `voz`.
+  - **Lo que pasa** va en la especificación, en `falla` (del error y de cada uno de `otros`, formato v1.14), y la voz lo dice. En los pilotos: el as de guía con la gaza al revés no traba y se deshace al tirar del firme; en el amarre cuadrado con los ahorcados por encima, y con la cuerda floja, el palo de arriba gira o se corre al empujarlo; en la eslinga de andamio con el seno por debajo, y con una sola eslinga, la tabla se voltea al subirla, y con las vueltas lejos de la punta queda inclinada.
+  - **Gabriel comprueba cada falla con cuerda real** antes de dibujarla, como el filtro 1: el video no puede mostrar una falla que no pasa.
+  - **Lo que pide al motor:** nudos que se deshacen o se corren con carga, y anfitriones que se mueven (el palo que gira, la tabla que se voltea), que hoy son fijos. Es una parte nueva de T21e.
 - **Las aplicaciones de los pilotos** (Gabriel las eligió el 27 nov; dentro de D1: solo los amarres sostienen personas). Las escenas van en `guion.ESCENAS`; la utilería es propia, hecha en Blender, sobre el campamento J&E Gray 02, que ya trae los árboles de fondo, así que Sapling Tree Gen no hace falta para los pilotos.
   - **El nudo trabaja** (Gabriel, 27 nov): en las tres, la cuerda empieza floja, se tensa cuando entra la carga y el nudo aguanta; después la cámara se aleja hasta mostrar el uso. El nudo apretado se coloca con un giro rígido, y la carga es el motor llevando sus puntas hasta sus anclas y asentándolas (T21e), con el crujido del foley. Ahí se comprueba que nada se atraviese y que el lazo abrace la utilería, no la secuencia vista desde arriba.
   - **El as de guía, el cabo de un toldo (`toldo`, unos 11 s):**
@@ -1199,13 +1204,13 @@ La cámara (las paradas y la aceleración) es de T22.
   - El nombre del grupo, «Grupo Guías y Scouts Huetares 431», y su logo van en la apertura y en el cierre (Gabriel, 28 nov).
 - **La duración no limita** (Gabriel, 27 nov): el video dura lo que haga falta para explicar bien y que quede claro, y no se recorta ninguna escena ni ninguna explicación para que dure menos. Ya no hay una meta de 2 min. Con el guion completo, los pilotos duran de 2:45 a 3:30, y cada escena puede alargarse si lo necesita. El reel sigue en 45 a 60 s.
 - **Lo que cuesta.** Los videos van con EEVEE a 32 muestras (Gabriel, 27 nov; `aspecto.MOTOR_VIDEO`), a unos 3,3 s por cuadro de 4K. El render crece con la duración: el as de guía son unas 9,5 h, y los 36 con sus reels, unos 16 días si duran como los pilotos (3 min en promedio, y 52 s el reel). Los 11 días de la elección de EEVEE suponían videos de 2 min.
-  - **Lo que lo bajaría sin quitar nada:** los capítulos donde nada se mueve, sobre un cuadro quieto del render con un acercamiento lento hecho en la composición, sin Blender: lo que necesitas, los demás errores, la seguridad y la pantalla final. Son unos 40 s por nudo: unos 3 días menos.
+  - **El cuadro quieto** (Gabriel, 28 nov): lo que necesitas, la seguridad y la pantalla final van sobre un cuadro quieto del render, con un acercamiento lento hecho en la composición, sin Blender. Los errores no, porque llevan su falla animada. Con eso y las fallas, los 36 con sus reels son unos 14 días de render.
 - **Lo que decide Gabriel en el punto de control:**
   1. El diseño, con el guion en la especificación (v1.14).
   2. El guion del as de guía (`guion as-de-guia`): aprobado el 28 nov.
   3. Las tarjetas de la maqueta: decididas el 28 nov (la del paso sale y vuelve a entrar, la paleta es «Huetares» y el logo no va en la esquina).
   4. Las tres aplicaciones: decididas el 27 nov (el toldo, la mesa y la repisa, con el nudo que se tensa y aguanta).
-  5. La duración y el motor: decididos el 27 nov (la duración no limita, y EEVEE a 32 muestras): unos 16 días de render para los 36. Falta si los capítulos quietos van sobre un cuadro quieto (unos 3 días menos). El nombre y el logo del grupo van en la apertura y el cierre (decidido el 28 nov).
+  5. La duración, el motor y el cuadro quieto: decididos (la duración no limita y EEVEE a 32 muestras, el 27 nov; el cuadro quieto para lo que necesitas, la seguridad y la pantalla final, y los errores con su falla animada, el 28 nov): unos 14 días de render para los 36. El nombre y el logo del grupo van en la apertura y el cierre (decidido el 28 nov).
   6. «En la práctica» de los 36 nudos: aprobada el 27 nov, con siete cambios suyos (abajo).
 
 **Cómo se hizo T22a (27 nov):**
@@ -1279,7 +1284,7 @@ La cámara (las paradas y la aceleración) es de T22.
 #### T19: Todos los nudos a la vez
 
 **Descripción:** con todo implementado y probado en los pilotos, una sola corrida calcula todos los nudos con el motor, dibuja todas sus fichas en Blender y arma todos sus videos. No hay tandas (Gabriel, 23 nov).
-- **Antes, desde el pulido a fondo (26 nov):** la tabla de aplicaciones de los 36 nudos en texto, que Gabriel aprueba (aprobada el 27 nov; está en T22a, «En la práctica» de los 36 nudos); sus escenas, armadas por familias (en poste, amarres, dos cuerdas…); los guiones revisados, y las voces y la música generadas. El render de los videos es de unas 2 semanas.
+- **Antes, desde el pulido a fondo (26 nov):** la tabla de aplicaciones de los 36 nudos en texto, que Gabriel aprueba (aprobada el 27 nov; está en T22a, «En la práctica» de los 36 nudos); la falla de cada error de los 36, comprobada con cuerda real; sus escenas, armadas por familias (en poste, amarres, dos cuerdas…); los guiones revisados, y las voces y la música generadas. El render de los videos es de unas 2 semanas.
 1. `referencia` de todos los nudos con el código de antes de la fase, para comparar.
 2. Todos los nudos construidos con el motor, a la vez y con todos los núcleos (`nudos/procesos.py`), de noche si hace falta.
 3. `comparar` dice qué cambió en cada nudo. Donde la secuencia de algún paso no es la declarada, el paso se corrige (ver «La secuencia declarada sigue mandando» en T15) y se vuelve a correr.

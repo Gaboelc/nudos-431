@@ -217,8 +217,13 @@ error:
     sale un as de guía. Deshaz la gaza y vuelve a formarla con ese tramo por encima.
   voz: >-
     El error más común está en el segundo paso: la gaza pequeña al revés, con el tramo que
-    va al chicote por debajo del firme. Si te pasa, deshaz la gaza y vuelve a formarla con
-    ese tramo por encima.
+    va al chicote por debajo del firme. Con la gaza al revés, el nudo no traba, y al tirar
+    del firme se deshace. Si te pasa, deshaz la gaza y vuelve a formarla con ese tramo por
+    encima.
+  # Lo que se ve en el video (T22): el nudo terminado con el error y lo que le pasa al usarlo.
+  falla: >-
+    El nudo se termina con la gaza pequeña al revés y se tira del firme: no traba y se
+    deshace. Después, el nudo bien hecho aguanta el mismo tirón.
   encuadre:
     x: [-6.5, 3.5]
     y: [-2.5, 7.0]

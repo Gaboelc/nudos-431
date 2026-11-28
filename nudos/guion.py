@@ -63,10 +63,12 @@ ESCENAS = {
 BASE, POR_SILABA, POR_COMA, POR_PUNTO = 1.44, 0.134, 0.086, 0.246
 
 # Lo que la imagen agrega alrededor de cada frase, en s: el movimiento que sigue a la voz de un
-# paso, la cámara que va de una cosa a otra en la revisión, el error que se ata, se marca y vuelve
-# atrás antes del correcto, la cámara que se aleja en la aplicación.
-MARGEN = {"apertura": 2.0, "materiales": 1.0, "pasos": 1.8, "verificacion": 1.2, "error": 3.5,
-          "errores": 1.0, "aplicacion": 2.5, "seguridad": 1.0, "cierre": 1.5}
+# paso, la cámara que va de una cosa a otra en la revisión, la cámara que se aleja en la aplicación
+# y, en los errores, lo que pasa cuando el nudo se usa mal (Gabriel, 28 nov): el error con imagen se
+# ata, se marca, se termina y se usa hasta que falla, y después el correcto aguanta lo mismo; cada
+# uno de los demás errores muestra su falla.
+MARGEN = {"apertura": 2.0, "materiales": 1.0, "pasos": 1.8, "verificacion": 1.2, "error": 9.0,
+          "errores": 3.0, "aplicacion": 2.5, "seguridad": 1.0, "cierre": 1.5}
 MINIMO = {"apertura": 6.0, "materiales": 3.0}   # s: lo menos que dura el capítulo
 CAMBIO_CAPITULO = 0.6      # s: la tarjeta de capítulo, entre uno y otro
 PANTALLA_FINAL = 10.0      # s al final para la pantalla final de YouTube (de 5 a 20 s)
@@ -175,9 +177,11 @@ def partes(spec) -> list[Parte]:
     if spec.error is not None:
         e = spec.error
         out.append(Parte("errores", "error", e.voz or e.texto,
-                         {"tipo": "error", "titulo": e.titulo, "paso": e.paso}, MARGEN["error"], falta=not e.voz))
+                         {"tipo": "error", "titulo": e.titulo, "paso": e.paso, "falla": e.falla or ""},
+                         MARGEN["error"], falta=not e.voz))
         for i, o in enumerate(e.otros, 1):
-            out.append(Parte("errores", f"otro-{i}", o.voz or o.texto, {"tipo": "otro", "titulo": o.titulo},
+            out.append(Parte("errores", f"otro-{i}", o.voz or o.texto,
+                             {"tipo": "otro", "titulo": o.titulo, "falla": o.falla or ""},
                              MARGEN["errores"], falta=not o.voz))
     if v.aplicacion is not None:
         out.append(Parte("aplicacion", "aplicacion", v.aplicacion.voz,
@@ -237,6 +241,11 @@ def problemas(spec) -> list[str]:
         out.append("falta «video.verificacion»: lo que se revisa al final, con la voz")
     if spec.error is not None and not spec.error.voz:
         out.append("falta la «voz» del error")
+    if spec.error is not None and not spec.error.falla:
+        out.append("falta la «falla» del error: lo que pasa en el video cuando el nudo se usa con él")
+    sin_falla = [o.titulo for o in (spec.error.otros if spec.error is not None else ()) if not o.falla]
+    if sin_falla:
+        out.append("falta la «falla» de: " + ", ".join(sin_falla))
     if v.aplicacion is None:
         out.append("falta «video.aplicacion»")
     elif v.aplicacion.escena not in ESCENAS:
@@ -406,10 +415,11 @@ def _tarjeta(t: dict) -> str:
         mira = f' <span class="mira">mira {e(t["mira"])}{lado}</span>' if t.get("mira") else (
             f' <span class="mira">el nudo entero{lado}</span>')
         return f'<span class="si">✓</span> {e(t.get("etiqueta") or "")}{mira}'
+    falla = (f'<br><span class="mira">lo que pasa</span> {e(t["falla"])}' if t.get("falla") else "")
     if tipo == "error":
-        return f'<span class="no">✗</span> <b>{e(t["titulo"])}</b> · después, el correcto con ✓'
+        return f'<span class="no">✗</span> <b>{e(t["titulo"])}</b> · después, el correcto con ✓{falla}'
     if tipo == "otro":
-        return f'<span class="no">✗</span> {e(t["titulo"])}'
+        return f'<span class="no">✗</span> {e(t["titulo"])}{falla}'
     if tipo == "aplicacion":
         escena = f' <span class="mira">escena {e(t["escena"])}</span>' if t.get("escena") else ""
         return f'<b>{e(t["titulo"])}</b>{escena}'
@@ -544,7 +554,8 @@ def _html(spec, lista: list[Parte], total: float, rl: list[Parte], malos: list[s
                   f'{POR_COMA:.3f} s por coma y {POR_PUNTO:.3f} s por punto, con un error medio de medio segundo. '
                   'Las partes ya generadas dicen «medida».</li>'
                   '<li>La imagen: cada parte suma lo que el video muestra después de la voz (el movimiento del '
-                  'paso, la cámara que va a lo siguiente, el error que se ata y vuelve atrás). Son estimados: la '
+                  'paso, la cámara que va a lo siguiente, el error que se ata y se usa hasta que falla). Son '
+                  'estimados: la '
                   'implementación (T22b) los mide con el motor, y la voz manda el tiempo.</li>'
                   f'<li>Entre capítulos, {CAMBIO_CAPITULO:.1f} s de la tarjeta de capítulo; al final, '
                   f'{PANTALLA_FINAL:.0f} s para la pantalla final de YouTube.</li></ul>')

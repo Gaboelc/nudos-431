@@ -32,8 +32,8 @@ _CAMPOS = {"slug", "nombre", "otros_nombres", "familia", "abok", "usos", "materi
 _CAMPOS_ALTERNATIVA = {"nudo", "cuando"}
 _CAMPOS_PASO = {"titulo", "texto", "voz", "trazado", "secuencia", "resaltar"}
 _CAMPOS_PASO_PLANTILLA = {"titulo", "texto", "voz", "hasta"}
-_CAMPOS_ERROR = {"paso", "invierte", "variante", "titulo", "texto", "voz", "encuadre", "otros"}
-_CAMPOS_OTRO_ERROR = {"titulo", "texto", "voz"}
+_CAMPOS_ERROR = {"paso", "invierte", "variante", "titulo", "texto", "voz", "falla", "encuadre", "otros"}
+_CAMPOS_OTRO_ERROR = {"titulo", "texto", "voz", "falla"}
 # El video (T22, formato v1.14): lo que dice la voz fuera de los pasos y los errores.
 _CAMPOS_VIDEO = {"apertura", "materiales", "verificacion", "aplicacion", "seguridad", "cierre", "reel"}
 _CAMPOS_REVISA = {"voz", "mira", "lado", "etiqueta"}
@@ -229,6 +229,7 @@ class OtroError:
     titulo: str
     texto: str
     voz: str | None = None             # lo que dice la voz en el video; sin ella, no entra
+    falla: str | None = None           # lo que pasa en el video si el nudo se usa con este error
 
 
 @dataclass(frozen=True)
@@ -243,6 +244,7 @@ class Error:
     variante: str | None = None        # solo en un nudo de plantilla; entonces `invierte` va vacío
     otros: tuple[OtroError, ...] = ()  # errores comunes sin imagen
     voz: str | None = None             # lo que dice la voz en el video
+    falla: str | None = None           # lo que pasa en el video cuando el nudo con el error se usa
 
 
 @dataclass(frozen=True)
@@ -503,7 +505,8 @@ def _con_medidas(spec: Spec, medidas: dict[str, str], falla) -> Spec:
     error = spec.error
     if error is not None:
         error = replace(error, titulo=poner(error.titulo), texto=poner(error.texto), voz=poner(error.voz),
-                        otros=tuple(OtroError(poner(o.titulo), poner(o.texto), poner(o.voz))
+                        falla=poner(error.falla),
+                        otros=tuple(OtroError(poner(o.titulo), poner(o.texto), poner(o.voz), poner(o.falla))
                                     for o in error.otros))
     v = spec.video
     video = replace(
@@ -673,6 +676,7 @@ def _error(datos, pasos: tuple[Paso, ...], plantilla, falla) -> Error | None:
         variante=variante,
         otros=_otros_errores(datos.get("otros"), ef),
         voz=_voz(datos, "voz", ef),
+        falla=_voz(datos, "falla", ef),
     )
 
 
@@ -690,7 +694,8 @@ def _otros_errores(datos, falla) -> tuple[OtroError, ...]:
         sobran = set(o) - _CAMPOS_OTRO_ERROR
         if sobran:
             raise of(f"campos desconocidos: {', '.join(sorted(sobran))}")
-        out.append(OtroError(_texto(o, "titulo", of), _texto(o, "texto", of), _voz(o, "voz", of)))
+        out.append(OtroError(_texto(o, "titulo", of), _texto(o, "texto", of), _voz(o, "voz", of),
+                             _voz(o, "falla", of)))
     return tuple(out)
 
 
